@@ -1,0 +1,4 @@
+- test_check_hypervisor_hostname
+- test_check_satellite_org
+- test_only_satellite
+- test_only_rhsm
