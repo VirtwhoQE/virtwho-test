@@ -1,7 +1,13 @@
-### VIRTWHO-QE - Testing virt-who package based on rhel lifecycle.
+virtwho-test
+=========
 
-Team Members: _[Eko](https://github.com/eko999), [Coulson](https://github.com/hkx303), [Yuefen](https://github.com/Junefen)_
+`virtwho-test`_ is focused on virt-who package testing based on the rhel lifecycle
 
-Supproted Hypervisors: _libvirt, esx, rhevm, hyperv, xen, kubevirt and fake_
+* Team Members: `Eko`_, `Coulson`_, `Yuefen`_
+* Supproted Hypervisors: libvirt, esx, rhevm, hyperv, xen, kubevirt and fake
+* Supported Subscription Servers: rhsm, satellite, sam(deprecated)
 
-Supported Subscription Servers: _rhsm, satellite, sam(deprecated)_
+.. _virtwho-test: https://github.com/VirtwhoQE/virtwho-test
+.. _Eko: https://github.com/eko999
+.. _Coulson: https://github.com/hkx303
+.. _Yuefen: https://github.com/Junefen
