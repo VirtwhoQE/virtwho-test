@@ -45,7 +45,6 @@ esx_uuid=
 esx_hwuuid=
 esx_hostname=
 esx_version=
-esx_state=
 esx_cpu=
 esx_cluster=
 guest_name=
@@ -62,7 +61,6 @@ password=
 uuid=
 hostname=
 version=
-state=
 cpu=
 guest_name=
 guest_ip=
@@ -78,7 +76,6 @@ password=
 uuid=
 hostname=
 version=
-state=
 cpu=
 guest_name=
 guest_ip=
@@ -92,19 +89,12 @@ guest_state=
 server=
 username=
 password=
-ssh_username=
-ssh_password=
-vdsm_ip=
-vdsm_username=
-vdsm_password=
 vdsm_uuid=
 vdsm_hwuuid=
 vdsm_hostname=
 vdsm_version=
-vdsm_state=
 vdsm_cpu=
 vdsm_cluster=
-vdsm_datacenter=
 guest_name=
 guest_ip=
 guest_username=
@@ -112,28 +102,13 @@ guest_password=
 guest_uuid=
 guest_state=
 
-[libvirt-local]
-; the virt-who host is the libvirt server
-server=
-username=
-password=
-state=
-cpu=
-guest_name=
-guest_ip=
-guest_username=
-guest_password=
-guest_uuid=
-guest_state=
-
-[libvirt-remote]
+[libvirt]
 server=
 username=
 password=
 uuid=
 hostname=
 version=
-state=
 cpu=
 guest_name=
 guest_ip=
@@ -149,7 +124,6 @@ config_file=
 uuid=
 hostname=
 version=
-state=
 cpu=
 guest_name=
 guest_ip=
@@ -158,3 +132,16 @@ guest_username=
 guest_password=
 guest_uuid=
 guest_state=
+
+[local]
+; the virt-who host is also the libvirt server
+server=
+username=
+password=
+guest_name=
+guest_ip=
+guest_username=
+guest_password=
+guest_uuid=
+guest_state=
+
