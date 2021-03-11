@@ -145,9 +145,12 @@ guest_state=
 [kubevirt]
 endpoint=
 token=
-kubeconfig_with_cert=
-kubeconfig_without_cert=
-kubeversion=
+config_file=
+uuid=
+hostname=
+version=
+state=
+cpu=
 guest_name=
 guest_ip=
 guest_port=
