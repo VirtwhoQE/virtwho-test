@@ -1,10 +1,9 @@
-; this file is used to define all necessary options for virt-who testing
-; all default values are null, need to update according to the test requirements
-; hypervisor-builder can help to get some hypervisor and guest information
-
+; The section of [virtwho] is used to define the host information where virt-who package is installed and running
+; host is a required option to indicate the ip address or hostname
+; username and password are the required options to access the host
+; port is an optional setting, the default port is 22
+; repo is an optional setting, to indicate where is the virt-who yum repository
 [virtwho]
-; host= is the rhel system to run virt-who service
-; repo= is the base url of the rhel compose
 host=
 username=
 password=
@@ -13,6 +12,16 @@ repo=
 proxy_server=
 proxy_prot=
 
+; The section of [rhsm] and [satellite] are used to define subscription servers
+; server is a required option to indicate where to register
+; server=subscription.rhsm.redhat.com for product candlepin
+; server=subscription.rhsm.stage.redhat.com for stage candlepin
+; server should be the hostname or ip for satellite
+; username and password are the required account options for registering
+; prefix is an optional setting, the default prefix is /subscription for candlepin, /rhsm for satellite
+; port is an optional setting, the default port is 443
+; default_org is a required option to indicate which org to register
+; secondary_org and activation_key are optional settings for special case requirements
 [rhsm]
 server=
 username=
@@ -31,8 +40,14 @@ default_org=
 secondary_org=
 activation_key=
 
+; The below sections are used to define the different hypervisors information
+; server, username and password are the required options to access vcenter/xen/hyperv/rhevm/libvirt and get mapping
+; config_file is a required option to access kubevirt and get mapping
+; uuid or hostname of hypervisor is a required option when need to attach subscriptions for hypervisor
+; guest_ip, guest_username and guest_password are required options when need to access guest for registering
+; other options are optional settings based on special case requirements
+; hypervisor-builder can help to get some information, like hypervisor_uuid/hwuuid/hostname/version/cpu/cluster, guest_ip/uuid/state
 [vcenter]
-; esx_ datas are for the esxi host which the guest is based on
 server=
 username=
 password=
@@ -85,7 +100,6 @@ guest_uuid=
 guest_state=
 
 [rhevm]
-; vdsm_ datas are for the vdsm host which the guest is based on
 server=
 username=
 password=
@@ -134,7 +148,6 @@ guest_uuid=
 guest_state=
 
 [local]
-; the virt-who host is also the libvirt server
 server=
 username=
 password=
