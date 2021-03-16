@@ -14,7 +14,7 @@ def get_project_root():
 
 
 class ConfHandler(object):
-    """ConfigParser able to read INI file and configure content."""
+    """ConfigParser is able to read INI file and configure content."""
 
     def __init__(self, path):
         self.config_parser = ConfigParser()
@@ -61,8 +61,7 @@ class ConfHandler(object):
             pass
 
     def remove_option(self, section, option):
-        """Remove an option from INI file
-        """
+        """Remove an option from INI file"""
         try:
             self.config_parser.remove_option(section, option)
         except:
@@ -123,8 +122,7 @@ class Settings(object):
 
 
 class Configure(Settings):
-    """Configure class able to read and handle any local or remote ini file.
-    """
+    """Configure class is able to read and handle any local or remote ini file."""
 
     def __init__(self, local_file, remote_ssh=None, remote_file=None):
         """local_file will be read and parsed after call the class.
@@ -149,8 +147,7 @@ class Configure(Settings):
         self.configure(self.local_file)
 
     def get(self, section, option):
-        """Read an option from a section
-        """
+        """Read an option from a section"""
         return self.reader.get(section, option)
 
     def update(self, section, option=None, value=None):
@@ -161,23 +158,19 @@ class Configure(Settings):
         self.save()
 
     def delete(self, section, option):
-        """Delete an option from a section.
-        """
+        """Delete an option from a section."""
         self.reader.remove_option(section, option)
         self.save()
 
     def save(self):
-        """Save the actions
-        """
+        """Save the actions"""
         self.reader.write(self.file_path)
 
     def rm_remote_file(self):
-        """Remove a file in remote server
-        """
+        """Remove a file in remote server"""
         self.sftp.remove_file(self.remote_file)
 
     def put(self):
-        """Upload the local file to remote server
-        """
+        """Upload the local file to remote server"""
         self.sftp.put_file(self.local_file, self.remote_file)
 
