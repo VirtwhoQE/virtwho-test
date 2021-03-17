@@ -7,9 +7,9 @@ virtwho-test
 * Supproted Hypervisors: libvirt, esx, rhevm, hyperv, xen, kubevirt and fake
 * Supported Subscription Servers: rhsm, satellite, sam(deprecated)
 
-`virtwho.properties.sample`_ is provided as a sample to define attributes
+`virtwho.ini.sample`_ is provided as a sample to define attributes
 
-* Change the file name to virtwho.properties
+* Change the file name to virtwho.ini
 * Update the necessary datas based on test requirements
 * `hypervisor-builder`_ can help to get part of the information
 
@@ -17,6 +17,6 @@ virtwho-test
 .. _Eko: https://github.com/eko999
 .. _Coulson: https://github.com/hkx303
 .. _Yuefen: https://github.com/Junefen
-.. _virtwho.properties.sample:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/virtwho.properties.sample
+.. _virtwho.ini.sample:
+    https://github.com/VirtwhoQE/virtwho-test/blob/master/virtwho.ini.sample
 .. _hypervisor-builder: https://github.com/VirtwhoQE/hypervisor-builder
