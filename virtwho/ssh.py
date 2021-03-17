@@ -1,6 +1,5 @@
 import os
 import paramiko
-from six import BytesIO
 from virtwho.logger import getLogger
 
 logger = getLogger(__name__)
@@ -116,13 +115,12 @@ class SSHConnect:
         sftp.put(local_file, remote_file)
         conn.close()
 
-    def remove_file(self, remote_file_path):
+    def remove_file(self, remote_file):
         """Remove the file at the given path.
-
-        :param remote_file_path: path of the file to remove
+        :param remote_file: a remote file path to remove
         """
         sftp, conn = self._transfer()
-        sftp.remove(remote_file_path)
+        sftp.remove(remote_file)
         conn.close()
 
     def put_dir(self, local_dir, remote_dir):
@@ -131,7 +129,7 @@ class SSHConnect:
         :param remote_dir: a remote path where the uploaded files will be placed.
         """
         sftp, conn = self._transfer()
-        for root,dirs,files in os.walk(local_dir):
+        for root, dirs, files in os.walk(local_dir):
             for filespath in files:
                 local_file = os.path.join(root,filespath)
                 a = local_file.replace(local_dir,'')
