@@ -6,7 +6,7 @@ import logging
 class Logger:
     """
     Usage:
-        from hypervisor import log
+        from virtwho.logger import getLogger
         logger = log.getLogger(__name__)
         logger.info("abc")
         logger.debug("abc")
@@ -26,7 +26,8 @@ class Logger:
         self.log_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
             'logs')
-        if not os.path.exists(self.log_path):os.mkdir(self.log_path)
+        if not os.path.exists(self.log_path):
+            os.mkdir(self.log_path)
         self.log_name = os.path.join(self.log_path, '%s.log' % time.strftime('%Y_%m_%d'))
         self.formatter = logging.Formatter(
             '[%(asctime)s] - [%(filename)s] - %(levelname)s: %(message)s',
