@@ -32,27 +32,27 @@ class VirtwhoHypervisorConfig:
                 self.update('server', config.vcenter.server)
                 self.update('username', config.vcenter.username)
                 self.update('password', config.vcenter.password)
-            if mode == 'xen':
+            elif mode == 'xen':
                 self.update('server', config.xen.server)
                 self.update('username', config.xen.username)
                 self.update('password', config.xen.password)
-            if mode == 'hyperv':
+            elif mode == 'hyperv':
                 self.update('server', config.hyperv.server)
                 self.update('username', config.hyperv.username)
                 self.update('password', config.hyperv.password)
-            if mode == 'rhevm':
+            elif mode == 'rhevm':
                 self.update('server', config.rhevm.server)
                 self.update('username', config.rhevm.username)
                 self.update('password', config.rhevm.password)
-            if mode == 'libvirt':
+            elif mode == 'libvirt':
                 self.update('server', config.libvirt.server)
                 self.update('username', config.libvirt.username)
                 self.update('password', config.libvirt.password)
-            if mode == 'kubevirt':
+            elif mode == 'kubevirt':
                 self.update('kubeconfig', config.mode.config_file)
             if register == "rhsm":
                 self.update('owner', config.rhsm.default_org)
-            if register == 'satellite':
+            elif register == 'satellite':
                 self.update('owner', config.satellite.default_org)
             self.update('hypervisor_id', 'hostname')
 
