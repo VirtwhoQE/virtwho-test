@@ -52,7 +52,7 @@ class VirtwhoHypervisorConfig:
                 self.update('kubeconfig', config.mode.config_file)
             if register == "rhsm":
                 self.update('owner', config.rhsm.default_org)
-            else:
+            if register == 'satellite':
                 self.update('owner', config.satellite.default_org)
             self.update('hypervisor_id', 'hostname')
 
