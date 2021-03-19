@@ -1,3 +1,4 @@
+import os
 from virtwho.settings import Configure
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
@@ -67,7 +68,8 @@ class VirtwhoHypervisorConfig:
         self.cfg.delete(self.section, option)
 
     def destroy(self):
-        """Remove the /etc/virt-who.d/{mode}.conf file"""
+        """Remove both the local and remote files"""
+        os.remove(self.local_file)
         self.remote_ssh.remove_file(self.remote_file)
 
 
