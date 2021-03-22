@@ -1,6 +1,7 @@
 import os
 from virtwho.settings import Configure
 from virtwho.settings import config
+from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.logger import getLogger
 
@@ -10,15 +11,17 @@ logger = getLogger(__name__)
 class VirtwhoHypervisorConfig:
     """Able to create and manage /etc/virt-who.d/xxx.conf file when
     call this class"""
-    def __init__(self, mode, register):
+    def __init__(self, mode, register_type):
         """Create virt-who configuration file with basic options.
          All data come from virtwho.ini file.
         :param mode: The hypervisor mode.
             (esx, xen, hyperv, rhevm, libvirt, kubevirt, local)
-        :param register: The subscription server. (rhsm, satellite)
+        :param register_type: The subscription server. (rhsm, satellite)
         """
+        self.mode = mode
+        self.register_type = register_type
         self.remote_ssh = virtwho_ssh_connect(mode)
-        self.local_file = f'/root/{mode}.conf'
+        self.local_file = os.path.join(TEMP_DIR, f'{mode}.conf')
         self.remote_file = f'/etc/virt-who.d/{mode}.conf'
         self.section = f'virtwho-{mode}'
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
@@ -48,9 +51,9 @@ class VirtwhoHypervisorConfig:
                 self.update('password', config.libvirt.password)
             elif mode == 'kubevirt':
                 self.update('kubeconfig', config.mode.config_file)
-            if register == "rhsm":
+            if register_type == "rhsm":
                 self.update('owner', config.rhsm.default_org)
-            elif register == 'satellite':
+            elif register_type == 'satellite':
                 self.update('owner', config.satellite.default_org)
             self.update('hypervisor_id', 'hostname')
 
@@ -82,7 +85,7 @@ class VirtwhoGlobalConfig:
             all other remote modes.
         """
         self.remote_ssh = virtwho_ssh_connect(mode)
-        self.local_file = '/root/virt-who.conf'
+        self.local_file = os.path.join(TEMP_DIR, 'virt-who.conf')
         self.remote_file = '/etc/virt-who.conf'
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
