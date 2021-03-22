@@ -81,9 +81,13 @@ class VirtwhoGlobalConfig:
             the local libvirt host, othervise will manage the host for
             all other remote modes.
         """
-        self.remote_ssh = virtwho_ssh_connect(mode)
+        self.mode = mode
+        self.remote_ssh = virtwho_ssh_connect(self.mode)
         self.local_file = os.path.join(TEMP_DIR, 'virt-who.conf')
         self.remote_file = '/etc/virt-who.conf'
+        self.save_file = os.path.join(TEMP_DIR, 'virt-who.conf.save')
+        if not os.path.exists(self.save_file):
+            self.remote_ssh.get_file(self.remote_file, self.save_file)
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
     def update(self, section, option, value):
@@ -118,4 +122,3 @@ def virtwho_ssh_connect(mode=None):
     else:
         return SSHConnect(host, user=username, pwd=password,
                           port=int(virtwho.port))
-
