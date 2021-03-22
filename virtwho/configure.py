@@ -11,7 +11,7 @@ logger = getLogger(__name__)
 class VirtwhoHypervisorConfig:
     """Able to create and manage /etc/virt-who.d/xxx.conf file when
     call this class"""
-    def __init__(self, mode, register_type):
+    def __init__(self, mode='esx', register_type='rhsm'):
         """Create virt-who configuration file with basic options.
          All data come from virtwho.ini file.
         :param mode: The hypervisor mode.
@@ -20,42 +20,39 @@ class VirtwhoHypervisorConfig:
         """
         self.mode = mode
         self.register_type = register_type
-        self.remote_ssh = virtwho_ssh_connect(mode)
-        self.local_file = os.path.join(TEMP_DIR, f'{mode}.conf')
-        self.remote_file = f'/etc/virt-who.d/{mode}.conf'
-        self.section = f'virtwho-{mode}'
+        self.remote_ssh = virtwho_ssh_connect(self.mode)
+        self.local_file = os.path.join(TEMP_DIR, f'{self.mode}.conf')
+        self.remote_file = f'/etc/virt-who.d/{self.mode}.conf'
+        self.section = f'virtwho-{self.mode}'
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
-        if mode == 'local':
-            logger.info("Don't need to configure for local mode")
+        if self.mode == 'local':
+            self.update('type', 'libvirt')
         else:
-            self.update('type', mode)
-            if mode == 'esx':
-                self.update('server', config.vcenter.server)
-                self.update('username', config.vcenter.username)
-                self.update('password', config.vcenter.password)
-            elif mode == 'xen':
-                self.update('server', config.xen.server)
-                self.update('username', config.xen.username)
-                self.update('password', config.xen.password)
-            elif mode == 'hyperv':
-                self.update('server', config.hyperv.server)
-                self.update('username', config.hyperv.username)
-                self.update('password', config.hyperv.password)
-            elif mode == 'rhevm':
-                self.update('server', config.rhevm.server)
-                self.update('username', config.rhevm.username)
-                self.update('password', config.rhevm.password)
-            elif mode == 'libvirt':
-                self.update('server', config.libvirt.server)
-                self.update('username', config.libvirt.username)
-                self.update('password', config.libvirt.password)
-            elif mode == 'kubevirt':
-                self.update('kubeconfig', config.mode.config_file)
-            if register_type == "rhsm":
-                self.update('owner', config.rhsm.default_org)
-            elif register_type == 'satellite':
-                self.update('owner', config.satellite.default_org)
+            if self.register_type == 'rhsm':
+                register = config.rhsm
+            elif self.register_type == 'satellite':
+                register = config.satellite
+            if self.mode == 'esx':
+                hypervisor = config.vcenter
+            elif self.mode == 'xen':
+                hypervisor = config.xen
+            elif self.mode == 'hyperv':
+                hypervisor = config.hyperv
+            elif self.mode == 'rhevm':
+                hypervisor = config.rhevm
+            elif self.mode == 'libvirt':
+                hypervisor = config.libvirt
+            elif self.mode == 'kubevirt':
+                hypervisor = config.kubevirt
+            self.update('type', self.mode)
             self.update('hypervisor_id', 'hostname')
+            self.update('owner', register.default_org)
+            if self.mode == 'kubevirt':
+                self.update('kubeconfig', hypervisor.config_file)
+            else:
+                self.update('server', hypervisor.server)
+                self.update('username', hypervisor.username)
+                self.update('password', hypervisor.password)
 
     def update(self, option, value):
         """Add or update an option
@@ -110,12 +107,15 @@ def virtwho_ssh_connect(mode=None):
     virtwho.ini file.
     :param mode: The test hypervisor mode.
     """
+    virtwho = config.virtwho
     if mode == 'local':
-        host = config.local.host
-        username = config.local.username
-        password = config.local.password
+        virtwho = config.local
+    host = virtwho.host
+    username = virtwho.username
+    password = virtwho.password
+    if mode == 'local' or not virtwho.port:
+        return SSHConnect(host, user=username, pwd=password)
     else:
-        host = config.virtwho.host
-        username = config.virtwho.username
-        password = config.virtwho.password
-    return SSHConnect(host, user=username, pwd=password)
+        return SSHConnect(host, user=username, pwd=password,
+                          port=int(virtwho.port))
+
