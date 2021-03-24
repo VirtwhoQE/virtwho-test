@@ -20,7 +20,7 @@ class SSHConnect:
         self.user = user
         self.pwd = pwd
         self.rsa = rsafile
-        self.port = port
+        self.port = int(port)
         self.timeout = timeout
         self.err = "passwd or rsafile can not be None"
 
