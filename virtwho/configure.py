@@ -129,16 +129,6 @@ def get_hypervisor_handler(mode):
     :return: hypervisor section
     """
     hypervisor = config.vcenter
-    if mode == 'xen':
-        hypervisor = config.xen
-    if mode == 'hyperv':
-        hypervisor = config.hyperv
-    if mode == 'rhevm':
-        hypervisor = config.rhevm
-    if mode == 'libvirt':
-        hypervisor = config.libvirt
-    if mode == 'kubevirt':
-        hypervisor = config.kubevirt
-    if mode == 'local':
-        hypervisor = config.local
+    if mode in ['xen', 'hyperv', 'rhevm', 'libvirt', 'kubevirt']:
+        hypervisor = getattr(config, mode)
     return hypervisor
