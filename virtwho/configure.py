@@ -11,48 +11,35 @@ logger = getLogger(__name__)
 class VirtwhoHypervisorConfig:
     """Able to create and manage /etc/virt-who.d/xxx.conf file when
     call this class"""
+
     def __init__(self, mode='esx', register_type='rhsm'):
-        """Create virt-who configuration file with basic options.
-         All data come from virtwho.ini file.
+        """Create virt-who configuration file with basic options. All
+        data come from virtwho.ini. All local files are backed up
+        to /temp directory of the project root.
         :param mode: The hypervisor mode.
             (esx, xen, hyperv, rhevm, libvirt, kubevirt, local)
         :param register_type: The subscription server. (rhsm, satellite)
         """
-        self.mode = mode
-        self.register_type = register_type
-        self.remote_ssh = virtwho_ssh_connect(self.mode)
-        self.local_file = os.path.join(TEMP_DIR, f'{self.mode}.conf')
-        self.remote_file = f'/etc/virt-who.d/{self.mode}.conf'
-        self.section = f'virtwho-{self.mode}'
+        self.register = get_register_handler(register_type)
+        self.hypervisor = get_hypervisor_handler(mode)
+        self.remote_ssh = virtwho_ssh_connect(mode)
+        self.local_file = os.path.join(TEMP_DIR, f'{mode}.conf')
+        self.remote_file = f'/etc/virt-who.d/{mode}.conf'
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
-        if self.mode == 'local':
+
+        self.section = f'virtwho-{mode}'
+        if mode is 'local':
             self.update('type', 'libvirt')
         else:
-            if self.register_type == 'rhsm':
-                register = config.rhsm
-            elif self.register_type == 'satellite':
-                register = config.satellite
-            if self.mode == 'esx':
-                hypervisor = config.vcenter
-            elif self.mode == 'xen':
-                hypervisor = config.xen
-            elif self.mode == 'hyperv':
-                hypervisor = config.hyperv
-            elif self.mode == 'rhevm':
-                hypervisor = config.rhevm
-            elif self.mode == 'libvirt':
-                hypervisor = config.libvirt
-            elif self.mode == 'kubevirt':
-                hypervisor = config.kubevirt
-            self.update('type', self.mode)
+            self.update('type', mode)
             self.update('hypervisor_id', 'hostname')
-            self.update('owner', register.default_org)
-            if self.mode == 'kubevirt':
-                self.update('kubeconfig', hypervisor.config_file)
-            else:
-                self.update('server', hypervisor.server)
-                self.update('username', hypervisor.username)
-                self.update('password', hypervisor.password)
+            self.update('owner', self.register.default_org)
+        if mode is 'kubevirt':
+            self.update('kubeconfig', self.hypervisor.config_file)
+        if mode in ('esx', 'xen', 'hyperv', 'rhevm', 'libvirt'):
+            self.update('server', self.hypervisor.server)
+            self.update('username', self.hypervisor.username)
+            self.update('password', self.hypervisor.password)
 
     def update(self, option, value):
         """Add or update an option
@@ -75,8 +62,10 @@ class VirtwhoHypervisorConfig:
 
 class VirtwhoGlobalConfig:
     """Able to manage /etc/virt-who.conf file when call this class"""
+
     def __init__(self, mode=None):
-        """
+        """virt-who.conf file is backed up to /temp directory of the
+        project root.
         :param mode: Hypervisor mode. When mode is local, will manage
             the local libvirt host, othervise will manage the host for
             all other remote modes.
@@ -120,5 +109,37 @@ def virtwho_ssh_connect(mode=None):
     if mode == 'local' or not virtwho.port:
         return SSHConnect(host, user=username, pwd=password)
     else:
-        return SSHConnect(host, user=username, pwd=password,
-                          port=int(virtwho.port))
+        return SSHConnect(host, user=username, pwd=password, port=virtwho.port)
+
+
+def get_register_handler(register_type):
+    """Navigate to register type section in virtwho.ini.
+    :param register_type: rhsm or satellite. rhsm as default.
+    :return: register section
+    """
+    register = config.rhsm
+    if register_type == 'satellite':
+        register = config.satellite
+    return register
+
+
+def get_hypervisor_handler(mode):
+    """Navigate to hypervisor mode section in virtwho.ini.
+    :param mode: The hypervisor mode. esx as default
+    :return: hypervisor section
+    """
+    hypervisor = config.vcenter
+    if mode == 'xen':
+        hypervisor = config.xen
+    if mode == 'hyperv':
+        hypervisor = config.hyperv
+    if mode == 'rhevm':
+        hypervisor = config.rhevm
+    if mode == 'libvirt':
+        hypervisor = config.libvirt
+    if mode == 'kubevirt':
+        hypervisor = config.kubevirt
+    if mode == 'local':
+        hypervisor = config.local
+    return hypervisor
+
