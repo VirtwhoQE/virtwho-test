@@ -103,13 +103,13 @@ def virtwho_ssh_connect(mode=None):
     virtwho = config.virtwho
     if mode == 'local':
         virtwho = config.local
+        port = 22
+    else:
+        port = virtwho.port or 22
     host = virtwho.host
     username = virtwho.username
     password = virtwho.password
-    if mode == 'local' or not virtwho.port:
-        return SSHConnect(host, user=username, pwd=password)
-    else:
-        return SSHConnect(host, user=username, pwd=password, port=virtwho.port)
+    return SSHConnect(host=host, user=username, pwd=password, port=port)
 
 
 def get_register_handler(register_type):
@@ -142,4 +142,3 @@ def get_hypervisor_handler(mode):
     if mode == 'local':
         hypervisor = config.local
     return hypervisor
-
