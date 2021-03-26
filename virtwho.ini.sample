@@ -4,7 +4,7 @@
 ; port is an optional setting, the default port is 22
 ; repo is an optional setting, to indicate where is the virt-who yum repository
 [virtwho]
-host=
+server=
 username=
 password=
 port=
@@ -151,6 +151,7 @@ guest_state=
 server=
 username=
 password=
+port=
 guest_name=
 guest_ip=
 guest_username=
