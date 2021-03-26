@@ -103,12 +103,10 @@ def virtwho_ssh_connect(mode=None):
     virtwho = config.virtwho
     if mode == 'local':
         virtwho = config.local
-        port = 22
-    else:
-        port = virtwho.port or 22
-    host = virtwho.host
+    host = virtwho.server
     username = virtwho.username
     password = virtwho.password
+    port = virtwho.port or 22
     return SSHConnect(host=host, user=username, pwd=password, port=port)
 
 
