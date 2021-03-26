@@ -20,7 +20,7 @@ class SSHConnect:
         self.user = user
         self.pwd = pwd
         self.rsa = rsafile
-        self.port = port
+        self.port = int(port)
         self.timeout = timeout
         self.err = "passwd or rsafile can not be None"
 
@@ -69,7 +69,7 @@ class SSHConnect:
 
     def pwd_transfer(self):
         """Sftp download/upload execution connection by password"""
-        transport = paramiko.Transport(self.host, self.port)
+        transport = paramiko.Transport((self.host, self.port))
         transport.connect(username=self.user, password=self.pwd)
         sftp = paramiko.SFTPClient.from_transport(transport)
         return sftp, transport
@@ -77,7 +77,7 @@ class SSHConnect:
     def rsa_transfer(self):
         """Sftp download/upload execution connection by key file"""
         pkey = paramiko.RSAKey.from_private_key_file(self.rsa)
-        transport = paramiko.Transport(self.host, self.port)
+        transport = paramiko.Transport((self.host, self.port))
         transport.connect(username=self.user, pkey=pkey)
         sftp = paramiko.SFTPClient.from_transport(transport)
         return sftp, transport
