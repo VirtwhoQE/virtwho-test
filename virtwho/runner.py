@@ -23,25 +23,6 @@ class Runner:
         self.register_type = register_type
         self.ssh = virtwho_ssh_connect(mode)
 
-    # def check_virtwho_info(self,
-    #                        helps=False,
-    #                        manvirtwho=False,
-    #                        manvirtwhoconfig=False,
-    #                        version=False):
-    #     cmd = ''
-    #     if helps is True:
-    #         cmd = 'virt-who --help'
-    #         ret, output = self.ssh.runcmd(cmd)
-    #         logger.info(output)
-    #         return output
-    #     elif manvirtwho is True:
-    #         cmd = 'man virt-who'
-    #     elif version is True:
-    #         cmd = 'virt-who --version'
-    #     ret, output = self.ssh.runcmd(cmd)
-    #     logger.info(output)
-    #     return output
-
     def run_virtwho_cli(self,
                         normal=True,
                         debug=True,
@@ -77,10 +58,9 @@ class Runner:
                                              event=event)
         return tty_output, rhsm_output
 
-    def log_analyzer(self):
+    def log_analyzer(self, rhsm_output):
         # self.rhsm_log = os.path.join(TEMP_DIR, f'rhsmrandom.conf')
         data = dict()
-        rhsm_output = ''
         if "virtwho.main DEBUG" in rhsm_output and \
                 (
                         "Domain info:" in rhsm_output
@@ -120,7 +100,6 @@ class Runner:
     def vw_start(self, cli=None, normal=True, oneshot=False, exp_loopnum=None, event=None):
         for i in range(4):
             tty_output, rhsm_output = self.vw_start_thread(cli, normal, oneshot, exp_loopnum, event)
-            # if data['is_429'] == "yes":
             if self.vw_callback_429_check() == 'yes':
                 wait_time = 60*(i+3)
                 logger.warning("429 code found, re-register virt-who host and try again after %s seconds..." % wait_time)
@@ -197,55 +176,43 @@ class Runner:
             time.sleep(10)
             end = time.time()
             spend_time = int(end-start)
-            if self.vw_callback_429_check() == "yes":
-                logger.info("virt-who is terminated by 429 status")
+            ret, rhsm_output = self.ssh.runcmd('cat /var/log/rhsm/rhsm.log')
+            is_429 = self.vw_callback_429_check()
+            thread_number = self.vw_callback_thread_num()
+            error_number = self.vw_callback_error_num()[0]
+            loop_number = self.vw_callback_loop_num()[1]
+            if is_429 == "yes":
+                logger.warning("virt-who is terminated by 429 status")
                 break
-            if self.vw_callback_thread_num() == 0:
-                logger.info("virt-who is terminated by pid exit")
+            if oneshot is False and thread_number == 0:
+                logger.warning("virt-who is terminated by pid exit")
                 break
-            if self.vw_callback_error_num() != 0 and normal is True:
-                logger.info("virt-who is terminated by error msg")
+            if normal is True and error_number != 0:
+                logger.warning("virt-who is terminated by error msg")
                 break
             if spend_time >= 900:
-                logger.info("virt-who is terminated by timeout(900s)")
+                logger.warning("virt-who is terminated by timeout(900s)")
                 break
-            # test normal and interval
+            # test normal with or without interval
             if (
                     normal is True
                     and oneshot is False
-                    and self.vw_callback_loop_num() >= exp_loopnum
+                    and error_number == 0
+                    and loop_number >= exp_loopnum
             ):
-                logger.info(
-                    "virt-who is terminated by expected_send and expected_loop"
-                )
+                logger.info("virt-who is terminated normally")
                 break
             # test oneshot
-            if oneshot is True and self.vw_callback_thread_num() is 0:
+            if oneshot is True and thread_number == 0:
                 logger.info('virt-who is terminalted normally with oneshot')
-            # test unnormal configuration
-            if normal is False and self.vw_callback_error_num() != 0:
-                logger.info('virt-who is terminated with error')
+                break
+            # test abnormal configuration
+            if normal is False and error_number != 0:
+                logger.info('virt-who is terminated normally with bad config')
                 break
         self.vw_stop()
         ret, rhsm_output = self.ssh.runcmd("cat /var/log/rhsm/rhsm.log")
         q.put(("rhsm_output", rhsm_output))
-
-    # def vw_thread_callback(self):
-    #     is_429 = self.vw_callback_429_check()
-    #     error_num, error_list = self.vw_callback_error_num()
-    #     key, loop_num = self.vw_callback_loop_num()
-    #     loop_time = self.vw_callback_loop_time()
-    #     send_num = self.vw_callback_send_num()
-    #     logger.info("is_429: %s, loop_num: %s, loop_time: %s, send_num: %s, error_num: %s" \
-    #             % (len(pending_job), is_429, loop_num, loop_time, send_num, error_num))
-    #     return pending_job, is_429, loop_num, loop_time, send_num, error_num, error_list
-
-    # def vw_callback_pending_job(self):
-    #     pending_job = list()
-    #     if "stage" in self.register_type:
-    #         ret, rhsm_output = self.ssh.runcmd("cat /var/log/rhsm/rhsm.log")
-    #         pending_job = re.findall(r"Job (.*?) not finished", rhsm_output)
-    #     return pending_job
 
     def vw_callback_429_check(self):
         cmd = 'grep "status=429" /var/log/rhsm/rhsm.log |sort'
@@ -343,7 +310,6 @@ class Runner:
         res = re.findall(msg, rhsm_output, re.I)
         return len(res)
 
-
     def vw_thread_clean(self):
         self.vw_stop()
         cmd = "rm -rf /var/log/rhsm/*"
@@ -365,9 +331,9 @@ class Runner:
                 grep -v grep |
                 awk '{print $2}' |
                 xargs -I {} kill -9 {}''' % process_name
-        self.ssh.runcmd(cmd)
+        ret, output = self.ssh.runcmd(cmd)
         cmd = "rm -f /var/run/%s.pid" % process_name
-        self.ssh.runcmd(cmd)
+        ret, output = self.ssh.runcmd(cmd)
         cmd = "ps -ef | grep %s -i | grep -v grep |sort" % process_name
         ret, output = self.ssh.runcmd(cmd)
         if output.strip() == "" or output.strip() is None:
@@ -476,3 +442,38 @@ class Runner:
                     org_data[hypervisor_id] = facts
                 data[org] = org_data
         return data
+
+    def msg_validation(self, output, msg_list, exp_exist=True):
+        matched_list = list()
+        for msg in msg_list:
+            is_matched = ""
+            if "|" in msg:
+                keys = msg.split("|")
+                for key in keys:
+                    if len(re.findall(key, output, re.I)) > 0:
+                        logger.info("Found msg: %s" % key)
+                        is_matched = "Yes"
+            else:
+                if len(re.findall(msg, output, re.I)) > 0:
+                    logger.info("Found msg: %s" % msg)
+                    is_matched = "Yes"
+            if is_matched == "Yes":
+                matched_list.append("Yes")
+            else:
+                matched_list.append("No")
+        if "No" in matched_list and exp_exist is True:
+            logger.error(
+                "Failed to search, expected msg(%s) is not exist" % msg_list)
+            return False
+        if "No" in matched_list and exp_exist is False:
+            logger.info(
+                "Succeeded to search, unexpected msg(%s) is not exist" % msg_list)
+            return True
+        if "No" not in matched_list and "Yes" in matched_list and exp_exist is True:
+            logger.info(
+                "Succeeded to search, expected msg(%s) is exist" % msg_list)
+            return True
+        if "No" not in matched_list and "Yes" in matched_list and exp_exist is False:
+            logger.error(
+                "Failed to search, unexpected msg(%s) is exist" % msg_list)
+            return False
