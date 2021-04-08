@@ -35,14 +35,11 @@ class Runner:
             if config == 'default':
                 config = f'{self.config_file}'
             cmd += f'-c {config} '
-        tty_output, rhsm_output = self.vw_start(cli=cmd,
-                                                oneshot=oneshot,
-                                                wait=wait)
+        tty_output, rhsm_output = self.vw_start(cli=cmd, wait=wait)
         return tty_output, rhsm_output
 
-    def run_virtwho_service(self, oneshot=False, wait=None):
-        tty_output, rhsm_output = self.vw_start(oneshot=oneshot,
-                                                wait=wait)
+    def run_virtwho_service(self, wait=None):
+        tty_output, rhsm_output = self.vw_start(wait=wait)
         return tty_output, rhsm_output
 
     def log_analyzer(self, rhsm_log):
@@ -61,9 +58,9 @@ class Runner:
             data.update(self.vw_mapping_facts(rhsm_log))
         return data
 
-    def vw_start(self, cli=None, oneshot=False, wait=None):
+    def vw_start(self, cli=None, wait=None):
         for i in range(4):
-            tty_output, rhsm_output = self.vw_start_thread(cli, oneshot, wait)
+            tty_output, rhsm_output = self.vw_start_thread(cli, wait)
             if self.vw_429_error():
                 wait_time = 60 * (i + 3)
                 logger.warning(
@@ -88,7 +85,7 @@ class Runner:
             logger.warning("Run virt-who abnormally, please check")
             return tty_output, rhsm_output
 
-    def vw_start_thread(self, cli, oneshot, wait):
+    def vw_start_thread(self, cli, wait):
         q = queue.Queue()
         results = list()
         threads = list()
@@ -100,7 +97,7 @@ class Runner:
         t2 = threading.Thread(target=self.vw_thread_run,
                               args=(q, cli))
         t3 = threading.Thread(target=self.vw_thread_timeout,
-                              args=(oneshot, wait))
+                              args=(cli, wait))
         threads.append(t1)
         threads.append(t2)
         threads.append(t3)
@@ -118,7 +115,7 @@ class Runner:
         return tty_output, rhsm_output
 
     def vw_thread_run(self, q, cli):
-        if cli is not None:
+        if cli:
             logger.info(f'Start to run virt-who by cli: {cli}')
             ret, tty_output = self.ssh.runcmd(cli)
         else:
@@ -126,7 +123,8 @@ class Runner:
             ret, tty_output = self.run_service()
         q.put(("tty_output", tty_output))
 
-    def vw_thread_timeout(self, oneshot, wait):
+    def vw_thread_timeout(self, cli, wait):
+        oneshot = self.vw_oneshot_check(cli)
         if wait:
             time.sleep(wait)
         for i in range(30):
@@ -146,6 +144,18 @@ class Runner:
                 break
         self.vw_stop()
         self.kill_pid_by_name('tail')
+
+    def vw_oneshot_check(self, cli):
+        if cli and ' -o ' in cli:
+            return True
+        cmd1 = "grep '^\\[global\\]$' /etc/virt-who.conf"
+        cmd2 = "grep '^oneshot=\\(1\\|true\\|True\\)$' /etc/virt-who.conf"
+        _, output1 = self.ssh.runcmd(cmd1)
+        _, output2 = self.ssh.runcmd(cmd2)
+        if output1 and output2:
+            return True
+        else:
+            return False
 
     def get_rhsm_log(self, q, file):
         cmd_tail = 'tail -n 0 -f /var/log/rhsm/rhsm.log'
