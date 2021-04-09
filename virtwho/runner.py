@@ -12,6 +12,14 @@ logger = getLogger(__name__)
 class Runner:
 
     def __init__(self, mode, register_type):
+        """
+        - self.config_file is used to define virt-who configuration.
+        - self.rhsm_log_file is used to store the latest rhsm log.
+
+        :param mode: the hypervisor mode.
+            (esx, xen, hyperv, rhevm, libvirt, kubevirt, local)
+        :param register_type: the subscription server. (rhsm, satellite)
+        """
         self.mode = mode
         self.register_type = register_type
         self.config_file = f'/etc/virt-who.d/{self.mode}.conf'
@@ -24,6 +32,20 @@ class Runner:
                         interval=None,
                         config='default',
                         wait=None):
+        """
+        Run virt-who by command line and return log.
+        Use parameters to define options in command line.
+
+        :param debug: use '-d' option when debug is True.
+        :param oneshot: use '-o' option when oneshot is True.
+        :param interval: use '-i' option when configure interval time.
+        :param config: use '-c' option to define virt-who configuration
+            file when define the config para.
+            Default using '/etc/virt-who.d/mode.conf'.
+        :param wait: set wait time before stop virt-who service when
+            test interval function.
+        :return: tty_output and rhsm_output
+        """
         cmd = 'virt-who '
         if debug is True:
             cmd += '-d '
@@ -39,24 +61,59 @@ class Runner:
         return tty_output, rhsm_output
 
     def run_virtwho_service(self, wait=None):
+        """
+        Run virt-who by start service and return log.
+
+        :param wait: set wait time before stop virt-who service when
+            test interval function.
+        :return: tty_output and rhsm_output
+        """
         tty_output, rhsm_output = self.vw_start(wait=wait)
         return tty_output, rhsm_output
 
-    def log_analyzer(self, rhsm_log):
-        data = dict()
-        if "virtwho.main DEBUG" in rhsm_log:
-            data['send_number'] = self.vw_send_number(rhsm_log)
-            data['report_id'] = self.vw_report_id(rhsm_log)
-            data['interval_time'] = self.vw_interval_time(rhsm_log)
-            data['error_number'] = self.vw_error_number()
-            data['error_list'] = self.vw_error_list()
-            data['loop_number'] = self.vw_loop_number()[1]
-            data['loop_time'] = self.vw_loop_time()
-        if ("Domain info:" in rhsm_log
-                or
-                "Host-to-guest mapping being sent to" in rhsm_log):
-            data.update(self.vw_mapping_facts(rhsm_log))
-        return data
+    def log_analyzer(self,
+                     rhsm_log,
+                     send_number=None,
+                     report_id=None,
+                     interval_time=None,
+                     error_number=None,
+                     error_list=None,
+                     loop_number=None,
+                     loop_time=None,
+                     mapping=True):
+        if send_number:
+            send_number_get = self.vw_send_number(rhsm_log)
+            logger.info(f'The send number get from log is {send_number_get}')
+            return send_number_get == send_number
+        if report_id:
+            report_id_get = self.vw_report_id(rhsm_log)
+            logger.info(f'The report id get from log is {report_id_get}')
+            return report_id_get == report_id
+        if interval_time:
+            interval_time_get = self.vw_interval_time(rhsm_log)
+            logger.info(f'The interval time get from log is '
+                        f'{interval_time_get}')
+            return interval_time_get == interval_time
+        if error_number:
+            error_number_get = self.vw_error_number()
+            logger.info(f'The error number get from log is {error_number_get}')
+            if error_number == 'nonzero' or error_number == 'nz':
+                return error_number_get > 0
+            return error_number_get == error_number
+        if error_list:
+            error_list_get = self.vw_error_list()
+            logger.info(f'The error list get from log is {error_list_get}')
+            return self.msg_validation(str(error_list_get), error_list)
+        if loop_number:
+            loop_number_get = self.vw_loop_number()[1]
+            logger.info(f'The loop number get from log is {loop_number_get}')
+            return loop_number_get == loop_number
+        if loop_time:
+            loop_time_get = self.vw_loop_time()
+            logger.info(f'The loop time get from log is {loop_time_get}')
+            return loop_time_get == loop_time
+        if mapping:
+            return self.vw_mapping_facts(rhsm_log) is not None
 
     def vw_start(self, cli=None, wait=None):
         for i in range(4):
@@ -66,23 +123,23 @@ class Runner:
                 logger.warning(
                     f'429 code found, re-register virt-who host and try again '
                     f'after {wait_time} seconds...')
-                # self.re_register()
+                # self.re_register() need to be defined after register.py finished.
                 time.sleep(wait_time)
             elif len(re.findall(
                     'RemoteServerException: Server error attempting a '
                     'GET.*returned status 500',
                     rhsm_output, re.I)) > 0:
                 logger.warning(
-                    "RemoteServerException return 500 code, restart virt-who "
-                    "again after 60s")
+                    'RemoteServerException return 500 code, restart '
+                    'virt-who again after 60s')
                 time.sleep(60)
             else:
                 logger.info('Finished to run virt-who')
                 return tty_output, rhsm_output
         if self.vw_429_error():
-            raise AssertionError("Failed due to 429 code, please check")
+            raise AssertionError('Failed due to 429 code, please check')
         else:
-            logger.warning("Run virt-who abnormally, please check")
+            logger.warning('Run virt-who abnormally, please check')
             return tty_output, rhsm_output
 
     def vw_start_thread(self, cli, wait):
@@ -108,9 +165,9 @@ class Runner:
         while not q.empty():
             results.append(q.get())
         for item in results:
-            if item[0] == "tty_output":
+            if item[0] == 'tty_output':
                 tty_output = item[1]
-            if item[0] == "rhsm_output":
+            if item[0] == 'rhsm_output':
                 rhsm_output = item[1]
         return tty_output, rhsm_output
 
@@ -121,7 +178,7 @@ class Runner:
         else:
             logger.info('Start to run virt-who by service')
             ret, tty_output = self.run_service()
-        q.put(("tty_output", tty_output))
+        q.put(('tty_output', tty_output))
 
     def vw_thread_timeout(self, cli, wait):
         oneshot = self.vw_oneshot_check(cli)
@@ -130,7 +187,7 @@ class Runner:
         for i in range(30):
             time.sleep(10)
             if self.vw_429_error() is True:
-                logger.warning("virt-who is terminated by 429 status")
+                logger.warning('virt-who is terminated by 429 status')
                 break
             if oneshot is True and self.vw_thread_number() == 0:
                 logger.info('virt-who is terminated normally by oneshot')
@@ -277,7 +334,7 @@ class Runner:
         return data
 
     def vw_mapping_facts_local_mode(self, rhsm_log):
-        data = {}
+        data = dict()
         key = "Domain info:"
         rex = re.compile(r'(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)', re.S)
         mapping_info = rex.findall(rhsm_log)[0]
@@ -297,7 +354,7 @@ class Runner:
         return data
 
     def vw_mapping_facts_remote_mode(self, rhsm_log):
-        data = {}
+        data = dict()
         orgs = re.findall(r"Host-to-guest mapping being sent to '(.*?)'",
                           rhsm_log)
         if len(orgs) > 0:
@@ -347,7 +404,7 @@ class Runner:
         return data
 
     def vw_stop(self):
-        ret, output = self.run_service("virt-who", "stop")
+        _, _ = self.run_service("virt-who", "stop")
         assert self.kill_pid_by_name("virt-who")
 
     def run_service(self, name='virt-who', action='restart'):
@@ -362,12 +419,57 @@ class Runner:
                 grep -v grep |
                 awk '{print $2}' |
                 xargs -I {} kill -9 {}''' % process_name
-        ret, output = self.ssh.runcmd(cmd)
+        _, _ = self.ssh.runcmd(cmd)
         cmd = f"rm -f /var/run/{process_name}.pid"
-        ret, output = self.ssh.runcmd(cmd)
+        _, _ = self.ssh.runcmd(cmd)
         cmd = f"ps -ef | grep {process_name} -i | grep -v grep |sort"
         ret, output = self.ssh.runcmd(cmd)
         if output.strip() == "" or output.strip() is None:
             return True
         else:
+            return False
+
+    def msg_validation(self, output, msgs, exp_exist=True):
+        if type(msgs) is str:
+            msgs = [msgs]
+        matched_list = list()
+        for msg in msgs:
+            is_matched = ""
+            if "|" in msg:
+                keys = msg.split("|")
+                for key in keys:
+                    if len(re.findall(key, output, re.I)) > 0:
+                        logger.info(f"Found msg: {key}")
+                        is_matched = "Yes"
+            else:
+                if len(re.findall(msg, output, re.I)) > 0:
+                    logger.info(f"Found msg: {msg}")
+                    is_matched = "Yes"
+            if is_matched == "Yes":
+                matched_list.append("Yes")
+            else:
+                matched_list.append("No")
+        if "No" in matched_list and exp_exist is True:
+            logger.error(
+                f"Failed to search, expected msg {msgs} is not exist")
+            return False
+        if "No" in matched_list and exp_exist is False:
+            logger.info(
+                f"Succeeded to search, unexpected msg {msgs} is not exist")
+            return True
+        if (
+                "No" not in matched_list
+                and "Yes" in matched_list
+                and exp_exist is True
+        ):
+            logger.info(
+                f"Succeeded to search, expected msg {msgs} is exist")
+            return True
+        if (
+                "No" not in matched_list
+                and "Yes" in matched_list
+                and exp_exist is False
+        ):
+            logger.error(
+                f"Failed to search, unexpected msg {msgs} is exist")
             return False
