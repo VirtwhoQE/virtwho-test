@@ -44,7 +44,7 @@ class Runner:
             Default using '/etc/virt-who.d/mode.conf'.
         :param wait: set wait time before stop virt-who service when
             test interval function.
-        :return: tty_output and rhsm_output
+        :return: tty_output
         """
         cmd = 'virt-who '
         if debug is True:
@@ -58,7 +58,7 @@ class Runner:
                 config = f'{self.config_file}'
             cmd += f'-c {config} '
         tty_output, rhsm_output = self.vw_start(cli=cmd, wait=wait)
-        return tty_output, rhsm_output
+        return tty_output
 
     def run_virtwho_service(self, wait=None):
         """
@@ -73,47 +73,63 @@ class Runner:
 
     def log_analyzer(self,
                      rhsm_log,
-                     send_number=None,
+                     send_number=1,
+                     error_number=0,
+                     error_list=None,
                      report_id=None,
                      interval_time=None,
-                     error_number=None,
-                     error_list=None,
                      loop_number=None,
-                     loop_time=None,
-                     mapping=True):
+                     loop_time=None):
+        """
+
+        :param rhsm_log: the log to be analyzed.
+        :param send_number:
+        :param error_number:
+        :param error_list:
+        :param report_id:
+        :param interval_time:
+        :param loop_number:
+        :param loop_time:
+        :return:
+        """
+        analyzer_list = list()
         if send_number:
             send_number_get = self.vw_send_number(rhsm_log)
             logger.info(f'The send number get from log is {send_number_get}')
-            return send_number_get == send_number
+            analyzer_list.append(send_number_get == send_number)
+        if error_number:
+            error_number_get = self.vw_error_number(rhsm_log)
+            logger.info(f'The error number get from log is {error_number_get}')
+            if error_number == 'nonzero' or error_number == 'nz':
+                analyzer_list.append(error_number_get > 0)
+            analyzer_list.append(error_number_get == error_number)
+        if error_list:
+            error_list_get = self.vw_error_list()
+            logger.info(f'The error list get from log is {error_list_get}')
+            analyzer_list.append(
+                self.msg_search(str(error_list_get), error_list)
+            )
         if report_id:
             report_id_get = self.vw_report_id(rhsm_log)
             logger.info(f'The report id get from log is {report_id_get}')
-            return report_id_get == report_id
+            analyzer_list.append(report_id_get == report_id)
         if interval_time:
             interval_time_get = self.vw_interval_time(rhsm_log)
             logger.info(f'The interval time get from log is '
                         f'{interval_time_get}')
-            return interval_time_get == interval_time
-        if error_number:
-            error_number_get = self.vw_error_number()
-            logger.info(f'The error number get from log is {error_number_get}')
-            if error_number == 'nonzero' or error_number == 'nz':
-                return error_number_get > 0
-            return error_number_get == error_number
-        if error_list:
-            error_list_get = self.vw_error_list()
-            logger.info(f'The error list get from log is {error_list_get}')
-            return self.msg_validation(str(error_list_get), error_list)
+            analyzer_list.append(interval_time_get == interval_time)
         if loop_number:
             loop_number_get = self.vw_loop_number()[1]
             logger.info(f'The loop number get from log is {loop_number_get}')
-            return loop_number_get == loop_number
+            analyzer_list.append(loop_number_get == loop_number)
         if loop_time:
             loop_time_get = self.vw_loop_time()
             logger.info(f'The loop time get from log is {loop_time_get}')
-            return loop_time_get == loop_time
-        if mapping:
-            return self.vw_mapping_facts(rhsm_log) is not None
+            analyzer_list.append(loop_time_get == loop_time)
+        if 'False' in analyzer_list:
+            return False
+        else:
+            return True
 
     def vw_start(self, cli=None, wait=None):
         for i in range(4):
@@ -148,7 +164,7 @@ class Runner:
         threads = list()
         tty_output = ''
         rhsm_output = ''
-        self.vw_stop()
+        self.kill_pid_by_name("virt-who")
         t1 = threading.Thread(target=self.get_rhsm_log,
                               args=(q, self.rhsm_log_file))
         t2 = threading.Thread(target=self.vw_thread_run,
@@ -199,7 +215,7 @@ class Runner:
                 logger.info(
                     'virt-who is terminated normally after send mappings')
                 break
-        self.vw_stop()
+        self.kill_pid_by_name("virt-who")
         self.kill_pid_by_name('tail')
 
     def vw_oneshot_check(self, cli):
@@ -239,15 +255,16 @@ class Runner:
     def vw_error_list(self):
         error_list = list()
         cmd = f'grep "\\[.*ERROR.*\\]" {self.rhsm_log_file} |sort'
-        ret, output = self.ssh.runcmd(cmd)
+        _, output = self.ssh.runcmd(cmd)
         if output is not None and output != "":
             error_list = output.strip().split('\n')
         return error_list
 
-    def vw_error_number(self):
-        error_list = self.vw_error_list()
-        error_num = len(error_list)
-        return error_num
+    def vw_error_number(self, rhsm_log=None):
+        if not rhsm_log:
+            ret, rhsm_log = self.ssh.runcmd(f"cat {self.rhsm_log_file}")
+        error_number = self.msg_number(rhsm_log, '\\[.*ERROR.*\\]')
+        return error_number
 
     def vw_send_number(self, rhsm_log=None):
         if not rhsm_log:
@@ -299,12 +316,12 @@ class Runner:
         cmd = f'''grep 'Report for config' {self.rhsm_log_file} |
                  grep 'placing in datastore' |
                  head -1'''
-        ret, output = self.ssh.runcmd(cmd)
+        _, output = self.ssh.runcmd(cmd)
         keys = re.findall(r'Report for config "(.*?)"', output)
         if output is not None and output != "" and len(keys) > 0:
             key = f'Report for config "{keys[0]}" gathered, placing in datastore'
             cmd = f"grep '{key}' {self.rhsm_log_file} | wc -l"
-            ret, output = self.ssh.runcmd(cmd)
+            _, output = self.ssh.runcmd(cmd)
             if output is not None or output != "":
                 loop_num = int(output) - 1
         return key, loop_num
@@ -314,7 +331,7 @@ class Runner:
         key, loop_num = self.vw_loop_number()
         if loop_num != 0:
             cmd = f"grep '{key}' {self.rhsm_log_file} | head -2"
-            ret, output = self.ssh.runcmd(cmd)
+            _, output = self.ssh.runcmd(cmd)
             output = output.split('\n')
             if len(output) > 0:
                 d1 = re.findall(r"\d{2}:\d{2}:\d{2}", output[0])[0]
@@ -403,10 +420,6 @@ class Runner:
                 data[org] = org_data
         return data
 
-    def vw_stop(self):
-        _, _ = self.run_service("virt-who", "stop")
-        assert self.kill_pid_by_name("virt-who")
-
     def run_service(self, name='virt-who', action='restart'):
         cmd = f'systemctl {action} {name}'
         ret, output = self.ssh.runcmd(cmd)
@@ -429,47 +442,45 @@ class Runner:
         else:
             return False
 
-    def msg_validation(self, output, msgs, exp_exist=True):
+    def msg_search(self, output, msgs):
+        """
+        Check if the key messages exist or not in output.
+        :param output: messages to search around
+        :param msgs: key messages to be searched.
+            msgs could be a string or a list.
+            If '|' in string, it means 'or' for the left and right.
+        :return: Ture or False
+        """
         if type(msgs) is str:
             msgs = [msgs]
-        matched_list = list()
+        search_list = list()
         for msg in msgs:
-            is_matched = ""
+            if_find = "No"
             if "|" in msg:
                 keys = msg.split("|")
                 for key in keys:
-                    if len(re.findall(key, output, re.I)) > 0:
-                        logger.info(f"Found msg: {key}")
-                        is_matched = "Yes"
+                    if self.msg_number(output, key) > 0:
+                        if_find = "Yes"
             else:
-                if len(re.findall(msg, output, re.I)) > 0:
-                    logger.info(f"Found msg: {msg}")
-                    is_matched = "Yes"
-            if is_matched == "Yes":
-                matched_list.append("Yes")
+                if self.msg_number(output, msg) > 0:
+                    if_find = "Yes"
+            if if_find == "Yes":
+                logger.info(f"Found msg: {msg}")
             else:
-                matched_list.append("No")
-        if "No" in matched_list and exp_exist is True:
-            logger.error(
-                f"Failed to search, expected msg {msgs} is not exist")
+                logger.info(f"Haven't found msg: {msg}")
+            search_list.append(if_find)
+        if "No" in search_list:
             return False
-        if "No" in matched_list and exp_exist is False:
-            logger.info(
-                f"Succeeded to search, unexpected msg {msgs} is not exist")
+        else:
             return True
-        if (
-                "No" not in matched_list
-                and "Yes" in matched_list
-                and exp_exist is True
-        ):
-            logger.info(
-                f"Succeeded to search, expected msg {msgs} is exist")
-            return True
-        if (
-                "No" not in matched_list
-                and "Yes" in matched_list
-                and exp_exist is False
-        ):
-            logger.error(
-                f"Failed to search, unexpected msg {msgs} is exist")
-            return False
+
+    def msg_number(self, output, msg):
+        """
+        Get message numbers.
+        :param output: output to search around
+        :param msg: message string to be searched
+        :return: the message number
+        """
+        num = len(re.findall(msg, output, re.I))
+        logger.info(f"Find '{msg}' {num} times")
+        return num
