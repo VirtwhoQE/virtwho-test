@@ -89,7 +89,9 @@ class Runner:
         data["loop_number"], data["loop_time"] = self.virtwho_loop_status()
         data["mappings"] = self.virtwho_mappings(rhsm_log)
         data["print_json"] = self.virtwho_print_json()
-        print(data)
+        logger.info(f"Completed the analyzer after run virt-who, "
+                    f"the result is:\n"
+                    f"{data}")
         return data
 
     def virtwho_start(self, cli=None, wait=None):
@@ -116,7 +118,8 @@ class Runner:
 
     def virtwho_thread_start(self, cli, wait):
         q = queue.Queue()
-        self.rhsm_log_clean()
+        self.virtwho_stop()
+        self.log_clean()
         t1 = threading.Thread(target=self.virtwho_run, args=(q, cli))
         t1.setDaemon(True)
         t1.start()
@@ -161,9 +164,9 @@ class Runner:
                 break
         return rhsm_output
 
-    def rhsm_log_clean(self):
-        self.virtwho_stop()
+    def log_clean(self):
         _, _ = self.ssh.runcmd("rm -rf /var/log/rhsm/*")
+        _, _ = self.ssh.runcmd(f"rm -rf {self.print_json_file}")
 
     def virtwho_error_status(self):
         error_number = 0
