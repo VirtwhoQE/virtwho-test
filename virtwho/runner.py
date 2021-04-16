@@ -12,7 +12,8 @@ class Runner:
     def __init__(self, mode, register_type):
         """
         - self.config_file is used to define virt-who configuration.
-        - self.rhsm_log_file is used to store the latest rhsm log.
+        - self.print_json_file is used to store the json created by
+            print function.
 
         :param mode: the hypervisor mode.
             (esx, xen, hyperv, rhevm, libvirt, kubevirt, local)
@@ -43,8 +44,8 @@ class Runner:
         :param config: use '-c' option to define virt-who configuration
             file when define the config para.
             Default using '/etc/virt-who.d/mode.conf'.
-        :param wait: set wait time before stop virt-who service when
-            test interval function.
+        :param wait: wait time after run virt-who, mainly used to test
+            interval function.
         :return:
         """
         cmd = 'virt-who '
@@ -86,12 +87,13 @@ class Runner:
             debug: check if find [DEBUG] log
             oneshot: check if find the oneshot keywords
             thread_number: check the alive thread number of virt-who
-            error_number: get the error number
+            send_number: check the mappings send number
+            error_number: check the error number
             error_list: get all error lines
             report_id: get the report id
             interval_time: check the interval time by keywords
             loop_number: calculate virt-who run times
-            loop_time: calculate the actual interval
+            loop_time: calculate the actual interval time
             mappings: get the host-to-guest mappings
             print_json: get the json output after by print function
         """
@@ -116,6 +118,14 @@ class Runner:
         return data
 
     def virtwho_start(self, cli=None, wait=None):
+        """
+        Start/loop to run virt-who and analyze the result mainly by the
+        rhsm log.
+        :param cli: the command to run virt-who, such as "virt-who -d -o",
+            will start virt-who by service when no cli configured.
+        :param wait: wait time after run virt-who
+        :return: analyzer data dict
+        """
         for i in range(4):
             rhsm_output = self.virtwho_thread_start(cli, wait)
             if self.msg_search(rhsm_output, "status=429"):
@@ -138,6 +148,15 @@ class Runner:
         raise FailException("Failed to run virt-who service.")
 
     def virtwho_thread_start(self, cli, wait):
+        """
+        Start virt-who in a sub-thread (t1), analyze and get rhsm log in
+        the main-thread, the sub-thread will be auto stopped when the
+        main-thread complete.
+        :param cli: the command to run virt-who, such as "virt-who -d -o",
+            will start virt-who by service when no cli configured.
+        :param wait: wait time after run virt-who
+        :return: output of rhsm log
+        """
         q = queue.Queue()
         self.virtwho_stop()
         self.log_clean()
@@ -148,6 +167,12 @@ class Runner:
         return rhsm_ouput
 
     def virtwho_run(self, q, cli):
+        """
+        Run virt-who by command line or service.
+        :param q: queue
+        :param cli: the command to run virt-who, such as "virt-who -d -o",
+            will start virt-who by service when no cli configured.
+        """
         if cli:
             logger.info(f"Start to run virt-who by cli: {cli}")
             _, output = self.ssh.runcmd(cli)
@@ -157,11 +182,18 @@ class Runner:
         q.put("tty_output", output)
 
     def virtwho_stop(self):
+        """Stop virt-who service and then kill the pid
+        """
         _, _ = self.run_service("virt-who", "stop")
         if self.kill_pid_by_name("virt-who") is False:
             raise FailException("Failed to stop and clean virt-who process")
 
     def rhsm_log_get(self, wait):
+        """
+        Get and return rhsm log when the expected message found in log.
+        :param wait: wait time before starting analyzing log
+        :return: output of rhsm log
+        """
         rhsm_output = ""
         if wait:
             time.sleep(wait)
@@ -186,10 +218,19 @@ class Runner:
         return rhsm_output
 
     def log_clean(self):
+        """
+        Clean all log files under /var/log/rhsm/
+        Clean the json file created by print function of virt-who
+        """
         _, _ = self.ssh.runcmd("rm -rf /var/log/rhsm/*")
         _, _ = self.ssh.runcmd(f"rm -rf {self.print_json_file}")
 
     def virtwho_error_status(self):
+        """
+        Analyze the rhsm log to calculate the error number and collect
+        all error lines to a list.
+        :return: error number and all error lines
+        """
         error_number = 0
         error_list = list()
         cmd = f"grep '\\[.*ERROR.*\\]' {self.rhsm_log_file} |sort"
@@ -200,6 +241,12 @@ class Runner:
         return error_number, error_list
 
     def virtwho_send_number(self, rhsm_log):
+        """
+        Calculate virt-who mappings report number by analyzing the rhsm
+        log based on keywords.
+        :param rhsm_log: the rhsm.log
+        :return: virt-who report times
+        """
         msg = ""
         if "0 hypervisors and 0 guests found" in rhsm_log:
             msg = "0 hypervisors and 0 guests found"
@@ -229,12 +276,22 @@ class Runner:
         return len(res)
 
     def virtwho_report_id(self, rhsm_log):
+        """
+        Get the reporter id from rhsm log based on keywords.
+        :param rhsm_log: the rhsm.log
+        :return: reporter id
+        """
         res = re.findall(r"reporter_id='(.*?)'", rhsm_log)
         if len(res) > 0:
             reporter_id = res[0].strip()
             return reporter_id
 
     def virtwho_interval_time(self, rhsm_log):
+        """
+        Get the interval time from rhsm log based on keywords.
+        :param rhsm_log: the rhsm.log
+        :return: interval time
+        """
         res = re.findall(
             r"Starting infinite loop with(.*?)seconds interval",
             rhsm_log)
@@ -242,23 +299,12 @@ class Runner:
             interval_time = res[0].strip()
             return int(interval_time)
 
-    def virtwho_loop_number(self):
-        key = ""
-        loop_num = 0
-        cmd = f'''grep 'Report for config' {self.rhsm_log_file} |
-                 grep 'placing in datastore' |
-                 head -1'''
-        _, output = self.ssh.runcmd(cmd)
-        keys = re.findall(r'Report for config "(.*?)"', output)
-        if output is not None and output != "" and len(keys) > 0:
-            key = f'Report for config "{keys[0]}" gathered, placing in datastore'
-            cmd = f"grep '{key}' {self.rhsm_log_file} | wc -l"
-            _, output = self.ssh.runcmd(cmd)
-            if output is not None or output != "":
-                loop_num = int(output) - 1
-        return key, loop_num
-
     def virtwho_loop_status(self):
+        """
+        Calculate the virt-who loop times and loop interval time, which
+        mainly for interval function testing.
+        :return: virt-who loop number and loop interval time
+        """
         loop_time = -1
         key, loop_num = self.virtwho_loop_number()
         if loop_num != 0:
@@ -275,7 +321,32 @@ class Runner:
                 loop_time = s2 - s1
         return loop_num, loop_time
 
+    def virtwho_loop_number(self):
+        """
+        Analyzing rhsm log to calculate the virt-who loop number.
+        :return: keywords and loop number
+        """
+        key = ""
+        loop_num = 0
+        cmd = f'''grep 'Report for config' {self.rhsm_log_file} |
+                 grep 'placing in datastore' |
+                 head -1'''
+        _, output = self.ssh.runcmd(cmd)
+        keys = re.findall(r'Report for config "(.*?)"', output)
+        if output is not None and output != "" and len(keys) > 0:
+            key = f'Report for config "{keys[0]}" gathered, placing in datastore'
+            cmd = f"grep '{key}' {self.rhsm_log_file} | wc -l"
+            _, output = self.ssh.runcmd(cmd)
+            if output is not None or output != "":
+                loop_num = int(output) - 1
+        return key, loop_num
+
     def virtwho_mappings(self, rhsm_log):
+        """
+        Get mapping facts from log.
+        :param rhsm_log: the rhsm.log
+        :return: dict including all mapping facts
+        """
         if self.mode == "local":
             data = self.virtwho_mappings_local_mode(rhsm_log)
         else:
@@ -283,6 +354,11 @@ class Runner:
         return data
 
     def virtwho_mappings_local_mode(self, rhsm_log):
+        """
+        Analyzing mappings of local mode from log.
+        :param rhsm_log:
+        :return: dict with local mode mapping facts
+        """
         data = dict()
         key = "Domain info:"
         rex = re.compile(r'(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)', re.S)
@@ -303,6 +379,11 @@ class Runner:
         return data
 
     def virtwho_mappings_remote_mode(self, rhsm_log):
+        """
+        Analyzing mappings of remote mode from log.
+        :param rhsm_log:
+        :return: dict with remote mode mapping facts
+        """
         data = dict()
         orgs = re.findall(r"Host-to-guest mapping being sent to '(.*?)'",
                           rhsm_log)
@@ -353,6 +434,10 @@ class Runner:
         return data
 
     def virtwho_print_json(self):
+        """
+        Get and return the json created by print function.
+        :return: json output
+        """
         ret, output = self.ssh.runcmd(f"cat {self.print_json_file}")
         if ret == 0 and output != "":
             return output
@@ -360,6 +445,10 @@ class Runner:
             return None
 
     def virtwho_thread_number(self):
+        """
+        Get the alive virt-who thread number.
+        :return: virt-who thread number
+        """
         thread_num = 0
         cmd = "ps -ef | grep virt-who -i | grep -v grep |wc -l"
         ret, output = self.ssh.runcmd(cmd)
@@ -368,12 +457,23 @@ class Runner:
         return thread_num
 
     def run_service(self, name='virt-who', action='restart'):
+        """
+
+        :param name: service name, default is virt-who
+        :param action: start, stop, restart, status...
+        :return: return code and output
+        """
         cmd = f"systemctl {action} {name}"
         ret, output = self.ssh.runcmd(cmd)
         time.sleep(10)
         return ret, output
 
     def kill_pid_by_name(self, process_name):
+        """
+        Kill an alive process id.
+        :param process_name: process name
+        :return: True or False
+        """
         cmd = '''ps -ef |
                 grep %s -i |
                 grep -v grep |
