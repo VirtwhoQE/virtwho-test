@@ -3,11 +3,8 @@ import queue
 import re
 import threading
 import time
-from virtwho import FailException
+from virtwho import logger, FailException
 from virtwho.configure import virtwho_ssh_connect
-from virtwho.logger import getLogger
-
-logger = getLogger(__name__)
 
 
 class Runner:
@@ -25,12 +22,14 @@ class Runner:
         self.register_type = register_type
         self.config_file = f"/etc/virt-who.d/{self.mode}.conf"
         self.rhsm_log_file = "/var/log/rhsm/rhsm.log"
+        self.print_json_file = "/temp/print.json"
         self.ssh = virtwho_ssh_connect(self.mode)
 
     def run_virtwho_cli(self,
                         debug=True,
                         oneshot=True,
                         interval=None,
+                        prt=False,
                         config="default",
                         wait=None):
         """
@@ -40,12 +39,13 @@ class Runner:
         :param debug: use '-d' option when debug is True.
         :param oneshot: use '-o' option when oneshot is True.
         :param interval: use '-i' option when configure interval time.
+        :param prt: use '-p' option when prt is True.
         :param config: use '-c' option to define virt-who configuration
             file when define the config para.
             Default using '/etc/virt-who.d/mode.conf'.
         :param wait: set wait time before stop virt-who service when
             test interval function.
-        :return: tty_output
+        :return:
         """
         cmd = "virt-who "
         if debug is True:
@@ -54,12 +54,17 @@ class Runner:
             cmd += "-o "
         if interval:
             cmd += f"-i {interval} "
+        if prt:
+            cmd += "-p "
         if config:
             if config == "default":
                 config = f"{self.config_file}"
             cmd += f"-c {config} "
-        rhsm_data = self.virtwho_start(cli=cmd, wait=wait)
-        return rhsm_data
+
+        if prt:
+            cmd = f"{cmd} > {self.print_json_file}"
+        result_data = self.virtwho_start(cli=cmd, wait=wait)
+        return result_data
 
     def run_virtwho_service(self, wait=None):
         """
@@ -69,19 +74,22 @@ class Runner:
             test interval function.
         :return: tty_output and rhsm_output
         """
-        rhsm_data = self.virtwho_start(wait=wait)
-        return rhsm_data
+        result_data = self.virtwho_start(wait=wait)
+        return result_data
 
-    def log_analyzer(self, rhsm_log):
+    def result_analyzer(self, rhsm_log):
         data = dict()
         data["debug"] = self.msg_search(rhsm_log, "\\[.*DEBUG\\]")
         data["oneshot"] = self.msg_search(rhsm_log, "virt-who terminated")
+        data["thread_number"] = self.virtwho_thread_number()
         data["send_number"] = self.virtwho_send_number(rhsm_log)
         data["error_number"], data["error_list"] = self.virtwho_error_status()
         data["report_id"] = self.virtwho_report_id(rhsm_log)
         data["interval_time"] = self.virtwho_interval_time(rhsm_log)
         data["loop_number"], data["loop_time"] = self.virtwho_loop_status()
         data["mappings"] = self.virtwho_mappings(rhsm_log)
+        data["print_json"] = self.virtwho_print_json()
+        print(data)
         return data
 
     def virtwho_start(self, cli=None, wait=None):
@@ -102,8 +110,8 @@ class Runner:
                     "virt-who again after 60s")
                 time.sleep(60)
             else:
-                rhsm_data = self.log_analyzer(rhsm_output)
-                return rhsm_data
+                result_data = self.result_analyzer(rhsm_output)
+                return result_data
         raise FailException("Failed to run virt-who service.")
 
     def virtwho_thread_start(self, cli, wait):
@@ -145,6 +153,9 @@ class Runner:
             if self.virtwho_send_number(rhsm_output) > 0:
                 logger.info("Succeed to send mapping after run virt-who")
                 break
+            if self.virtwho_thread_number() == 0:
+                logger.info("Virt-who is terminated after run once")
+                break
             if i == 29:
                 logger.info("Timeout when run virt-who")
                 break
@@ -153,14 +164,6 @@ class Runner:
     def rhsm_log_clean(self):
         self.virtwho_stop()
         _, _ = self.ssh.runcmd("rm -rf /var/log/rhsm/*")
-
-    def virtwho_thread_number(self):
-        thread_num = 0
-        cmd = "ps -ef | grep virt-who -i | grep -v grep |wc -l"
-        ret, output = self.ssh.runcmd(cmd)
-        if output is not None and output != "":
-            thread_num = int(output.strip())
-        return thread_num
 
     def virtwho_error_status(self):
         error_number = 0
@@ -324,6 +327,21 @@ class Runner:
                     org_data[hypervisorId] = facts
                 data[org] = org_data
         return data
+
+    def virtwho_print_json(self):
+        ret, output = self.ssh.runcmd(f"cat {self.print_json_file}")
+        if ret == 0 and output != "":
+            return output
+        else:
+            return None
+
+    def virtwho_thread_number(self):
+        thread_num = 0
+        cmd = "ps -ef | grep virt-who -i | grep -v grep |wc -l"
+        ret, output = self.ssh.runcmd(cmd)
+        if output is not None and output != "":
+            thread_num = int(output.strip())
+        return thread_num
 
     def run_service(self, name='virt-who', action='restart'):
         cmd = f"systemctl {action} {name}"
