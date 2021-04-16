@@ -78,17 +78,38 @@ class Runner:
         return result_data
 
     def result_analyzer(self, rhsm_log):
+        """
+        Return a dict including all necessary informations for case
+        asserting.
+        :param rhsm_log: the output of rhsm.log
+        :return: a dict including below keys.
+            debug: check if find [DEBUG] log
+            oneshot: check if find the oneshot keywords
+            thread_number: check the alive thread number of virt-who
+            error_number: get the error number
+            error_list: get all error lines
+            report_id: get the report id
+            interval_time: check the interval time by keywords
+            loop_number: calculate virt-who run times
+            loop_time: calculate the actual interval
+            mappings: get the host-to-guest mappings
+            print_json: get the json output after by print function
+        """
         data = dict()
-        data["debug"] = self.msg_search(rhsm_log, "\\[.*DEBUG\\]")
-        data["oneshot"] = self.msg_search(rhsm_log, "virt-who terminated")
-        data["thread_number"] = self.virtwho_thread_number()
-        data["send_number"] = self.virtwho_send_number(rhsm_log)
-        data["error_number"], data["error_list"] = self.virtwho_error_status()
-        data["report_id"] = self.virtwho_report_id(rhsm_log)
-        data["interval_time"] = self.virtwho_interval_time(rhsm_log)
-        data["loop_number"], data["loop_time"] = self.virtwho_loop_status()
-        data["mappings"] = self.virtwho_mappings(rhsm_log)
-        data["print_json"] = self.virtwho_print_json()
+        data['debug'] = self.msg_search(rhsm_log, "\\[.*DEBUG\\]")
+        data['oneshot'] = self.msg_search(
+            rhsm_log,
+            ["virt-who terminated",
+             "Thread '.*' stopped after running once"]
+        )
+        data['thread_number'] = self.virtwho_thread_number()
+        data['send_number'] = self.virtwho_send_number(rhsm_log)
+        data['error_number'], data['error_list'] = self.virtwho_error_status()
+        data['report_id'] = self.virtwho_report_id(rhsm_log)
+        data['interval_time'] = self.virtwho_interval_time(rhsm_log)
+        data['loop_number'], data['loop_time'] = self.virtwho_loop_status()
+        data['mappings'] = self.virtwho_mappings(rhsm_log)
+        data['print_json'] = self.virtwho_print_json()
         logger.info(f"Completed the analyzer after run virt-who, "
                     f"the result is:\n"
                     f"{data}")
