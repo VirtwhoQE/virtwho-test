@@ -33,12 +33,14 @@ class TestCli:
         # run without '-o'
         result = runner.run_virtwho_cli(oneshot=False)
         assert (result["send_number"] == 1
+                and result["error_number"] == 0
                 and result["thread_number"] == 1
                 and result["oneshot"] is False)
 
         # run with '-o'
         result = runner.run_virtwho_cli(oneshot=True)
         assert (result["send_number"] == 1
+                and result["error_number"] == 0
                 and result["thread_number"] == 0
                 and result["oneshot"] is True)
 
