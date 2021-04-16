@@ -47,22 +47,22 @@ class Runner:
             test interval function.
         :return:
         """
-        cmd = "virt-who "
+        cmd = 'virt-who '
         if debug is True:
-            cmd += "-d "
+            cmd += '-d '
         if oneshot is True:
-            cmd += "-o "
+            cmd += '-o '
         if interval:
-            cmd += f"-i {interval} "
+            cmd += f'-i {interval} '
         if prt:
-            cmd += "-p "
+            cmd += '-p '
         if config:
-            if config == "default":
-                config = f"{self.config_file}"
-            cmd += f"-c {config} "
+            if config == 'default':
+                config = f'{self.config_file}'
+            cmd += f'-c {config} '
 
         if prt:
-            cmd = f"{cmd} > {self.print_json_file}"
+            cmd = f'{cmd} > {self.print_json_file}'
         result_data = self.virtwho_start(cli=cmd, wait=wait)
         return result_data
 
