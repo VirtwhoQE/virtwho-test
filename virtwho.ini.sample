@@ -40,6 +40,20 @@ default_org=
 secondary_org=
 activation_key=
 
+; The section of [sku] is used to define the name-to-id for testing skus.
+; for example RH00001
+; vdc is for physical vdc sku
+; vdc_virtual is for virtual vdc sku
+; unlimit is for sku which can produce unlimited virtual ones
+; limit is for sku which produce limited virtual one/ones.
+; instance is for sku which is same for Physical and Virtual Nodes
+[sku]
+vdc=
+vdc_virtual=
+unlimit=
+limit=
+instance=
+
 ; The below sections are used to define the different hypervisors information
 ; server, username and password are the required options to access vcenter/xen/hyperv/rhevm/libvirt and get mapping
 ; config_file is a required option to access kubevirt and get mapping
@@ -64,6 +78,7 @@ esx_cpu=
 esx_cluster=
 guest_name=
 guest_ip=
+guest_port=
 guest_username=
 guest_password=
 guest_uuid=
@@ -79,6 +94,7 @@ version=
 cpu=
 guest_name=
 guest_ip=
+guest_port=
 guest_username=
 guest_password=
 guest_uuid=
@@ -94,6 +110,7 @@ version=
 cpu=
 guest_name=
 guest_ip=
+guest_port=
 guest_username=
 guest_password=
 guest_uuid=
@@ -111,6 +128,7 @@ vdsm_cpu=
 vdsm_cluster=
 guest_name=
 guest_ip=
+guest_port=
 guest_username=
 guest_password=
 guest_uuid=
@@ -126,6 +144,7 @@ version=
 cpu=
 guest_name=
 guest_ip=
+guest_port=
 guest_username=
 guest_password=
 guest_uuid=
@@ -154,6 +173,7 @@ password=
 port=
 guest_name=
 guest_ip=
+guest_port=
 guest_username=
 guest_password=
 guest_uuid=
