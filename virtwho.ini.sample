@@ -162,7 +162,6 @@ password=
 port=
 guest_name=
 guest_ip=
-guest_port=
 guest_username=
 guest_password=
 guest_uuid=
