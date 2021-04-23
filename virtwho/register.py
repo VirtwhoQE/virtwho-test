@@ -41,11 +41,12 @@ class SubscriptionManager:
         """
         cmd = f'subscription-manager register ' \
               f'--serverurl={self.server}:{self.port}{self.prefix} ' \
-              f'--username={self.username} ' \
-              f'--password={self.password} ' \
               f'--org={self.org} '
         if self.activation_key:
             cmd += f'--activationkey={self.activation_key} '
+        else:
+            cmd += f'--username={self.username} ' \
+                   f'--password={self.password} '
         self.satellite_cert_install()
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0 and 'The system has been registered' in output:
