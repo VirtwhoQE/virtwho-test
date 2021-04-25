@@ -77,6 +77,15 @@ class SubscriptionManager:
                 raise FailException(
                     f'Failed to install satellite certification for {self.host}')
 
+    def sku_pool_id(self, sku_name, virtual=False):
+        pool_id = ''
+        sku_type = self.sku_type(virtual=virtual)
+        sku_attr = self.sku_available(sku_name=sku_name, virtual=virtual)
+        if sku_attr:
+            pool_id = sku_attr['pool_id']
+            logger.info(f'The Pool ID of {sku_type}:{sku_name} is {pool_id}')
+        return pool_id
+
     def sku_attach(self, pool=None, quantity=None):
         """
         Attach subscription by Pool ID or --auto.
@@ -120,7 +129,7 @@ class SubscriptionManager:
         else:
             raise FailException(f'Failed to remove subscription for {self.host}')
 
-    def sku_attributes(self, sku_name, virtual=False):
+    def sku_available(self, sku_name, virtual=False):
         """
         Search and analyze an available subscription by name and type.
         :param sku_name: sku name configured in virtwho.ini - [sku].
@@ -140,7 +149,7 @@ class SubscriptionManager:
                 if re.search(pattern_1, sku) or re.search(pattern_2, sku):
                     logger.info(f'Succeeded to find {sku_type}:{sku_name} '
                                 f'in {self.host}')
-                    sku_attr = self.sku_analyzer(sku)
+                    sku_attr = self.attr_analyzer(sku)
                     return sku_attr
         logger.warning(f'Failed to find {sku_type}:{sku_name}' in {self.host})
         return None
@@ -161,7 +170,7 @@ class SubscriptionManager:
             elif "Pool ID:" in output:
                 sku_attrs = output.strip().split('\n\n')
                 for attr in sku_attrs:
-                    sku_attr = self.sku_analyzer(attr)
+                    sku_attr = self.attr_analyzer(attr)
                     if sku_attr['pool_id'] == pool:
                         logger.info(f'Succeeded to get the consumed '
                                     f'subscription in {self.host}')
@@ -178,85 +187,12 @@ class SubscriptionManager:
         ret, output = self.ssh.runcmd(
             'subscription-manager list --installed | tail -n +4')
         if ret == 0 and output.strip() != '':
-            install_attr = self.installed_analyzer(output)
+            install_attr = self.attr_analyzer(output)
             logger.info(
                 f'Succeeded to list installed subscription for {self.host}')
             return install_attr
         raise FailException(
             f'Failed to list installed subscription for {self.host}')
-
-    def installed_analyzer(self, attr):
-        """
-        Analyze the installed attributes to a dict.
-        :param attr: output get from --installed
-        :return: a dict with all installed attibutes.
-        """
-        install_attr = dict()
-        attr = attr.strip().split('\n')
-        for line in attr:
-            if re.match(r"^Product Name:", line):
-                product_name = line.split(':')[1].strip()
-                install_attr['product_name'] = product_name
-            if re.match(r"^Product ID:", line):
-                product_id = line.split(':')[1].strip()
-                install_attr['product_id'] = product_id
-            if re.match(r"^Version:", line):
-                version = line.split(':')[1].strip()
-                install_attr['version'] = version
-            if re.match(r"^Arch:", line):
-                arch = line.split(':')[1].strip()
-                install_attr['arch'] = arch
-            if re.match(r"^Status:", line):
-                status = line.split(':')[1].strip()
-                install_attr['status'] = status
-            if re.match(r"^Status Details:", line):
-                status_details = line.split(':')[1].strip()
-                install_attr['status_details'] = status_details
-            if re.match(r"^Starts:", line):
-                starts = line.split(':')[1].strip()
-                install_attr['starts'] = starts
-            if re.match(r"^Ends:", line):
-                ends = line.split(':')[1].strip()
-                install_attr['ends'] = ends
-        return install_attr
-
-    def sku_analyzer(self, attr):
-        """
-        Analyze the sku attributes to a dict.
-        :param attr: output get from --av or --co
-        :return: a dict including all sku attributes.
-        """
-        sku_attr = dict()
-        attr = attr.strip().split("\n")
-        for line in attr:
-            if re.match(r"^Subscription Name:", line):
-                sku_attr['sku_name'] = line.split(':')[1].strip()
-            if re.match(r"^SKU:", line):
-                sku_attr['sku_id'] = line.split(':')[1].strip()
-            if re.match(r"^Contract:", line):
-                sku_attr['contract_id'] = line.split(':')[1].strip()
-            if re.match(r"^Pool ID:", line):
-                sku_attr['pool_id'] = line.split(':')[1].strip()
-            if re.match(r"^Available:", line):
-                sku_attr['available'] = line.split(':')[1].strip()
-            if re.match(r"^Suggested:", line):
-                sku_attr['suggested'] = line.split(':')[1].strip()
-            if re.match(r"^Service Level:", line):
-                sku_attr['service_level'] = line.split(':')[1].strip()
-            if re.match(r"^Service Type:", line):
-                sku_attr['service_type'] = line.split(':')[1].strip()
-            if re.match(r"^Subscription Type:", line):
-                sku_attr['sub_type'] = line.split(':')[1].strip()
-                if 'Temporary' in sku_attr['sub_type']:
-                    sku_attr['temporary'] = True
-                else:
-                    sku_attr['temporary'] = False
-            if re.match(r"^Ends:", line):
-                sku_attr['ends'] = line.split(':')[1].strip()
-            if (re.match(r"^System Type:", line)
-                    or re.match(r"^Entitlement Type:", line)):
-                sku_attr['sku_type'] = line.split(':')[1].strip()
-        return sku_attr
 
     def sku_refresh(self):
         """
@@ -270,6 +206,23 @@ class SubscriptionManager:
             logger.warning('Try again to refresh subscription after 180s...')
             time.sleep(180)
         raise FailException(f'Failed to refresh subscription for {self.host}')
+
+    def attr_analyzer(self, attr):
+        """
+        Analyze the output attributes to a dict, like the output from
+        command "subscription-manager list --in/co/av"
+        :param attr: the output including several lines, which lines are
+            {string}:{string} format.
+        :return: a dict
+        """
+        attr_data = dict()
+        attr = attr.strip().split('\n')
+        for line in attr:
+            line = line.split(':')
+            key = line[0].strip().replace(' ', '_').lower()
+            value = line[1].strip()
+            attr_data[key] = value
+        return attr_data
 
     def custom_facts_create(self, key, value):
         """
