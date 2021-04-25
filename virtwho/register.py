@@ -1,9 +1,7 @@
 import re
 import time
-
 from virtwho import logger, FailException
 from virtwho.configure import get_register_handler
-from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 
 
@@ -32,17 +30,17 @@ class SubscriptionManager:
         self.port = self.registe.port
         self.prefix = self.registe.prefix
         self.org = org or self.registe.default_org
-        if 'satellite' in register_type:
-            self.activation_key = activation_key or self.registe.activation_key
+        self.activation_key = activation_key or self.registe.activation_key
 
     def register(self):
         """
         Register host by subscription-manager command
         """
+        self.unregister()
         cmd = f'subscription-manager register ' \
               f'--serverurl={self.server}:{self.port}{self.prefix} ' \
               f'--org={self.org} '
-        if self.activation_key:
+        if 'satellite' in self.register_type and self.activation_key:
             cmd += f'--activationkey={self.activation_key} '
         else:
             cmd += f'--username={self.username} ' \
@@ -51,6 +49,7 @@ class SubscriptionManager:
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0 and 'The system has been registered' in output:
             logger.info(f'Succeeded to register host')
+            return output
         else:
             raise FailException(f'Failed to register {self.host}')
 
@@ -77,16 +76,16 @@ class SubscriptionManager:
                 raise FailException(
                     f'Failed to install satellite certification for {self.host}')
 
-    def sku_pool_id(self, sku_name, virtual=False):
+    def pool_id(self, sku_id, virtual=False):
         pool_id = ''
         sku_type = self.sku_type(virtual=virtual)
-        sku_attr = self.sku_available(sku_name=sku_name, virtual=virtual)
+        sku_attr = self.available(sku_id=sku_id, virtual=virtual)
         if sku_attr:
             pool_id = sku_attr['pool_id']
-            logger.info(f'The Pool ID of {sku_type}:{sku_name} is {pool_id}')
+            logger.info(f'The Pool ID of {sku_type}:{sku_id} is {pool_id}')
         return pool_id
 
-    def sku_attach(self, pool=None, quantity=None):
+    def attach(self, pool=None, quantity=None):
         """
         Attach subscription by Pool ID or --auto.
         :param pool: Pool ID, attach by --auto when pool=None
@@ -100,7 +99,7 @@ class SubscriptionManager:
             cmd += f'--quantity={quantity}'
         if not pool:
             cmd += f'--auto '
-        self.sku_refresh()
+        self.refresh()
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0:
             logger.info(f'Succeeded to attach subscription for {self.host}')
@@ -115,7 +114,7 @@ class SubscriptionManager:
         else:
             raise FailException(f'Failed to attach subscription for {self.host}')
 
-    def sku_unattach(self, pool=None):
+    def unattach(self, pool=None):
         """
         Remove subscription by Pool ID or remove all.
         :param pool: Pool ID, remove all when pool=None.
@@ -129,14 +128,13 @@ class SubscriptionManager:
         else:
             raise FailException(f'Failed to remove subscription for {self.host}')
 
-    def sku_available(self, sku_name, virtual=False):
+    def available(self, sku_id, virtual=False):
         """
         Search and analyze an available subscription by name and type.
-        :param sku_name: sku name configured in virtwho.ini - [sku].
+        :param sku_id: sku id, such as RH00001
         :param virtual: sku type, 'Physical' or 'Virtual'.
         :return: a dict with sku attributes.
         """
-        sku_id = self.sku_id(sku_name=sku_name)
         sku_type = self.sku_type(virtual=virtual)
         cmd = f'subscription-manager list --av --all --matches={sku_id} |' \
               f'tail -n +4'
@@ -144,23 +142,29 @@ class SubscriptionManager:
         if ret == 0 and "Pool ID:" in output:
             skus = output.strip().split('\n\n')
             for sku in skus:
-                pattern_1 = r'System Type:.*%s' % sku_type
-                pattern_2 = r'Entitlement Type:.*%s' % sku_type
-                if re.search(pattern_1, sku) or re.search(pattern_2, sku):
-                    logger.info(f'Succeeded to find {sku_type}:{sku_name} '
+                sku_attr = self.attr_analyzer(sku)
+                if 'system_type' in sku_attr.keys():
+                    sku_attr['sku_type'] = sku_attr['system_type']
+                else:
+                    sku_attr['sku_type'] = sku_attr['entitlement_type']
+                if sku_attr['sku_type'] == sku_type:
+                    logger.info(f'Succeeded to find {sku_type}:{sku_id} '
                                 f'in {self.host}')
-                    sku_attr = self.attr_analyzer(sku)
+                    if '(Temporary)' in sku_attr['subscription_type']:
+                        sku_attr['temporary'] = True
+                    else:
+                        sku_attr['temporary'] = False
                     return sku_attr
-        logger.warning(f'Failed to find {sku_type}:{sku_name}' in {self.host})
+        logger.warning(f'Failed to find {sku_type}:{sku_id}' in {self.host})
         return None
 
-    def sku_consumed(self, pool):
+    def consumed(self, pool):
         """
         List and analyze the consumed subscription by Pool ID.
         :param pool: Pool ID for checking.
         :return: a dict with sku attributes.
         """
-        self.sku_refresh()
+        self.refresh()
         ret, output = self.ssh.runcmd(f'subscription-manager list --co')
         if ret == 0:
             if (output is None or
@@ -174,16 +178,20 @@ class SubscriptionManager:
                     if sku_attr['pool_id'] == pool:
                         logger.info(f'Succeeded to get the consumed '
                                     f'subscription in {self.host}')
+                        if '(Temporary)' in sku_attr['subscription_type']:
+                            sku_attr['temporary'] = True
+                        else:
+                            sku_attr['temporary'] = False
                         return sku_attr
         logger.warning('Failed to get consumed subscriptions.')
         return None
 
-    def sku_installed(self):
+    def installed(self):
         """
         List products which are currently installed on the system and
         analyse the result.
         """
-        self.sku_refresh()
+        self.refresh()
         ret, output = self.ssh.runcmd(
             'subscription-manager list --installed | tail -n +4')
         if ret == 0 and output.strip() != '':
@@ -194,7 +202,7 @@ class SubscriptionManager:
         raise FailException(
             f'Failed to list installed subscription for {self.host}')
 
-    def sku_refresh(self):
+    def refresh(self):
         """
         Refresh subscription by command 'subscription-manager refresh'.
         """
@@ -218,13 +226,15 @@ class SubscriptionManager:
         attr_data = dict()
         attr = attr.strip().split('\n')
         for line in attr:
+            if ':' not in line:
+                continue
             line = line.split(':')
             key = line[0].strip().replace(' ', '_').lower()
             value = line[1].strip()
             attr_data[key] = value
         return attr_data
 
-    def custom_facts_create(self, key, value):
+    def facts_create(self, key, value):
         """
         Create subscription facts to /etc/rhsm/facts/custom.facts.
         :param key: fact key
@@ -247,7 +257,7 @@ class SubscriptionManager:
             raise FailException(
                 f'Failed to create custom facts for {self.host}')
 
-    def custom_facts_remove(self):
+    def facts_remove(self):
         """
         Remove subscription facts.
         """
@@ -269,17 +279,6 @@ class SubscriptionManager:
         if virtual:
             return 'Virtual'
         return 'Physical'
-
-    def sku_id(self, sku_name):
-        """
-        Get the sku id by sku name.
-        :param sku_name: vdc/vdc_virtual/unlimit/limit/instance
-        :return: the sku_id
-        """
-        if sku_name == 'vdc':
-            return config.sku.vdc
-        if sku_name == 'vdc_virtual':
-            return config.sku.vdc_virtual
 
 
 class RHSMAPI:
