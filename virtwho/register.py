@@ -118,14 +118,13 @@ class SubscriptionManager:
         else:
             raise FailException(f'Failed to remove subscription for {self.host}')
 
-    def available(self, sku_id, virtual=False):
+    def available(self, sku_id, sku_type='Virtual'):
         """
         Search and analyze an available subscription by name and type.
         :param sku_id: sku id, such as RH00001
-        :param virtual: sku type, 'Physical' or 'Virtual'.
+        :param sku_type: 'Physical' or 'Virtual'.
         :return: a dict with sku attributes.
         """
-        sku_type = self.sku_type(virtual=virtual)
         cmd = f'subscription-manager list --av --all --matches={sku_id} |' \
               f'tail -n +4'
         ret, output = self.ssh.runcmd(cmd)
@@ -259,16 +258,6 @@ class SubscriptionManager:
         else:
             raise FailException(
                 f'Failed to remove custom.facts for {self.host}')
-
-    def sku_type(self, virtual=False):
-        """
-        Get the sku type for searching.
-        :param virtual: 'Virtual' when define True, default is 'Physical'
-        :return: 'Physical' or 'Virtual'
-        """
-        if virtual:
-            return 'Virtual'
-        return 'Physical'
 
 
 class RHSMAPI:
