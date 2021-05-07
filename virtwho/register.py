@@ -1,4 +1,3 @@
-import re
 import time
 from virtwho import logger, FailException
 from virtwho.configure import get_register_handler
@@ -75,15 +74,6 @@ class SubscriptionManager:
             if ret != 0:
                 raise FailException(
                     f'Failed to install satellite certification for {self.host}')
-
-    def pool_id(self, sku_id, virtual=False):
-        pool_id = ''
-        sku_type = self.sku_type(virtual=virtual)
-        sku_attr = self.available(sku_id=sku_id, virtual=virtual)
-        if sku_attr:
-            pool_id = sku_attr['pool_id']
-            logger.info(f'The Pool ID of {sku_type}:{sku_id} is {pool_id}')
-        return pool_id
 
     def attach(self, pool=None, quantity=None):
         """
