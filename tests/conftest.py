@@ -29,54 +29,30 @@ guest_password = hypervisor.guest_password
 
 register = get_register_handler(register_type)
 org = register.default_org
-if 'satellite' in register_type:
-    secondary_org = register.secondary_org
-activation_key = register.activation_key
 
 
-@pytest.fixture(scope='class')
-def hypervisor():
+@pytest.fixture(name='hypervisor', scope='class')
+def hypervisor_config():
     return VirtwhoHypervisorConfig(mode, register_type)
 
 
-@pytest.fixture(scope='session')
-def virtwhoconf():
+@pytest.fixture(name='virtwhoconf', scope='session')
+def virtwho_conf():
     return VirtwhoGlobalConfig(mode)
 
 
-@pytest.fixture(scope='class')
-def virtwho():
+@pytest.fixture(name='virtwho', scope='class')
+def virtwho_runner():
     return VirtwhoRunner(mode, register_type)
 
 
-@pytest.fixture(name='sm_virtwho', scope='session')
+@pytest.fixture(name='sm_host', scope='session')
 def subscription_manager_virtwho_host_with_default_org():
     return SubscriptionManager(host=vw_server,
                                username=vw_username,
                                password=vw_password,
                                port=vw_port,
                                register_type=register_type, org=org)
-
-
-@pytest.fixture(name='sm_virtwho_org', scope='session')
-def subscription_manager_virtwho_host_with_second_org():
-    return SubscriptionManager(host=vw_server,
-                               username=vw_username,
-                               password=vw_password,
-                               port=vw_port,
-                               register_type=register_type,
-                               org=secondary_org)
-
-
-@pytest.fixture(name='sm_virtwho_ak', scope='session')
-def subscription_manager_virtwho_host_with_activation_key():
-    return SubscriptionManager(host=vw_server,
-                               username=vw_username,
-                               password=vw_password,
-                               port=vw_port,
-                               register_type=register_type,
-                               org=org,
-                               activation_key=activation_key)
 
 
 @pytest.fixture(name='sm_guest', scope='session')
@@ -86,27 +62,6 @@ def subscription_manager_guest_host_with_default_org():
                                password=guest_password,
                                port=22,
                                register_type=register_type, org=org)
-
-
-@pytest.fixture(name='sm_guest_org', scope='session')
-def subscription_manager_guest_host_with_second_org():
-    return SubscriptionManager(host=guest_server,
-                               username=guest_username,
-                               password=guest_password,
-                               port=22,
-                               register_type=register_type,
-                               org=secondary_org)
-
-
-@pytest.fixture(name='sm_guest_ak', scope='session')
-def subscription_manager_guest_host_with_activation_key():
-    return SubscriptionManager(host=guest_server,
-                               username=guest_username,
-                               password=guest_password,
-                               port=22,
-                               register_type=register_type,
-                               org=org,
-                               activation_key=activation_key)
 
 
 @pytest.fixture(name='global_conf_clean', scope='class')
