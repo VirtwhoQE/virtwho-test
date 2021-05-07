@@ -1,21 +1,7 @@
-from virtwho.runner import VirtwhoRunner
-from virtwho.configure import VirtwhoGlobalConfig
-from virtwho.configure import VirtwhoHypervisorConfig
-
-hypervisor = 'esx'
-register_type = 'satellite'
-esx = VirtwhoHypervisorConfig('esx', 'satellite')
-globalconfig = VirtwhoGlobalConfig(hypervisor)
-virtwho = VirtwhoRunner(hypervisor, register_type)
-
 
 class TestCli:
 
-    @classmethod
-    def setup_class(cls):
-        globalconfig.initiate()
-
-    def test_debug(self):
+    def test_debug(self, virtwho, global_conf_clean):
         """test the '-d' option in command line
         """
 
@@ -29,7 +15,7 @@ class TestCli:
         assert (result['send'] == 1
                 and result['debug'] is True)
 
-    def test_oneshot(self):
+    def test_oneshot(self, virtwho, global_conf_clean):
         """test the '-o' option in command line
         """
 
@@ -49,7 +35,7 @@ class TestCli:
                 and result['terminate'] == 1
                 and result['oneshot'] is True)
 
-    def test_interval(self):
+    def test_interval(self, virtwho, global_conf_clean):
         """test the '-i ' option in command line
         """
 
@@ -69,7 +55,7 @@ class TestCli:
                 and result['interval'] == 60
                 and result['loop'] == 60)
 
-    def test_print(self):
+    def test_print(self, virtwho, global_conf_clean):
         guest_id = '42018c62-d744-65bf-0377-9efdac488a57'
         # without debug
         result = virtwho.run_cli(oneshot=False, debug=False, prt=True)

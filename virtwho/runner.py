@@ -159,15 +159,15 @@ class VirtwhoRunner:
         :return: output of rhsm log
         """
         q = queue.Queue()
-        self.virtwho_stop()
+        self.stop()
         self.log_clean()
-        t1 = threading.Thread(target=self.virtwho_start, args=(q, cli))
+        t1 = threading.Thread(target=self.start, args=(q, cli))
         t1.setDaemon(True)
         t1.start()
         rhsm_ouput = self.rhsm_log_get(wait)
         return rhsm_ouput
 
-    def virtwho_start(self, q, cli):
+    def start(self, q, cli):
         """
         Start virt-who by command line or service.
         :param q: queue
@@ -181,7 +181,7 @@ class VirtwhoRunner:
             logger.info("Start to run virt-who by service")
             _, output = self.operate_service()
 
-    def virtwho_stop(self):
+    def stop(self):
         """Stop virt-who service and then kill the pid
         """
         _, _ = self.operate_service("virt-who", "stop")
