@@ -44,7 +44,8 @@ class SubscriptionManager:
         else:
             cmd += f'--username={self.username} ' \
                    f'--password={self.password} '
-        self.satellite_cert_install()
+        if 'satellite' in self.register_type:
+            self.satellite_cert_install()
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0 and 'The system has been registered' in output:
             logger.info(f'Succeeded to register host')
@@ -67,13 +68,12 @@ class SubscriptionManager:
         """
         Install certificate when registering to satellite.
         """
-        if 'satellite' in self.register_type:
-            cmd = f'rpm -ihv http://{self.server}' \
-                  f'/pub/katello-ca-consumer-latest.noarch.rpm'
-            ret, _ = self.ssh.runcmd(cmd)
-            if ret != 0:
-                raise FailException(
-                    f'Failed to install satellite certification for {self.host}')
+        cmd = f'rpm -ihv http://{self.server}' \
+              f'/pub/katello-ca-consumer-latest.noarch.rpm'
+        ret, _ = self.ssh.runcmd(cmd)
+        if ret != 0:
+            raise FailException(
+                f'Failed to install satellite certification for {self.host}')
 
     def attach(self, pool=None, quantity=None):
         """
