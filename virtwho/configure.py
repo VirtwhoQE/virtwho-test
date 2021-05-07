@@ -3,9 +3,6 @@ from virtwho.settings import Configure
 from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
-from virtwho.logger import getLogger
-
-logger = getLogger(__name__)
 
 
 class VirtwhoHypervisorConfig:
@@ -94,6 +91,13 @@ class VirtwhoGlobalConfig:
         """
         self.cfg.delete(section, option)
 
+    def clean(self):
+        """
+        Delete all configurations in /etc/virt-who.conf.
+        """
+        os.system(f"echo '' > {self.local_file}")
+        self.remote_ssh.put_file(self.local_file, self.remote_file)
+
 
 def virtwho_ssh_connect(mode=None):
     """Define the ssh connection of virt-who host, get data from
@@ -127,6 +131,6 @@ def get_hypervisor_handler(mode):
     :return: hypervisor section
     """
     hypervisor = config.vcenter
-    if mode in ['xen', 'hyperv', 'rhevm', 'libvirt', 'kubevirt']:
+    if mode in ['xen', 'hyperv', 'rhevm', 'libvirt', 'kubevirt', 'local']:
         hypervisor = getattr(config, mode)
     return hypervisor

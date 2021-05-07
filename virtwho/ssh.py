@@ -1,8 +1,6 @@
 import os
 import paramiko
-from virtwho.logger import getLogger
-
-logger = getLogger(__name__)
+from virtwho import logger
 
 
 class SSHConnect:
@@ -84,7 +82,7 @@ class SSHConnect:
 
     def runcmd(self, cmd):
         """Executes SSH command on remote hostname.
-        :param str command: The command to run
+        :param str cmd: The command to run
         """
         ssh = self._connect()
         logger.info(">>> {}".format(cmd))
