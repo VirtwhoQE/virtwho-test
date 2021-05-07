@@ -1,3 +1,10 @@
+; The section of [job] is used to define the testing hypervisor and subscription server
+; mode is an optional setting from esx/xen/hyperv/libvirt/rhevm/kubevirt/local, the default is 'esx'.
+; register is an optional setting from rhsm/satellite, the default is 'rhsm'
+[job]
+mode=
+register=
+
 ; The section of [virtwho] is used to define the host information where virt-who package is installed and running
 ; host is a required option to indicate the ip address or hostname
 ; username and password are the required options to access the host
@@ -10,7 +17,7 @@ password=
 port=
 repo=
 proxy_server=
-proxy_prot=
+proxy_port=
 
 ; The section of [rhsm] and [satellite] are used to define subscription servers
 ; server is a required option to indicate where to register
