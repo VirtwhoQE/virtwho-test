@@ -22,14 +22,14 @@ class SubscriptionManager:
         self.register_type = register_type
         self.rhsm_conf = '/etc/rhsm/rhsm.conf'
         self.ssh = SSHConnect(host=host, user=username, pwd=password, port=port)
-        self.registe = get_register_handler(register_type)
-        self.server = self.registe.server
-        self.username = self.registe.username
-        self.password = self.registe.password
-        self.port = self.registe.port
-        self.prefix = self.registe.prefix
-        self.org = org or self.registe.default_org
-        self.activation_key = activation_key or self.registe.activation_key
+        register = get_register_handler(register_type)
+        self.server = register.server
+        self.username = register.username
+        self.password = register.password
+        self.port = register.port
+        self.prefix = register.prefix
+        self.org = org or register.default_org
+        self.activation_key = activation_key or register.activation_key
 
     def register(self):
         """
