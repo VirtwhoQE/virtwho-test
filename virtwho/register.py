@@ -1,5 +1,7 @@
+import json
 import time
 from virtwho import logger, FailException
+from virtwho.settings import config
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
 
@@ -261,8 +263,195 @@ class SubscriptionManager:
 
 
 class RHSMAPI:
-    def __init__(self):
-        pass
+
+    def __init__(self, host, username, password, port=22):
+        """
+        Using rhsm api to check/get/delete consumers,  attach/remove
+        subscription, and check the host-to-guest associations.
+        :param host: ip/hostname to run curl command.
+        :param username: account username of the host
+        :param password: password to access the host
+        :param port: port to access the host
+        """
+        self.ssh = SSHConnect(host=host, user=username, pwd=password, port=port)
+        self.server = config.rhsm.server
+        self.username = config.rhsm.username
+        self.password = config.rhsm.password
+        self.org = config.rhsm.default_org
+        self.api = f'https://{self.server}/subscription'
+        self.curl_base = f'curl -s -k -u {self.username}:{self.password}'
+
+    def consumers(self, host_name=None):
+        """
+        Search consumer host information.
+        :param host_name: host name, search all consumers if host_name=None.
+        :return: one consumer or all consumers to a list.
+        """
+        cmd = f'{self.curl_base} {self.api}/owners/{self.org}/consumers'
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0 and output:
+            consumers = json.loads(output.strip())
+            if host_name:
+                for consumer in consumers:
+                    if host_name in consumer['name'].strip():
+                        return consumer
+            else:
+                return consumers
+        return None
+
+    def uuid(self, host_name):
+        """
+        Get the consumer uuid by host name
+        :param host_name: host name
+        :return: consumer uuid or None
+        """
+        consumer = self.consumers(host_name)
+        if consumer:
+            uuid = consumer['uuid'].strip()
+            logger.info(f'Succeeded to get stage consumer uuid: '
+                        f'{host_name}:{uuid}')
+            return uuid
+        raise FailException(
+            f'Failed to get stage consumer uuid for {host_name}')
+
+    def get(self, host_name):
+        """
+        Get the consumer host information by host name, including the
+        detail facts info.
+        :param host_name: host name
+        :return: output to a dic
+        """
+        uuid = self.uuid(host_name)
+        cmd = f'{self.curl_base} -X GET {self.api}/consumers/{uuid}'
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0 and output:
+            output = json.loads(output.strip())
+            logger.info(f'Succeeded to get host display name: '
+                        f'{output["name"]}')
+            return output
+        raise FailException(f'Failed to get {host_name} information on stage')
+
+    def delete(self, host_name=None):
+        """
+        Delete only one consumer or clean all consumers.
+        :param host_name: host name, will clean all consumers if host_name=None.
+        :return: True
+        """
+        consumers = self.consumers()
+        if consumers:
+            for consumer in consumers:
+                uuid = consumer['uuid'].strip()
+                if not host_name or \
+                        (host_name and host_name in consumer['name'].strip()):
+                    self.ssh.runcmd(f'{self.curl_base} -X DELETE '
+                                    f'{self.api}/consumers/{uuid}')
+            if not self.consumers(host_name=host_name):
+                logger.info('Succeeded to delete consumer on stage')
+                return True
+            raise FailException('Failed to delete consumer on stage')
+        logger.info('No consumers found on stage')
+        return True
+
+    def pool(self, sku_id):
+        """
+        Get the pool id by sku id
+        :param sku_id: sku id
+        :return: pool id
+        """
+        ret, output = self.ssh.runcmd(f'{self.curl_base} -X GET '
+                                      f'{self.api}/owners/{self.org}/pools')
+        if ret == 0 and output:
+            pools = json.loads(output.strip())
+            for pool in pools:
+                if sku_id in pool['productId']:
+                    return pool['id'].strip()
+        raise FailException(f'Failed to get pool id for {sku_id}')
+
+    def attach(self, host_name, pool=None):
+        """
+        Attach subscription for host by auto or pool_id.
+        :param host_name: host name
+        :param pool: pool id, will attach by auto when pool_id=None
+        """
+        if self.entitlements(host_name, pool=pool):
+            self.unattach(host_name)
+        uuid = self.uuid(host_name)
+        cmd = f'{self.curl_base} -X POST ' \
+              f'{self.api}/consumers/{uuid}/entitlements'
+        if pool:
+            cmd = f'{self.curl_base} -X POST ' \
+                  f'{self.api}/consumers/{uuid}/entitlements?pool={pool}'
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0 and self.entitlements(host_name, pool=pool):
+            logger.info(f'Succeeded to attach pool for {host_name}')
+        else:
+            raise FailException(f'Failed to attach pool for {host_name}')
+
+    def unattach(self, host_name, pool=None):
+        """
+        Remove subscription for consumer.
+        :param host_name: host name
+        :param pool: pool id, remove all subscriptions when pool=None
+        """
+        uuid = self.uuid(host_name)
+        cmd = f'{self.curl_base} -X DELETE ' \
+              f'{self.api}/consumers/{uuid}/entitlements'
+        if pool:
+            entitlement_id = self.entitlement_id(host_name=host_name, pool=pool)
+            cmd = f'{self.curl_base} -X DELETE ' \
+                  f'{self.api}/consumers/{uuid}/entitlements/{entitlement_id}'
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0 and not self.entitlements(host_name, pool=pool):
+            logger.info(f'Succeeded to remove pool for {host_name}')
+        else:
+            raise FailException(f'Failed to remove pool for {host_name}')
+
+    def entitlements(self, host_name, pool=None):
+        """
+        Check the entitlement/subscribe status.
+        :param host_name: host name
+        :param pool: pool id for searching
+        :return: output/None
+        """
+        uuid = self.uuid(host_name)
+        cmd = f'{self.curl_base} -X GET ' \
+              f'{self.api}/consumers/{uuid}/entitlements'
+        _, output = self.ssh.runcmd(cmd)
+        if (pool and pool in output) or (not pool and 'pool' in output):
+            return output
+        return None
+
+    def entitlement_id(self, host_name, pool):
+        """
+        Get the entitlement id, one pool may have several entitlement ids.
+        :param host_name: host name
+        :param pool: pool id
+        :return: entitlement id
+        """
+        entitlements = self.entitlements(host_name=host_name)
+        if entitlements:
+            entitlements = json.loads(entitlements.strip())
+            for item in entitlements:
+                if pool in item['pool']['id']:
+                    return item['id']
+        raise FailException(
+            f'Failed to get the entitlement id for {pool} on {host_name}')
+
+    def associate(self, host_name, guest_uuid):
+        """
+        Check the host/hypervisor is associated with guest or not.
+        :param host_name: host name
+        :param guest_uuid: guest uuid
+        :return: True/False
+        """
+        uuid = self.uuid(host_name)
+        cmd = f'{self.curl_base} {self.api}/consumers/{uuid}/guestids'
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0 and guest_uuid in output:
+            logger.info("Hypervisor and Guest are associated on stage web")
+            return True
+        logger.warning("Hypervisor and Guest are not associated on stage web")
+        return False
 
 
 class SatelliteCLI:
