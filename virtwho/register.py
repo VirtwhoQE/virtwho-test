@@ -276,12 +276,9 @@ class RHSMAPI:
         :param port: port to access the host
         """
         self.ssh = SSHConnect(host=host, user=username, pwd=password, port=port)
-        rhsm_server = config.rhsm.server
-        rhsm_username = config.rhsm.username
-        rhsm_password = config.rhsm.password
         self.org = config.rhsm.default_org
-        self.api = f'https://{rhsm_server}/subscription'
-        self.auth = (rhsm_username, rhsm_password)
+        self.api = f'https://{config.rhsm.server}/subscription'
+        self.auth = (config.rhsm.username, config.rhsm.password)
 
     def consumers(self, host_name=None):
         """
@@ -295,7 +292,7 @@ class RHSMAPI:
             consumers = res.json()
             if host_name:
                 for consumer in consumers:
-                    if host_name in consumer['name'].strip():
+                    if host_name in consumer['name']:
                         return consumer
             else:
                 return consumers
@@ -309,7 +306,7 @@ class RHSMAPI:
         """
         consumer = self.consumers(host_name)
         if consumer:
-            uuid = consumer['uuid'].strip()
+            uuid = consumer['uuid']
             logger.info(f'Succeeded to get stage consumer uuid: '
                         f'{host_name}:{uuid}')
             return uuid
@@ -335,21 +332,25 @@ class RHSMAPI:
         """
         Delete only one consumer or clean all consumers.
         :param host_name: host name, will clean all consumers if host_name=None.
-        :return: True
+        :return: True or Fail
         """
         consumers = self.consumers()
         if consumers:
             for consumer in consumers:
-                uuid = consumer['uuid'].strip()
-                if not host_name or \
-                        (host_name and host_name in consumer['name'].strip()):
+                uuid = consumer['uuid']
+                if (
+                        not host_name
+                        or
+                        (host_name and host_name in consumer['name'])
+                ):
                     requests.delete(url=f'{self.api}/consumers/{uuid}',
                                     auth=self.auth, verify=False)
             if not self.consumers(host_name=host_name):
-                logger.info('Succeeded to delete consumer on stage')
+                logger.info('Succeeded to delete consumer(s) on stage')
                 return True
-            raise FailException('Failed to delete consumer on stage')
-        logger.info('No consumers found on stage')
+            raise FailException('Failed to delete consumer(s) on stage')
+        logger.info('Succeeded to delete consumer(s) on stage '
+                    'because no consumer found')
         return True
 
     def pool(self, sku_id):
@@ -373,36 +374,36 @@ class RHSMAPI:
         :param pool: pool id, will attach by auto when pool_id=None
         """
         uuid = self.uuid(host_name)
-        if self.entitlement(host_name, pool=pool):
+        if self.entitlements(host_name, pool=pool):
             self.unattach(host_name, pool=pool)
         params = ''
         if pool:
             params = (('pool', pool),)
         requests.post(url=f'{self.api}/consumers/{uuid}/entitlements',
                       params=params, auth=self.auth, verify=False)
-        if self.entitlement(host_name, pool=pool):
+        if self.entitlements(host_name, pool=pool):
             logger.info(f'Succeeded to attach pool for {host_name}')
         else:
             raise FailException(f'Failed to attach pool for {host_name}')
 
     def unattach(self, host_name, pool=None):
         """
-        Remove all subscriptions for consumer.
+        Remove all subscriptions or the specified one for consumer.
         :param host_name: pool id, remove all subscriptions when pool=None
         :param pool: pool id
         """
         uuid = self.uuid(host_name)
         url = f'{self.api}/consumers/{uuid}/entitlements'
         if pool:
-            entitlement_id = self.entitlement(host_name=host_name, pool=pool)
+            entitlement_id = self.entitlements(host_name=host_name, pool=pool)
             url = f'{self.api}/consumers/{uuid}/entitlements/{entitlement_id}'
         requests.delete(url=url, auth=self.auth, verify=False)
-        if not self.entitlement(host_name, pool=pool):
-            logger.info(f'Succeeded to remove pool for {host_name}')
+        if not self.entitlements(host_name, pool=pool):
+            logger.info(f'Succeeded to remove pool(s) for {host_name}')
         else:
-            raise FailException(f'Failed to remove pool for {host_name}')
+            raise FailException(f'Failed to remove pool(s) for {host_name}')
 
-    def entitlement(self, host_name, pool=None):
+    def entitlements(self, host_name, pool=None):
         """
         Get entitlement id for each pool or the only one for the defined pool.
         :param host_name: host name
