@@ -264,7 +264,7 @@ class SubscriptionManager:
                 f'Failed to remove custom.facts for {self.host}')
 
 
-class RHSMAPI:
+class RHSM:
 
     def __init__(self, host, username, password, port=22):
         """
@@ -443,13 +443,13 @@ class RHSMAPI:
         return False
 
 
-class SatelliteCLI:
+class Satellite:
 
     def __init__(self, org=None, activation_key=None):
         """
         Using hammer command to set satellite, handle organization and
-        activation key, attach/remove subscription for host, and check
-        the host-to-guest associations.
+        activation key, attach/remove subscription for host.
+        Using api to check the host-to-guest associations.
         :param org: organization label, use the default_org configured
             in virtwho.ini as default.
         :param activation_key: activation key name, use the configure
@@ -462,6 +462,8 @@ class SatelliteCLI:
                               user=register.ssh_username,
                               pwd=register.ssh_password)
         self.org_id = self.org_id()
+        self.api = f'https://{register.server}'
+        self.auth = (register.username, register.password)
 
     def org_id(self, org=None):
         """
@@ -520,57 +522,41 @@ class SatelliteCLI:
             return True
         raise FailException(f'Failed to delete organization:{label}')
 
-    def host_id(self, host_name, host_uuid=None, host_hwuuid=None):
+    def host_id(self, host):
         """
         Get the host id by host name or uuid or hwuuid.
-        :param host_name: host name as a required option.
-        :param host_uuid: host uuid as an optional option.
-        :param host_hwuuid: host hwuuid as an optional option for
-            only esx and rhvm modes.
-        :return: host id
+        :param host: host name/uuid/hwuuid
+        :return: host id or None
         """
-        host_list = [host_name.lower()]
-        if host_uuid:
-            host_list.append(host_uuid.lower())
-        if host_hwuuid:
-            host_list.append(host_hwuuid.lower())
-        for host in host_list:
-            ret, output = self.ssh.runcmd(f'hammer host list '
-                                          f'--organization-id {self.org_id} '
-                                          f'--search {host} '
-                                          f'--fields Id')
-            if ret == 0 and len(output.split('\n')) == 6:
-                host_id = output.split('\n')[3].strip()
-                logger.info(f'Succeeded to get the host id, {host_name}:{id}')
-                return host_id
-        logger.warning(f'Failed to get the host id for {host_name}')
+        ret, output = self.ssh.runcmd(f'hammer host list '
+                                      f'--organization-id {self.org_id} '
+                                      f'--search {host} '
+                                      f'--fields Id')
+        if ret == 0 and len(output.split('\n')) == 6:
+            host_id = output.split('\n')[3].strip()
+            logger.info(f'Succeeded to get the host id, {host}:{host_id}')
+            return host_id
+        logger.warning(f'Failed to get the host id for {host}')
         return None
 
-    def host_delete(self, host_name, host_uuid, host_hwuuid=None):
+    def host_delete(self, host):
         """
         Delete a host by host name or uuid or hwuuid.
-        :param host_name: host name as a required option.
-        :param host_uuid: host uuid as an optional option.
-        :param host_hwuuid: host hwuuid as an optional option for
-            only esx and rhvm modes.
+        :param host: host name/uuid/hwuuid
         :return: True or raise Fail
         """
-        host_id = self.host_id(host_name=host_name,
-                               host_uuid=host_uuid,
-                               host_hwuuid=host_hwuuid)
+        host_id = self.host_id(host)
         _, output = self.ssh.runcmd(f'hammer host delete '
                                     f'--organization-id {self.org} '
                                     f'--id {host_id}')
         if (
                 ('Host deleted' in output or 'host not found' in output)
                 and
-                not self.host_id(host_name=host_name,
-                                 host_uuid=host_uuid,
-                                 host_hwuuid=host_hwuuid)
+                not self.host_id(host)
         ):
-            logger.info(f'Succeeded to delete {host_name} from satellite')
+            logger.info(f'Succeeded to delete {host} from satellite')
             return True
-        raise FailException(f'Failed to Delete {host_name} from satellite')
+        raise FailException(f'Failed to Delete {host} from satellite')
 
     def subscription_id(self, pool):
         """
@@ -588,20 +574,15 @@ class SatelliteCLI:
                     return subscription_id
         raise FailException(f'Failed to get the subscription id for {pool}')
 
-    def attach(self, host_name, host_uuid=None, host_hwuuid=None, pool=None, quantity=1):
+    def attach(self, host, pool=None, quantity=1):
         """
-        Attach or auto attach subscription for one host.
-        :param host_name: host name as a required option.
-        :param host_uuid: host uuid as an optional option.
-        :param host_hwuuid: host hwuuid as an optional option for
-            only esx and rhvm modes.
+        Attach or auto attach subscription for one host/hypervisor.
+        :param host: host name/uuid/hwuuid
         :param pool: pool id, run auto attach when pool=None.
         :param quantity: the subscription quantity to attach.
         :return: True or raise Fail.
         """
-        host_id = self.host_id(host_name=host_name,
-                               host_uuid=host_uuid,
-                               host_hwuuid=host_hwuuid)
+        host_id = self.host_id(host)
         cmd = f'hammer host subscription auto-attach --host-id {host_id}'
         msg = 'Auto attached subscriptions to the host successfully'
         if pool:
@@ -613,24 +594,19 @@ class SatelliteCLI:
             msg = 'Subscription attached to the host successfully'
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0 and msg in output:
-            logger.info(f'Succeeded to attach subscription for {host_name}')
+            logger.info(f'Succeeded to attach subscription for {host}')
             return True
-        raise FailException(f'Failed to attach subscription for {host_name}')
+        raise FailException(f'Failed to attach subscription for {host}')
 
-    def unattach(self, pool, host_name, host_uuid=None, host_hwuuid=None, quantity=1):
+    def unattach(self, host, pool, quantity=1):
         """
-        Remove subscription from one host by pool id.
+        Remove subscription from one host/hypervisor by pool id.
+        :param host: host name/uuid/hwuuid
         :param pool: pool id
-        :param host_name: host name as a required option.
-        :param host_uuid: host uuid as an optional option.
-        :param host_hwuuid: host hwuuid as an optional option for
-            only esx and rhvm modes.
         :param quantity: the subscription quantity to remove.
         :return:
         """
-        host_id = self.host_id(host_name=host_name,
-                               host_uuid=host_uuid,
-                               host_hwuuid=host_hwuuid)
+        host_id = self.host_id(host)
         subscription_id = self.subscription_id(pool=pool)
         ret, output = self.ssh.runcmd(f'hammer host subscription remove '
                                       f'--host-id {host_id} '
@@ -638,9 +614,9 @@ class SatelliteCLI:
                                       f'--quantity {quantity}')
         msg = 'Subscription removed from the host successfully'
         if ret == 0 and msg in output:
-            logger.info(f'Succeeded to remove subscription for {host_name}')
+            logger.info(f'Succeeded to remove subscription for {host}')
             return True
-        raise FailException(f'Failed to remove subscription for {host_name}')
+        raise FailException(f'Failed to remove subscription for {host}')
 
     def activation_key_create(self,
                               key=None,
@@ -736,7 +712,7 @@ class SatelliteCLI:
         :param pool: pool id.
         :param key: activation key name, default to use the key when
         instantiate the class.
-        :return:
+        :return: True or raise Fail.
         """
         key = key or self.activation_key
         subscription_id = self.subscription_id(pool=pool)
@@ -766,4 +742,3 @@ class SatelliteCLI:
             logger.info(f'Succeeded to set {name}:{value} for satellite')
             return True
         raise FailException(f'Failed to set {name}:{value} for satellite')
-
