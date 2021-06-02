@@ -28,6 +28,7 @@ proxy_port=
 ; prefix is an optional setting, the default prefix is /subscription for candlepin, /rhsm for satellite
 ; port is an optional setting, the default port is 443
 ; default_org is a required option to indicate which org to register
+; ssh_username/password are required options to access satellite host
 ; secondary_org and activation_key are optional settings for special case requirements
 [rhsm]
 server=
@@ -44,6 +45,8 @@ username=
 password=
 prefix=
 port=
+ssh_username=
+ssh_password=
 default_org=
 secondary_org=
 activation_key=
