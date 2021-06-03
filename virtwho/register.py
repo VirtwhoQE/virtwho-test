@@ -461,11 +461,12 @@ class Satellite:
         self.ssh = SSHConnect(host=register.server,
                               user=register.ssh_username,
                               pwd=register.ssh_password)
-        self.org_id = self.org_id()
+        self.hammer = 'hammer --output=json'
+        self.org_id = self.organization_id()
         self.api = f'https://{register.server}'
         self.auth = (register.username, register.password)
 
-    def org_id(self, org=None):
+    def organization_id(self, org=None):
         """
         Get the organization id by organization label.
         :param org: organization label, use the org when instantiate
@@ -473,12 +474,12 @@ class Satellite:
         :return: organization id
         """
         org = org or self.org
-        ret, output = self.ssh.runcmd(f'hammer organization info '
+        ret, output = self.ssh.runcmd(f'{self.hammer} organization info '
                                       f'--label "{org}" '
                                       f'--fields Id')
-        if ret == 0 and 'Id' in output:
-            org_id = output.split(':')[1].strip()
-            return org_id
+        output = json.loads(output)
+        if ret == 0 and output:
+            return output['Id']
         raise FailException(f'Failed to get the organization id for {org}')
 
     def org_create(self, name, label, description=None):
@@ -528,14 +529,15 @@ class Satellite:
         :param host: host name/uuid/hwuuid
         :return: host id or None
         """
-        ret, output = self.ssh.runcmd(f'hammer host list '
+        ret, output = self.ssh.runcmd(f'{self.hammer} host list '
                                       f'--organization-id {self.org_id} '
                                       f'--search {host} '
                                       f'--fields Id')
-        if ret == 0 and len(output.split('\n')) == 6:
-            host_id = output.split('\n')[3].strip()
-            logger.info(f'Succeeded to get the host id, {host}:{host_id}')
-            return host_id
+        output = json.loads(output)
+        if ret == 0 and len(output) == 1:
+            id = output[0]['Id']
+            logger.info(f'Succeeded to get the host id, {host}:{id}')
+            return id
         logger.warning(f'Failed to get the host id for {host}')
         return None
 
@@ -564,13 +566,14 @@ class Satellite:
         :param pool: pool id.
         :return: subscription id.
         """
-        cmd = f'hammer subscription list --organization-id {self.org_id}'
-        ret, output = self.ssh.runcmd(cmd)
-        if ret == 0:
-            subscription_list = output.split('\n')
-            for item in subscription_list:
-                if pool in item:
-                    subscription_id = item.split('|')[0].strip()
+        ret, output = self.ssh.runcmd(f'{self.hammer} '
+                                      f'subscription list '
+                                      f'--organization-id {self.org_id}')
+        output = json.loads(output)
+        if ret == 0 and output:
+            for item in output:
+                if item['UUID'] == pool:
+                    subscription_id = item['ID']
                     return subscription_id
         raise FailException(f'Failed to get the subscription id for {pool}')
 
