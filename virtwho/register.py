@@ -547,7 +547,7 @@ class Satellite:
         """
         host_id = self.host_id(host)
         _, output = self.ssh.runcmd(f'hammer host delete '
-                                    f'--organization-id {self.org} '
+                                    f'--organization-id {self.org_id} '
                                     f'--id {host_id}')
         if (
                 ('Host deleted' in output or 'host not found' in output)
