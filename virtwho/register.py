@@ -288,11 +288,11 @@ class RHSM:
         :param host_name: host name, search all consumers if host_name=None.
         :return: one consumer or all consumers to a list.
         """
-        code, consumers = request_get(
+        status, consumers = request_get(
             url=f'{self.api}/owners/{self.org}/consumers',
             auth=self.auth
         )
-        if code == 200:
+        if status == 200:
             if host_name:
                 for consumer in consumers:
                     if host_name in consumer['name']:
@@ -324,9 +324,9 @@ class RHSM:
         :return: output to a dic
         """
         uuid = self.uuid(host_name)
-        code, info = request_get(url=f'{self.api}/consumers/{uuid}',
-                                 auth=self.auth)
-        if code == 200:
+        status, info = request_get(url=f'{self.api}/consumers/{uuid}',
+                                   auth=self.auth)
+        if status == 200:
             logger.info(f'Succeeded to get consumer info for {host_name}')
             return info
         raise FailException(f'Failed to get consumer info for {host_name}')
