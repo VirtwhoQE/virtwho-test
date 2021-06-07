@@ -763,6 +763,7 @@ class Satellite:
         host_id = self.host_id(host=hypervisor)
         guest_id = self.host_id(host=guest)
         if host_id and guest_id:
+            # Find the guest in hypervisor page
             ret, output = request_get(url=f'{self.api}/api/v2/hosts/{host_id}',
                                       auth=self.auth)
             if guest.lower() in str(output):
@@ -771,6 +772,7 @@ class Satellite:
             else:
                 raise FailException(
                     'Failed to find the associated guest in hypervisor page')
+            # Find the hypervisor in guest page
             ret, output = request_get(url=f'{self.api}/api/v2/hosts/{guest_id}',
                                       auth=self.auth)
             if hypervisor.lower() in str(output):
