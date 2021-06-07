@@ -264,7 +264,7 @@ class SubscriptionManager:
                 f'Failed to remove custom.facts for {self.host}')
 
 
-class RHSMAPI:
+class RHSM:
 
     def __init__(self, host, username, password, port=22):
         """
@@ -443,6 +443,305 @@ class RHSMAPI:
         return False
 
 
-class SatelliteCLI:
-    def __init__(self):
-        pass
+class Satellite:
+
+    def __init__(self, org=None, activation_key=None):
+        """
+        Using hammer command to set satellite, handle organization and
+        activation key, attach/remove subscription for host.
+        Using api to check the host-to-guest associations.
+        :param org: organization label, use the default_org configured
+            in virtwho.ini as default.
+        :param activation_key: activation key name, use the configure
+            in virtwho.ini as default.
+        """
+        register = get_register_handler('satellite')
+        self.org = org or register.default_org
+        self.activation_key = activation_key or register.activation_key
+        self.ssh = SSHConnect(host=register.server,
+                              user=register.ssh_username,
+                              pwd=register.ssh_password)
+        self.hammer = 'hammer --output=json'
+        self.org_id = self.organization_id()
+        self.api = f'https://{register.server}'
+        self.auth = (register.username, register.password)
+
+    def organization_id(self, org=None):
+        """
+        Get the organization id by organization label.
+        :param org: organization label, use the org when instantiate
+        the class as default
+        :return: organization id
+        """
+        org = org or self.org
+        ret, output = self.ssh.runcmd(f'{self.hammer} organization info '
+                                      f'--label "{org}" '
+                                      f'--fields Id')
+        output = json.loads(output)
+        if ret == 0 and output:
+            return output['Id']
+        raise FailException(f'Failed to get the organization id for {org}')
+
+    def org_create(self, name, label, description=None):
+        """
+        Create a new organization.
+        :param name: the name of the organization.
+        :param label: the label of the organization.
+        :param description: the description for the organization.
+        :return: True or raise Fail
+        """
+        description = description or ''
+        _, output = self.ssh.runcmd(f'hammer organization create '
+                                    f'--name "{name}" '
+                                    f'--label "{label}" '
+                                    f'--description "{description}"')
+        if 'Organization created' in output:
+            logger.info(f'Succeeded to create organization:{name}')
+            return True
+        if (
+                'Name has already been taken' in output
+                and
+                'Label has already been taken' in output
+        ):
+            logger.info(f'The organization:{name} already existed')
+            return True
+        raise FailException(f'Failed to create organization:{name}')
+
+    def org_delete(self, label):
+        """
+        Delete an organization by organization label.
+        :param label: organization label
+        :return: True or raise Fail
+        """
+        _, output = self.ssh.runcmd(f'hammer organization delete '
+                                    f'--label "{label}"')
+        if '100%' in output:
+            logger.info(f'Succeeded to delete organization:{label}')
+            return True
+        if 'organization not found' in output:
+            logger.info(f'The organization:{label} does not exist already')
+            return True
+        raise FailException(f'Failed to delete organization:{label}')
+
+    def host_id(self, host):
+        """
+        Get the host id by host name or uuid or hwuuid.
+        :param host: host name/uuid/hwuuid
+        :return: host id or None
+        """
+        ret, output = self.ssh.runcmd(f'{self.hammer} host list '
+                                      f'--organization-id {self.org_id} '
+                                      f'--search {host} '
+                                      f'--fields Id')
+        output = json.loads(output)
+        if ret == 0 and len(output) == 1:
+            id = output[0]['Id']
+            logger.info(f'Succeeded to get the host id, {host}:{id}')
+            return id
+        logger.warning(f'Failed to get the host id for {host}')
+        return None
+
+    def host_delete(self, host):
+        """
+        Delete a host by host name or uuid or hwuuid.
+        :param host: host name/uuid/hwuuid
+        :return: True or raise Fail
+        """
+        host_id = self.host_id(host)
+        _, output = self.ssh.runcmd(f'hammer host delete '
+                                    f'--organization-id {self.org_id} '
+                                    f'--id {host_id}')
+        if (
+                ('Host deleted' in output or 'host not found' in output)
+                and
+                not self.host_id(host)
+        ):
+            logger.info(f'Succeeded to delete {host} from satellite')
+            return True
+        raise FailException(f'Failed to Delete {host} from satellite')
+
+    def subscription_id(self, pool):
+        """
+        Get the subscription id by pool id.
+        :param pool: pool id.
+        :return: subscription id.
+        """
+        ret, output = self.ssh.runcmd(f'{self.hammer} '
+                                      f'subscription list '
+                                      f'--organization-id {self.org_id}')
+        output = json.loads(output)
+        if ret == 0 and output:
+            for item in output:
+                if item['UUID'] == pool:
+                    subscription_id = item['ID']
+                    return subscription_id
+        raise FailException(f'Failed to get the subscription id for {pool}')
+
+    def attach(self, host, pool=None, quantity=1):
+        """
+        Attach or auto attach subscription for one host/hypervisor.
+        :param host: host name/uuid/hwuuid
+        :param pool: pool id, run auto attach when pool=None.
+        :param quantity: the subscription quantity to attach.
+        :return: True or raise Fail.
+        """
+        host_id = self.host_id(host)
+        cmd = f'hammer host subscription auto-attach --host-id {host_id}'
+        msg = 'Auto attached subscriptions to the host successfully'
+        if pool:
+            subscription_id = self.subscription_id(pool=pool)
+            cmd = f'hammer host subscription attach ' \
+                  f'--host-id {host_id} ' \
+                  f'--subscription-id {subscription_id} ' \
+                  f'--quantity {quantity}'
+            msg = 'Subscription attached to the host successfully'
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0 and msg in output:
+            logger.info(f'Succeeded to attach subscription for {host}')
+            return True
+        raise FailException(f'Failed to attach subscription for {host}')
+
+    def unattach(self, host, pool, quantity=1):
+        """
+        Remove subscription from one host/hypervisor by pool id.
+        :param host: host name/uuid/hwuuid
+        :param pool: pool id
+        :param quantity: the subscription quantity to remove.
+        :return:
+        """
+        host_id = self.host_id(host)
+        subscription_id = self.subscription_id(pool=pool)
+        ret, output = self.ssh.runcmd(f'hammer host subscription remove '
+                                      f'--host-id {host_id} '
+                                      f'--subscription-id {subscription_id} '
+                                      f'--quantity {quantity}')
+        msg = 'Subscription removed from the host successfully'
+        if ret == 0 and msg in output:
+            logger.info(f'Succeeded to remove subscription for {host}')
+            return True
+        raise FailException(f'Failed to remove subscription for {host}')
+
+    def activation_key_create(self,
+                              key=None,
+                              content_view='Default Organization View',
+                              environment='Library'):
+        """
+        Create one activation key.
+        :param key: activation key name.
+        :param content_view: 'Default Organization View' as default.
+        :param environment: 'Library' as default.
+        :return: True or raise Fail.
+        """
+        key = key or self.activation_key
+        _, output = self.ssh.runcmd(f'hammer activation-key create '
+                                    f'--organization-id {self.org_id} '
+                                    f'--name {key} '
+                                    f'--lifecycle-environment {environment} '
+                                    f'--content-view "{content_view}"')
+        if 'Activation key created' in output:
+            logger.info(f'Succeeded to create activation key:{key}')
+            return True
+        if 'Name has already been taken' in output:
+            logger.info(f'Activation key:{key} already exists')
+            return True
+        raise FailException(f'Failed to create activation key:{key}')
+
+    def activation_key_delete(self, key=None):
+        """
+        Delete an activation key by key name.
+        :param key: activation key name.
+        :return: True or raise Fail.
+        """
+        key = key or self.activation_key
+        _, output = self.ssh.runcmd(f'hammer activation-key delete '
+                                    f'--organization-id {self.org_id} '
+                                    f'--name {key}')
+        if 'Activation key deleted' in output:
+            logger.info(f'Succeeded to delete activation key:{key}')
+            return True
+        if 'activation_key not found' in output:
+            logger.info(f'Activation key:{key} was not found')
+            return True
+        raise FailException(f'Failed to delete activation key:{key}')
+
+    def activation_key_update(self, key=None, auto_attach='yes'):
+        """
+        Update auto attach setting for an activation key.
+        :param key: activation key name, default to use the key when
+            instantiate the class.
+        :param auto_attach: boolean, true/false, yes/no, 1/0.
+        :return: True or raise Fail.
+        """
+        key = key or self.activation_key
+        _, output = self.ssh.runcmd(f'hammer activation-key update '
+                                    f'--organization-id {self.org_id} '
+                                    f'--name {key} '
+                                    f'--auto-attach {auto_attach}')
+        if 'Activation key updated' in output:
+            logger.info(f'Succeeded to update activation key:{key} with '
+                        f'auto_attach:{auto_attach}')
+            return True
+        raise FailException(f'Failed to update auto-attach for '
+                            f'activation key:{key}')
+
+    def activation_key_attach(self, pool, quantity=None, key=None):
+        """
+        Add subscription for activation key.
+        :param pool: pool id.
+        :param quantity: the subscription quantity to add.
+        :param key: activation key name, default to use the key when
+        instantiate the class.
+        :return: True or raise Fail.
+        """
+        key = key or self.activation_key
+        subscription_id = self.subscription_id(pool=pool)
+        cmd = f'hammer activation-key add-subscription ' \
+              f'--organization-id {self.org_id} ' \
+              f'--name {key} ' \
+              f'--subscription-id {subscription_id}'
+        if quantity:
+            cmd += f' --quantity {quantity}'
+        ret, output = self.ssh.runcmd(cmd)
+        if 'Subscription added to activation key' in output:
+            logger.info(f'Succeeded to attach subscription for '
+                        f'activation key:{key}')
+            return True
+        raise FailException(f'Failed to attach subscription for '
+                            f'activation key:{key}')
+
+    def activation_key_unattach(self, pool, key=None):
+        """
+        Remove subscription from activation key.
+        :param pool: pool id.
+        :param key: activation key name, default to use the key when
+        instantiate the class.
+        :return: True or raise Fail.
+        """
+        key = key or self.activation_key
+        subscription_id = self.subscription_id(pool=pool)
+        cmd = f'hammer activation-key remove-subscription ' \
+              f'--organization-id {self.org_id} ' \
+              f'--name {key} ' \
+              f'--subscription-id {subscription_id}'
+        ret, output = self.ssh.runcmd(cmd)
+        if 'Subscription removed from activation key' in output:
+            logger.info(f'Succeeded to remove subscription for '
+                        f'activation key:{key}')
+            return True
+        raise FailException(f'Failed to remove subscription for '
+                            f'activation key:{key}')
+
+    def settings(self, name, value):
+        """
+        Update the settings.
+        :param name: such as unregister_delete_host.
+        :param value: the value.
+        :return: True or raise Fail.
+        """
+        ret, output = self.ssh.runcmd(f'hammer settings set '
+                                      f'--name={name} '
+                                      f'--value={value}')
+        if ret == 0 and f'Setting [{name}] updated to' in output:
+            logger.info(f'Succeeded to set {name}:{value} for satellite')
+            return True
+        raise FailException(f'Failed to set {name}:{value} for satellite')
