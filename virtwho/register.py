@@ -106,8 +106,7 @@ class SubscriptionManager:
             logger.warning(output)
             return output.strip()
         else:
-            raise FailException(
-                f'Failed to attach subscription for {self.host}')
+            raise FailException(f'Failed to attach subscription for {self.host}')
 
     def unattach(self, pool=None):
         """
@@ -121,8 +120,7 @@ class SubscriptionManager:
         if ret == 0:
             logger.info(f'Succeeded to remove subscription for {self.host}')
         else:
-            raise FailException(
-                f'Failed to remove subscription for {self.host}')
+            raise FailException(f'Failed to remove subscription for {self.host}')
 
     def available(self, sku_id, sku_type='Virtual'):
         """
