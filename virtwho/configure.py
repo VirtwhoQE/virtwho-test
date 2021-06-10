@@ -25,13 +25,13 @@ class VirtwhoHypervisorConfig:
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
         self.section = f'virtwho-{mode}'
-        if mode is 'local':
+        if mode == 'local':
             self.update('type', 'libvirt')
         else:
             self.update('type', mode)
             self.update('hypervisor_id', 'hostname')
             self.update('owner', self.register.default_org)
-        if mode is 'kubevirt':
+        if mode == 'kubevirt':
             self.update('kubeconfig', self.hypervisor.config_file)
         if mode in ('esx', 'xen', 'hyperv', 'rhevm', 'libvirt'):
             self.update('server', self.hypervisor.server)
@@ -122,6 +122,8 @@ def get_register_handler(register_type):
     register = config.rhsm
     if register_type == 'satellite':
         register = config.satellite
+    if register_type == 'rhsm_product':
+        register = config.rhsm_product
     return register
 
 
