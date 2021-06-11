@@ -18,9 +18,10 @@ class SubscriptionManager:
         :param username: account username of the host
         :param password: password to access the host
         :param port: port to access the host
-        :param register_type: rhsm or satellite, rhsm as default
+        :param register_type: rhsm/rhsm_product/satellite, rhsm as default
         :param org: organization of the entitlement server
-        :param activation_key: activation_key of the entitlement server
+        :param activation_key: activation_key of the satellite server.
+            Will register by activation_key when the value is set.
         """
         self.host = host
         self.register_type = register_type
@@ -33,7 +34,9 @@ class SubscriptionManager:
         self.port = register.port
         self.prefix = register.prefix
         self.org = org or register.default_org
-        self.activation_key = activation_key or register.activation_key
+        self.activation_key = activation_key
+        if register_type != 'satellite':
+            self.baseurl = register.baseurl
 
     def register(self):
         """
@@ -43,13 +46,15 @@ class SubscriptionManager:
         cmd = f'subscription-manager register ' \
               f'--serverurl={self.server}:{self.port}{self.prefix} ' \
               f'--org={self.org} '
-        if 'satellite' in self.register_type and self.activation_key:
+        if self.activation_key:
             cmd += f'--activationkey={self.activation_key} '
         else:
             cmd += f'--username={self.username} ' \
                    f'--password={self.password} '
-        if 'satellite' in self.register_type:
+        if self.register_type == 'satellite':
             self.satellite_cert_install()
+        else:
+            cmd += f'--baseurl={self.baseurl}'
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0 and 'The system has been registered' in output:
             logger.info(f'Succeeded to register host')
@@ -194,6 +199,23 @@ class SubscriptionManager:
             return install_attr
         raise FailException(
             f'Failed to list installed subscription for {self.host}')
+
+    def repo(self, action, repo):
+        """
+        Enable/disable one or more repos.
+        :param action: enable or disable
+        :param repo: a string including one or more repos separated
+            by comma, such as "repo1, repo2, repo3...".
+        """
+        repo_list = repo.split(',')
+        cmd = 'subscription-manager repos '
+        for item in repo_list:
+            cmd += f'--{action}="{item.strip()}" '
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0:
+            logger.info(f'Succeeded to {action} repo: {repo}')
+        else:
+            raise FailException(f'Failed to {action} repo: {repo}')
 
     def refresh(self):
         """
