@@ -116,7 +116,8 @@ def virtwho_ssh_connect(mode=None):
 
 def get_register_handler(register_type):
     """Navigate to register type section in virtwho.ini.
-    :param register_type: rhsm or satellite. rhsm as default.
+    :param register_type: rhsm, rhsm_product or satellite.
+        rhsm as default.
     :return: register section
     """
     register = config.rhsm
