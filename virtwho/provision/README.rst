@@ -19,6 +19,7 @@ virtwho/provison
   # python3 beaker.py --rhel-compose=RHEL-7.9-20200917.0 --variant=Server --arch=x86_64 --type=virtual
 
 
+
 `satellite.py`_ is used to deploy satellite by cdn or dogfood resource.
 
 1. Define the register and repo information before deploying.
@@ -49,10 +50,13 @@ virtwho/provison
   # python3 satellite.py --version=6.9 --repo=cdn --os=RHEL-7.9-20200917.0
 
 
+
 `docker.py`_ is used to create rhel container.
 
 
+
 `hypervisor.py`_ is used gather the hypervisor and guest information.
+
 
 
 `kickstart.py`_ is used to install rhel host by grub.
