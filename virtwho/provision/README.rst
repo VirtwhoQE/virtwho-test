@@ -30,11 +30,11 @@ virtwho/provison
 
 2. Run the satellite.py with the required arguments.
 
-* If you want to configure all arguments by command line, please run as below.
+    * If you want to configure all arguments by command line, please run as below.
 
-    # python3 satellite.py --version VERSION --repo REPO --os OS --server SERVER --ssh-username SSH_USERNAME --ssh-password SSH_PASSWORD --admin-username ADMIN_USERNAME --admin-password ADMIN_PASSWORD --manifest MANIFEST
+      # python3 satellite.py --version VERSION --repo REPO --os OS --server SERVER --ssh-username SSH_USERNAME --ssh-password SSH_PASSWORD --admin-username ADMIN_USERNAME --admin-password ADMIN_PASSWORD --manifest MANIFEST
 
-* You can also configure arguments by define the [satellite] section in virtwho.ini.
+    * You can also configure arguments by define the [satellite] section in virtwho.ini.
 
       * [satellite]
       * username=
@@ -43,11 +43,11 @@ virtwho/provison
       * ssh_passowrd=
       * manifest=
 
-    # python3 satellite.py --version VERSION --repo REPO --os OS
+      # python3 satellite.py --version VERSION --repo REPO --os OS
 
-* Below is an example to run the file with required arguments.
+    * Below is an example to run the file with required arguments.
 
-  # python3 satellite.py --version=6.9 --repo=cdn --os=RHEL-7.9-20200917.0
+      # python3 satellite.py --version=6.9 --repo=cdn --os=RHEL-7.9-20200917.0
 
 
 
