@@ -10,7 +10,6 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho.provision import base
 from virtwho import logger, FailException
 from virtwho.ssh import SSHConnect
-from virtwho.configure import get_register_handler
 from virtwho.register import SubscriptionManager
 from virtwho.settings import config
 
@@ -27,16 +26,15 @@ def satellite_deploy(args):
     sat_ver = args.version
     sat_repo = args.repo
     rhel_ver = args.os.split('-')[1].split('.')[0]
-    register = get_register_handler('satellite')
-    host = register.server
-    ssh_username = register.ssh_username
-    ssh_password = register.ssh_password
+    host = args.server
+    ssh_username = args.ssh_username
+    ssh_password = args.ssh_password
     ssh = SSHConnect(host=host,
                      user=ssh_username,
                      pwd=ssh_password)
-    admin_username = register.username
-    admin_password = register.password
-    manifest = register.manifest
+    admin_username = args.admin_username
+    admin_password = args.admin_password
+    manifest = args.manifest
     base.system_init(ssh, 'satellite')
     if 'cdn' in sat_repo:
         sm = SubscriptionManager(host=host,
@@ -86,7 +84,7 @@ def satellite_repo_enable_dogfood(ssh, sat_ver, rhel_ver, repo_type='satellite')
     :return: True or raise Fail.
     """
     maintenance_pool = '8a88800f5ca45116015cc807610319ed'
-    doogfood = config.satellite.doogfood
+    dogfood = config.satellite.dogfood
     org = 'Sat6-CI'
     ssh.runcmd('subscription-manager unregister;'
                'subscription-manager clean')
@@ -94,7 +92,7 @@ def satellite_repo_enable_dogfood(ssh, sat_ver, rhel_ver, repo_type='satellite')
                'grep katello-ca-consumer |'
                'xargs rpm -e |'
                'sort')
-    ssh.runcmd(f'yum -y localinstall {doogfood}')
+    ssh.runcmd(f'yum -y localinstall {dogfood}')
     ret, _ = ssh.runcmd(
         f'subscription-manager register '
         f'--org {org} '
@@ -217,6 +215,42 @@ def satellite_arguments_parser():
         '--os',
         required=True,
         help='such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
+    parser.add_argument(
+        '--server',
+        default=config.satellite.server,
+        required=False,
+        help='The server hostname or ip to deploy satellite, '
+             'default to the [satellite]:server in virtwho.ini')
+    parser.add_argument(
+        '--ssh-username',
+        default=config.satellite.ssh_username,
+        required=False,
+        help='Username to access the server, '
+             'default to the [satellite]:ssh_username in virtwho.ini')
+    parser.add_argument(
+        '--ssh-password',
+        default=config.satellite.ssh_password,
+        required=False,
+        help='Password to access the server, '
+             'default to the [satellite]:ssh_password in virtwho.ini')
+    parser.add_argument(
+        '--admin-username',
+        default=config.satellite.ssh_username,
+        required=False,
+        help='Account name for the satellite administrator, '
+             'default to the [satellite]:username in virtwho.ini')
+    parser.add_argument(
+        '--admin-password',
+        default=config.satellite.ssh_password,
+        required=False,
+        help='Account password for the satellite administrator, '
+             'default to the [satellite]:password in virtwho.ini')
+    parser.add_argument(
+        '--manifest',
+        default=config.satellite.manifest,
+        required=False,
+        help='Manifest url to upload after complete deploying satellite, '
+             'default to the [satellite]:manifest in virtwho.ini')
     return parser.parse_args()
 
 
