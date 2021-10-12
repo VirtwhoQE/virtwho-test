@@ -18,7 +18,7 @@ class SubscriptionManager:
         :param username: account username of the host
         :param password: password to access the host
         :param port: port to access the host
-        :param register_type: rhsm/rhsm_product/satellite, rhsm as default
+        :param register_type: rhsm/satellite, rhsm as default
         :param org: organization of the entitlement server
         :param activation_key: activation_key of the satellite server.
             Will register by activation_key when the value is set.
@@ -297,7 +297,6 @@ class RHSM:
         :param password: password to access the host
         :param port: port to access the host
         """
-        self.ssh = SSHConnect(host=host, user=username, pwd=password, port=port)
         self.org = config.rhsm.default_org
         self.api = f'https://{config.rhsm.server}/subscription'
         self.auth = (config.rhsm.username, config.rhsm.password)
