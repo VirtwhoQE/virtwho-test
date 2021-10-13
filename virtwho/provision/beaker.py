@@ -1,6 +1,7 @@
 #!/usr/bin/python
-
+import random
 import re
+import string
 import time
 import os
 import sys
@@ -18,13 +19,17 @@ def install_rhel_by_beaker(args):
     """
     Install rhel by submitting job to beaker with required arguments.
     Please refer to the README for usage.
-    :param args: rhel_compose, type, variant, arch are required options.
-        rhel_compose: such as RHEL-7.9-20200917.0
-        type: physical or virtual
-        variant: Server, Client, Workstation or BaseOS
-        arch: x86_64, s390x, ppc64, ppc64le or aarch64
+    :param args:
+        rhel_compose: required option, such as RHEL-7.9-20200917.0.
+        arch: required option, such as x86_64, s390x, ppc64...
+        variant: optional, default using BaseOS for rhel8 and later.
+        job_group: optional, associate a group to this job.
+        system_require:
+        host_require: optional, additional <hostRequires/> for job,
+            separate multiple options with commas.
     """
-    job_name = f'virtwho-ci-{args.rhel_compose}'
+    random_str = ''.join(random.sample(string.digits, 4))
+    job_name = f'virtwho-ci-{args.rhel_compose}({random_str})'
     ssh_client = SSHConnect(
         host=config.beaker.client,
         user=config.beaker.client_username,
@@ -33,32 +38,34 @@ def install_rhel_by_beaker(args):
     beaker_client_kinit(ssh_client)
     job_id = beaker_job_submit(
         ssh_client,
-        args.type,
-        args.variant,
-        args.arch,
-        args.rhel_compose,
         job_name,
+        args.rhel_compose,
+        args.arch,
+        args.variant,
+        args.job_group,
+        args.system_require,
+        args.host_require,
     )
     while beaker_job_status(ssh_client, job_name, job_id):
         time.sleep(60)
     host = beaker_job_result(ssh_client, job_name, job_id)
-    username = config.beaker.default_username
-    password = config.beaker.default_password
     if host:
         config.update('satellite', 'server', host)
-        config.update('satellite', 'ssh_username', username)
-        config.update('satellite', 'ssh_password', password)
 
 
-def beaker_job_submit(ssh, type, variant, arch, distro, job_name):
+def beaker_job_submit(ssh, job_name, distro, arch, variant=None,
+                      job_group=None, system_require=None,
+                      host_require=None):
     """
     Submit beaker job by command and return the job id.
     :param ssh: ssh access of client to run command
-    :param type: virtual or physical
-    :param variant: Server, Client, Workstation or BaseOS
-    :param arch: x86_64, s390x, ppc64, ppc64le or aarch64
-    :param distro: such as RHEL-7.9-20200917.0
     :param job_name: beaker job name
+    :param distro: such as RHEL-7.9-20200917.0
+    :param arch: x86_64, s390x, ppc64, ppc64le or aarch64
+    :param variant: Server, Client, Workstation or BaseOS
+    :param job_group:
+    :param system_require:
+    :param host_require:
     :return: beaker job id
     """
     task = ('--suppress-install-task '
@@ -66,23 +73,20 @@ def beaker_job_submit(ssh, type, variant, arch, distro, job_name):
             '--task /distribution/reservesys')
     whiteboard = f'--whiteboard="reserve host for {job_name}"'
     reserve = '--reserve --reserve-duration 259200 --priority Urgent'
-    job_group = '--job-group=virt-who-ci-server-group'
-    if type == 'virtual':
-        ent_vm = (f"--hostrequire "
-                  f"\"<and><system><name op='like' "
-                  f"value='%ent-02-vm%'/></system></and>\"")
-        hostrequire = (f'{ent_vm} '
-                       f'--hostrequire "hypervisor!=" '
-                       f'--hostrequire "memory > 7000"')
-    else:
-        hostrequire = ('--hostrequire "hypervisor=" '
-                       '--hostrequire "memory > 7000"')
-    cmd = (f'bkr workflow-simple '
-           f'--prettyxml '
-           f'--variant={variant} '
-           f'--arch={arch} '
-           f'--distro='
-           f'{distro} {task} {whiteboard} {job_group} {hostrequire} {reserve}')
+    cmd = (f'bkr workflow-simple --prettyxml '
+           f'{task} {whiteboard} {reserve} '
+           f'--distro={distro} '
+           f'--arch={arch} ')
+    if variant:
+        cmd += f'--variant={variant} '
+    if job_group:
+        cmd += f'--job-group={job_group} '
+    if system_require:
+        cmd += f'--hostrequire "<and><system><name op=\'like\' value=\'{system_require}\'/></system></and>" '
+    if host_require:
+        require_list = host_require.split(',')
+        for item in require_list:
+            cmd += f'--hostrequire "{item.strip()}" '
     ret, output = ssh.runcmd(cmd)
     if ret == 0 and 'Submitted' in output:
         job_id = re.findall(r"Submitted: \['(.*?)'", output)[0]
@@ -155,17 +159,32 @@ def beaker_arguments_parser():
         required=True,
         help='Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
     parser.add_argument(
-        '--variant',
-        required=True,
-        help='One of [Server, Client, Workstation, BaseOS]')
-    parser.add_argument(
         '--arch',
         required=True,
         help='One of [x86_64, s390x, ppc64, ppc64le, aarch64]')
     parser.add_argument(
-        '--type',
-        required=True,
-        help='One of [physical, virtual]')
+        '--variant',
+        required=False,
+        default=None,
+        help='One of [Server, Client, Workstation, BaseOS]. '
+             'Unnecessary for RHEL-8 and later, default using BaseOS.')
+    parser.add_argument(
+        '--job-group',
+        required=False,
+        default=None,
+        help='Associate a group to the job')
+    parser.add_argument(
+        '--system-require',
+        required=False,
+        default=None,
+        help='Define the system for hostrequire. '
+             'Such as: %ent-02-vm%, ent-02-vm-20.lab.eng.nay.redhat.com')
+    parser.add_argument(
+        '--host-require',
+        required=False,
+        default=None,
+        help='Separate multiple options with commas. '
+             'Such as: hypervisor!=,memory > 7000.')
     return parser.parse_args()
 
 
