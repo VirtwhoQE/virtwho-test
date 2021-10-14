@@ -18,10 +18,11 @@ def satellite_deploy(args):
     """
     Deploy satellite by cdn or dogfood with required arguments to.
     Please refer to the README for usage.
-    :param args: version, repo and os are required options.
+    :param args: version, repo, os and server are required options.
         version: satellite version, such as 6.8, 6.9
-        repo: repo resources, such as cdn or dogfood
+        repo: repo resources, cdn or dogfood
         os: rhel host, such as RHEL-7.9-20200917.0
+        server: server FQDN or IP
     """
     sat_ver = args.version
     sat_repo = args.repo
@@ -40,10 +41,14 @@ def satellite_deploy(args):
         sm = SubscriptionManager(host=host,
                                  username=ssh_username,
                                  password=ssh_password,
-                                 register_type='rhsm_product')
+                                 register_type='rhsm')
         sm.register()
-        sm.attach(pool=config.rhsm_product.employee_sku)
-        sm.attach(pool=config.rhsm_product.satellite_sku)
+        employee_sku_pool = sm.available(
+            config.sku.employee_sku, 'physical')['pool_id']
+        satellite_sku_pool = sm.available(
+            config.sku.satellite_sku, 'physical')['pool_id']
+        sm.attach(pool=employee_sku_pool)
+        sm.attach(pool=satellite_sku_pool)
         sm.repo('disable', '*')
         repos = satellite_repos_cdn(rhel_ver, sat_ver)
         sm.repo('enable', repos)
@@ -55,6 +60,11 @@ def satellite_deploy(args):
     satellite_settings(ssh, 'unregister_delete_host', 'true')
     if manifest:
         satellite_manifest_upload(ssh, manifest, admin_username, admin_password)
+    config.update('satellite', 'server', host)
+    config.update('satellite', 'username', admin_username)
+    config.update('satellite', 'password', admin_password)
+    config.update('satellite', 'ssh_username', ssh_username)
+    config.update('satellite', 'ssh_password', ssh_password)
 
 
 def satellite_repos_cdn(rhel_ver, sat_ver):
@@ -96,15 +106,14 @@ def satellite_repo_enable_dogfood(ssh, sat_ver, rhel_ver, repo_type='satellite')
     ret, _ = ssh.runcmd(
         f'subscription-manager register '
         f'--org {org} '
-        f'--activationkey '
-        f'"{repo_type}-{sat_ver}-qa-rhel{rhel_ver}"'
+        f'--activationkey "{repo_type}-{sat_ver}-qa-rhel{rhel_ver}"'
     )
     if ret == 0:
         ssh.runcmd(f'subscription-manager attach '
                    f'--pool {maintenance_pool}')
         logger.info('Succeeded to enable dogfood repo.')
         return True
-    raise FailException('Failed to enable dogfood repo')
+    raise FailException('Failed to enable dogfood repo.')
 
 
 def satellite_pkg_install(ssh):
@@ -217,10 +226,8 @@ def satellite_arguments_parser():
         help='such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
     parser.add_argument(
         '--server',
-        default=config.satellite.server,
-        required=False,
-        help='The server hostname or ip to deploy satellite, '
-             'default to the [satellite]:server in virtwho.ini')
+        required=True,
+        help='The server hostname or ip to deploy satellite')
     parser.add_argument(
         '--ssh-username',
         default=config.satellite.ssh_username,
@@ -235,13 +242,13 @@ def satellite_arguments_parser():
              'default to the [satellite]:ssh_password in virtwho.ini')
     parser.add_argument(
         '--admin-username',
-        default=config.satellite.ssh_username,
+        default=config.satellite.username,
         required=False,
         help='Account name for the satellite administrator, '
              'default to the [satellite]:username in virtwho.ini')
     parser.add_argument(
         '--admin-password',
-        default=config.satellite.ssh_password,
+        default=config.satellite.password,
         required=False,
         help='Account password for the satellite administrator, '
              'default to the [satellite]:password in virtwho.ini')
