@@ -22,8 +22,9 @@ def install_rhel_by_beaker(args):
         arch: required option, such as x86_64, s390x, ppc64...
         variant: optional, default using BaseOS for rhel8 and later.
         job_group: optional, associate a group to this job.
-        system_require: filter system as hostrequire
-        host_require: optional, additional <hostRequires/> for job,
+        host: optional, define/filter system as hostrequire
+        host_type: optional, physical or virtual
+        host_require: optional, other hostRequires for job,
             separate multiple options with commas.
     """
     job_name = f'virtwho-ci-{args.rhel_compose}'
@@ -40,19 +41,18 @@ def install_rhel_by_beaker(args):
         args.arch,
         args.variant,
         args.job_group,
-        args.system_require,
+        args.host,
+        args.host_type,
         args.host_require,
     )
     while beaker_job_status(ssh_client, job_name, job_id):
         time.sleep(60)
     host = beaker_job_result(ssh_client, job_name, job_id)
-    if host:
-        config.update('satellite', 'server', host)
 
 
 def beaker_job_submit(ssh, job_name, distro, arch,
                       variant=None, job_group=None,
-                      system_require=None, host_require=None):
+                      host=None, host_type=None, host_require=None):
     """
     Submit beaker job by command and return the job id.
     :param ssh: ssh access of client to run command
@@ -61,7 +61,8 @@ def beaker_job_submit(ssh, job_name, distro, arch,
     :param arch: x86_64, s390x, ppc64, ppc64le or aarch64
     :param variant: Server, Client, Workstation or BaseOS
     :param job_group: associate a group to this job
-    :param system_require: filter system as hostrequire
+    :param host: define/filter system as hostrequire
+    :param host_type: virtual, physical
     :param host_require: optional, additional <hostRequires/> for job
     :return: beaker job id
     """
@@ -78,8 +79,14 @@ def beaker_job_submit(ssh, job_name, distro, arch,
         cmd += f'--variant={variant} '
     if job_group:
         cmd += f'--job-group={job_group} '
-    if system_require:
-        cmd += f'--hostrequire "<and><system><name op=\'like\' value=\'{system_require}\'/></system></and>" '
+    if host:
+        cmd += f'--hostrequire "<and><system><name op=\'like\' ' \
+               f'value=\'{host}\'/></system></and>" '
+    if host_type:
+        if host_type.lower() == 'virtual':
+            cmd += f'--hostrequire "hypervisor!=" '
+        else:
+            cmd += f'--hostrequire "hypervisor=" '
     if host_require:
         require_list = host_require.split(',')
         for item in require_list:
@@ -171,17 +178,23 @@ def beaker_arguments_parser():
         default=None,
         help='Associate a group to the job')
     parser.add_argument(
-        '--system-require',
+        '--host',
         required=False,
         default=None,
-        help='Define the system for hostrequire. '
+        help='Define/filter system as hostrequire. '
              'Such as: %ent-02-vm%, ent-02-vm-20.lab.eng.nay.redhat.com')
+    parser.add_argument(
+        '--host-type',
+        required=False,
+        default=None,
+        help='Define the system type as hostrequire. '
+             'Such as: physical or virtual')
     parser.add_argument(
         '--host-require',
         required=False,
         default=None,
         help='Separate multiple options with commas. '
-             'Such as: hypervisor!=,memory > 7000.')
+             'Such as: labcontroller=lab.example.com,memory > 7000')
     return parser.parse_args()
 
 
