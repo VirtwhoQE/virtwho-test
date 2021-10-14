@@ -1,7 +1,5 @@
 #!/usr/bin/python
-import random
 import re
-import string
 import time
 import os
 import sys
@@ -24,12 +22,11 @@ def install_rhel_by_beaker(args):
         arch: required option, such as x86_64, s390x, ppc64...
         variant: optional, default using BaseOS for rhel8 and later.
         job_group: optional, associate a group to this job.
-        system_require:
+        system_require: filter system as hostrequire
         host_require: optional, additional <hostRequires/> for job,
             separate multiple options with commas.
     """
-    random_str = ''.join(random.sample(string.digits, 4))
-    job_name = f'virtwho-ci-{args.rhel_compose}({random_str})'
+    job_name = f'virtwho-ci-{args.rhel_compose}'
     ssh_client = SSHConnect(
         host=config.beaker.client,
         user=config.beaker.client_username,
@@ -53,9 +50,9 @@ def install_rhel_by_beaker(args):
         config.update('satellite', 'server', host)
 
 
-def beaker_job_submit(ssh, job_name, distro, arch, variant=None,
-                      job_group=None, system_require=None,
-                      host_require=None):
+def beaker_job_submit(ssh, job_name, distro, arch,
+                      variant=None, job_group=None,
+                      system_require=None, host_require=None):
     """
     Submit beaker job by command and return the job id.
     :param ssh: ssh access of client to run command
@@ -63,9 +60,9 @@ def beaker_job_submit(ssh, job_name, distro, arch, variant=None,
     :param distro: such as RHEL-7.9-20200917.0
     :param arch: x86_64, s390x, ppc64, ppc64le or aarch64
     :param variant: Server, Client, Workstation or BaseOS
-    :param job_group:
-    :param system_require:
-    :param host_require:
+    :param job_group: associate a group to this job
+    :param system_require: filter system as hostrequire
+    :param host_require: optional, additional <hostRequires/> for job
     :return: beaker job id
     """
     task = ('--suppress-install-task '
