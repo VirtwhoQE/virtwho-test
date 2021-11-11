@@ -1,5 +1,5 @@
 ; The section of [job] is used to define the testing hypervisor and subscription server
-; mode is an optional setting from esx/xen/hyperv/libvirt/rhevm/kubevirt/local, the default is 'esx'.
+; mode is an optional setting from esx/xen/hyperv/libvirt/rhevm/kubevirt/ahv/local, the default is 'esx'.
 ; register is an optional setting from rhsm/satellite, the default is 'rhsm'
 [job]
 mode=
@@ -60,7 +60,7 @@ vdc=
 vdc_virtual=
 
 ; The below sections are used to define the different hypervisors information
-; server, username and password are the required options to access vcenter/xen/hyperv/rhevm/libvirt and get mapping
+; server, username and password are the required options to access vcenter/xen/hyperv/rhevm/libvirt/ahv and get mapping
 ; config_file is a required option to access kubevirt and get mapping
 ; uuid or hostname of hypervisor is a required option when need to attach subscriptions for hypervisor
 ; guest_ip, guest_username and guest_password are required options when need to access guest for registering
@@ -161,6 +161,22 @@ cpu=
 guest_name=
 guest_ip=
 guest_port=
+guest_username=
+guest_password=
+guest_uuid=
+guest_state=
+
+[ahv]
+server=
+username=
+password=
+uuid=
+hostname=
+version=
+cpu=
+cluster=
+guest_name=
+guest_ip=
 guest_username=
 guest_password=
 guest_uuid=
