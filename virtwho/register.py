@@ -18,9 +18,10 @@ class SubscriptionManager:
         :param username: account username of the host
         :param password: password to access the host
         :param port: port to access the host
-        :param register_type: rhsm or satellite, rhsm as default
+        :param register_type: rhsm/satellite, rhsm as default
         :param org: organization of the entitlement server
-        :param activation_key: activation_key of the entitlement server
+        :param activation_key: activation_key of the satellite server.
+            Will register by activation_key when the value is set.
         """
         self.host = host
         self.register_type = register_type
@@ -33,7 +34,9 @@ class SubscriptionManager:
         self.port = register.port
         self.prefix = register.prefix
         self.org = org or register.default_org
-        self.activation_key = activation_key or register.activation_key
+        self.activation_key = activation_key
+        if register_type != 'satellite':
+            self.baseurl = register.baseurl
 
     def register(self):
         """
@@ -43,13 +46,15 @@ class SubscriptionManager:
         cmd = f'subscription-manager register ' \
               f'--serverurl={self.server}:{self.port}{self.prefix} ' \
               f'--org={self.org} '
-        if 'satellite' in self.register_type and self.activation_key:
+        if self.activation_key:
             cmd += f'--activationkey={self.activation_key} '
         else:
             cmd += f'--username={self.username} ' \
                    f'--password={self.password} '
-        if 'satellite' in self.register_type:
+        if self.register_type == 'satellite':
             self.satellite_cert_install()
+        else:
+            cmd += f'--baseurl={self.baseurl}'
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0 and 'The system has been registered' in output:
             logger.info(f'Succeeded to register host')
@@ -195,6 +200,23 @@ class SubscriptionManager:
         raise FailException(
             f'Failed to list installed subscription for {self.host}')
 
+    def repo(self, action, repo):
+        """
+        Enable/disable one or more repos.
+        :param action: enable or disable
+        :param repo: a string including one or more repos separated
+            by comma, such as "repo1, repo2, repo3...".
+        """
+        repo_list = repo.split(',')
+        cmd = 'subscription-manager repos '
+        for item in repo_list:
+            cmd += f'--{action}="{item.strip()}" '
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0:
+            logger.info(f'Succeeded to {action} repo: {repo}')
+        else:
+            raise FailException(f'Failed to {action} repo: {repo}')
+
     def refresh(self):
         """
         Refresh subscription by command 'subscription-manager refresh'.
@@ -275,7 +297,6 @@ class RHSM:
         :param password: password to access the host
         :param port: port to access the host
         """
-        self.ssh = SSHConnect(host=host, user=username, pwd=password, port=port)
         self.org = config.rhsm.default_org
         self.api = f'https://{config.rhsm.server}/subscription'
         self.auth = (config.rhsm.username, config.rhsm.password)
@@ -286,10 +307,11 @@ class RHSM:
         :param host_name: host name, search all consumers if host_name=None.
         :return: one consumer or all consumers to a list.
         """
-        res = requests.get(url=f'{self.api}/owners/{self.org}/consumers',
-                           auth=self.auth, verify=False)
-        if res.status_code == 200:
-            consumers = res.json()
+        status, consumers = request_get(
+            url=f'{self.api}/owners/{self.org}/consumers',
+            auth=self.auth
+        )
+        if status == 200:
             if host_name:
                 for consumer in consumers:
                     if host_name in consumer['name']:
@@ -321,11 +343,11 @@ class RHSM:
         :return: output to a dic
         """
         uuid = self.uuid(host_name)
-        res = requests.get(url=f'{self.api}/consumers/{uuid}',
-                           auth=self.auth, verify=False)
-        if res.status_code == 200:
+        status, info = request_get(url=f'{self.api}/consumers/{uuid}',
+                                   auth=self.auth)
+        if status == 200:
             logger.info(f'Succeeded to get consumer info for {host_name}')
-            return res.json()
+            return info
         raise FailException(f'Failed to get consumer info for {host_name}')
 
     def delete(self, host_name=None):
@@ -343,8 +365,8 @@ class RHSM:
                         or
                         (host_name and host_name in consumer['name'])
                 ):
-                    requests.delete(url=f'{self.api}/consumers/{uuid}',
-                                    auth=self.auth, verify=False)
+                    request_delete(url=f'{self.api}/consumers/{uuid}',
+                                   auth=self.auth)
             if not self.consumers(host_name=host_name):
                 logger.info('Succeeded to delete consumer(s) on stage')
                 return True
@@ -359,12 +381,15 @@ class RHSM:
         :param sku_id: sku id
         :return: pool id
         """
-        res = requests.get(url=f'{self.api}/owners/{self.org}/pools',
-                           auth=self.auth, verify=False)
-        if res.status_code == 200 and res.json():
-            for item in res.json():
-                if sku_id in item['productId']:
-                    return item['id']
+        status, pools = request_get(url=f'{self.api}/owners/{self.org}/pools',
+                                    auth=self.auth)
+        if status == 200 and pools:
+            for pool in pools:
+                if sku_id in pool['productId']:
+                    pool_id = pool['id']
+                    logger.info(
+                        f'Succeeded to get the pool id {sku_id}:{pool_id}')
+                    return pool_id
         raise FailException(f'Failed to get pool id for {sku_id}')
 
     def attach(self, host_name, pool=None):
@@ -374,14 +399,15 @@ class RHSM:
         :param pool: pool id, will attach by auto when pool_id=None
         """
         uuid = self.uuid(host_name)
-        if self.entitlements(host_name, pool=pool):
+        if self.entitlements(uuid, pool=pool):
             self.unattach(host_name, pool=pool)
         params = ''
         if pool:
             params = (('pool', pool),)
-        requests.post(url=f'{self.api}/consumers/{uuid}/entitlements',
-                      params=params, auth=self.auth, verify=False)
-        if self.entitlements(host_name, pool=pool):
+        request_post(url=f'{self.api}/consumers/{uuid}/entitlements',
+                     params=params,
+                     auth=self.auth)
+        if self.entitlements(uuid, pool=pool):
             logger.info(f'Succeeded to attach pool for {host_name}')
         else:
             raise FailException(f'Failed to attach pool for {host_name}')
@@ -395,27 +421,28 @@ class RHSM:
         uuid = self.uuid(host_name)
         url = f'{self.api}/consumers/{uuid}/entitlements'
         if pool:
-            entitlement_id = self.entitlements(host_name=host_name, pool=pool)
+            entitlement_id = self.entitlements(uuid, pool)
             url = f'{self.api}/consumers/{uuid}/entitlements/{entitlement_id}'
-        requests.delete(url=url, auth=self.auth, verify=False)
-        if not self.entitlements(host_name, pool=pool):
+        request_delete(url=url, auth=self.auth)
+        if not self.entitlements(uuid, pool=pool):
             logger.info(f'Succeeded to remove pool(s) for {host_name}')
         else:
             raise FailException(f'Failed to remove pool(s) for {host_name}')
 
-    def entitlements(self, host_name, pool=None):
+    def entitlements(self, consumer_uuid, pool=None):
         """
         Get entitlement id for each pool or the only one for the defined pool.
-        :param host_name: host name
+        :param consumer_uuid: consumer uuid in rhsm api
         :param pool: pool id, get all entitlement id when pool=None
         :return: entitlement id
         """
-        uuid = self.uuid(host_name)
-        res = requests.get(url=f'{self.api}/consumers/{uuid}/entitlements',
-                           auth=self.auth, verify=False)
-        if res.status_code == 200:
+        status, entitlements = request_get(
+            url=f'{self.api}/consumers/{consumer_uuid}/entitlements',
+            auth=self.auth
+        )
+        if status == 200:
             entitlement_ids = dict()
-            for item in res.json():
+            for item in entitlements:
                 pool_id = item['pool']['id']
                 entitlement_ids[pool_id] = item['id']
             if pool:
@@ -424,7 +451,7 @@ class RHSM:
                 return None
             return entitlement_ids
         raise FailException(
-            f'Failed to get entitlement info for {host_name}')
+            f'Failed to get entitlement info for {consumer_uuid}')
 
     def associate(self, host_name, guest_uuid):
         """
@@ -434,9 +461,11 @@ class RHSM:
         :return: True/False
         """
         uuid = self.uuid(host_name)
-        res = requests.get(url=f'{self.api}/consumers/{uuid}/guestids',
-                           auth=self.auth, verify=False)
-        if res.status_code == 200 and guest_uuid in res.text:
+        status, output = request_get(
+            url=f'{self.api}/consumers/{uuid}/guestids',
+            auth=self.auth
+        )
+        if status == 200 and guest_uuid in str(output):
             logger.info("Hypervisor and Guest are associated on stage web")
             return True
         logger.warning("Hypervisor and Guest are not associated on stage web")
@@ -745,3 +774,46 @@ class Satellite:
             logger.info(f'Succeeded to set {name}:{value} for satellite')
             return True
         raise FailException(f'Failed to set {name}:{value} for satellite')
+
+    def associate(self, hypervisor, guest):
+        """
+        Check the hypervisor is associated with guest on web.
+        :param guest: guest name
+        :param hypervisor: hypervisor host name/uuid/hwuuid
+        """
+        host_id = self.host_id(host=hypervisor)
+        guest_id = self.host_id(host=guest)
+        if host_id and guest_id:
+            # Find the guest in hypervisor page
+            ret, output = request_get(url=f'{self.api}/api/v2/hosts/{host_id}',
+                                      auth=self.auth)
+            if guest.lower() in str(output):
+                logger.info(
+                    'Succeeded to find the associated guest in hypervisor page')
+            else:
+                raise FailException(
+                    'Failed to find the associated guest in hypervisor page')
+            # Find the hypervisor in guest page
+            ret, output = request_get(url=f'{self.api}/api/v2/hosts/{guest_id}',
+                                      auth=self.auth)
+            if hypervisor.lower() in str(output):
+                logger.info(
+                    'Succeeded to find the associated hypervisor in guest page')
+            else:
+                raise FailException(
+                    'Failed to find the associated hypervisor in guest page')
+
+
+def request_get(url, auth, verify=False):
+    res = requests.get(url=url, auth=auth, verify=verify)
+    return res.status_code, res.json()
+
+
+def request_post(url, auth, params, verify=False):
+    res = requests.post(url=url, auth=auth, params=params, verify=verify)
+    return res.status_code
+
+
+def request_delete(url, auth, verify=False):
+    res = requests.delete(url=url, auth=auth, verify=verify)
+    return res.status_code
