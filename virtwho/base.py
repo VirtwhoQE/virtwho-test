@@ -4,12 +4,7 @@ import os
 import random
 import re
 import string
-import sys
 import time
-
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(os.path.split(rootPath)[0])
 
 from virtwho import logger, FailException
 from virtwho.settings import config
