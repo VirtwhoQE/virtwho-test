@@ -2,6 +2,7 @@
 import os
 import sys
 import argparse
+
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
@@ -18,8 +19,8 @@ def provision_virtwho_host_by_beaker(args):
     Install rhel by submitting job to beaker with required arguments.
     Please refer to the provision/README for usage.
     :param args:
-        rhel_compose: required option, such as RHEL-7.9-20200917.0.
-        arch: required option, such as x86_64, s390x, ppc64...
+        rhel_compose: optional for gating test, default using the latest one.
+        arch: optional, default using x86_64.
         variant: optional, default using BaseOS for rhel8 and later.
         job_group: optional, associate a group to this job.
         host: optional, define/filter system as hostrequire
@@ -28,8 +29,13 @@ def provision_virtwho_host_by_beaker(args):
         gating_msg: optional, install virt-who from gating msg
         brew_url: optional, install virt-who from brew url
     """
+    virtwho_pkg = args.brew_url
+    if args.gating_msg:
+        msg = base.gating_msg_parser(args.gating_msg)
+        virtwho_pkg = msg['pkg_url']
+        if not args.rhel_compose:
+            args.rhel_compose = msg['latest_rhel_compose']
     host = install_rhel_by_beaker(args)
-    host = '10.66.144.5'
     username = config.beaker.default_username
     password = config.beaker.default_password
     ssh_host = SSHConnect(
@@ -37,20 +43,25 @@ def provision_virtwho_host_by_beaker(args):
         user=username,
         pwd=password
     )
+    virtwho_install(ssh_host, virtwho_pkg)
     base.system_init(ssh_host, 'virtwho')
-    virtwho_install(ssh_host, args.gating_msg, args.brew_url)
+
+    if config.job.mode == 'libvirt':
+        libvirt_access_no_password(ssh_host)
+    if config.job.mode == 'kubevirt':
+        kubevirt_config_file(ssh_host)
+
     config.update('virtwho', 'server', host)
     config.update('virtwho', 'username', username)
     config.update('virtwho', 'password', password)
 
 
-def virtwho_install(ssh, gating_msg=None, brew_url=None):
+def virtwho_install(ssh, url=None):
     """
     Install virt-who package, default is from repository,
     or gating msg, or brew url.
     :param ssh: ssh access of virt-who host
-    :param gating_msg: JSON, got from UMB
-    :param brew_url: brew url link of virt-who package
+    :param url: url link of virt-who package from brew
     """
     rhel_ver = base.rhel_version(ssh)
     cmd = ('rm -rf /var/lib/rpm/__db*;'
@@ -64,13 +75,9 @@ def virtwho_install(ssh, gating_msg=None, brew_url=None):
         cmd = 'dbus-uuidgen > /var/lib/dbus/machine-id'
     if rhel_ver == '8':
         cmd = 'localectl set-locale en_US.utf8; source /etc/profile.d/lang.sh'
-    ssh.runcmd(cmd)
-    if gating_msg:
-        env = base.gating_msg_parser(gating_msg)
-        pkg_url = env['pkg_url']
-        virtwho_install_by_url(ssh, pkg_url)
-    elif brew_url:
-        virtwho_install_by_url(ssh, brew_url)
+    _, _ = ssh.runcmd(cmd)
+    if url:
+        virtwho_install_by_url(ssh, url)
     else:
         ssh.runcmd('yum remove -y virt-who;'
                    'yum install -y virt-who')
@@ -94,6 +101,43 @@ def virtwho_install_by_url(ssh, url):
     ssh.runcmd(f'yum localinstall -y {url}')
 
 
+def libvirt_access_no_password(ssh):
+    """
+    Configure virt-who host accessing remote libvirt host by ssh
+    without password.
+    :param ssh: ssh access of virt-who host
+    """
+    ssh_libvirt = SSHConnect(
+        host=config.libvirt.server,
+        user=config.libvirt.username,
+        pwd=config.libvirt.password
+    )
+    _, _ = ssh.runcmd('echo -e "\n" | '
+                      'ssh-keygen -N "" &> /dev/null')
+    ret, output = ssh.runcmd('cat ~/.ssh/id_rsa.pub')
+    if ret != 0 or output is None:
+        raise FailException("Failed to create ssh key")
+    _, _ = ssh_libvirt.runcmd(f"mkdir ~/.ssh/;"
+                              f"echo '{output}' >> ~/.ssh/authorized_keys")
+    ret, _ = ssh.runcmd(f'ssh-keyscan -p 22 {config.libvirt.server} >> '
+                        f'~/.ssh/known_hosts')
+    if ret != 0:
+        raise FailException('Failed to configure access libvirt without passwd')
+
+
+def kubevirt_config_file(ssh):
+    """
+    Download the both config_file and config_file_no_cert.
+    :param ssh: ssh access of virt-who host.
+    """
+    base.url_file_download(ssh,
+                           config.kubevirt.config_file,
+                           config.kubevirt.config_url)
+    base.url_file_download(ssh,
+                           config.kubevirt.config_file_no_cert,
+                           config.kubevirt.config_url_no_cert)
+
+
 def virtwho_arguments_parser():
     """
     Parse and convert the arguments from command line to parameters
@@ -103,11 +147,13 @@ def virtwho_arguments_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--rhel-compose',
-        required=True,
-        help='Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
+        required=False,
+        default=None,
+        help='Such as: RHEL-8.0-20181005.1, optional for gating test.')
     parser.add_argument(
         '--arch',
-        required=True,
+        required=False,
+        default='x86_64',
         help='One of [x86_64, s390x, ppc64, ppc64le, aarch64]')
     parser.add_argument(
         '--variant',
@@ -142,12 +188,12 @@ def virtwho_arguments_parser():
         '--gating-msg',
         default=None,
         required=False,
-        help='It is a json got from UMB to provide virt-who pkg url')
+        help='Gating msg from UMB')
     parser.add_argument(
         '--brew-url',
         default=None,
         required=False,
-        help='It is used to install virt-who pkg by brew url')
+        help='Brew url of virt-who package')
     return parser.parse_args()
 
 
