@@ -16,10 +16,11 @@ from utils.beaker import install_rhel_by_beaker
 
 def provision_virtwho_host(args):
     """
-    Install rhel by submitting job to beaker with required arguments. ?????
+    Configure virt-who host for an existing server or a new one
+        installed by beaker.
     Please refer to the provision/README for usage.
     :param args:
-        rhel_compose: optional for gating test, default using the latest one.
+        rhel_compose: optional for gating test, default to the latest compose.
         server, username, password: optional, if not provide,
             will install a new system by beaker.
         beaker_host: optional, define/filter system as hostrequire
