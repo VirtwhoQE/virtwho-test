@@ -10,50 +10,67 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho import logger, FailException
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
-from virtwho.provision import base
+from virtwho import base
 from utils.beaker import install_rhel_by_beaker
 
 
-def provision_virtwho_host_by_beaker(args):
+def provision_virtwho_host(args):
     """
-    Install rhel by submitting job to beaker with required arguments.
+    Install rhel by submitting job to beaker with required arguments. ?????
     Please refer to the provision/README for usage.
     :param args:
         rhel_compose: optional for gating test, default using the latest one.
-        arch: optional, default using x86_64.
-        variant: optional, default using BaseOS for rhel8 and later.
-        job_group: optional, associate a group to this job.
-        host: optional, define/filter system as hostrequire
-        host_type: optional, physical or virtual
-        host_require: optional, other hostRequires for job
+        server, username, password: optional, if not provide,
+            will install a new system by beaker.
+        beaker_host: optional, define/filter system as hostrequire
         gating_msg: optional, install virt-who from gating msg
-        brew_url: optional, install virt-who from brew url
+        virtwho_pkg_url: optional, install virt-who from brew url
     """
-    virtwho_pkg = args.brew_url
+    virtwho_pkg = args.virtwho_pkg_url
     if args.gating_msg:
         msg = base.gating_msg_parser(args.gating_msg)
         virtwho_pkg = msg['pkg_url']
         if not args.rhel_compose:
             args.rhel_compose = msg['latest_rhel_compose']
-    host = install_rhel_by_beaker(args)
-    username = config.beaker.default_username
-    password = config.beaker.default_password
+
+    host = args.server
+    username = args.username
+    password = args.password
+    if not args.server:
+        beaker_args_define(args)
+        host = install_rhel_by_beaker(args)
+        username = config.beaker.default_username
+        password = config.beaker.default_password
     ssh_host = SSHConnect(
         host=host,
         user=username,
         pwd=password
     )
+
     virtwho_install(ssh_host, virtwho_pkg)
     base.system_init(ssh_host, 'virtwho')
-
     if config.job.mode == 'libvirt':
         libvirt_access_no_password(ssh_host)
     if config.job.mode == 'kubevirt':
         kubevirt_config_file(ssh_host)
-
     config.update('virtwho', 'server', host)
     config.update('virtwho', 'username', username)
     config.update('virtwho', 'password', password)
+
+
+def beaker_args_define(args):
+    """
+    Define the necessary args to call the utils/beaker.by
+    :param args: arguments to define
+    """
+    args.arch = 'x86_64'
+    args.variant = 'BaseOS'
+    if 'RHEL-7' in args.rhel_compose:
+        args.variant = 'Server'
+    args.job_group = 'virt-who-ci-server-group'
+    args.host = args.beaker_host
+    args.host_type = None
+    args.host_require = None
 
 
 def virtwho_install(ssh, url=None):
@@ -149,54 +166,44 @@ def virtwho_arguments_parser():
         '--rhel-compose',
         required=False,
         default=None,
-        help='Such as: RHEL-8.0-20181005.1, optional for gating test.')
+        help='Such as: RHEL-8.5.0-20211013.2, optional for gating test.')
     parser.add_argument(
-        '--arch',
+        '--server',
         required=False,
-        default='x86_64',
-        help='One of [x86_64, s390x, ppc64, ppc64le, aarch64]')
+        default=config.virtwho.server,
+        help='IP/fqdn of virt-who host, '
+             'will install one by beaker if not provide.')
     parser.add_argument(
-        '--variant',
+        '--username',
         required=False,
-        default=None,
-        help='One of [Server, Client, Workstation, BaseOS]. '
-             'Unnecessary for RHEL-8 and later, default using BaseOS.')
+        default=config.virtwho.username,
+        help='Username to access the server, '
+             'default to the [virtwho]:username in virtwho.ini')
     parser.add_argument(
-        '--job-group',
+        '--password',
         required=False,
-        default='virt-who-ci-server-group',
-        help='Associate a group to the job')
+        default=config.virtwho.password,
+        help='Password to access the server, '
+             'default to the [virtwho]:password in virtwho.ini')
     parser.add_argument(
-        '--host',
+        '--beaker-host',
         required=False,
         default=None,
         help='Define/filter system as hostrequire. '
              'Such as: %ent-02-vm%, ent-02-vm-20.lab.eng.nay.redhat.com')
-    parser.add_argument(
-        '--host-type',
-        required=False,
-        default=None,
-        help='Define the system type as hostrequire. '
-             'Such as: physical or virtual')
-    parser.add_argument(
-        '--host-require',
-        required=False,
-        default=None,
-        help='Separate multiple options with commas. '
-             'Such as: labcontroller=lab.example.com,memory > 7000')
     parser.add_argument(
         '--gating-msg',
         default=None,
         required=False,
         help='Gating msg from UMB')
     parser.add_argument(
-        '--brew-url',
+        '--virtwho-pkg-url',
         default=None,
         required=False,
-        help='Brew url of virt-who package')
+        help='Brew url of virt-who package for localinstall.')
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = virtwho_arguments_parser()
-    provision_virtwho_host_by_beaker(args)
+    provision_virtwho_host(args)
