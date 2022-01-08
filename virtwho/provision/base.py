@@ -5,7 +5,6 @@ import random
 import re
 import string
 import sys
-import argparse
 import time
 
 curPath = os.path.abspath(os.path.dirname(__file__))
@@ -14,10 +13,15 @@ sys.path.append(os.path.split(rootPath)[0])
 
 from virtwho import logger, FailException
 from virtwho.settings import config
-from virtwho.ssh import SSHConnect
 
 
-def system_init(ssh, key):
+def system_init(ssh, keyword):
+    """
+    Initiate the rhel system before testing, including set hostname,
+    stop firewall and disable selinux.
+    :param ssh: ssh access of host
+    :param keyword: keyword to set the hostname
+    """
     if ssh_connect(ssh):
         host_ip = ipaddr_get(ssh)
         host_name = hostname_get(ssh)
@@ -28,7 +32,7 @@ def system_init(ssh, key):
             random_str = ''.join(
                 random.sample(string.ascii_letters + string.digits, 8)
             )
-            host_name = f'{key}-{random_str}.redhat.com'
+            host_name = f'{keyword}-{random_str}.redhat.com'
         hostname_set(ssh, host_name)
         etc_hosts_set(ssh, f'{host_ip} {host_name}')
         firewall_stop(ssh)
@@ -39,6 +43,10 @@ def system_init(ssh, key):
 
 
 def ssh_connect(ssh):
+    """
+    Test if the host is running and can be accessed by ssh.
+    :param ssh: ssh access of host
+    """
     for i in range(60):
         ret, output = ssh.runcmd('rpm -qa filesystem')
         if ret == 0 and 'filesystem' in output:
@@ -48,6 +56,10 @@ def ssh_connect(ssh):
 
 
 def ipaddr_get(ssh):
+    """
+    Get the host ip address.
+    :param ssh: ssh access of host
+    """
     ret, output = ssh.runcmd("ip route get 8.8.8.8 |"
                              "awk '/src/ { print $7 }'")
     if ret == 0 and output:
@@ -56,6 +68,10 @@ def ipaddr_get(ssh):
 
 
 def hostname_get(ssh):
+    """
+    Get the hostname.
+    :param ssh: ssh access of host
+    """
     ret, output = ssh.runcmd('hostname')
     if ret == 0 and output:
         return output.strip()
@@ -63,6 +79,11 @@ def hostname_get(ssh):
 
 
 def hostname_set(ssh, hostname):
+    """
+    Set hostname.
+    :param ssh: ssh access of host
+    :param hostname: hostname
+    """
     ret1, _ = ssh.runcmd(f'hostnamectl set-hostname {hostname}')
     cmd = (f"if [ -f /etc/hostname ];"
            f"then sed -i -e '/localhost/d' -e '/{hostname}/d' /etc/hostname;"
@@ -76,6 +97,11 @@ def hostname_set(ssh, hostname):
 
 
 def etc_hosts_set(ssh, value):
+    """
+    Set the /etc/hosts file.
+    :param ssh: ssh access of host
+    :param value: should be the format of '{ip} {hostname}'
+    """
     ret, _ = ssh.runcmd(f"sed -i '/localhost/!d' /etc/hosts;"
                         f"echo '{value}' >> /etc/hosts")
     if ret != 0:
@@ -83,6 +109,10 @@ def etc_hosts_set(ssh, value):
 
 
 def firewall_stop(ssh):
+    """
+    Stop firewall for one host.
+    :param ssh: ssh access of host
+    """
     cmd = ('systemctl stop firewalld.service;'
            'systemctl disable firewalld.service')
     if rhel_version(ssh) == '6':
@@ -93,6 +123,10 @@ def firewall_stop(ssh):
 
 
 def selinux_disable(ssh):
+    """
+    Disable selinux for one host.
+    :param ssh: ssh access of host
+    """
     ret, _ = ssh.runcmd("setenforce 0;"
                         "sed -i -e 's/SELINUX=.*/SELINUX=disabled/g' "
                         "/etc/selinux/config")
@@ -101,6 +135,11 @@ def selinux_disable(ssh):
 
 
 def rhel_version(ssh):
+    """
+    Check the rhel version.
+    :param ssh: ssh access of host
+    :return: one number, such as 7, 8, 9
+    """
     ret, output = ssh.runcmd('cat /etc/redhat-release')
     if ret == 0 and output:
         m = re.search(r'(?<=release )\d', output)
@@ -110,6 +149,11 @@ def rhel_version(ssh):
 
 
 def url_validation(url):
+    """
+    Test the url existence.
+    :param url: url link
+    :return: True or False
+    """
     output = os.popen(f"if ( curl -o/dev/null -sfI '{url}' );"
                       f"then echo 'true';"
                       f"else echo 'false';"
@@ -120,6 +164,11 @@ def url_validation(url):
 
 
 def gating_msg_parser(json_msg):
+    """
+    Parse the gating message to a dict with necessary options.
+    :param json_msg: gating msg got from UMB, which should be a Json
+    :return: a dict
+    """
     env = dict()
     msg = json.loads(json_msg)
     if 'info' in msg.keys():
@@ -155,14 +204,19 @@ def gating_msg_parser(json_msg):
     env['pkg_nvr'] = items[9]
     env['rhel_release'] = rhel_release
     env['latest_rhel_compose'] = latest_compose_id
-    logger.info(f'{env}')
     return env
 
 
-def url_file_download(ssh, local_file, remote_url):
+def url_file_download(ssh, local_file, url):
+    """
+    Test the url existence.
+    :param ssh: ssh access of host
+    :param local_file: local file path and name
+    :param url: url link of remote file
+    """
     _, _ = ssh.runcmd(f'rm -f {local_file};'
-                      f'curl -L {remote_url} -o {local_file};'
+                      f'curl -L {url} -o {local_file};'
                       f'sync')
     ret, output = ssh.runcmd(f'cat {local_file}')
     if ret != 0 or 'Not Found' in output:
-        raise FailException(f'Failed to download {remote_url}')
+        raise FailException(f'Failed to download {url}')
