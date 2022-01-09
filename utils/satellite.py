@@ -2,7 +2,8 @@
 
 import argparse
 
-from virtwho import base, logger, FailException
+from virtwho import logger, FailException
+from virtwho.base import system_init
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager
 from virtwho.settings import config
@@ -12,11 +13,6 @@ def satellite_deploy(args):
     """
     Deploy satellite by cdn or dogfood with required arguments.
     Please refer to the README for usage.
-    :param args: version, repo, os and server are required options.
-        version: satellite version, such as 6.8, 6.9
-        repo: repo resources, cdn or dogfood
-        os: rhel host, such as RHEL-7.9-20200917.0
-        server: server FQDN or IP
     """
     sat_ver = args.version
     sat_repo = args.repo
@@ -24,7 +20,8 @@ def satellite_deploy(args):
     ssh = SSHConnect(host=args.server,
                      user=args.ssh_username,
                      pwd=args.ssh_password)
-    base.system_init(ssh, 'satellite')
+    system_init(ssh, 'satellite')
+    # Enable repos of cnd or dogfood
     if 'cdn' in sat_repo:
         sm = SubscriptionManager(host=args.server,
                                  username=args.ssh_username,
@@ -33,8 +30,10 @@ def satellite_deploy(args):
         satellite_repo_enable_cdn(sm, rhel_ver, sat_ver)
     if 'dogfood' in sat_repo:
         satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver)
+    # Install satellite package and deploy
     satellite_pkg_install(ssh)
     satellite_installer(ssh, args.admin_password)
+    # Upload manifest as requirement
     if args.manifest:
         satellite_manifest_upload(
             ssh, args.manifest, args.admin_username, args.admin_password
@@ -43,11 +42,17 @@ def satellite_deploy(args):
 
 
 def satellite_repo_enable_cdn(sm, rhel_ver, sat_ver):
+    """
+    Enable satellite related repos from cnd content
+    :param sm: subscription-manager instance
+    :param rhel_ver: rhel version, such as 6, 7
+    :param sat_ver: satellite version, such as 6.9, 6.10
+    """
     sm.register()
     employee_sku_pool = sm.available(
-        config.sku.employee_sku, 'physical')['pool_id']
+        config.sku.employee, 'Physical')['pool_id']
     satellite_sku_pool = sm.available(
-        config.sku.satellite_sku, 'physical')['pool_id']
+        config.sku.satellite, 'Physical')['pool_id']
     sm.attach(pool=employee_sku_pool)
     sm.attach(pool=satellite_sku_pool)
     sm.repo('disable', '*')
@@ -83,7 +88,6 @@ def satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver,
     if ret == 0:
         ssh.runcmd(f'subscription-manager attach '
                    f'--pool {maintenance_pool}')
-        logger.info('Succeeded to enable dogfood repo.')
         return True
     raise FailException('Failed to enable dogfood repo.')
 
@@ -111,7 +115,6 @@ def satellite_pkg_install(ssh):
     """
     Run command to install satellite package.
     :param ssh: ssh access to satellite host.
-    :return: True or raise Fail.
     """
     # clean yum history and rebuilddb
     ssh.runcmd('rm -f /var/lib/rpm/__db*;'
@@ -120,12 +123,9 @@ def satellite_pkg_install(ssh):
                'rm -rf /var/cache/yum/*;'
                'yum clean all;'
                'rm -rf /etc/yum.repos.d/beaker*')
-
     ret, output = ssh.runcmd('yum install -y satellite')
-    if ret == 0:
-        logger.info(f'Succeeded to install satellite package')
-        return True
-    raise FailException('Failed to install satellite package')
+    if ret != 0:
+        raise FailException('Failed to install satellite package')
 
 
 def satellite_installer(ssh, admin_password):
@@ -133,17 +133,14 @@ def satellite_installer(ssh, admin_password):
     Run command to deploy satellite by satellite-installer.
     :param ssh: ssh access to satellite host.
     :param admin_password: password for admin account.
-    :return: True or raise Fail
     """
     ret, output = ssh.runcmd(
         f'satellite-installer --scenario satellite '
         f'--disable-system-checks '
         f'--foreman-initial-admin-password={admin_password}'
     )
-    if ret == 0:
-        logger.info('Succeeded to run satellite-installer')
-        return True
-    raise FailException('Failed to run satellite-installer')
+    if ret != 0:
+        raise FailException('Failed to run satellite-installer')
 
 
 def satellite_manifest_upload(ssh, url, admin_username, admin_password):
@@ -173,9 +170,7 @@ def satellite_manifest_upload(ssh, url, admin_username, admin_password):
     ret, _ = ssh.runcmd(f'hammer -u {admin_username} -p {admin_password} '
                         f'subscription refresh-manifest '
                         f'--organization="Default Organization"')
-    if ret == 0:
-        logger.info('Succeeded to refresh satellite manifest')
-    else:
+    if ret != 0:
         raise FailException('Failed to refresh satellite manifest')
 
 
@@ -189,7 +184,7 @@ def satellite_arguments_parser():
     parser.add_argument(
         '--version',
         required=True,
-        help="One of ['6.5', '6.6', '6.7', '6.8', '6.9', '6.10']")
+        help="Satellite version, such as '6.9', '6.10'")
     parser.add_argument(
         '--repo',
         required=True,
@@ -201,7 +196,7 @@ def satellite_arguments_parser():
     parser.add_argument(
         '--server',
         required=True,
-        help='The server hostname or ip to deploy satellite')
+        help='The server ip/fqdn to deploy satellite')
     parser.add_argument(
         '--ssh-username',
         default=config.satellite.ssh_username,
