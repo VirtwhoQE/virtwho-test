@@ -1,6 +1,11 @@
 #!/usr/bin/python
-
 import argparse
+import os
+import sys
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 from virtwho import logger, FailException
 from virtwho.base import system_init
@@ -11,7 +16,7 @@ from virtwho.settings import config
 
 def satellite_deploy(args):
     """
-    Deploy satellite by cdn or dogfood with required arguments.
+    Deploy satellite server by cdn or dogfood with required arguments.
     Please refer to the README for usage.
     """
     sat_ver = args.version
@@ -21,6 +26,7 @@ def satellite_deploy(args):
                      user=args.ssh_username,
                      pwd=args.ssh_password)
     system_init(ssh, 'satellite')
+
     # Enable repos of cnd or dogfood
     if 'cdn' in sat_repo:
         sm = SubscriptionManager(host=args.server,
@@ -30,9 +36,11 @@ def satellite_deploy(args):
         satellite_repo_enable_cdn(sm, rhel_ver, sat_ver)
     if 'dogfood' in sat_repo:
         satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver)
-    # Install satellite package and deploy
+
+    # Install satellite
     satellite_pkg_install(ssh)
     satellite_installer(ssh, args.admin_password)
+
     # Upload manifest as requirement
     if args.manifest:
         satellite_manifest_upload(
@@ -163,9 +171,7 @@ def satellite_manifest_upload(ssh, url, admin_username, admin_password):
                         f'subscription upload '
                         f'--organization-label Default_Organization '
                         f'--file {filename}')
-    if ret == 0:
-        logger.info(f'Succeeded to upload manifest for satellite')
-    else:
+    if ret != 0:
         raise FailException('Failed to upload manifest for satellite')
     ret, _ = ssh.runcmd(f'hammer -u {admin_username} -p {admin_password} '
                         f'subscription refresh-manifest '
