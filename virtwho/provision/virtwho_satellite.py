@@ -8,56 +8,72 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
-from virtwho import logger, FailException
-from utils.beaker import install_rhel_by_beaker
-from utils.satellite import satellite_deploy
+from virtwho import FailException
+from virtwho.register import Satellite
 from virtwho.ssh import SSHConnect
 from virtwho.settings import config
+from utils.beaker import install_rhel_by_beaker
+from utils.satellite import satellite_deploy
 
 
 def satellite_deploy_for_virtwho(args):
     """
-    Deploy satellite by cdn or dogfood with required arguments to.
+    Deploy satellite by cdn or dogfood with required arguments.
+    If no server provided, will install new system by beaker.
+    Configure the satellite as virt-who testing requirements.
     Please refer to the README for usage.
-    :param args: version, repo, os and server are required options.
-        version: satellite version, such as 6.8, 6.9
-        repo: repo resources, cdn or dogfood
-        os: rhel host, such as RHEL-7.9-20200917.0
-        server: server FQDN or IP
     """
     satellite = args.satellite.split('-')
-    args.rhel_compose = rhel_compose_for_satellite(satellite[2])
     args.version = satellite[0]
     args.repo = satellite[1]
-    # If not provide the server ip/fqdn, will install a new system by beaker.
+    args.rhel_compose = rhel_compose_for_satellite(satellite[2])
+
+    # Install a new system by beaker when no server provided.
     if not args.server:
         beaker_args_define(args)
         args.server = install_rhel_by_beaker(args)
         args.ssh_username = config.beaker.default_username
         args.ssh_password = config.beaker.default_password
-    ssh_host = SSHConnect(
+    ssh_satellite = SSHConnect(
         host=args.server,
         user=args.ssh_username,
         pwd=args.ssh_password
     )
-    # start to deploy and set satellite
+
+    # Start to deploy and configure the satellite server
     satellite_deploy(args)
-    satellite_settings(ssh_host, 'failed_login_attempts_limit', '0')
-    satellite_settings(ssh_host, 'unregister_delete_host', 'true')
+    satellite_settings(ssh_satellite, 'failed_login_attempts_limit', '0')
+    satellite_settings(ssh_satellite, 'unregister_delete_host', 'true')
+
+    # Update the [satellite] section of virtwho.ini
     config.update('satellite', 'server', args.server)
     config.update('satellite', 'username', args.admin_username)
     config.update('satellite', 'password', args.admin_password)
     config.update('satellite', 'ssh_username', args.ssh_username)
     config.update('satellite', 'ssh_password', args.ssh_password)
 
+    # Create the organization and activation key as requirement.
+    satellite = Satellite()
+    second_org = config.satellite.secondary_org
+    if second_org:
+        satellite.org_create(name=second_org, label=second_org)
+    activation_key = config.satellite.activation_key
+    if activation_key:
+        satellite.activation_key_create(key=activation_key)
+
 
 def rhel_compose_for_satellite(rhel_version):
-    compose = ''
+    """
+    Define the stable rhel compose to deploy satellite.
+    :param rhel_version: such as rhel7, rhel8
+    :return: rhel compose id
+    """
+    compose_id = ''
     if 'rhel7' in rhel_version:
-        compose = 'RHEL-7.9-20200917.0'
+        compose_id = 'RHEL-7.9-20200917.0'
     if 'rhel8' in rhel_version:
-        compose = 'RHEL-8.5.0-20211013.2'
-    return compose
+        compose_id = 'RHEL-8.5.0-20211013.2'
+    return compose_id
 
 
 def beaker_args_define(args):
@@ -87,7 +103,6 @@ def satellite_settings(ssh, name, value):
                              f'--name={name} '
                              f'--value={value}')
     if ret == 0 and f'Setting [{name}] updated to' in output:
-        logger.info(f'Succeeded to set {name}:{value} for satellite')
         return True
     raise FailException(f'Failed to set {name}:{value} for satellite')
 
