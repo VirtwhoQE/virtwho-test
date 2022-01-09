@@ -38,7 +38,6 @@ def install_rhel_by_grup(args):
         #     ssh_host, ks_url, vmlinuz_url, initrd_url, repo_base
         # )
         grub_reboot(ssh_host)
-        logger.info('------------step2-------')
         if base.ssh_connect(ssh_host):
             base.rhel_compose_repo(
                 ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
@@ -141,11 +140,8 @@ def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
 
 
 def grub_reboot(ssh):
-    ssh.runcmd('sync; sync; sync; sync; reboot -f > /dev/null &')
-    logger.info('------------step1-------')
+    ssh.runcmd('sync; sync; sync; sync; reboot -f && exit')
     time.sleep(20)
-    if base.ssh_connect(ssh):
-        raise FailException('Failed to reboot host for grub install.')
 
 
 def rhel_arguments_parser():
