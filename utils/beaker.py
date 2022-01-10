@@ -16,17 +16,8 @@ from virtwho.ssh import SSHConnect
 
 def install_rhel_by_beaker(args):
     """
-    Install rhel by submitting job to beaker with required arguments.
+    Install rhel os by submitting job to beaker with required arguments.
     Please refer to the utils/README for usage.
-    :param args:
-        rhel_compose: required option, such as RHEL-7.9-20200917.0.
-        arch: required option, such as x86_64, s390x, ppc64...
-        variant: optional, default using BaseOS for rhel8 and later.
-        job_group: optional, associate a group to this job.
-        host: optional, define/filter system as hostrequire
-        host_type: optional, physical or virtual
-        host_require: optional, other hostRequires for job,
-            separate multiple options with commas.
     """
     job_name = f'virtwho-{args.rhel_compose}'
     ssh_client = SSHConnect(
