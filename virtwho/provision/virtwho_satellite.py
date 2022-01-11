@@ -19,14 +19,10 @@ from utils.satellite import satellite_deploy
 def satellite_deploy_for_virtwho(args):
     """
     Deploy satellite by cdn or dogfood with required arguments.
-    If no server provided, will install new system by beaker.
-    Configure the satellite as virt-who testing requirements.
+    If no server provided, will firstly install a new system by beaker.
+    And will configure the satellite as virt-who testing requirements.
     Please refer to the README for usage.
     """
-    satellite = args.satellite.split('-')
-    args.version = satellite[0]
-    args.repo = satellite[1]
-    args.rhel_compose = rhel_compose_for_satellite(satellite[2])
 
     # Install a new system by beaker when no server provided.
     if not args.server:
@@ -41,6 +37,11 @@ def satellite_deploy_for_virtwho(args):
     )
 
     # Start to deploy and configure the satellite server
+    satellite = args.satellite.split('-')
+    args.version = satellite[0]
+    args.repo = satellite[1]
+    args.rhel_compose = rhel_compose_for_satellite(satellite[2])
+    args.manifest = config.satellite.manifest
     satellite_deploy(args)
     satellite_settings(ssh_satellite, 'failed_login_attempts_limit', '0')
     satellite_settings(ssh_satellite, 'unregister_delete_host', 'true')
@@ -148,12 +149,6 @@ def virtwho_satellite_arguments_parser():
         required=False,
         help='Account password for the satellite administrator, '
              'default to the [satellite]:password in virtwho.ini')
-    parser.add_argument(
-        '--manifest',
-        default=config.satellite.manifest,
-        required=False,
-        help='Manifest url to upload after complete deploying satellite, '
-             'default to the [satellite]:manifest in virtwho.ini')
     return parser.parse_args()
 
 
