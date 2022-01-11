@@ -166,8 +166,10 @@ def beaker_arguments_parser():
         help='Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
     parser.add_argument(
         '--arch',
-        required=True,
-        help='One of [x86_64, s390x, ppc64, ppc64le, aarch64]')
+        required=False,
+        default='x86_64',
+        help='One of [x86_64, s390x, ppc64, ppc64le, aarch64]. '
+             'Default to x86_64.')
     parser.add_argument(
         '--variant',
         required=False,
