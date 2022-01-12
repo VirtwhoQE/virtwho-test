@@ -5,11 +5,10 @@ All the provision/*.py are defined for virt-who testing.
 
 `virtwho_host.py`_ is used to configure virt-who host for an existing server or a new one installed by beaker.
 
-This module helps to initiate the virt-who host, install virt-who package (by cdn, UMB msg or brew), download kube.conf for cnv mode and
+It helps to initiate the virt-who host, install virt-who package (by cdn, UMB msg or brew url), download kube.conf for cnv mode and
 configure no password ssh login for remote libvirt mode.
 
-
-* If need to install system by beaker, we have to set the [beaker] section in virtwho.ini.
+* If need to install system by beaker, we need to firstly set the [beaker] section in virtwho.ini.
 
     * [beaker]
     * client=
@@ -20,7 +19,7 @@ configure no password ssh login for remote libvirt mode.
     * keytab=
     * principal=
 
-* We can configure the [virtwho] section to replace some arguments
+* We can optionally configure the [virtwho] section to replace some arguments.
 
     * [virtwho]
     * server=
@@ -43,7 +42,38 @@ configure no password ssh login for remote libvirt mode.
 
 
 
-`virtwho_satellite.py`_ is used to create rhel container.
+`virtwho_satellite.py`_ is used to deploy and configure satellite for virt-who testing.
+
+* If need to install system by beaker, we should firstly set the [beaker] section in virtwho.ini.
+
+    * [beaker]
+    * client=
+    * client_username=
+    * client_password=
+    * default_username=
+    * default_password=
+    * keytab=
+    * principal=
+
+* Define the register and repo information before deploying.
+
+    * cnd,  define the [rhsm] section in virtwho.ini
+    * dogfood, define the [satellite]:dogfood= in virtwho.ini
+
+
+* We can optionally configure the [satellite] in virtwho.ini to replace some arguments.
+    * [satellite]
+    * server=
+    * username=
+    * password=
+    * ssh_username=
+    * ssh_passowrd=
+
+* Below are examples to run the file with required arguments.
+
+    * # python3 satellite.py --version=6.9 --repo=cdn --rhel-compose=RHEL-7.9-20200917.0
+    * # python3 satellite.py --version=6.10 --repo=dogfood --rhel-compose=RHEL-7.9-20200917.0 --server=ent-02-vm-x.lab.eng.nay.redhat.com --ssh-username=root --ssh-password=redhat --admin-username=admin --admin-password=password --manifest=[url]
+
 
 
 
