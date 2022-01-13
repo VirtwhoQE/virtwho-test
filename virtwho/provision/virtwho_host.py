@@ -19,36 +19,32 @@ def provision_virtwho_host(args):
     Configure virt-who host for an existing server or a new one installed by beaker.
     Please refer to the provision/README for usage.
     """
-    virtwho_pkg = args.virtwho_pkg_url
     if args.gating_msg:
         msg = base.gating_msg_parser(args.gating_msg)
-        virtwho_pkg = msg['pkg_url']
+        args.virtwho_pkg_url = msg['pkg_url']
         if not args.rhel_compose:
             args.rhel_compose = msg['latest_rhel_compose']
 
-    host = args.server
-    username = args.username
-    password = args.password
     if not args.server:
         beaker_args_define(args)
-        host = install_rhel_by_beaker(args)
-        username = config.beaker.default_username
-        password = config.beaker.default_password
+        args.server = install_rhel_by_beaker(args)
+        args.username = config.beaker.default_username
+        args.password = config.beaker.default_password
     ssh_host = SSHConnect(
-        host=host,
-        user=username,
-        pwd=password
+        host=args.server,
+        user=args.username,
+        pwd=args.password
     )
 
-    virtwho_install(ssh_host, virtwho_pkg)
+    virtwho_install(ssh_host, args.virtwho_pkg_url)
     base.system_init(ssh_host, 'virtwho')
     if config.job.mode == 'libvirt':
         libvirt_access_no_password(ssh_host)
     if config.job.mode == 'kubevirt':
         kubevirt_config_file(ssh_host)
-    config.update('virtwho', 'server', host)
-    config.update('virtwho', 'username', username)
-    config.update('virtwho', 'password', password)
+    config.update('virtwho', 'server', args.server)
+    config.update('virtwho', 'username', args.username)
+    config.update('virtwho', 'password', args.password)
 
 
 def beaker_args_define(args):
