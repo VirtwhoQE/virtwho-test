@@ -44,6 +44,9 @@ configure no password ssh login for remote libvirt mode.
 
 `virtwho_satellite.py`_ is used to deploy and configure satellite for virt-who testing.
 
+It helps to install and initiate a host by beaker, install satellite pkg, deploy satellite server,
+load manifest and set for virt-who testing.
+
 * If need to install system by beaker, we should firstly set the [beaker] section in virtwho.ini.
 
     * [beaker]
@@ -62,6 +65,7 @@ configure no password ssh login for remote libvirt mode.
 
 
 * We can optionally configure the [satellite] in virtwho.ini to replace some arguments.
+
     * [satellite]
     * server=
     * username=
