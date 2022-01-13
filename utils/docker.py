@@ -46,31 +46,27 @@ def create_rhel_container_by_docker(args):
     ssh_docker.put_dir(local_dir, remote_dir)
 
     # Create docker image
-    ssh_docker.runcmd('subscription-manager unregister;'
-                      'subscription-manager clean')
     docker_image_create(ssh_docker, image_name, args.rhel_compose)
 
     # Create docker container
-    if docker_container_create(ssh_docker, image_name, container_name,
-                               container_port, args.container_username,
-                               args.container_password):
-        ssh_container = SSHConnect(
-            host=args.docker_server,
-            user=args.container_username,
-            pwd=args.container_password,
-            port=container_port
-        )
-        if base.ssh_connect(ssh_container):
-            logger.info(
-                f'Succeeded to create docker container {container_name} '
-                f'({args.docker_server}:{container_port})'
-            )
-            return f'{args.docker_server}:{container_port}'
-    raise FailException(f'Failed to create docker container {container_name}.')
+    docker_container_create(ssh_docker, image_name,
+                            container_name, container_port,
+                            args.container_username, args.container_password)
+    logger.info(f'Succeeded to create docker container:{container_name}, '
+                f'port:{container_port}')
+    return container_name, container_port
 
 
 def docker_image_create(ssh, image_name, compose_id):
+    """
+    Create docker image.
+    :param ssh: ssh access to docker server
+    :param image_name: image name to create
+    :param compose_id: rhel compose id
+    """
     if not docker_image_exist(ssh, image_name):
+        ssh.runcmd('subscription-manager unregister;'
+                   'subscription-manager clean')
         repo_file = '/tmp/docker/compose.repo'
         base.rhel_compose_repo(ssh, compose_id, repo_file)
         ret, _ = ssh.runcmd(
@@ -80,37 +76,17 @@ def docker_image_create(ssh, image_name, compose_id):
             raise FailException(f'Failed to create docker image {image_name}')
 
 
-def docker_image_exist(ssh, image_name):
-    ret, _ = ssh.runcmd(f'docker images | grep {image_name}')
-    if ret == 0:
-        return True
-    return False
-
-
-def docker_container_exist(ssh, keyword):
-    keyword = str(keyword)
-    ret, output = ssh.runcmd(f"docker ps -a | grep '{keyword}'")
-    if ret == 0 and keyword in output:
-        return True
-    return False
-
-
-def docker_container_port(ssh):
-    port = random.randint(53220, 60000)
-    while docker_container_exist(ssh, port):
-        port = random.randint(53220, 60000)
-    return str(port)
-
-
-def docker_container_name(image_name, container_port):
-    name = (image_name.replace('.', '-')
-            + '-'
-            + container_port)
-    return name
-
-
 def docker_container_create(ssh, image_name, container_name, container_port,
                             container_username, container_password):
+    """
+    Create docker container.
+    :param ssh: ssh access to docker server
+    :param image_name: docker image name
+    :param container_name: docker container name
+    :param container_port: docker container port
+    :param container_username: docker container username
+    :param container_password: docker container password
+    """
     ssh.runcmd(
         f'sh /tmp/docker/mk_container.sh '
         f'-i {image_name} '
@@ -119,9 +95,59 @@ def docker_container_create(ssh, image_name, container_name, container_port,
         f'-u {container_username} '
         f'-p {container_password}'
     )
-    if docker_container_exist(ssh, container_name):
+    if not docker_container_exist(ssh, container_name):
+        raise FailException(
+            f'Failed to create docker container:{container_name}'
+        )
+
+
+def docker_image_exist(ssh, image_name):
+    """
+    Check if the docker image exit or not.
+    :param ssh: ssh access to docker server
+    :param image_name: image name to check
+    """
+    ret, _ = ssh.runcmd(f'docker images | grep {image_name}')
+    if ret == 0:
         return True
     return False
+
+
+def docker_container_exist(ssh, keyword):
+    """
+    Check if the docker container exit or not.
+    :param ssh: ssh access to docker server
+    :param keyword: keywork in container name for checking
+    """
+    keyword = str(keyword)
+    ret, output = ssh.runcmd(f"docker ps -a | grep '{keyword}'")
+    if ret == 0 and keyword in output:
+        return True
+    return False
+
+
+def docker_container_port(ssh):
+    """
+    Define the container port with a random number.
+    :param ssh: ssh access to docker server
+    """
+    port = random.randint(53220, 60000)
+    while docker_container_exist(ssh, port):
+        port = random.randint(53220, 60000)
+    return str(port)
+
+
+def docker_container_name(image_name, container_port):
+    """
+    Define the container name based on image name and port.
+    :param image_name: docker image name
+    :param container_port: docker container port
+    :return: container name as format imageName-port-666666
+    """
+    name = (image_name.replace('.', '-')
+            + '-port-'
+            + container_port)
+    return name
 
 
 def docker_arguments_parser():
