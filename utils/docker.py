@@ -8,7 +8,8 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import base, logger, FailException
+from virtwho import logger, FailException
+from virtwho.base import rhel_compose_repo
 from virtwho.ssh import SSHConnect
 
 
@@ -68,7 +69,7 @@ def docker_image_create(ssh, image_name, compose_id):
         ssh.runcmd('subscription-manager unregister;'
                    'subscription-manager clean')
         repo_file = '/tmp/docker/compose.repo'
-        base.rhel_compose_repo(ssh, compose_id, repo_file)
+        rhel_compose_repo(ssh, compose_id, repo_file)
         ret, _ = ssh.runcmd(
             f'sh /tmp/docker/mk_image.sh -y {repo_file} {image_name}'
         )
