@@ -36,8 +36,11 @@ def provision_virtwho_host(args):
         pwd=args.password
     )
 
-    virtwho_install(ssh_host, args.virtwho_pkg_url)
+    base.rhel_compose_repo(
+        ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
+    )
     base.system_init(ssh_host, 'virtwho')
+    virtwho_install(ssh_host, args.virtwho_pkg_url)
     if config.job.mode == 'libvirt':
         libvirt_access_no_password(ssh_host)
     if config.job.mode == 'kubevirt':
