@@ -162,7 +162,7 @@ def virtwho_arguments_parser():
     parser.add_argument(
         '--server',
         required=False,
-        default=config.virtwho.server,
+        default=None,
         help='IP/fqdn of virt-who host, '
              'will install one by beaker if not provide.')
     parser.add_argument(
