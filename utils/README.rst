@@ -58,8 +58,11 @@ All the utils/*.py are defined as public tools.
 
 
 
-`docker.py`_ is used to create rhel container.
+`docker.py`_ is used to create rhel container by docker.
 
+* Below is an examples to run with required arguments.
+
+    # python3 docker.py --rhel-compose=RHEL-8.6.0-20220111.0 --docker-server=10.73.3.99 --docker-username=root --docker-password=password --container-name=test --container-port=33333 --container-username=root --container-password=password
 
 
 `kickstart.py`_ is used to install rhel host by grub.
