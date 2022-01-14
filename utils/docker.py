@@ -159,38 +159,39 @@ def docker_arguments_parser():
     parser.add_argument(
         '--rhel-compose',
         required=True,
-        help='Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
+        help='[Required] Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
     parser.add_argument(
         '--docker-server',
         required=True,
-        help='')
+        help='[Required] IP/Hostname of docker server')
     parser.add_argument(
         '--docker-username',
         required=True,
-        help='')
+        help='[Required] Username to access the docker server')
     parser.add_argument(
         '--docker-password',
         required=True,
-        help='')
+        help='[Required] Password to access the docker server')
     parser.add_argument(
         '--container-name',
         required=False,
         default=None,
-        help='')
+        help='[Optional] Default to make by the rhel compose id and '
+             'container port')
     parser.add_argument(
         '--container-port',
         required=False,
         default=None,
-        help='')
+        help='[Optional] Default to create one randomly')
     parser.add_argument(
         '--container-username',
         required=False,
         default='root',
-        help='')
+        help='[Optional] Default to user root')
     parser.add_argument(
         '--container-password',
         required=True,
-        help='')
+        help='[Required] container password')
     return parser.parse_args()
 
 
