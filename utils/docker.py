@@ -46,10 +46,8 @@ def create_rhel_container_by_docker(args):
     remote_dir = '/tmp/docker/'
     ssh_docker.put_dir(local_dir, remote_dir)
 
-    # Create docker image
+    # Create docker image and container
     docker_image_create(ssh_docker, image_name, args.rhel_compose)
-
-    # Create docker container
     docker_container_create(ssh_docker, image_name,
                             container_name, container_port,
                             args.container_username, args.container_password)
