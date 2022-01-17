@@ -33,10 +33,10 @@ def install_rhel_by_grup(args):
     repo_base, repo_extra = base.rhel_compose_url(args.rhel_compose)
     ks_url, ks_path, vmlinuz_url, initrd_url = grup_params(repo_base)
     try:
-        # ks_file_create(ssh_nfs, ks_path, repo_base, repo_extra)
-        # grub_update(
-        #     ssh_host, ks_url, vmlinuz_url, initrd_url, repo_base
-        # )
+        ks_file_create(ssh_nfs, ks_path, repo_base, repo_extra)
+        grub_update(
+            ssh_host, ks_url, vmlinuz_url, initrd_url, repo_base
+        )
         grub_reboot(ssh_host)
         if base.ssh_connect(ssh_host):
             base.rhel_compose_repo(
@@ -44,11 +44,15 @@ def install_rhel_by_grup(args):
             )
     except Exception as e:
         logger.error(e)
-    # finally:
-    #     ssh_host.runcmd(f'rm -rf {ks_path}')
+    finally:
+        ssh_host.runcmd(f'rm -rf {ks_path}')
 
 
 def grup_params(repo_base):
+    """
+    Gether the necessary parameters for install rhel os by grub
+    :param repo_base: xxx/compose/AppStream/x86_64/os
+    """
     random_str = ''.join(
         random.sample(string.ascii_letters + string.digits, 8)
     )
@@ -60,7 +64,14 @@ def grup_params(repo_base):
     return ks_url, ks_path, vmlinuz_url, initrd_url
 
 
-def ks_file_create(ssh_nfs, ks_path, repo_base, repo_extra):
+def ks_file_create(ssh, ks_path, repo_base, repo_extra):
+    """
+    Create ks file
+    :param ssh: ssh access to nfs server
+    :param ks_path: the path of ks file
+    :param repo_base: base repo of rhel compose
+    :param repo_extra: optional/appstream repo of rhel compose
+    """
     cmd = (f'cat <<EOF > {ks_path}\n'
            f'text\n'
            f'bootloader --location=mbr\n'
@@ -87,8 +98,8 @@ def ks_file_create(ssh_nfs, ks_path, repo_base, repo_extra):
            f'EOF'
            )
     for i in range(10):
-        _, _ = ssh_nfs.runcmd(cmd)
-        ret, _ = ssh_nfs.runcmd(f'ls {ks_path}')
+        _, _ = ssh.runcmd(cmd)
+        ret, _ = ssh.runcmd(f'ls {ks_path}')
         if ret == 0:
             return
         time.sleep(10)
@@ -98,6 +109,11 @@ def ks_file_create(ssh_nfs, ks_path, repo_base, repo_extra):
 def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
     """
     Update grub menuentry
+    :param ssh: ssh access to the host
+    :param ks_url: url of ks file
+    :param vmlinuz_url: url of compose vmlinuz file
+    :param initrd_url: url of compose initrd file
+    :param repo_url: url of compose repo
     """
     if not base.url_validation(vmlinuz_url):
         raise FailException('vmlinuz_url is not available')
@@ -140,6 +156,10 @@ def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
 
 
 def grub_reboot(ssh):
+    """
+    Reboot the host to reinstall os by grub
+    :param ssh: ssh access to the host
+    """
     ssh.runcmd('sync; sync; sync; sync; reboot -f && exit')
     time.sleep(20)
 
@@ -154,20 +174,20 @@ def rhel_arguments_parser():
     parser.add_argument(
         '--rhel-compose',
         required=True,
-        help='Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
+        help='[Required] Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1')
     parser.add_argument(
         '--server',
         required=True,
-        help='')
+        help='[Required] Host ip/fqdn to re-install')
     parser.add_argument(
         '--username',
         required=False,
         default='root',
-        help='')
+        help='[Optional] Default to use root')
     parser.add_argument(
         '--password',
         required=True,
-        help='')
+        help='[Required] Password to access the server')
     return parser.parse_args()
 
 
