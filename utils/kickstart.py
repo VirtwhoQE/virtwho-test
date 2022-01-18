@@ -59,8 +59,8 @@ def grup_params(repo_base):
         random.sample(string.ascii_letters + string.digits, 8)
     )
     ks_name = f'{random_str}.cfg'
-    ks_url = f'{config.nfs.rhel_url}/{ks_name}'
-    ks_path = f'{config.nfs.rhel_mount}/{ks_name}'
+    ks_url = f'{config.nfs.ks_url}/{ks_name}'
+    ks_path = f'{config.nfs.ks_mount}/{ks_name}'
     vmlinuz_url = f'{repo_base}/isolinux/vmlinuz'
     initrd_url = f'{repo_base}/isolinux/initrd.img'
     return ks_url, ks_path, vmlinuz_url, initrd_url
