@@ -67,6 +67,18 @@ All the utils/*.py are defined as public tools.
 
 `kickstart.py`_ is used to install rhel host by grub.
 
+* Before run the file we need to set the [nfs] section in virtwho.ini.
+
+    * [nfs]
+    * server=10.73.131.83
+    * username=root
+    * password=red2015
+    * ks_mount=/home/data/nfs/ci/auto/rhel
+    * ks_url=http://10.73.131.83/ci/auto/rhel
+
+* Below is an examples to run with required arguments.
+
+    # python3 kickstart.py --rhel-compose=RHEL-8.6.0-20220111.0 --server=10.73.3.234 --username=root --password=password
 
 
 .. _beaker.py:
