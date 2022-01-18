@@ -70,11 +70,11 @@ All the utils/*.py are defined as public tools.
 * Before run the file we need to set the [nfs] section in virtwho.ini.
 
     * [nfs]
-    * server=10.73.131.83
-    * username=root
-    * password=red2015
-    * ks_mount=/home/data/nfs/ci/auto/rhel
-    * ks_url=http://10.73.131.83/ci/auto/rhel
+    * server=
+    * username=
+    * password=
+    * ks_mount=
+    * ks_url=
 
 * Below is an examples to run with required arguments.
 
