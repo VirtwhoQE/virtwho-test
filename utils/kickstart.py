@@ -38,10 +38,12 @@ def install_rhel_by_grup(args):
             ssh_host, ks_url, vmlinuz_url, initrd_url, repo_base
         )
         grub_reboot(ssh_host)
-        if base.ssh_connect(ssh_host):
-            base.rhel_compose_repo(
-                ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
-            )
+        for i in range(60):
+            if base.host_ping(args.server):
+                base.ssh_connect(ssh_host)
+                base.rhel_compose_repo(ssh_host, args.rhel_compose,
+                                       '/etc/yum.repos.d/compose.repo')
+            time.sleep(30)
     except Exception as e:
         logger.error(e)
     finally:
@@ -115,12 +117,17 @@ def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
     :param initrd_url: url of compose initrd file
     :param repo_url: url of compose repo
     """
-    if not base.url_validation(vmlinuz_url):
-        raise FailException('vmlinuz_url is not available')
-    if not base.url_validation(initrd_url):
-        raise FailException('initrd_url is not available')
-    if not base.url_validation(repo_url):
-        raise FailException('repo_url is not available')
+    logger.info(f'-----{ks_url}')
+    logger.info(f'-----{vmlinuz_url}')
+    logger.info(f'-----{initrd_url}')
+    logger.info(f'-----{repo_url}')
+    if (
+            not base.url_validation(ks_url) or
+            not base.url_validation(vmlinuz_url) or
+            not base.url_validation(initrd_url) or
+            not base.url_validation(repo_url)
+    ):
+        raise FailException('The necessary urls are not available')
     menu_title = 'rhel-reinstall'
     vmlinuz_name = 'vmlinuz-reinstall'
     initrd_name = 'initrd-reinstall.img'
@@ -130,7 +137,6 @@ def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
     ssh.runcmd(f'rm -f /boot/{initrd_name};'
                f'curl -L {initrd_url} -o /boot/{initrd_name};'
                f'sync')
-    repo = f'repo={repo_url}'
     cmd = (
               'cat <<EOF > /etc/grub.d/40_custom\n'
               '#!/bin/sh\n'
@@ -142,14 +148,15 @@ def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
               'insmod part_msdos\n'
               'insmod xfs\n'
               'set root="hd0,msdos1"\n'
-              'linux16 /%s ksdevice=bootif ip=dhcp ks=%s %s quiet LANG=en_US.UTF-8 acpi=off\n'
+              'linux16 /%s ksdevice=bootif ip=dhcp ks=%s repo=%s quiet LANG=en_US.UTF-8 acpi=off\n'
               'initrd16 /%s\n'
               '}\n'
               'EOF'
-          ) % (menu_title, vmlinuz_name, ks_url, repo, initrd_name)
+          ) % (menu_title, vmlinuz_name, ks_url, repo_url, initrd_name)
     ret1, _ = ssh.runcmd(cmd)
     ret2, _ = ssh.runcmd('grub2-mkconfig -o /boot/grub2/grub.cfg')
-    ret3, _ = ssh.runcmd(f'grub2-set-default "{menu_title}"; grub2-editenv list')
+    ret3, _ = ssh.runcmd(
+        f'grub2-set-default "{menu_title}"; grub2-editenv list')
     if ret1 != 0 or ret2 != 0 or ret3 != 0:
         raise FailException('Failed to update grub file.')
     time.sleep(60)
@@ -160,7 +167,8 @@ def grub_reboot(ssh):
     Reboot the host to reinstall os by grub
     :param ssh: ssh access to the host
     """
-    ssh.runcmd('sync; sync; sync; sync; reboot -f && exit')
+    ssh.runcmd('sync; sync; sync; sync;'
+               'reboot -f > /dev/null 2>&1 &')
     time.sleep(20)
 
 
