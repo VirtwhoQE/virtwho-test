@@ -23,6 +23,11 @@ def satellite_deploy_for_virtwho(args):
     And will configure the satellite as virt-who testing requirements.
     Please refer to the README for usage.
     """
+    satellite = args.satellite.split('-')
+    args.version = satellite[0]
+    args.repo = satellite[1]
+    args.rhel_compose = rhel_compose_for_satellite(satellite[2])
+    args.manifest = config.satellite.manifest
 
     # Install a new system by beaker when no server provided.
     if not args.server:
@@ -37,11 +42,6 @@ def satellite_deploy_for_virtwho(args):
     )
 
     # Start to deploy and configure the satellite server
-    satellite = args.satellite.split('-')
-    args.version = satellite[0]
-    args.repo = satellite[1]
-    args.rhel_compose = rhel_compose_for_satellite(satellite[2])
-    args.manifest = config.satellite.manifest
     satellite_deploy(args)
     satellite_settings(ssh_satellite, 'failed_login_attempts_limit', '0')
     satellite_settings(ssh_satellite, 'unregister_delete_host', 'true')
