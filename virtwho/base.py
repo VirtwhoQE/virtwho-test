@@ -4,7 +4,6 @@ import os
 import random
 import re
 import string
-import time
 
 from virtwho import logger, FailException
 from virtwho.settings import config
@@ -17,37 +16,21 @@ def system_init(ssh, keyword):
     :param ssh: ssh access of host
     :param keyword: keyword to set the hostname
     """
-    if ssh_connect(ssh):
-        host_ip = ipaddr_get(ssh)
-        host_name = hostname_get(ssh)
-        if ('localhost' in host_name
-                or 'unused' in host_name
-                or 'openshift' in host_name
-                or host_name is None):
-            random_str = ''.join(
-                random.sample(string.ascii_letters + string.digits, 8)
-            )
-            host_name = f'{keyword}-{random_str}.redhat.com'
-        hostname_set(ssh, host_name)
-        etc_hosts_set(ssh, f'{host_ip} {host_name}')
-        firewall_stop(ssh)
-        selinux_disable(ssh)
-        logger.info("Finished to init system {0}".format(host_name))
-    else:
-        raise FailException("Failed to ssh login {0}".format(ssh['host']))
-
-
-def ssh_connect(ssh):
-    """
-    Test if the host is running and can be accessed by ssh.
-    :param ssh: ssh access of host
-    """
-    for i in range(60):
-        ret, output = ssh.runcmd('rpm -qa filesystem')
-        if ret == 0 and 'filesystem' in output:
-            return True
-        time.sleep(60)
-    return False
+    host_ip = ipaddr_get(ssh)
+    host_name = hostname_get(ssh)
+    if ('localhost' in host_name
+            or 'unused' in host_name
+            or 'openshift' in host_name
+            or host_name is None):
+        random_str = ''.join(
+            random.sample(string.ascii_letters + string.digits, 8)
+        )
+        host_name = f'{keyword}-{random_str}.redhat.com'
+    hostname_set(ssh, host_name)
+    etc_hosts_set(ssh, f'{host_ip} {host_name}')
+    firewall_stop(ssh)
+    selinux_disable(ssh)
+    logger.info(f'Finished to init system {host_name}')
 
 
 def ipaddr_get(ssh):
@@ -127,6 +110,27 @@ def selinux_disable(ssh):
                         "/etc/selinux/config")
     if ret != 0:
         raise FailException('Failed to disable selinux')
+
+
+def ssh_connect(ssh):
+    """
+    Test if the host is running and can be accessed by ssh.
+    :param ssh: ssh access of host
+    """
+    ret, output = ssh.runcmd('rpm -qa filesystem')
+    if ret == 0 and 'filesystem' in output:
+        logger.info(f'Suceeded to ssh connect the host')
+
+
+def host_ping(host):
+    """
+    Test if the host is available to ping successfully.
+    :param host: host ip/fqdn
+    """
+    ret = os.system(f'ping -w 5 {host}')
+    if ret == 0:
+        return True
+    return False
 
 
 def rhel_version(ssh):
@@ -218,6 +222,12 @@ def url_file_download(ssh, local_file, url):
 
 
 def rhel_compose_repo(ssh, compose_id, repo_file):
+    """
+    Set the BaseOS and AppStream compose repository of rhel.
+    :param ssh: ssh access of host
+    :param compose_id: rhel compose id
+    :param repo_file: repository file name
+    """
     repo_base, repo_extra = rhel_compose_url(compose_id)
     cmd = (f'cat <<EOF > {repo_file}\n'
            f'[{compose_id}]\n'
@@ -225,8 +235,8 @@ def rhel_compose_repo(ssh, compose_id, repo_file):
            f'baseurl={repo_base}\n'
            f'enabled=1\n'
            f'gpgcheck=0\n\n'
-           f'[{compose_id}-optional]\n'
-           f'name={compose_id}-optional\n'
+           f'[{compose_id}-appstream]\n'
+           f'name={compose_id}-appstream\n'
            f'baseurl={repo_extra}\n'
            f'enabled=1\n'
            f'gpgcheck=0\n'
@@ -237,6 +247,10 @@ def rhel_compose_repo(ssh, compose_id, repo_file):
 
 
 def rhel_compose_url(compose_id):
+    """
+    Configure the BaseOS and AppStream compose url
+    :param compose_id: rhel compose id
+    """
     base_url = config.virtwho.repo
     repo_base = ''
     repo_extra = ''
