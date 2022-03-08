@@ -1,25 +1,68 @@
+"""Test cases Global fields
 
+:SubsystemTeam: sst_subscription_virtwho
+:TestType: Functional
+:CaseLevel: Function
+:CaseAutomation: Automated
+"""
+import pytest
+
+
+@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('hypervisor_create')
 class TestCli:
+    @pytest.mark.tier1
+    def test_debug(self, virtwho):
+        """Test the '-d' option in virt-who command line
 
-    def test_debug(self, virtwho, global_conf_clean):
-        """test the '-d' option in command line
+        :title: Virt-who: test cli option -d
+        :id: 9389396f-d4c3-4be2-8aec-a9f7be3d25f1
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. clean all virt-who global configurations
+            2. run "#virt-who -c" without "-d"
+            3. run "#virt-who -d -c"
+
+        :expectedresults:
+
+            1. no [DEBUG] log printed without "-d" option
+            2. [DEBUG] logs are printed with "-d" option
         """
-
-        # run without '-d'
         result = virtwho.run_cli(debug=False)
         assert (result['send'] == 1
+                and result['error'] == 0
                 and result['debug'] is False)
 
-        # run with '-d'
         result = virtwho.run_cli(debug=True)
         assert (result['send'] == 1
+                and result['error'] == 0
                 and result['debug'] is True)
 
-    def test_oneshot(self, virtwho, global_conf_clean):
-        """test the '-o' option in command line
-        """
+    @pytest.mark.tier1
+    def test_oneshot(self, virtwho):
+        """Test the '-o' option in virt-who command line
 
-        # run without '-o'
+        :title: Virt-who: test cli option -o
+        :id: 6902b844-8b71-490c-abf1-fa6087987666
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. clean all virt-who global configurations
+            2. run "#virt-who -c" without "-o"
+            3. run "#virt-who -o -c"
+
+        :expectedresults:
+
+            1. virt-who thread is not terminated automatically without "-o"
+            2. virt-who thread is terminated after reporting once with "-o"
+        """
         result = virtwho.run_cli(oneshot=False)
         assert (result['send'] == 1
                 and result['error'] == 0
@@ -27,7 +70,6 @@ class TestCli:
                 and result['terminate'] == 0
                 and result['oneshot'] is False)
 
-        # run with '-o'
         result = virtwho.run_cli(oneshot=True)
         assert (result['send'] == 1
                 and result['error'] == 0
@@ -35,33 +77,73 @@ class TestCli:
                 and result['terminate'] == 1
                 and result['oneshot'] is True)
 
-    def test_interval(self, virtwho, global_conf_clean):
-        """test the '-i ' option in command line
-        """
+    @pytest.mark.tier1
+    def test_interval(self, virtwho):
+        """Test the '-i' option in virt-who command line
 
-        # run without '-i' to test default interval=3600
+        :title: Virt-who: test cli option -i
+        :id: e43d9fd0-0f1b-4b25-98f6-c421046e1c47
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. clean all virt-who global configurations
+            2. run "#virt-who" without "-i"
+            3. run "#virtwho -i 10 -c"
+            4. run "#virtwho -i 60 -c"
+
+        :expectedresults:
+
+            1. the default interval=3600 when run without "-i"
+            2. the interval=3600 when run with "-i" < 60
+            3. the interval uses the setting value when run with "-i" >= 60
+        """
         result = virtwho.run_cli(oneshot=False, interval=None)
         assert (result['send'] == 1
                 and result['interval'] == 3600)
 
-        # run with '-i 10' and check interval will use default 3600
         result = virtwho.run_cli(oneshot=False, interval=10)
         assert (result['send'] == 1
                 and result['interval'] == 3600)
 
-        # run with '-i 60' to test interval=60
         result = virtwho.run_cli(oneshot=False, interval=60, wait=60)
         assert (result['send'] == 1
                 and result['interval'] == 60
                 and result['loop'] == 60)
 
-    def test_print(self, virtwho, global_conf_clean):
-        guest_id = '42018c62-d744-65bf-0377-9efdac488a57'
-        # without debug
+    @pytest.mark.tier1
+    def test_print(self, virtwho, hypervisor_handler):
+        """Test the '-p' option in virt-who command line
+
+        :title: Virt-who: test cli option -p
+        :id: 16c01269-f4ab-4fe5-a29e-a3d5dc69a32a
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. clean all virt-who global configurations
+            2. run "#virt-who -p -c"
+            3. run "#virt-who -p -d -c"
+
+        :expectedresults:
+
+            1. virt-who service is terminated after run with -p
+            2. mappings is not reported when run with -p
+            3. mappings can be printed out
+        """
+        guest_id = hypervisor_handler.guest_uuid
         result = virtwho.run_cli(oneshot=False, debug=False, prt=True)
         assert (result['thread'] == 0
+                and result['send'] == 0
+                and result['debug'] is False
                 and guest_id in result['print_json'])
-        # with debug
+
         result = virtwho.run_cli(oneshot=False, debug=True, prt=True)
         assert (result['thread'] == 0
+                and result['send'] == 0
+                and result['debug'] is True
                 and guest_id in result['print_json'])
