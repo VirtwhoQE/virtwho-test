@@ -4,7 +4,6 @@ import re
 import threading
 import time
 from virtwho import logger, FailException
-from virtwho.settings import Configure
 from virtwho.configure import virtwho_ssh_connect
 
 
