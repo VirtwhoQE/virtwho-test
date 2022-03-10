@@ -40,7 +40,7 @@ def provision_virtwho_host(args):
         ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
     )
     base.system_init(ssh_host, 'virtwho')
-    virtwho_install(ssh_host, args.virtwho_pkg_url)
+    virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
     if config.job.mode == 'libvirt':
         libvirt_access_no_password(ssh_host)
     if config.job.mode == 'kubevirt':
@@ -48,6 +48,12 @@ def provision_virtwho_host(args):
     config.update('virtwho', 'server', args.server)
     config.update('virtwho', 'username', args.username)
     config.update('virtwho', 'password', args.password)
+    config.update('job', 'rhel_compose', args.rhel_compose)
+    config.update('virtwho', 'package', virtwho_pkg)
+    if config.job.mode == 'local':
+        config.update('local', 'server', args.server)
+        config.update('server', 'username', args.username)
+        config.update('server', 'password', args.password)
 
 
 def beaker_args_define(args):
@@ -94,6 +100,7 @@ def virtwho_install(ssh, url=None):
     if 'virt-who' not in output:
         raise FailException('Failed to install virt-who package')
     logger.info(f'Succeeded to install {output.strip()}')
+    return output.strip()
 
 
 def virtwho_install_by_url(ssh, url):
