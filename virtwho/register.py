@@ -288,14 +288,10 @@ class SubscriptionManager:
 
 class RHSM:
 
-    def __init__(self, host, username, password, port=22):
+    def __init__(self):
         """
         Using rhsm api to check/get/delete consumers,  attach/remove
         subscription, and check the host-to-guest associations.
-        :param host: ip/hostname to run curl command.
-        :param username: account username of the host
-        :param password: password to access the host
-        :param port: port to access the host
         """
         self.org = config.rhsm.default_org
         self.api = f'https://{config.rhsm.server}/subscription'

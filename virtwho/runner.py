@@ -23,7 +23,7 @@ class VirtwhoRunner:
         self.register_type = register_type
         self.config_file = f"/etc/virt-who.d/{self.mode}.conf"
         self.rhsm_log_file = "/var/log/rhsm/rhsm.log"
-        self.print_json_file = "/temp/print.json"
+        self.print_json_file = "/root/print.json"
         self.ssh = virtwho_ssh_connect(self.mode)
 
     def run_cli(self,
@@ -198,7 +198,7 @@ class VirtwhoRunner:
         if wait:
             time.sleep(wait)
         for i in range(30):
-            time.sleep(10)
+            time.sleep(15)
             _, rhsm_output = self.ssh.runcmd(f"cat {self.rhsm_log_file}")
             if self.msg_search(rhsm_output, "status=429") is True:
                 logger.warning("429 code found when run virt-who")
