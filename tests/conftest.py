@@ -10,7 +10,7 @@ from virtwho.register import Satellite
 import pytest
 
 
-mode = config.job.mode
+mode = config.job.hypervisor
 register_type = config.job.register
 
 
