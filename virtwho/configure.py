@@ -22,6 +22,8 @@ class VirtwhoHypervisorConfig:
         self.register = get_register_handler(register_type)
         self.hypervisor = get_hypervisor_handler(mode)
         self.remote_ssh = virtwho_ssh_connect(mode)
+        if not os.path.exists(TEMP_DIR):
+            os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, f'{mode}.conf')
         self.remote_file = f'/etc/virt-who.d/{mode}.conf'
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
@@ -78,6 +80,8 @@ class VirtwhoGlobalConfig:
         """
         self.mode = mode
         self.remote_ssh = virtwho_ssh_connect(self.mode)
+        if not os.path.exists(TEMP_DIR):
+            os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, 'virt-who.conf')
         self.remote_file = '/etc/virt-who.conf'
         self.save_file = os.path.join(TEMP_DIR, 'virt-who.conf.save')
