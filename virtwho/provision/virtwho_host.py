@@ -187,7 +187,7 @@ def virtwho_arguments_parser():
     parser.add_argument(
         '--beaker-host',
         required=False,
-        default=None,
+        default='%hp-z220%',
         help='Define/filter system as hostrequire. '
              'Such as: %ent-02-vm%, ent-02-vm-20.lab.eng.nay.redhat.com')
     parser.add_argument(
