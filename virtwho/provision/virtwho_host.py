@@ -41,16 +41,16 @@ def provision_virtwho_host(args):
     )
     base.system_init(ssh_host, 'virtwho')
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
-    if config.job.mode == 'libvirt':
+    if config.job.hypervisor == 'libvirt':
         libvirt_access_no_password(ssh_host)
-    if config.job.mode == 'kubevirt':
+    if config.job.hypervisor == 'kubevirt':
         kubevirt_config_file(ssh_host)
     config.update('virtwho', 'server', args.server)
     config.update('virtwho', 'username', args.username)
     config.update('virtwho', 'password', args.password)
     config.update('job', 'rhel_compose', args.rhel_compose)
     config.update('virtwho', 'package', virtwho_pkg)
-    if config.job.mode == 'local':
+    if config.job.hypervisor == 'local':
         config.update('local', 'server', args.server)
         config.update('server', 'username', args.username)
         config.update('server', 'password', args.password)
