@@ -87,7 +87,7 @@ def beaker_args_define(args):
     if 'RHEL-7' in args.rhel_compose:
         args.variant = 'Server'
     args.job_group = 'virt-who-ci-server-group'
-    args.host = '%ent-02-vm%'
+    args.host = '%hp-dl360g9-08-vm%'
     args.host_type = None
     args.host_require = None
 
