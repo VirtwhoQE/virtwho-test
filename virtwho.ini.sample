@@ -66,7 +66,7 @@ vdc_virtual=
 ; guest_ip, guest_username and guest_password are required options when need to access guest for registering
 ; other options are optional settings based on special case requirements
 ; hypervisor-builder can help to get some information, like hypervisor_uuid/hwuuid/hostname/version/cpu/cluster, guest_ip/uuid/state
-[vcenter]
+[esx]
 server=
 username=
 password=
@@ -81,21 +81,6 @@ esx_hostname=
 esx_version=
 esx_cpu=
 esx_cluster=
-guest_name=
-guest_ip=
-guest_username=
-guest_password=
-guest_uuid=
-guest_state=
-
-[xen]
-server=
-username=
-password=
-uuid=
-hostname=
-version=
-cpu=
 guest_name=
 guest_ip=
 guest_username=
@@ -118,7 +103,7 @@ guest_password=
 guest_uuid=
 guest_state=
 
-[rhevm]
+[rhvm]
 server=
 username=
 password=
@@ -135,22 +120,7 @@ guest_password=
 guest_uuid=
 guest_state=
 
-[libvirt]
-server=
-username=
-password=
-uuid=
-hostname=
-version=
-cpu=
-guest_name=
-guest_ip=
-guest_username=
-guest_password=
-guest_uuid=
-guest_state=
-
-[kubevirt]
+[cnv]
 endpoint=
 token=
 config_file=
@@ -182,11 +152,41 @@ guest_password=
 guest_uuid=
 guest_state=
 
+[libvirt]
+server=
+username=
+password=
+uuid=
+hostname=
+version=
+cpu=
+guest_name=
+guest_ip=
+guest_username=
+guest_password=
+guest_uuid=
+guest_state=
+
 [local]
 server=
 username=
 password=
 port=
+guest_name=
+guest_ip=
+guest_username=
+guest_password=
+guest_uuid=
+guest_state=
+
+[xen]
+server=
+username=
+password=
+uuid=
+hostname=
+version=
+cpu=
 guest_name=
 guest_ip=
 guest_username=

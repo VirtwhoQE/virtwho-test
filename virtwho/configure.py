@@ -143,7 +143,7 @@ def get_hypervisor_handler(mode):
     :param mode: The hypervisor mode. esx as default
     :return: hypervisor section
     """
-    hypervisor = config.vcenter
-    if mode in ['xen', 'hyperv', 'rhevm', 'libvirt', 'kubevirt', 'ahv', 'local']:
+    hypervisor = config.esx
+    if mode in ['xen', 'hyperv', 'rhvm', 'libvirt', 'cnv', 'ahv', 'local']:
         hypervisor = getattr(config, mode)
     return hypervisor
