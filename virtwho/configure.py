@@ -144,6 +144,6 @@ def get_hypervisor_handler(mode):
     :return: hypervisor section
     """
     hypervisor = config.esx
-    if mode in ['xen', 'hyperv', 'rhvm', 'libvirt', 'cnv', 'ahv', 'local']:
+    if mode in ['xen', 'hyperv', 'rhvm', 'libvirt', 'kubevirt', 'ahv', 'local']:
         hypervisor = getattr(config, mode)
     return hypervisor
