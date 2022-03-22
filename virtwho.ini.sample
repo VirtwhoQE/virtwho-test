@@ -60,13 +60,13 @@ vdc=
 vdc_virtual=
 
 ; The below sections are used to define the different hypervisors information
-; server, username and password are the required options to access vcenter/xen/hyperv/rhevm/libvirt/ahv and get mapping
+; server, username and password are the required options to access esx/xen/hyperv/rhevm/libvirt/ahv and get mapping
 ; config_file is a required option to access kubevirt and get mapping
 ; uuid or hostname of hypervisor is a required option when need to attach subscriptions for hypervisor
 ; guest_ip, guest_username and guest_password are required options when need to access guest for registering
 ; other options are optional settings based on special case requirements
 ; hypervisor-builder can help to get some information, like hypervisor_uuid/hwuuid/hostname/version/cpu/cluster, guest_ip/uuid/state
-[vcenter]
+[esx]
 server=
 username=
 password=
@@ -81,21 +81,6 @@ esx_hostname=
 esx_version=
 esx_cpu=
 esx_cluster=
-guest_name=
-guest_ip=
-guest_username=
-guest_password=
-guest_uuid=
-guest_state=
-
-[xen]
-server=
-username=
-password=
-uuid=
-hostname=
-version=
-cpu=
 guest_name=
 guest_ip=
 guest_username=
@@ -135,21 +120,6 @@ guest_password=
 guest_uuid=
 guest_state=
 
-[libvirt]
-server=
-username=
-password=
-uuid=
-hostname=
-version=
-cpu=
-guest_name=
-guest_ip=
-guest_username=
-guest_password=
-guest_uuid=
-guest_state=
-
 [kubevirt]
 endpoint=
 token=
@@ -182,11 +152,41 @@ guest_password=
 guest_uuid=
 guest_state=
 
+[libvirt]
+server=
+username=
+password=
+uuid=
+hostname=
+version=
+cpu=
+guest_name=
+guest_ip=
+guest_username=
+guest_password=
+guest_uuid=
+guest_state=
+
 [local]
 server=
 username=
 password=
 port=
+guest_name=
+guest_ip=
+guest_username=
+guest_password=
+guest_uuid=
+guest_state=
+
+[xen]
+server=
+username=
+password=
+uuid=
+hostname=
+version=
+cpu=
 guest_name=
 guest_ip=
 guest_username=
