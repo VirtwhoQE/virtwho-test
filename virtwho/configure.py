@@ -3,6 +3,7 @@ from virtwho.settings import Configure
 from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
+from virtwho.base import hostname_get
 
 
 class VirtwhoHypervisorConfig:
@@ -31,14 +32,20 @@ class VirtwhoHypervisorConfig:
     def create(self):
         """create virt-who config file under /etc/virt-who.d/.
         """
-        if self.mode is 'local':
+        if self.mode == 'local':
             self.update('type', 'libvirt')
         else:
             self.update('type', self.mode)
             self.update('hypervisor_id', 'hostname')
-        if self.mode is 'kubevirt':
+        if self.mode == 'kubevirt':
             self.update('kubeconfig', self.hypervisor.config_file)
         if self.mode in ('esx', 'xen', 'hyperv', 'rhevm', 'libvirt', 'ahv'):
+            if self.mode == 'rhevm':
+                ssh_rhevm = SSHConnect(host=self.hypervisor.server,
+                                       user=self.hypervisor.ssh_username,
+                                       pwd=self.hypervisor.ssh_password)
+                self.hypervisor.server = f'''https://{hostname_get(ssh_rhevm)}:
+                                             443/ovirt-engine'''
             self.update('server', self.hypervisor.server)
             self.update('username', self.hypervisor.username)
             self.update('password', self.hypervisor.password)
