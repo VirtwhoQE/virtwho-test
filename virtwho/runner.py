@@ -16,7 +16,7 @@ class VirtwhoRunner:
             print function.
 
         :param mode: the hypervisor mode.
-            (esx, xen, hyperv, rhevm, libvirt, kubevirt, local, fake)
+            (esx, xen, hyperv, rhvm, libvirt, kubevirt, local, fake)
         :param register_type: the subscription server. (rhsm, satellite)
         """
         self.mode = mode
