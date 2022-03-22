@@ -4,7 +4,7 @@ virtwho-test
 `virtwho-test`_ is focused on virt-who package testing based on the rhel lifecycle
 
 * Team Members: `Eko`_, `Coulson`_, `Yuefen`_
-* Supproted Hypervisors: libvirt, esx, rhvm, hyperv, xen, kubevirt and fake
+* Supproted Hypervisors: libvirt, esx, rhevm, hyperv, xen, kubevirt and fake
 * Supported Subscription Servers: rhsm, satellite, sam(deprecated)
 
 `virtwho.ini.sample`_ is provided as a sample to define attributes

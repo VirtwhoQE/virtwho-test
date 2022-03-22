@@ -14,7 +14,7 @@ class VirtwhoHypervisorConfig:
         data come from virtwho.ini. All local files are backed up
         to /temp directory of the project root.
         :param mode: The hypervisor mode.
-            (esx, xen, hyperv, rhvm, libvirt, kubevirt, ahv, local)
+            (esx, xen, hyperv, rhevm, libvirt, kubevirt, ahv, local)
         :param register_type: The subscription server. (rhsm, satellite)
         """
         self.mode = mode
@@ -38,7 +38,7 @@ class VirtwhoHypervisorConfig:
             self.update('hypervisor_id', 'hostname')
         if self.mode is 'kubevirt':
             self.update('kubeconfig', self.hypervisor.config_file)
-        if self.mode in ('esx', 'xen', 'hyperv', 'rhvm', 'libvirt', 'ahv'):
+        if self.mode in ('esx', 'xen', 'hyperv', 'rhevm', 'libvirt', 'ahv'):
             self.update('server', self.hypervisor.server)
             self.update('username', self.hypervisor.username)
             self.update('password', self.hypervisor.password)
@@ -144,6 +144,6 @@ def get_hypervisor_handler(mode):
     :return: hypervisor section
     """
     hypervisor = config.esx
-    if mode in ['xen', 'hyperv', 'rhvm', 'libvirt', 'kubevirt', 'ahv', 'local']:
+    if mode in ['xen', 'hyperv', 'rhevm', 'libvirt', 'kubevirt', 'ahv', 'local']:
         hypervisor = getattr(config, mode)
     return hypervisor

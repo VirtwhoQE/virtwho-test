@@ -1,5 +1,5 @@
 ; The section of [job] is used to define the testing hypervisor and subscription server
-; hypervisor is an optional setting from esx/xen/hyperv/libvirt/rhvm/kubevirt/ahv/local, the default is 'esx'.
+; hypervisor is an optional setting from esx/xen/hyperv/libvirt/rhevm/kubevirt/ahv/local, the default is 'esx'.
 ; register is an optional setting from rhsm/satellite, the default is 'rhsm'
 [job]
 hypervisor=
@@ -60,7 +60,7 @@ vdc=
 vdc_virtual=
 
 ; The below sections are used to define the different hypervisors information
-; server, username and password are the required options to access esx/xen/hyperv/rhvm/libvirt/ahv and get mapping
+; server, username and password are the required options to access esx/xen/hyperv/rhevm/libvirt/ahv and get mapping
 ; config_file is a required option to access kubevirt and get mapping
 ; uuid or hostname of hypervisor is a required option when need to attach subscriptions for hypervisor
 ; guest_ip, guest_username and guest_password are required options when need to access guest for registering
@@ -103,7 +103,7 @@ guest_password=
 guest_uuid=
 guest_state=
 
-[rhvm]
+[rhevm]
 server=
 username=
 password=
