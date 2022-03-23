@@ -14,7 +14,7 @@ class TestCli:
     def test_debug(self, virtwho):
         """Test the '-d' option in virt-who command line
 
-        :title: virt-who: test cli option -d
+        :title: virt-who: cli: test option -d
         :id: 9389396f-d4c3-4be2-8aec-a9f7be3d25f1
         :caseimportance: High
         :tags: tier1
@@ -45,7 +45,7 @@ class TestCli:
     def test_oneshot(self, virtwho):
         """Test the '-o' option in virt-who command line
 
-        :title: virt-who: test cli option -o
+        :title: virt-who: cli: test option -o
         :id: 6902b844-8b71-490c-abf1-fa6087987666
         :caseimportance: High
         :tags: tier1
@@ -80,7 +80,7 @@ class TestCli:
     def test_interval(self, virtwho):
         """Test the '-i' option in virt-who command line
 
-        :title: virt-who: test cli option -i
+        :title: virt-who: cli: test option -i
         :id: e43d9fd0-0f1b-4b25-98f6-c421046e1c47
         :caseimportance: High
         :tags: tier1
@@ -116,7 +116,7 @@ class TestCli:
     def test_print(self, virtwho, hypervisor_handler):
         """Test the '-p' option in virt-who command line
 
-        :title: virt-who: test cli option -p
+        :title: virt-who: cli: test option -p
         :id: 16c01269-f4ab-4fe5-a29e-a3d5dc69a32a
         :caseimportance: High
         :tags: tier1
