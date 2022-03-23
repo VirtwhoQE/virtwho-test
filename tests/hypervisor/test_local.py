@@ -8,13 +8,13 @@ import pytest
 from virtwho import logger
 
 
-class TestSatellite:
+class TestLocal:
     @pytest.mark.tier1
-    def test_vdc_attach(self):
+    def test_hostname_option(self):
         """Just a demo
 
-        :title: virt-who: satellite: test vdc sku attach
-        :id: cd0e8694-4180-4b21-b9ed-9fe06005f066
+        :title: virt-who: local: test hostname option
+        :id: 33cc5ba0-c529-481b-8cfa-8613adbe23ee
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -24,14 +24,14 @@ class TestSatellite:
         :expectedresults:
             1.
         """
-        logger.info("Succeeded to run the 'test_vdc_attach'")
+        logger.info("Succeeded to run the 'test_hostname_option'")
 
     @pytest.mark.tier2
-    def test_vdc_remove(self):
+    def test_http_option(self):
         """Just a demo
 
-        :title: virt-who: satellite: test vdc sku unattach
-        :id: b5564039-fe25-4295-9911-abd77c2f14b7
+        :title: virt-who: local: test http option
+        :id: a66787b3-1a5f-4b6f-9c09-0873d6490de3
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -41,4 +41,4 @@ class TestSatellite:
         :expectedresults:
             1.
         """
-        logger.info("Succeeded to run the 'test_vdc_remove'")
+        logger.info("Succeeded to run the 'test_http_option'")
