@@ -5,8 +5,7 @@ from virtwho.configure import VirtwhoGlobalConfig
 from virtwho.configure import get_hypervisor_handler
 from virtwho.configure import get_register_handler
 from virtwho.register import SubscriptionManager
-from virtwho.register import RHSM
-from virtwho.register import Satellite
+from virtwho import logger
 import pytest
 
 
@@ -19,11 +18,6 @@ def virtwho_hypervisor_handler():
     return get_hypervisor_handler(mode)
 
 
-@pytest.fixture(name='register_handler', scope='session')
-def virtwho_register_handler():
-    return get_register_handler(register_type)
-
-
 @pytest.fixture(name='hypervisor', scope='session')
 def virtwho_hypervisor_config():
     return VirtwhoHypervisorConfig(mode, register_type)
@@ -34,14 +28,24 @@ def virtwho_hypervisor_config_file_create(hypervisor):
     hypervisor.create()
 
 
+@pytest.fixture(name='register_handler', scope='session')
+def virtwho_register_handler():
+    return get_register_handler(register_type)
+
+
 @pytest.fixture(name='globalconf', scope='session')
 def virtwho_global_config():
     return VirtwhoGlobalConfig(mode)
 
 
-@pytest.fixture(name='globalconf_clean', scope='class')
+@pytest.fixture(name='globalconf_clean', scope='function')
 def virtwho_global_config_clean(globalconf):
     globalconf.clean()
+
+
+@pytest.fixture(name='global_debug_true', scope='function')
+def virtwho_global_config_debug_true(globalconf):
+    globalconf.update('global', 'debug', 'true')
 
 
 @pytest.fixture(name='virtwho', scope='class')
@@ -78,11 +82,22 @@ def subscription_manager_guest_host_with_default_org(hypervisor_handler, registe
                                org=register_handler.default_org)
 
 
-@pytest.fixture(name='rhsm', scope='session')
-def rhsm():
-    return RHSM()
-
-
-@pytest.fixture(name='satellite', scope='session')
-def satellite_with_default_org():
-    return Satellite(org=config.satellite.default_org)
+@pytest.fixture(name='hypervisor_data', scope='session')
+def hypervisor_common_data_get_from_virtwho_ini(hypervisor_handler):
+    data = dict()
+    data['guest_uuid'] = hypervisor_handler.guest_uuid
+    data['hypervisor_uuid'] = ''
+    data['hypervisor_hostname'] = ''
+    data['hypervisor_hwuuid'] = ''
+    if mode == 'esx':
+        data['hypervisor_uuid'] = hypervisor_handler.esx_uuid
+        data['hypervisor_hostname'] = hypervisor_handler.esx_hostname
+        data['hypervisor_hwuuid'] = hypervisor_handler.esx_hwuuid
+    elif mode == 'rhevm':
+        data['hypervisor_uuid'] = hypervisor_handler.vdsm_uuid
+        data['hypervisor_hostname'] = hypervisor_handler.vdsm_hostname
+        data['hypervisor_hwuuid'] = hypervisor_handler.vdsm_hwuuid
+    else:
+        data['hypervisor_uuid'] = hypervisor_handler.uuid
+        data['hypervisor_hostname'] = hypervisor_handler.hostname
+    return data

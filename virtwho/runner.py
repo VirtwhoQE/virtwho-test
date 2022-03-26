@@ -4,7 +4,7 @@ import re
 import threading
 import time
 from virtwho import logger, FailException
-from virtwho.configure import virtwho_ssh_connect
+from virtwho.configure import virtwho_ssh_connect, get_hypervisor_handler
 
 
 class VirtwhoRunner:
@@ -110,6 +110,7 @@ class VirtwhoRunner:
         data['interval'] = self.interval_time(rhsm_log)
         data['loop'], data['loop_num'] = self.loop_info()
         data['mappings'] = self.mappings(rhsm_log)
+        data['hypervisor_id'] = self.hypervisor_id(data['mappings'])
         data['print_json'] = self.print_json()
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
@@ -431,6 +432,19 @@ class VirtwhoRunner:
                     org_data[hypervisorId] = facts
                 data[org] = org_data
         return data
+
+    def hypervisor_id(self, mapping):
+        """
+        Get the hypervisor id by mapping
+        :param mapping: the host-to-guest mapping
+        """
+        if mapping:
+            guest_uuid = get_hypervisor_handler(self.mode).guest_uuid
+            for org in mapping['orgs']:
+                org_dict = mapping[org]
+                if guest_uuid in org_dict.keys():
+                    return mapping[org][guest_uuid]['guest_hypervisor']
+        return ''
 
     def print_json(self):
         """

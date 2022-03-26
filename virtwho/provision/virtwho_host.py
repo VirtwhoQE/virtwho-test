@@ -24,6 +24,9 @@ def provision_virtwho_host(args):
         args.virtwho_pkg_url = msg['pkg_url']
         if not args.rhel_compose:
             args.rhel_compose = msg['latest_rhel_compose']
+        config.update('gating', 'package_nvr', msg['pkg_nvr'])
+        config.update('gating', 'build_id', msg['build_id'])
+        config.update('gating', 'task_id', msg['task_id'])
 
     if not args.server:
         beaker_args_define(args)
