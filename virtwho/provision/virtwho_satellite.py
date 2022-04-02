@@ -8,7 +8,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
-from virtwho import FailException
+from virtwho import FailException, logger
 from virtwho.register import Satellite
 from virtwho.ssh import SSHConnect
 from virtwho.settings import config
@@ -23,6 +23,8 @@ def satellite_deploy_for_virtwho(args):
     And will configure the satellite as virt-who testing requirements.
     Please refer to the README for usage.
     """
+    logger.info("+++ Start to deploy the Satellite +++")
+
     satellite = args.satellite.split('-')
     args.version = satellite[0]
     args.repo = satellite[1]
@@ -61,6 +63,9 @@ def satellite_deploy_for_virtwho(args):
     activation_key = config.satellite.activation_key
     if activation_key:
         satellite.activation_key_create(key=activation_key)
+
+    logger.info(f"+++ Succeeded to deploy the Satellite "
+                f"{args.satellite}/{args.server} +++")
 
 
 def rhel_compose_for_satellite(rhel_version):
