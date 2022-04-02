@@ -19,6 +19,8 @@ def provision_virtwho_host(args):
     Configure virt-who host for an existing server or a new one installed by beaker.
     Please refer to the provision/README for usage.
     """
+    logger.info("+++ Start to deploy the virt-who host +++")
+
     if args.gating_msg:
         msg = base.gating_msg_parser(args.gating_msg)
         args.virtwho_pkg_url = msg['pkg_url']
@@ -57,6 +59,9 @@ def provision_virtwho_host(args):
         config.update('local', 'server', args.server)
         config.update('server', 'username', args.username)
         config.update('server', 'password', args.password)
+
+    logger.info(f"+++ Suceeded to deploy the virt-who host "
+                f"{args.rhel_compose}/{args.server} +++")
 
 
 def beaker_args_define(args):
