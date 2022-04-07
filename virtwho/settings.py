@@ -75,17 +75,10 @@ TEMP_DIR = os.path.join(os.path.realpath(os.path.join(
     "temp"
     )
 
-DEPLOY_DATA = os.path.join(os.path.realpath(os.path.join(
-    os.path.dirname(__file__),
-    os.pardir)),
-    "provision.ini"
-    )
-
 TEST_DATA = os.path.join(os.path.realpath(os.path.join(
     os.path.dirname(__file__),
     os.pardir)),
     "virtwho.ini"
     )
 
-deploy = Configure(DEPLOY_DATA)
 config = Configure(TEST_DATA)
