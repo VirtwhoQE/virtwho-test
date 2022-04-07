@@ -92,7 +92,7 @@ def beaker_args_define(args):
     if 'RHEL-7' in args.rhel_compose:
         args.variant = 'Server'
     args.job_group = 'virt-who-ci-server-group'
-    args.host = '%hp-dl360g9-08-vm%'
+    args.host = args.beaker_host
     args.host_type = None
     args.host_require = None
 
@@ -154,6 +154,12 @@ def virtwho_satellite_arguments_parser():
         required=False,
         help='Account password for the satellite administrator, '
              'default to the [satellite]:password in virtwho.ini')
+    parser.add_argument(
+        '--beaker-host',
+        default='%dell-per740-69-vm%',
+        required=False,
+        help='Define/filter system as hostrequire. '
+             'Such as: %hp-dl360g9-08-vm%')
     return parser.parse_args()
 
 
