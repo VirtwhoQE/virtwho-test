@@ -29,7 +29,7 @@ def provision_virtwho_host(args):
         config.update('gating', 'package_nvr', msg['pkg_nvr'])
         config.update('gating', 'build_id', msg['build_id'])
         config.update('gating', 'task_id', msg['task_id'])
-
+    # Will deploy a new host by beaker if no server provided
     if not args.server:
         beaker_args_define(args)
         args.server = install_rhel_by_beaker(args)
@@ -40,22 +40,29 @@ def provision_virtwho_host(args):
         user=args.username,
         pwd=args.password
     )
-
+    # Initially set the host
     base.rhel_compose_repo(
         ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
     )
     base.system_init(ssh_host, 'virtwho')
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
-    if config.job.hypervisor == 'libvirt':
-        libvirt_access_no_password(ssh_host)
-    if config.job.hypervisor == 'kubevirt':
-        kubevirt_config_file(ssh_host)
+    # Update the test properties in virtwho.ini
+    config.update('job', 'rhel_compose', args.rhel_compose)
     config.update('virtwho', 'server', args.server)
     config.update('virtwho', 'username', args.username)
     config.update('virtwho', 'password', args.password)
-    config.update('job', 'rhel_compose', args.rhel_compose)
     config.update('virtwho', 'package', virtwho_pkg)
-    if config.job.hypervisor == 'local':
+    # Configure the virt-who host as mode requirements
+    if (config.job.hypervisor == 'libvirt'
+            or 'libvirt' in config.job.multi_hypervisors):
+        libvirt_access_no_password(ssh_host)
+
+    if (config.job.hypervisor == 'kubevirt'
+            or 'kubevirt' in config.job.multi_hypervisors):
+        kubevirt_config_file(ssh_host)
+
+    if (config.job.hypervisor == 'local'
+            or 'local' in config.job.multi_hypervisors):
         config.update('local', 'server', args.server)
         config.update('server', 'username', args.username)
         config.update('server', 'password', args.password)
