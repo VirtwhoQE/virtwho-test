@@ -19,9 +19,8 @@ def polarion_test_case_upload(args):
     Requires curl and betelgeuse pypi package installed
     """
     xml_file_generate()
-    upload()
-    job_id = job_id_get()
-    log_analyzer(job_id)
+    xml_file_upload()
+    log_analyzer(job_id_get())
 
 
 def xml_file_generate():
@@ -45,7 +44,10 @@ def xml_file_generate():
         raise FailException(f'Failed to generate test case xml file')
 
 
-def upload():
+def xml_file_upload():
+    """
+    Upload the xml file to Polarion
+    """
     cmd = (f'curl -k '
            f'-u {args.username}:{args.password} '
            f'-X POST -F file=@{args.xml_file} '
