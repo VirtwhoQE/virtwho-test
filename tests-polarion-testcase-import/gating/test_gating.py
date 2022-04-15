@@ -14,7 +14,7 @@ class TestGating:
     def test_debug(self, virtwho):
         """Test the '-d' option in virt-who command line
 
-        :title: virt-who: gating: test debug function
+        :title: VIRT-WHO: gating: test debug function
         :id: 4ba50cb9-c431-4283-bb8c-1d4a8ff0a036
         :caseimportance: High
         :tags: gating
@@ -44,7 +44,7 @@ class TestGating:
     def test_oneshot(self, virtwho):
         """Test the '-o' option in virt-who command line
 
-        :title: virt-who: gating: test oneshot function
+        :title: VIRT-WHO: gating: test oneshot function
         :id: 2ec0f2c4-9633-48cd-8d61-7872d0e23117
         :caseimportance: High
         :tags: gating
@@ -78,7 +78,7 @@ class TestGating:
     def test_interval(self, virtwho, globalconf, global_debug_true):
         """Test the interval option in /etc/virt-who.conf
 
-        :title: virt-who: gating: test interval function
+        :title: VIRT-WHO: gating: test interval function
         :id: e226ed41-454d-4855-8c1d-5ab2ba5293e4
         :caseimportance: High
         :tags: gating
@@ -115,7 +115,7 @@ class TestGating:
     def test_hypervisor_id(self, virtwho, hypervisor, hypervisor_data, hypervisor_handler):
         """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
 
-        :title: virt-who: gating: test hypervisor_id function
+        :title: VIRT-WHO: gating: test hypervisor_id function
         :id: 03b79c0b-8b1f-4f32-8285-370773b7124b
         :caseimportance: High
         :tags: gating
