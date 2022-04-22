@@ -14,7 +14,7 @@ class TestVirtwhoPackageInfo:
         :title: virt-who: base: test package is shipped in arch
         :id: a071e993-1070-4da5-8291-27a091a00d82
         :caseimportance: High
-        :tags: packageInfo
+        :tags: package
         :customerscenario: false
         :upstream: no
         :steps:
