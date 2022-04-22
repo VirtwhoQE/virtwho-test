@@ -8,7 +8,7 @@ import pytest
 from virtwho import logger
 
 
-class TestGlobalConfiguration:
+class TestConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_conf(self):
         """Just a demo
