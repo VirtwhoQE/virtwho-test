@@ -173,11 +173,11 @@ def satellite_manifest_upload(ssh, url, admin_username, admin_password):
                         f'--file {filename}')
     if ret != 0:
         raise FailException('Failed to upload manifest for satellite')
-    ret, _ = ssh.runcmd(f'hammer -u {admin_username} -p {admin_password} '
-                        f'subscription refresh-manifest '
-                        f'--organization="Default Organization"')
-    if ret != 0:
-        raise FailException('Failed to refresh satellite manifest')
+    # ret, _ = ssh.runcmd(f'hammer -u {admin_username} -p {admin_password} '
+    #                     f'subscription refresh-manifest '
+    #                     f'--organization="Default Organization"')
+    # if ret != 0:
+    #     raise FailException('Failed to refresh satellite manifest')
 
 
 def satellite_arguments_parser():
