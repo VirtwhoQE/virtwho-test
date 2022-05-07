@@ -12,24 +12,29 @@ from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho import base
 from utils.beaker import install_rhel_by_beaker
+from utils.properties_update import virtwho_ini_props_update
 
 
 def provision_virtwho_host(args):
     """
-    Configure virt-who host for an existing server or a new one installed by beaker.
-    Please refer to the provision/README for usage.
+    Configure virt-who host for an existing server or a new one installed
+    by beaker. Please refer to the provision/README for usage.
     """
     logger.info("+++ Start to deploy the virt-who host +++")
 
+    virtwho_ini_props = dict()
     if args.gating_msg:
         msg = base.gating_msg_parser(args.gating_msg)
         args.virtwho_pkg_url = msg['pkg_url']
         if not args.rhel_compose:
             args.rhel_compose = msg['latest_rhel_compose']
-        config.update('gating', 'package_nvr', msg['pkg_nvr'])
-        config.update('gating', 'build_id', msg['build_id'])
-        config.update('gating', 'task_id', msg['task_id'])
-    # Will deploy a new host by beaker if no server provided
+        virtwho_ini_props['gating'] = {
+            'package_nvr': msg['pkg_nvr'],
+            'build_id': msg['build_id'],
+            'task_id': msg['task_id']
+        }
+
+    # Deploy a new host by beaker if no server provided
     if not args.server:
         beaker_args_define(args)
         args.server = install_rhel_by_beaker(args)
@@ -40,32 +45,39 @@ def provision_virtwho_host(args):
         user=args.username,
         pwd=args.password
     )
-    # Initially set the host
+
+    # Initially setup the virt-who host
     base.rhel_compose_repo(
         ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
     )
     base.system_init(ssh_host, 'virtwho')
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
-    # Update the test properties in virtwho.ini
-    config.update('job', 'rhel_compose', args.rhel_compose)
-    config.update('virtwho', 'server', args.server)
-    config.update('virtwho', 'username', args.username)
-    config.update('virtwho', 'password', args.password)
-    config.update('virtwho', 'package', virtwho_pkg)
+
+    # Update the virtwho.ini properties
+    virtwho_ini_props['job'] = {'rhel_compose': args.rhel_compose}
+    virtwho_ini_props['virtwho'] = {
+        'server': args.server,
+        'username': args.username,
+        'password': args.password,
+        'package': virtwho_pkg
+    }
+    virtwho_ini_props['local'] = {
+        'server': args.server,
+        'username': args.username,
+        'password': args.password
+    }
+    logger.info(virtwho_ini_props)
+    for (args.section, data) in virtwho_ini_props.items():
+        for (args.option, args.value) in data.items():
+            virtwho_ini_props_update(args)
+
     # Configure the virt-who host as mode requirements
     if (config.job.hypervisor == 'libvirt'
             or 'libvirt' in config.job.multi_hypervisors):
         libvirt_access_no_password(ssh_host)
-
     if (config.job.hypervisor == 'kubevirt'
             or 'kubevirt' in config.job.multi_hypervisors):
         kubevirt_config_file(ssh_host)
-
-    if (config.job.hypervisor == 'local'
-            or 'local' in config.job.multi_hypervisors):
-        config.update('local', 'server', args.server)
-        config.update('server', 'username', args.username)
-        config.update('server', 'password', args.password)
 
     logger.info(f"+++ Suceeded to deploy the virt-who host "
                 f"{args.rhel_compose}/{args.server} +++")
