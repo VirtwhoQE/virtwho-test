@@ -6,15 +6,16 @@ import argparse
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
-sys.path.append(os.path.split(rootPath)[0])
+sys.path.append(rootPath)
 
-from virtwho.settings import config
+from virtwho.settings import Configure, TEST_DATA
 
 
 def virtwho_ini_props_update(args):
     """
-    Update the properties of virtwho.ini for testing
+    Update the property of virtwho.ini for testing/using
     """
+    config = Configure(TEST_DATA)
     if args.section and args.option:
         config.update(args.section, args.option, args.value)
 
