@@ -11,7 +11,7 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho import FailException, logger
 from virtwho.register import Satellite
 from virtwho.ssh import SSHConnect
-from virtwho.settings import config
+from virtwho.settings import config, Configure, TEST_DATA
 from utils.beaker import install_rhel_by_beaker
 from utils.satellite import satellite_deploy
 
@@ -49,11 +49,12 @@ def satellite_deploy_for_virtwho(args):
     satellite_settings(ssh_satellite, 'unregister_delete_host', 'true')
 
     # Update the [satellite] section of virtwho.ini
-    config.update('satellite', 'server', args.server)
-    config.update('satellite', 'username', args.admin_username)
-    config.update('satellite', 'password', args.admin_password)
-    config.update('satellite', 'ssh_username', args.ssh_username)
-    config.update('satellite', 'ssh_password', args.ssh_password)
+    virtwho_ini = Configure(TEST_DATA)
+    virtwho_ini.update('satellite', 'server', args.server)
+    virtwho_ini.update('satellite', 'username', args.admin_username)
+    virtwho_ini.update('satellite', 'password', args.admin_password)
+    virtwho_ini.update('satellite', 'ssh_username', args.ssh_username)
+    virtwho_ini.update('satellite', 'ssh_password', args.ssh_password)
 
     # Create the organization and activation key as requirement.
     satellite = Satellite()

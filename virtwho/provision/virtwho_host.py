@@ -8,7 +8,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
 from virtwho import logger, FailException
-from virtwho.settings import config
+from virtwho.settings import config, Configure, TEST_DATA
 from virtwho.ssh import SSHConnect
 from virtwho import base
 from utils.beaker import install_rhel_by_beaker
@@ -26,9 +26,10 @@ def provision_virtwho_host(args):
         args.virtwho_pkg_url = msg['pkg_url']
         if not args.rhel_compose:
             args.rhel_compose = msg['latest_rhel_compose']
-        config.update('gating', 'package_nvr', msg['pkg_nvr'])
-        config.update('gating', 'build_id', msg['build_id'])
-        config.update('gating', 'task_id', msg['task_id'])
+        virtwho_ini = Configure(TEST_DATA)
+        virtwho_ini.update('gating', 'package_nvr', msg['pkg_nvr'])
+        virtwho_ini.update('gating', 'build_id', msg['build_id'])
+        virtwho_ini.update('gating', 'task_id', msg['task_id'])
     # Will deploy a new host by beaker if no server provided
     if not args.server:
         beaker_args_define(args)
@@ -47,11 +48,12 @@ def provision_virtwho_host(args):
     base.system_init(ssh_host, 'virtwho')
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
     # Update the test properties in virtwho.ini
-    config.update('job', 'rhel_compose', args.rhel_compose)
-    config.update('virtwho', 'server', args.server)
-    config.update('virtwho', 'username', args.username)
-    config.update('virtwho', 'password', args.password)
-    config.update('virtwho', 'package', virtwho_pkg)
+    virtwho_ini = Configure(TEST_DATA)
+    virtwho_ini.update('job', 'rhel_compose', args.rhel_compose)
+    virtwho_ini.update('virtwho', 'server', args.server)
+    virtwho_ini.update('virtwho', 'username', args.username)
+    virtwho_ini.update('virtwho', 'password', args.password)
+    virtwho_ini.update('virtwho', 'package', virtwho_pkg)
     # Configure the virt-who host as mode requirements
     if (config.job.hypervisor == 'libvirt'
             or 'libvirt' in config.job.multi_hypervisors):
@@ -63,9 +65,10 @@ def provision_virtwho_host(args):
 
     if (config.job.hypervisor == 'local'
             or 'local' in config.job.multi_hypervisors):
-        config.update('local', 'server', args.server)
-        config.update('server', 'username', args.username)
-        config.update('server', 'password', args.password)
+        virtwho_ini = Configure(TEST_DATA)
+        virtwho_ini.update('local', 'server', args.server)
+        virtwho_ini.update('local', 'username', args.username)
+        virtwho_ini.update('local', 'password', args.password)
 
     logger.info(f"+++ Suceeded to deploy the virt-who host "
                 f"{args.rhel_compose}/{args.server} +++")
