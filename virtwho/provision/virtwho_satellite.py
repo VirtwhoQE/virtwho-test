@@ -61,7 +61,7 @@ def satellite_deploy_for_virtwho(args):
         virtwho_ini_props_update(args)
 
     # Create the organization and activation key as requirement.
-    satellite = Satellite()
+    satellite = Satellite(server=args.server)
     second_org = config.satellite.secondary_org
     if second_org:
         satellite.org_create(name=second_org, label=second_org)

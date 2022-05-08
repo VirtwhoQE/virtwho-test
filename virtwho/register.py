@@ -470,25 +470,28 @@ class RHSM:
 
 class Satellite:
 
-    def __init__(self, org=None, activation_key=None):
+    def __init__(self, server=None, org=None, activation_key=None):
         """
         Using hammer command to set satellite, handle organization and
         activation key, attach/remove subscription for host.
         Using api to check the host-to-guest associations.
+        :param server: satellite server ip/hostname, use the server configured
+            in virtwho.ini as default.
         :param org: organization label, use the default_org configured
             in virtwho.ini as default.
         :param activation_key: activation key name, use the configure
             in virtwho.ini as default.
         """
         register = get_register_handler('satellite')
+        self.server = server or register.server
         self.org = org or register.default_org
         self.activation_key = activation_key or register.activation_key
-        self.ssh = SSHConnect(host=register.server,
+        self.ssh = SSHConnect(host=self.server,
                               user=register.ssh_username,
                               pwd=register.ssh_password)
         self.hammer = 'hammer --output=json'
         self.org_id = self.organization_id()
-        self.api = f'https://{register.server}'
+        self.api = f'https://{self.server}'
         self.auth = (register.username, register.password)
 
     def organization_id(self, org=None):
