@@ -8,9 +8,11 @@ import pytest
 from virtwho import logger
 
 
+@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('hypervisor_create')
 class TestConfiguration:
     @pytest.mark.tier1
-    def test_debug_in_virtwho_conf(self):
+    def test_debug_in_virtwho_conf(self, virtwho, globalconf):
         """Just a demo
 
         :title: virt-who: config: test debug option
@@ -20,11 +22,26 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+
+            1. Run virt-who with "debug=True" in [global] section in /etc/virt-who.conf file
+            2. Run virt-who with "debug=False" in [global] section in /etc/virt-who.conf file
+
         :expectedresults:
-            1.
+
+            1. no [DEBUG] log printed
+            2. [DEBUG] logs are printed with "-d" option
         """
-        logger.info("Succeeded to run the 'test_debug_in_virtwho_conf'")
+        globalconf.update('global', 'debug', 'True')
+        result = virtwho.run_cli(debug=False)
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['debug'] is True)
+
+        globalconf.update('global', 'debug', 'False')
+        result = virtwho.run_cli(debug=False)
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['debug'] is False)
 
     @pytest.mark.tier2
     def test_interval_in_virtwho_conf(self):
