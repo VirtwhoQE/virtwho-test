@@ -117,6 +117,7 @@ class VirtwhoGlobalConfig:
         """
         os.system(f"echo '' > {self.local_file}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
+        self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
 
 def virtwho_ssh_connect(mode=None):
