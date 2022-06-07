@@ -2,15 +2,24 @@ from virtwho.settings import config
 from virtwho.runner import VirtwhoRunner
 from virtwho.configure import VirtwhoHypervisorConfig
 from virtwho.configure import VirtwhoGlobalConfig
-from virtwho.configure import get_hypervisor_handler
+from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
 from virtwho.register import SubscriptionManager
-from virtwho import logger
 import pytest
 
 
 mode = config.job.hypervisor
 register_type = config.job.register
+
+
+@pytest.fixture(name='rhel_compose', scope='session')
+def virtwho_test_rhel_compose():
+    return config.job.rhel_compose
+
+
+@pytest.fixture(name='mode_file', scope='session')
+def virtwho_test_hypervisor_configure_file():
+    return f'/etc/virt-who.d/{mode}.conf'
 
 
 @pytest.fixture(name='hypervisor_handler', scope='session')
@@ -51,6 +60,11 @@ def virtwho_global_config_debug_true(globalconf):
 @pytest.fixture(name='virtwho', scope='class')
 def virtwho_runner():
     return VirtwhoRunner(mode, register_type)
+
+
+@pytest.fixture(name='ssh_host', scope='session')
+def virtwho_host_ssh_connect():
+    return virtwho_ssh_connect(mode)
 
 
 @pytest.fixture(name='sm_host', scope='session')
