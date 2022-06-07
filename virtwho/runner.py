@@ -114,9 +114,7 @@ class VirtwhoRunner:
         data['print_json'] = self.print_json()
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
-        logger.info(f"Completed the analyzer after run virt-who, "
-                    f"the result is:\n"
-                    f"{data}")
+        data['log'] = rhsm_log
         return data
 
     def run_start(self, cli=None, wait=None):
