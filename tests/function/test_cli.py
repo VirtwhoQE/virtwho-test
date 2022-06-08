@@ -5,6 +5,7 @@
 :caseautomation: Automated
 """
 import pytest
+from virtwho import HYPERVISOR_FILE
 
 
 @pytest.mark.usefixtures('globalconf_clean')
@@ -149,7 +150,7 @@ class TestCli:
 
     @pytest.mark.tier1
     @pytest.mark.notLocal
-    def test_config(self, virtwho, ssh_host, mode_file):
+    def test_config(self, virtwho, ssh_host):
         """Test the '-c' option in virt-who command line
 
         :title: virt-who: cli: test option -c
@@ -171,7 +172,7 @@ class TestCli:
         """
         msg = "ignoring configuration files in '/etc/virt-who.d/'"
         config_file = '/root/test_cli_config.conf'
-        ssh_host.runcmd(f'cp {mode_file} {config_file}')
+        ssh_host.runcmd(f'\\cp -f {HYPERVISOR_FILE} {config_file}')
         result = virtwho.run_cli(config=config_file)
         assert (result['send'] == 1
                 and result['error'] == 0
