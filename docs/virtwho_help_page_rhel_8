@@ -1,0 +1,25 @@
+usage: virt-who [-d] [-o] [-i INTERVAL] [-p] [-c CONFIGS] [--version]
+
+Agent for reporting virtual guest IDs to subscription manager
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d, --debug           Enable debugging output
+  -o, --one-shot        Send the list of guest IDs and exit immediately
+  -i INTERVAL, --interval INTERVAL
+                        Acquire list of virtual guest each N seconds. Send if
+                        changes are detected.
+  -p, --print           Print the host/guest association obtained from
+                        virtualization backend (implies oneshot)
+  -c CONFIGS, --config CONFIGS
+                        Configuration file that will be processed and will
+                        override configuration from other files. 'global' and
+                        'default' sections are not read in files passed in via
+                        this option, and are only read from /etc/virt-
+                        who.conf. Can be used multiple times
+  --version             Display the version information and exit
+
+virt-who also reads environment variables. They have the same name as command
+line arguments but uppercased, with underscore instead of dash and prefixed
+with VIRTWHO_ (e.g. VIRTWHO_ONE_SHOT). Empty variables are considered as
+disabled, non-empty as enabled.
