@@ -69,6 +69,12 @@ class Configure:
         self.save()
 
 
+DOCS_DIR = os.path.join(os.path.realpath(os.path.join(
+    os.path.dirname(__file__),
+    os.pardir)),
+    "docs"
+    )
+
 TEMP_DIR = os.path.join(os.path.realpath(os.path.join(
     os.path.dirname(__file__),
     os.pardir)),
