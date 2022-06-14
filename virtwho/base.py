@@ -4,6 +4,7 @@ import os
 import random
 import re
 import string
+import operator
 
 from virtwho import logger, FailException
 from virtwho.settings import config
@@ -282,3 +283,54 @@ def rhel_compose_url(compose_id):
             repo_base = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os'
             repo_extra = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/AppStream/x86_64/os'
     return repo_base, repo_extra
+
+
+def local_files_compare(file1, file2):
+    """
+    Compare two local files information.
+    :param file1: local file 1
+    :param file2: local file 2
+    :reture: True or False
+    """
+    fp1 = open(file1)
+    fp2 = open(file2)
+    flist1 = [i for i in fp1]
+    flist2 = [x for x in fp2]
+    fp1.close()
+    fp2.close()
+    return operator.eq(flist1, flist2)
+
+
+def url_validation(url):
+    """
+    Test if the url available or not.
+    :param url: url link to check
+    :reture: True or False
+    """
+    output = os.popen(
+        f"if ( curl -o/dev/null -sfI '{url}' );"
+        f"then echo 'true';"
+        f"else echo 'false'; fi"
+    ).read()
+    if output.strip() == 'true':
+        return True
+    logger.warning(f'url({url}) not available')
+    return False
+
+
+def package_info_analyzer(ssh, pkg):
+    """
+    Analyze the package information after '#rpm -qa {pkg}'.
+    :param ssh: ssh access of testing host
+    :param pkg: package to test
+    :reture: a dict
+    """
+    _, output = ssh.runcmd(f'rpm -qi {pkg}')
+    data = dict()
+    info = output.strip().split('\n')
+    for line in info:
+        if ': ' not in line:
+            continue
+        line = line.split(': ')
+        data[line[0].strip()] = line[1].strip()
+    return data
