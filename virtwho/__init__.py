@@ -3,13 +3,15 @@ from virtwho.settings import config
 
 logger = getLogger(__name__)
 
-RHEL_COMPOSE = config.job.register
+RHEL_COMPOSE = config.job.rhel_compose
 
 HYPERVISOR = config.job.hypervisor
 
 HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}.conf'
 
 REGISTER = config.job.register
+
+VIRTWHO_PKG = config.virtwho.package
 
 
 class FailException(BaseException):
