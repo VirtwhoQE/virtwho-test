@@ -1,4 +1,5 @@
 import json
+import os
 import queue
 import re
 import threading
@@ -32,17 +33,21 @@ class VirtwhoRunner:
                 interval=None,
                 prt=False,
                 config="default",
+                status=False,
+                jsn=False,
                 wait=None):
         """
         Run virt-who by command line and analyze the result.
 
-        :param debug: use '-d' option when debug is True.
-        :param oneshot: use '-o' option when oneshot is True.
+        :param debug: use '-d' option when set True.
+        :param oneshot: use '-o' option when set True.
         :param interval: use '-i' option when configure interval time.
-        :param prt: use '-p' option when prt is True.
+        :param prt: use '-p' option when set True.
         :param config: use '-c' option to define virt-who configuration
             file when define the config para.
             Default using '/etc/virt-who.d/{mode}.conf'.
+        :param status: use '-s' option when set True.
+        :param jsn: use '-j' option when set True, together with -s
         :param wait: wait time after run virt-who, mainly used to test
             interval function.
         :return: a dict with analyzer result.
@@ -60,10 +65,17 @@ class VirtwhoRunner:
             if config == 'default':
                 config = f'{self.config_file}'
             cmd += f'-c {config} '
-
+        if status:
+            cmd += '-s '
+        if jsn:
+            cmd += '-j '
         if prt:
             cmd = f'{cmd} > {self.print_json_file}'
-        result_data = self.run_start(cli=cmd, wait=wait)
+
+        if status:
+            result_data = self.status(cmd)
+        else:
+            result_data = self.run_start(cli=cmd, wait=wait)
         return result_data
 
     def run_service(self, wait=None):
@@ -186,6 +198,40 @@ class VirtwhoRunner:
         _, _ = self.operate_service("virt-who", "stop")
         if self.kill_pid("virt-who") is False:
             raise FailException("Failed to stop and clean virt-who process")
+
+    def status(self, cmd):
+        """
+        Check virt-who status by run '#virt-who -s -j'
+        :param cmd: virt-who command
+        :return: a dic
+        """
+        status_data = dict()
+        _, output = self.ssh.runcmd(cmd)
+        if '-j ' not in cmd and 'Configuration Name' in output:
+            status = output.strip().split('\n')
+            for item in status:
+                num = status.index(item)
+                if 'Configuration Name' in item:
+                    config_name = item.split(':')[1].strip()
+                    status_data[config_name] = dict()
+                    if 'Source Status:' in status[num+1]:
+                        status_data[config_name]['source_status'] = \
+                            status[num+1].split(':')[1].strip()
+                    if 'Destination Status:' in status[num+2]:
+                        status_data[config_name]['destination_status'] = \
+                            status[num+2].split(':')[1].strip()
+        if '-j ' in cmd and 'configurations' in output:
+            output = json.loads(output.replace('\n', ''), strict=False)
+            configurations = output['configurations']
+            for item in configurations:
+                name = item['name']
+                status_data[name] = dict()
+                if 'source' in item.keys():
+                    status_data[name]['source'] = item['source']
+                if 'destination' in item.keys():
+                    status_data[name]['destination'] = item['destination']
+        logger.info(status_data)
+        return status_data
 
     def rhsm_log_get(self, wait):
         """
@@ -537,3 +583,4 @@ class VirtwhoRunner:
         number = len(re.findall(msg, output, re.I))
         logger.info(f"Find '{msg}' {number} times")
         return number
+
