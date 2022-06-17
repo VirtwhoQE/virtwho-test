@@ -71,16 +71,10 @@ class TestConfiguration:
                 and result['interval'] == 3600)
 
         globalconf.update('global', 'interval', '60')
-        result = virtwho.run_service()
+        result = virtwho.run_service(wait=60)
         assert (result['send'] == 1
                 and result['error'] == 0
-                and result['interval'] == 60)
-
-        globalconf.update('global', 'interval', '120')
-        result = virtwho.run_service()
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['interval'] == 120)
+                and result['loop'] == 60)
 
     @pytest.mark.tier1
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
@@ -107,15 +101,17 @@ class TestConfiguration:
         result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
+                and result['terminate'] == 1
                 and result['oneshot'] is True)
 
         globalconf.update('global', 'oneshot', 'False')
         result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
+                and result['terminate'] == 0
                 and result['oneshot'] is False)
 
-    def test_print_in_virtwho_conf(self, virtwho, globalconf):
+    def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler):
         """Test the print_ option in /etc/virtwho.conf
 
         :title: virt-who: config: test print_ option
@@ -134,16 +130,28 @@ class TestConfiguration:
             1. the mappings send number and alive thread number of the virt-who is 0
             2. the mappings send number and alive thread number of the virt-who is 1
         """
-        globalconf.update('global', 'debug', 'True')
-        globalconf.update('global', 'print_', 'True')
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 0
-                and result['thread'] == 0)
-
         globalconf.update('global', 'print_', 'False')
         result = virtwho.run_service()
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1)
+
+        guest_id = hypervisor_handler.guest_uuid
+        globalconf.update('global', 'print_', 'True')
+        globalconf.update('global', 'debug', 'True')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and result['debug'] is True
+                and guest_id in result['log'])
+
+        globalconf.update('global', 'print_', 'True')
+        globalconf.update('global', 'debug', 'False')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and result['debug'] is False
+                and guest_id not in result['log'])
 
