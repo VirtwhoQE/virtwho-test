@@ -5,6 +5,7 @@
 :caseautomation: Automated
 """
 import pytest
+from virtwho.base import hostname_get
 
 
 @pytest.mark.usefixtures('globalconf_clean')
@@ -155,3 +156,37 @@ class TestConfiguration:
                 and result['debug'] is False
                 and guest_id not in result['log'])
 
+    @pytest.mark.usefixtures('hypervisor_data')
+    def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf, ssh_host):
+        """Test the reporter_id option in /etc/virtwho.conf
+
+        :title: virt-who: config: test reporter_id option
+        :id: 83df76e6-27c6-4429-b32b-fbc2be0564a4
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. run virt-who to with default configured
+            2. update the reporter_id in /etc/virtwho.conf file and run virt-who
+
+        :expectedresults:
+
+            1. the hostname of the virt-who host shout be included in default reporter_id
+            2. the reporter_id should be updated to the setting reporter_id
+        """
+        virtwho_hostname = hostname_get(ssh_host)
+        globalconf.update('global', 'debug', 'True')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and virtwho_hostname in result['reporter_id'])
+        reporter_id = "virtwho_reporter_id"
+        globalconf.update('global', 'reporter_id', reporter_id)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and result['reporter_id'] == reporter_id)
