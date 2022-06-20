@@ -5,7 +5,6 @@
 :caseautomation: Automated
 """
 import pytest
-from virtwho import logger
 
 
 @pytest.mark.usefixtures('globalconf_clean')
@@ -13,7 +12,7 @@ from virtwho import logger
 class TestConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
-        """Just a demo
+        """Test the debug option in /etc/virtwho.conf
 
         :title: virt-who: config: test debug option
         :id: 6f238133-43db-4a52-b01c-441faba0cf74
@@ -29,50 +28,130 @@ class TestConfiguration:
         :expectedresults:
 
             1. no [DEBUG] log printed
-            2. [DEBUG] logs are printed with "-d" option
+            2. [DEBUG] logs are printed with the configuration
         """
         globalconf.update('global', 'debug', 'True')
-        result = virtwho.run_cli(debug=False)
+        result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['debug'] is True)
 
         globalconf.update('global', 'debug', 'False')
-        result = virtwho.run_cli(debug=False)
+        result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['debug'] is False)
 
-    @pytest.mark.tier2
-    def test_interval_in_virtwho_conf(self):
-        """Just a demo
+    @pytest.mark.tier1
+    def test_interval_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the interval option in /etc/virtwho.conf
 
         :title: virt-who: config: test interval option
         :id: f1d39429-62c0-44f0-a6d3-4ffc8dc704b1
         :caseimportance: High
-        :tags: tier2
+        :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
-        :expectedresults:
-            1.
-        """
-        logger.info("Succeeded to run the 'test_interval_in_virtwho_conf'")
 
-    @pytest.mark.tier3
-    def test_oneshot_in_virtwho_conf(self):
-        """Just a demo
+            1. Enable interval and set to 10 in /etc/virt-who.conf
+            2. Enable interval and set to 60 in /etc/virt-who.conf
+            3. Enable interval and set to 120 in /etc/virt-who.conf
+        :expectedresults:
+
+            1. Default value of 3600 seconds will be used when configure lower than 60 seconds
+            2. Configure successfully, and virt-who starting infinite loop with 60 seconds interval
+            3. Configure successfully, and virt-who starting infinite loop with 120 seconds interval
+        """
+        globalconf.update('global', 'debug', 'True')
+        globalconf.update('global', 'interval', '10')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['interval'] == 3600)
+
+        globalconf.update('global', 'interval', '60')
+        result = virtwho.run_service(wait=60)
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['loop'] == 60)
+
+    @pytest.mark.tier1
+    def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the oneshot option in /etc/virtwho.conf
 
         :title: virt-who: config: test oneshot option
-        :id: 15b45691-7358-4bc8-b49f-f87100bded1b
+        :id: 9e39f91f-80b5-4773-bef0-7facf8cb85e2
         :caseimportance: High
-        :tags: tier3
+        :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+
+            1. Run virt-who with "oneshot=True" in /etc/virt-who.conf
+            2. Run virt-who with "oneshot=False" in /etc/virt-who.conf file
+
         :expectedresults:
-            1.
+
+            1. Can see 'Thread X stopped after running once' log in rhsm.log
+            2. Cannot see 'Thread X stopped after running once' log in rhsm.log
         """
-        logger.info("Succeeded to run the 'test_oneshot'")
+        globalconf.update('global', 'debug', 'True')
+        globalconf.update('global', 'oneshot', 'True')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['terminate'] == 1
+                and result['oneshot'] is True)
+
+        globalconf.update('global', 'oneshot', 'False')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['terminate'] == 0
+                and result['oneshot'] is False)
+
+    def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler):
+        """Test the print_ option in /etc/virtwho.conf
+
+        :title: virt-who: config: test print_ option
+        :id: 25de8130-677f-43ca-b07d-a15f49e91205
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with "print_=True" in /etc/virt-who.conf
+            2. Run virt-who with "print_=False" in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. the mappings send number and alive thread number of the virt-who is 0
+            2. the mappings send number and alive thread number of the virt-who is 1
+        """
+        globalconf.update('global', 'print_', 'False')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        guest_id = hypervisor_handler.guest_uuid
+        globalconf.update('global', 'print_', 'True')
+        globalconf.update('global', 'debug', 'True')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and result['debug'] is True
+                and guest_id in result['log'])
+
+        globalconf.update('global', 'print_', 'True')
+        globalconf.update('global', 'debug', 'False')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and result['debug'] is False
+                and guest_id not in result['log'])
+
