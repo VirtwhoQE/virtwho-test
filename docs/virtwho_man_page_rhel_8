@@ -1,0 +1,109 @@
+VIRT-WHO(8)                 System Manager's Manual                VIRT-WHO(8)
+
+NAME
+       virt-who  - Agent for reporting virtual guest IDs to Subscription Asset
+       Manager, Satellite 6, or Satellite 5.
+
+SYNOPSIS
+       virt-who [-d] [-i INTERVAL] [-o]
+
+OPTIONS
+       -h, --help
+              show this help message and exit
+
+       -d, --debug
+              Enable debugging output
+
+       -o, --one-shot
+              Send the list of guest IDs and exit immediately
+
+       -i INTERVAL, --interval=INTERVAL
+              Acquire and send guest information each  N  seconds;  note  that
+              this option is recommendation only, requested interval might not
+              been honoured and the actual interval might be longer or shorter
+              depending on backend that is used.
+
+       -p, --print
+              Print  the  host/guests  association  in JSON format to standard
+              output
+
+       -c, --config
+              Use configuration file  directly  (will  override  configuration
+              from  other  files. 'global' and 'default' sections are not read
+              in files passed in via this  option,  and  are  only  read  from
+              /etc/virt-who.conf).  Can  be used multiple times. See virt-who-
+              config(5) for details about configuration file format.
+
+ENVIRONMENT
+       virt-who also reads environmental variables. They have the same name as
+       command line arguments but upper-cased, with underscore instead of dash
+       and prefixed with VIRTWHO_ (e.g. VIRTWHO_ONE_SHOT). Empty variables are
+       considered  as  disabled, non-empty as enabled. Their use is deprecated
+       and will be ignored in the next major release.
+
+USAGE
+   MODE
+       virt-who has three modes how it can run:
+
+       1. one-shot mode
+              # virt-who -o
+
+              In this mode virt-who just sends the host to  guest  association
+              to the server once and then exits.
+
+       2. interval mode
+              # virt-who -i INTERVAL
+
+              This  is default mode. virt-who will listen to change events (if
+              available) or do a polling with given interval,  and  will  send
+              the  host  to  guest  association  when  it changes. The default
+              polling interval is 3600 seconds and can be  changed  using  "-i
+              INTERVAL" (in seconds).
+
+       3. print mode
+              # virt-who -p
+
+              This mode is similar to oneshot mode but the host to guest asso‐
+              ciation is not send to server, but printed  to  standard  output
+              instead.
+
+LOGGING
+       virt-who  always writes error output to file /var/log/rhsm/rhsm.log. It
+       also writes the same output to standard error output when started  from
+       command line.
+
+       virt-who  can  be  started  with  option "-d" in all modes and with all
+       backends. This option will enable verbose output with more information.
+
+SECURITY
+       Virt-who may present security concerns in  some  scenarios  because  it
+       needs  access to every hypervisor in the environment. To minimize secu‐
+       rity risk, virt-who is a network client, not a  server.  It  only  does
+       outbound  connections to find and register new hypervisors and does not
+       need access to any virtual machines. To  further  reduce  risk,  deploy
+       virt-who  in  a  small  virtual machine with a minimal installation and
+       lock it down from any unsolicited inbound network connections.
+
+       Here is a list of ports that need to be open for different hypervisors:
+
+           VMWare ESX/vCenter: 443/tcp
+           Hyper-V: 5985/tcp
+           RHEV-M: 443/tcp or 8443/tcp (depending on version)
+           XenServer: 443/tcp
+           libvirt: depending on transport type, default (for  remote  connec‐
+       tions) is qemu over ssh on port 22
+           local libvirt uses a local connection and doesn't need an open port
+           kubevirt: 8443/tcp
+           Nutanix AHV: 9440/tcp
+
+       virt-who  also  needs  to  have  access  to Subscription Asset Manager,
+       Satellite 5, or Satellite 6. Default port is  443/tcp.  All  the  ports
+       might be changed by system administrators.
+
+       Using  the  same network for machine running virt-who as for hypervisor
+       management software instead of production VM networks is suggested.
+
+AUTHOR
+       Radek Novacek <rnovacek at redhat dot com>
+
+virt-who                          April 2016                       VIRT-WHO(8)
