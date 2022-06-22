@@ -190,3 +190,126 @@ class TestConfiguration:
                 and result['send'] == 1
                 and result['thread'] == 1
                 and result['reporter_id'] == reporter_id)
+
+    def test_log_per_config_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
+        """Test the log_per_config option in /etc/virtwho.conf
+
+        :title: virt-who: config: test log_per_config option
+        :id: 85accd49-54dc-4899-a9cf-c6fb07b2fe3c
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with log-per-config=False in /etc/virt-who.conf
+            2. Run virt-who with log-per-config=True in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. unexpected /var/log/rhsm/virtwho* files not exist
+            2. Succeeded to find virtwho.destination_-*.log, virtwho.main.log, virtwho.main.log and
+            virtwho.rhsm_log.log file in /var/log/rhsm/
+        """
+        guest_uuid = hypervisor_handler.guest_uuid
+        globalconf.update('global', 'debug', 'True')
+
+        globalconf.update('global', 'log_per_config', 'False')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+        ret, output = ssh_host.runcmd('ls /var/log/rhsm/virtwho*')
+        assert ret is not 0
+
+        globalconf.update('global', 'log_per_config', 'True')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+        ret, files = ssh_host.runcmd('ls /var/log/rhsm/virtwho*')
+        assert (ret == 0
+                and 'virtwho.destination' in files
+                and 'virtwho.main.log' in files
+                and 'virtwho.rhsm_log.log' in files
+                and 'virtwho.virt.log' in files)
+
+        # assert the contents for the log files
+        for file in files.strip().split('\n'):
+            _, file_content = ssh_host.runcmd(f"cat {file.strip()}")
+            if "virtwho.destination" in file:
+                assert (guest_uuid in file_content
+                        and "ERROR" not in file_content)
+            if file == 'virtwho.main.log':
+                assert ("Report for config" in file_content
+                        and "ERROR" not in file_content)
+            if file == 'virtwho.rhsm_log.log':
+                assert ("Using reporter_id=" in file_content
+                        and "ERROR" not in file_content)
+
+    def test_log_dir_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
+        """Test the log_dir option in /etc/virtwho.conf
+
+        :title: virt-who: config: test log_dir option
+        :id: b20c8bf6-25f1-485a-a659-2f4194ee7fcc
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with log_dir setting in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Succeeded to find the rhsm.log file in specific log dir
+        """
+        log_dir = "/var/log/rhsm/virtwho/"
+        log_file = "/var/log/rhsm/virtwho/rhsm.log"
+        guest_uuid = hypervisor_handler.guest_uuid
+        globalconf.update('global', 'debug', 'True')
+
+        globalconf.update('global', 'log_dir', log_dir)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+        result, _ = ssh_host.runcmd(f"ls {log_file}")
+        assert result == 0
+        _, content = ssh_host.runcmd(f'cat {log_file}')
+        assert (guest_uuid in content
+                and "ERROR" not in content)
+
+    def test_log_file_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
+        """Test the log_file option in /etc/virtwho.conf
+
+        :title: virt-who: config: test log_file option
+        :id: 3bfa53f7-2564-4978-8189-099860f80c26
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with log_dir and log_file setting in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Succeeded to find the specific log file in specific log dir
+        """
+        log_dir = "/var/log/rhsm/virtwho/"
+        log_file = "/var/log/rhsm/virtwho/rhsm.log"
+        guest_uuid = hypervisor_handler.guest_uuid
+        globalconf.update('global', 'debug', 'True')
+
+        globalconf.update('global', 'log_dir', log_dir)
+        globalconf.update('global', 'log_file', log_file)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+        result, _ = ssh_host.runcmd(f"ls {log_file}")
+        assert result == 0
+        result, contents = ssh_host.runcmd(f"cat {log_file}")
+        assert (guest_uuid in contents
+                and "ERROR" not in contents)
