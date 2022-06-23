@@ -7,14 +7,14 @@
 import pytest
 from virtwho import VIRTWHO_PKG
 from virtwho.base import package_check, package_install, package_uninstall
-from virtwho.base import wget_download
+from virtwho.base import wget_download, random_string
 from virtwho.testing import virtwho_pacakge_url
 
 
 class TestInstallUninstall:
     @pytest.mark.tier1
     def test_install_uninstall_by_yum(self, ssh_host):
-        """Just a demo
+        """Test virt-who install/uninstall by yum
 
         :title: virt-who: package: install/uninstall by yum
         :id: 4f784cd4-ad46-4457-a20f-7cf07ba44d9e
@@ -31,11 +31,11 @@ class TestInstallUninstall:
         package_uninstall(ssh_host, 'virt-who')
         assert package_check(ssh_host, 'virt-who') is False
         package_install(ssh_host, 'virt-who')
-        assert package_check(ssh_host, 'virt-who') is True
+        assert package_check(ssh_host, 'virt-who') == VIRTWHO_PKG
 
     @pytest.mark.tier1
     def test_install_uninstall_by_rpm(self, ssh_host):
-        """Just a demo
+        """Test virt-who install/uninstall by rpm
 
         :title: virt-who: package: install/uninstall by rpm
         :id: 4f784cd4-ad46-4457-a20f-7cf07ba44d9e
@@ -53,13 +53,12 @@ class TestInstallUninstall:
             package_uninstall(ssh_host, 'virt-who', rpm=VIRTWHO_PKG)
             assert package_check(ssh_host, 'virt-who') is False
 
-            pkg_url = virtwho_pacakge_url(arch='x86_64')
-            file_path = '/root/'
+            pkg_url = virtwho_pacakge_url(VIRTWHO_PKG)
+            file_path = '/root/' + random_string()
             wget_download(ssh_host, url=pkg_url, file_path=file_path)
-            package_install(ssh_host,
-                            pkg_name='virt-who',
+            package_install(ssh_host, 'virt-who',
                             rpm=f'{file_path}/{VIRTWHO_PKG}.rpm')
-            assert package_check(ssh_host, 'virt-who') is True
+            assert package_check(ssh_host, 'virt-who') == VIRTWHO_PKG
         finally:
             if package_check(ssh_host, 'virt-who') is False:
                 package_install(ssh_host, 'virt-who')
