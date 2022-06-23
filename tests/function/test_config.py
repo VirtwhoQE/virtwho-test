@@ -219,7 +219,7 @@ class TestConfiguration:
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1)
-        ret, output = ssh_host.runcmd('ls /var/log/rhsm/virtwho*')
+        ret, _ = ssh_host.runcmd('ls /var/log/rhsm/virtwho*')
         assert ret is not 0
 
         globalconf.update('global', 'log_per_config', 'True')
@@ -235,22 +235,31 @@ class TestConfiguration:
                 and 'virtwho.virt.log' in files)
 
         # assert the contents for the log files
-        for file in files.strip().split('\n'):
-            _, file_content = ssh_host.runcmd(f"cat {file.strip()}")
-            if "virtwho.destination" in file:
-                assert (guest_uuid in file_content
-                        and "ERROR" not in file_content)
-            if file == 'virtwho.main.log':
-                assert ("Report for config" in file_content
-                        and "ERROR" not in file_content)
-            if file == 'virtwho.rhsm_log.log':
-                assert ("Using reporter_id=" in file_content
-                        and "ERROR" not in file_content)
+        for filename in files.strip().split('\n'):
+            _, file_content = ssh_host.runcmd(f"cat {filename.strip()}")
+            if 'virtwho.destination' in filename:
+                assert ('ERROR' not in file_content
+                        and guest_uuid in file_content
+                        and 'virtwho.destination' in file_content
+                        and 'virtwho.rhsm_log' not in file_content
+                        and 'virtwho.main' not in file_content)
+            if 'virtwho.main.log' in filename:
+                assert ('ERROR' not in file_content
+                        and 'Report for config' in file_content
+                        and 'virtwho.main' in file_content
+                        and 'virtwho.destination' not in file_content
+                        and 'virtwho.rhsm_log' not in file_content)
+            if 'virtwho.rhsm_log.log' in filename:
+                assert ('ERROR' not in file_content
+                        and "Using reporter_id=" in file_content
+                        and 'virtwho.rhsm_log' in file_content
+                        and 'virtwho.destination' not in file_content
+                        and 'virtwho.main' not in file_content)
 
-    def test_log_dir_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
-        """Test the log_dir option in /etc/virtwho.conf
+    def test_log_dir_and_log_file_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
+        """Test the log_dir and log_file option in /etc/virtwho.conf
 
-        :title: virt-who: config: test log_dir option
+        :title: virt-who: config: test log_dir and log_file option
         :id: b20c8bf6-25f1-485a-a659-2f4194ee7fcc
         :caseimportance: High
         :tags: tier1
@@ -259,13 +268,16 @@ class TestConfiguration:
         :steps:
 
             1. Run virt-who with log_dir setting in /etc/virt-who.conf
+            2. Run virt-who with log_dir and log_file setting in /etc/virt-who.conf
 
         :expectedresults:
 
-            1. Succeeded to find the rhsm.log file in specific log dir
+            1. Succeeded to find the default rhsm.log file in specific log dir
+            2. Succeeded to find the specific log file in specific log dir
         """
-        log_dir = "/var/log/rhsm/virtwho/"
-        log_file = "/var/log/rhsm/virtwho/rhsm.log"
+        log_dir = '/var/log/rhsm/virtwho/'
+        default_log_file = '/var/log/rhsm/virtwho/rhsm.log'
+        specific_log_file = '/var/log/rhsm/virtwho/virtwho.log'
         guest_uuid = hypervisor_handler.guest_uuid
         globalconf.update('global', 'debug', 'True')
 
@@ -274,42 +286,19 @@ class TestConfiguration:
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1)
-        result, _ = ssh_host.runcmd(f"ls {log_file}")
+        result, _ = ssh_host.runcmd(f'ls {default_log_file}')
         assert result == 0
-        _, content = ssh_host.runcmd(f'cat {log_file}')
+        _, content = ssh_host.runcmd(f'cat {default_log_file}')
         assert (guest_uuid in content
-                and "ERROR" not in content)
+                and 'ERROR' not in content)
 
-    def test_log_file_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
-        """Test the log_file option in /etc/virtwho.conf
-
-        :title: virt-who: config: test log_file option
-        :id: 3bfa53f7-2564-4978-8189-099860f80c26
-        :caseimportance: High
-        :tags: tier1
-        :customerscenario: false
-        :upstream: no
-        :steps:
-
-            1. Run virt-who with log_dir and log_file setting in /etc/virt-who.conf
-
-        :expectedresults:
-
-            1. Succeeded to find the specific log file in specific log dir
-        """
-        log_dir = "/var/log/rhsm/virtwho/"
-        log_file = "/var/log/rhsm/virtwho/rhsm.log"
-        guest_uuid = hypervisor_handler.guest_uuid
-        globalconf.update('global', 'debug', 'True')
-
-        globalconf.update('global', 'log_dir', log_dir)
-        globalconf.update('global', 'log_file', log_file)
+        globalconf.update('global', 'log_file', specific_log_file)
         result = virtwho.run_service()
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1)
-        result, _ = ssh_host.runcmd(f"ls {log_file}")
+        result, _ = ssh_host.runcmd(f'ls {specific_log_file}')
         assert result == 0
-        result, contents = ssh_host.runcmd(f"cat {log_file}")
+        result, contents = ssh_host.runcmd(f'cat {specific_log_file}')
         assert (guest_uuid in contents
-                and "ERROR" not in contents)
+                and 'ERROR' not in contents)
