@@ -79,8 +79,8 @@ class SubscriptionManager:
         """
         cmd = f'rpm -ihv http://{self.server}' \
               f'/pub/katello-ca-consumer-latest.noarch.rpm'
-        ret, _ = self.ssh.runcmd(cmd)
-        if ret != 0:
+        ret, output = self.ssh.runcmd(cmd)
+        if ret != 0 and 'is already installed' not in output:
             raise FailException(
                 f'Failed to install satellite certification for {self.host}')
 
@@ -790,8 +790,9 @@ class Satellite:
                 logger.info(
                     'Succeeded to find the associated guest in hypervisor page')
             else:
-                raise FailException(
+                logger.warning(
                     'Failed to find the associated guest in hypervisor page')
+                return False
             # Find the hypervisor in guest page
             ret, output = request_get(url=f'{self.api}/api/v2/hosts/{guest_id}',
                                       auth=self.auth)
@@ -799,8 +800,9 @@ class Satellite:
                 logger.info(
                     'Succeeded to find the associated hypervisor in guest page')
             else:
-                raise FailException(
+                logger.warning(
                     'Failed to find the associated hypervisor in guest page')
+                return False
 
 
 def request_get(url, auth, verify=False):
