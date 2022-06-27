@@ -112,7 +112,7 @@ class TestConfiguration:
                 and result['terminate'] == 0
                 and result['oneshot'] is False)
 
-    def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler):
+    def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data):
         """Test the print_ option in /etc/virtwho.conf
 
         :title: virt-who: config: test print_ option
@@ -137,7 +137,7 @@ class TestConfiguration:
                 and result['send'] == 1
                 and result['thread'] == 1)
 
-        guest_id = hypervisor_handler.guest_uuid
+        guest_id = hypervisor_data['guest_uuid']
         globalconf.update('global', 'print_', 'True')
         globalconf.update('global', 'debug', 'True')
         result = virtwho.run_service()
@@ -156,8 +156,7 @@ class TestConfiguration:
                 and result['debug'] is False
                 and guest_id not in result['log'])
 
-    @pytest.mark.usefixtures('hypervisor_data')
-    def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf, ssh_host):
+    def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf, ssh_host, hypervisor_data):
         """Test the reporter_id option in /etc/virtwho.conf
 
         :title: virt-who: config: test reporter_id option
@@ -191,7 +190,7 @@ class TestConfiguration:
                 and result['thread'] == 1
                 and result['reporter_id'] == reporter_id)
 
-    def test_log_per_config_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
+    def test_log_per_config_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the log_per_config option in /etc/virtwho.conf
 
         :title: virt-who: config: test log_per_config option
@@ -211,7 +210,7 @@ class TestConfiguration:
             2. Succeeded to find virtwho.destination_-*.log, virtwho.main.log, virtwho.main.log and
             virtwho.rhsm_log.log file in /var/log/rhsm/
         """
-        guest_uuid = hypervisor_handler.guest_uuid
+        guest_uuid = hypervisor_data['guest_uuid']
         globalconf.update('global', 'debug', 'True')
 
         globalconf.update('global', 'log_per_config', 'False')
@@ -256,7 +255,7 @@ class TestConfiguration:
                         and 'virtwho.destination' not in file_content
                         and 'virtwho.main' not in file_content)
 
-    def test_log_dir_and_log_file_in_virtwho_conf(self, virtwho, globalconf, hypervisor_handler, ssh_host):
+    def test_log_dir_and_log_file_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the log_dir and log_file option in /etc/virtwho.conf
 
         :title: virt-who: config: test log_dir and log_file option
@@ -278,7 +277,7 @@ class TestConfiguration:
         log_dir = '/var/log/rhsm/virtwho/'
         default_log_file = '/var/log/rhsm/virtwho/rhsm.log'
         specific_log_file = '/var/log/rhsm/virtwho/virtwho.log'
-        guest_uuid = hypervisor_handler.guest_uuid
+        guest_uuid = hypervisor_data['guest_uuid']
         globalconf.update('global', 'debug', 'True')
 
         globalconf.update('global', 'log_dir', log_dir)
