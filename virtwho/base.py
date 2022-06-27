@@ -334,3 +334,107 @@ def package_info_analyzer(ssh, pkg):
         line = line.split(': ')
         data[line[0].strip()] = line[1].strip()
     return data
+
+
+def package_install(ssh, pkg_name, rpm=None):
+    """
+    Install a package by yum or rpm
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name, such as virt-who
+    :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
+    """
+    cmd = f'yum install -y {pkg_name}'
+    if rpm:
+        cmd = f'rpm -ivh {rpm}'
+    _, _ = ssh.runcmd(cmd)
+    if package_check(ssh, pkg_name) is False:
+        raise FailException(f'Failed to install {pkg_name}')
+
+
+def package_uninstall(ssh, pkg_name, rpm=False):
+    """
+    Uninstall a package by yum or rpm
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name, such as virt-who
+    :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
+    """
+    cmd = f'yum remove -y {pkg_name}'
+    if rpm:
+        cmd = f'rpm -e {rpm} --nodeps'
+    _, _ = ssh.runcmd(cmd)
+    if package_check(ssh, pkg_name) is True:
+        raise FailException(f'Failed to uninstall {pkg_name}')
+
+
+def package_upgrade(ssh, pkg_name, rpm=None):
+    """
+    Upgrade a package by yum or rpm
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name, such as virt-who
+    :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
+    """
+    cmd = f'yum upgrade -y {pkg_name}'
+    if rpm:
+        cmd = f'rpm -Uvh {rpm}'
+    ret, output = ssh.runcmd(cmd)
+    if ret != 0:
+        raise FailException(f'Failed to upgrade {pkg_name}')
+
+
+def package_downgrade(ssh, pkg_name, rpm=False):
+    """
+    Downgrade a package by yum or rpm
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name, such as virt-who
+    :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
+    """
+    cmd = f'yum downgrade -y {pkg_name}'
+    if rpm:
+        cmd = f'rpm -Uvh --oldpackage {rpm}'
+    ret, output = ssh.runcmd(cmd)
+    if ret != 0:
+        raise FailException(f'Failed to downgrade {pkg_name}')
+
+
+def package_check(ssh, pkg_name):
+    """
+    Check a package by #rpm -qa
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name, such as virt-who
+    :return: the package or False
+    """
+    ret, output = ssh.runcmd(f'rpm -qa {pkg_name}')
+    if ret == 0 and pkg_name in output:
+        return output.strip()
+    return False
+
+
+def wget_download(ssh, url, file_path, file_name=None):
+    """
+    Download from url by wget
+    :param ssh: ssh access of testing host
+    :param url: download resource
+    :param file_path: the save path
+    :param file_name: the save name
+    """
+    _, ouput = ssh.runcmd(f'ls {file_path}')
+    if 'No such file or directory' in ouput:
+        _, _ = ssh.runcmd(f'mkdir -p {file_path}')
+    cmd = f'wget {url} -P {file_path} '
+    if file_name:
+        cmd += f' -O {file_name}'
+    ret, output = ssh.runcmd(cmd)
+    if ret == 0 and '100%' in output:
+        return True
+    raise FailException(f'Failed to wget download from {url}')
+
+
+def random_string(num=8):
+    """
+    Create a random string with ascii and digit, such as 'Ca9KGqlY'
+    :param num: the string numbers, default is 8
+    """
+    random_str = ''.join(
+        random.sample(string.ascii_letters + string.digits, num)
+    )
+    return random_str
