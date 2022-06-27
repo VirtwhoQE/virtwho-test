@@ -114,7 +114,7 @@ class TestCli:
                 and result['loop'] == 60)
 
     @pytest.mark.tier1
-    def test_print(self, virtwho, hypervisor_handler):
+    def test_print(self, virtwho, hypervisor_data):
         """Test the '-p' option in virt-who command line
 
         :title: virt-who: cli: test option -p
@@ -135,7 +135,7 @@ class TestCli:
             2. mappings is not reported when run with -p
             3. mappings can be printed out
         """
-        guest_id = hypervisor_handler.guest_uuid
+        guest_id = hypervisor_data['guest_uuid']
         result = virtwho.run_cli(oneshot=False, debug=False, prt=True)
         assert (result['thread'] == 0
                 and result['send'] == 0

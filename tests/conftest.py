@@ -1,17 +1,19 @@
+import pytest
+
 from virtwho.settings import config
 from virtwho.runner import VirtwhoRunner
 from virtwho.configure import VirtwhoHypervisorConfig
 from virtwho.configure import VirtwhoGlobalConfig
 from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
-from virtwho.register import SubscriptionManager
+from virtwho.ssh import SSHConnect
+from virtwho.register import SubscriptionManager, Satellite, RHSM
 from virtwho import HYPERVISOR, REGISTER
-import pytest
+from virtwho.base import hostname_get
 
 
-@pytest.fixture(name='hypervisor_handler', scope='session')
-def virtwho_hypervisor_handler():
-    return get_hypervisor_handler(HYPERVISOR)
+hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
+register_handler = get_register_handler(REGISTER)
 
 
 @pytest.fixture(name='hypervisor', scope='session')
@@ -22,11 +24,6 @@ def virtwho_hypervisor_config():
 @pytest.fixture(name='hypervisor_create', scope='class')
 def virtwho_hypervisor_config_file_create(hypervisor):
     hypervisor.create()
-
-
-@pytest.fixture(name='register_handler', scope='session')
-def virtwho_register_handler():
-    return get_register_handler(REGISTER)
 
 
 @pytest.fixture(name='globalconf', scope='session')
@@ -54,8 +51,19 @@ def virtwho_host_ssh_connect():
     return virtwho_ssh_connect(HYPERVISOR)
 
 
+@pytest.fixture(name='ssh_guest', scope='session')
+def guest_ssh_connect():
+    port = 22
+    if HYPERVISOR == 'kubevirt':
+        port = hypervisor_handler.guest_port
+    return SSHConnect(host=hypervisor_handler.guest_ip,
+                      user=hypervisor_handler.guest_username,
+                      pwd=hypervisor_handler.guest_password,
+                      port=port)
+
+
 @pytest.fixture(name='sm_host', scope='session')
-def subscription_manager_virtwho_host_with_default_org(register_handler):
+def subscription_manager_virtwho_host_with_default_org():
     vw_server = config.virtwho.server
     vw_username = config.virtwho.username
     vw_password = config.virtwho.password
@@ -74,7 +82,7 @@ def subscription_manager_virtwho_host_with_default_org(register_handler):
 
 
 @pytest.fixture(name='sm_guest', scope='session')
-def subscription_manager_guest_host_with_default_org(hypervisor_handler, register_handler):
+def subscription_manager_guest_host_with_default_org():
     return SubscriptionManager(host=hypervisor_handler.guest_ip,
                                username=hypervisor_handler.guest_username,
                                password=hypervisor_handler.guest_password,
@@ -84,9 +92,12 @@ def subscription_manager_guest_host_with_default_org(hypervisor_handler, registe
 
 
 @pytest.fixture(name='hypervisor_data', scope='session')
-def hypervisor_common_data_get_from_virtwho_ini(hypervisor_handler):
+def hypervisor_common_data_get_from_virtwho_ini(ssh_guest):
     data = dict()
+    data['guest_name'] = hypervisor_handler.guest_name
+    data['guest_ip'] = hypervisor_handler.guest_ip
     data['guest_uuid'] = hypervisor_handler.guest_uuid
+    data['guest_hostname'] = hostname_get(ssh_guest)
     data['hypervisor_uuid'] = ''
     data['hypervisor_hostname'] = ''
     data['hypervisor_hwuuid'] = ''
@@ -102,3 +113,31 @@ def hypervisor_common_data_get_from_virtwho_ini(hypervisor_handler):
         data['hypervisor_uuid'] = hypervisor_handler.uuid
         data['hypervisor_hostname'] = hypervisor_handler.hostname
     return data
+
+
+@pytest.fixture(name='register_data', scope='session')
+def register_server_common_data_get_from_virtwho_ini():
+    data = dict()
+    data['server'] = register_handler.server
+    data['prefix'] = register_handler.prefix
+    data['port'] = register_handler.port
+    data['default_org'] = register_handler.default_org
+    data['activation_key'] = register_handler.activation_key
+    data['secondary_org'] = ''
+    if REGISTER == 'satellite':
+        data['secondary_org'] = register_handler.secondary_org
+    return data
+
+
+@pytest.fixture(name='satellite', scope='session')
+def satellite_default_org():
+    return Satellite(
+        server=config.satellite.server,
+        org=config.satellite.default_org,
+        activation_key=config.satellite.activation_key
+    )
+
+
+@pytest.fixture(name='rhsm', scope='session')
+def rhsm():
+    return RHSM()
