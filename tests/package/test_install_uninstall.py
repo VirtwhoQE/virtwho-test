@@ -17,7 +17,7 @@ class TestInstallUninstall:
         """Test virt-who install/uninstall by yum
 
         :title: virt-who: package: install/uninstall by yum
-        :id: 4f784cd4-ad46-4457-a20f-7cf07ba44d9e
+        :id: 7b32612a-11eb-437e-92c9-b7d501d2e8a0
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -38,7 +38,7 @@ class TestInstallUninstall:
         """Test virt-who install/uninstall by rpm
 
         :title: virt-who: package: install/uninstall by rpm
-        :id: 4f784cd4-ad46-4457-a20f-7cf07ba44d9e
+        :id: 14152159-22a7-4550-9281-1109c4440f34
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
