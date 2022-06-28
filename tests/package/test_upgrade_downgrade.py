@@ -70,7 +70,7 @@ class TestUpgradeDowngrade:
 
     @pytest.mark.tier1
     def test_upgrade_downgrade_by_rpm(self, ssh_host, virtwho, globalconf):
-        """Just a demo
+        """Test virt-who upgrade/downgrade by rpm
 
         :title: virt-who: package: upgrade/downgrade by rpm
         :id: b363a4f4-c4cb-46b0-a378-fdaf956dd345
