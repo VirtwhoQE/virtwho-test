@@ -8,9 +8,8 @@ from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
-from virtwho import HYPERVISOR, REGISTER
+from virtwho import HYPERVISOR, REGISTER, logger
 from virtwho.base import hostname_get
-
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
@@ -22,7 +21,7 @@ def virtwho_hypervisor_config():
 
 
 @pytest.fixture(name='hypervisor_create', scope='class')
-def virtwho_hypervisor_config_file_create(hypervisor):
+def virtwho_hypervisor_config_file_create_with_rhsm_options(hypervisor):
     hypervisor.create()
 
 
@@ -36,7 +35,7 @@ def virtwho_global_config_clean(globalconf):
     globalconf.clean()
 
 
-@pytest.fixture(name='global_debug_true', scope='function')
+@pytest.fixture(name='debug_true', scope='function')
 def virtwho_global_config_debug_true(globalconf):
     globalconf.update('global', 'debug', 'true')
 
@@ -141,3 +140,35 @@ def satellite_default_org():
 @pytest.fixture(name='rhsm', scope='session')
 def rhsm():
     return RHSM()
+
+
+@pytest.fixture(name='data', scope='session')
+def test_data():
+    data = dict()
+
+    proxy = dict()
+    proxy_server = config.virtwho.proxy_server
+    proxy_port = config.virtwho.proxy_port
+    bad_proxy_server = 'bad.proxy.redhat.com'
+    bad_proxy_port = '9999'
+    good_proxy = f'{proxy_server}:{proxy_port}'
+    bad_proxy = f'{bad_proxy_server}:{bad_proxy_port}'
+    proxy['server'] = proxy_server
+    proxy['port'] = proxy_port
+    proxy['bad_server'] = bad_proxy_server
+    proxy['bad_port'] = bad_proxy_port
+    proxy['http_proxy'] = f'http://{good_proxy}'
+    proxy['https_proxy'] = f'https://{good_proxy}'
+    proxy['bad_http_proxy'] = f'http://{bad_proxy}'
+    proxy['bad_https_proxy'] = f'https://{bad_proxy}'
+    proxy['connection_log'] = f'Connection built: ' \
+                              f'http_proxy={good_proxy}'
+    proxy['proxy_log'] = f'Using proxy: {good_proxy}'
+    proxy['error'] = ['Connection refused',
+                      'Cannot connect to proxy',
+                      'Connection timed out',
+                      'Unable to connect']
+
+    data['proxy'] = proxy
+    return data
+
