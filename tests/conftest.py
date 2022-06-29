@@ -8,50 +8,58 @@ from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
-from virtwho import HYPERVISOR, REGISTER, logger
+from virtwho import HYPERVISOR, REGISTER
 from virtwho.base import hostname_get
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
 
 
-@pytest.fixture(name='hypervisor', scope='session')
-def virtwho_hypervisor_config():
+@pytest.fixture(scope='session')
+def hypervisor():
+    """Instantication of class VirtwhoHypervisorConfig()"""
     return VirtwhoHypervisorConfig(HYPERVISOR, REGISTER)
 
 
-@pytest.fixture(name='hypervisor_create', scope='class')
-def virtwho_hypervisor_config_file_create_with_rhsm_options(hypervisor):
-    hypervisor.create()
+@pytest.fixture(scope='class')
+def hypervisor_create(hypervisor):
+    """Create virt-who hypervisor test file with all rhsm options"""
+    hypervisor.create(rhsm=True)
 
 
-@pytest.fixture(name='globalconf', scope='session')
-def virtwho_global_config():
+@pytest.fixture(scope='session')
+def globalconf():
+    """Instantication of class VirtwhoGlobalConfig()"""
     return VirtwhoGlobalConfig(HYPERVISOR)
 
 
-@pytest.fixture(name='globalconf_clean', scope='function')
-def virtwho_global_config_clean(globalconf):
+@pytest.fixture(scope='function')
+def globalconf_clean(globalconf):
+    """Clean all the settings in /etc/virt-who.conf"""
     globalconf.clean()
 
 
-@pytest.fixture(name='debug_true', scope='function')
-def virtwho_global_config_debug_true(globalconf):
+@pytest.fixture(scope='function')
+def debug_true(globalconf):
+    """Set the debug=True in /etc/virt-who.conf"""
     globalconf.update('global', 'debug', 'true')
 
 
-@pytest.fixture(name='virtwho', scope='class')
-def virtwho_runner():
+@pytest.fixture(scope='class')
+def virtwho():
+    """Instantication of class VirtwhoRunner()"""
     return VirtwhoRunner(HYPERVISOR, REGISTER)
 
 
-@pytest.fixture(name='ssh_host', scope='session')
-def virtwho_host_ssh_connect():
+@pytest.fixture(scope='session')
+def ssh_host():
+    """ssh connect access to virt-who host"""
     return virtwho_ssh_connect(HYPERVISOR)
 
 
-@pytest.fixture(name='ssh_guest', scope='session')
-def guest_ssh_connect():
+@pytest.fixture(scope='session')
+def ssh_guest():
+    """ssh connect access to hypervisor guest"""
     port = 22
     if HYPERVISOR == 'kubevirt':
         port = hypervisor_handler.guest_port
@@ -61,8 +69,12 @@ def guest_ssh_connect():
                       port=port)
 
 
-@pytest.fixture(name='sm_host', scope='session')
-def subscription_manager_virtwho_host_with_default_org():
+@pytest.fixture(scope='session')
+def sm_host():
+    """
+    Instantication of class SubscriptionManager() for virt-who host
+    with default org
+    """
     vw_server = config.virtwho.server
     vw_username = config.virtwho.username
     vw_password = config.virtwho.password
@@ -80,8 +92,12 @@ def subscription_manager_virtwho_host_with_default_org():
                                org=register_handler.default_org)
 
 
-@pytest.fixture(name='sm_guest', scope='session')
-def subscription_manager_guest_host_with_default_org():
+@pytest.fixture(scope='session')
+def sm_guest():
+    """
+    Instantication of class SubscriptionManager() for hypervisor guest
+    with default org
+    """
     return SubscriptionManager(host=hypervisor_handler.guest_ip,
                                username=hypervisor_handler.guest_username,
                                password=hypervisor_handler.guest_password,
@@ -90,8 +106,25 @@ def subscription_manager_guest_host_with_default_org():
                                org=register_handler.default_org)
 
 
-@pytest.fixture(name='hypervisor_data', scope='session')
-def hypervisor_common_data_get_from_virtwho_ini(ssh_guest):
+@pytest.fixture(scope='session')
+def satellite():
+    """Instantication of class Satellite() with default org"""
+    return Satellite(
+        server=config.satellite.server,
+        org=config.satellite.default_org,
+        activation_key=config.satellite.activation_key
+    )
+
+
+@pytest.fixture(scope='session')
+def rhsm():
+    """Instantication of class RHSM()"""
+    return RHSM()
+
+
+@pytest.fixture(scope='session')
+def hypervisor_data(ssh_guest):
+    """Hypervisor data for testing, mainly got from virtwho.ini file"""
     data = dict()
     data['guest_name'] = hypervisor_handler.guest_name
     data['guest_ip'] = hypervisor_handler.guest_ip
@@ -114,8 +147,9 @@ def hypervisor_common_data_get_from_virtwho_ini(ssh_guest):
     return data
 
 
-@pytest.fixture(name='register_data', scope='session')
-def register_server_common_data_get_from_virtwho_ini():
+@pytest.fixture(scope='session')
+def register_data():
+    """Register data for testing from virtwho.ini file"""
     data = dict()
     data['server'] = register_handler.server
     data['prefix'] = register_handler.prefix
@@ -128,24 +162,9 @@ def register_server_common_data_get_from_virtwho_ini():
     return data
 
 
-@pytest.fixture(name='satellite', scope='session')
-def satellite_default_org():
-    return Satellite(
-        server=config.satellite.server,
-        org=config.satellite.default_org,
-        activation_key=config.satellite.activation_key
-    )
-
-
-@pytest.fixture(name='rhsm', scope='session')
-def rhsm():
-    return RHSM()
-
-
-@pytest.fixture(name='data', scope='session')
-def test_data():
-    data = dict()
-
+@pytest.fixture(scope='session')
+def proxy_data():
+    """Proxy data for testing"""
     proxy = dict()
     proxy_server = config.virtwho.proxy_server
     proxy_port = config.virtwho.proxy_port
@@ -168,7 +187,5 @@ def test_data():
                       'Cannot connect to proxy',
                       'Connection timed out',
                       'Unable to connect']
-
-    data['proxy'] = proxy
-    return data
+    return proxy
 
