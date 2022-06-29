@@ -50,13 +50,13 @@ class VirtwhoHypervisorConfig:
             self.update('server', self.hypervisor.server)
             self.update('username', self.hypervisor.username)
             self.update('password', self.hypervisor.password)
+        self.update('owner', self.register.default_org)
         if rhsm:
             self.update('rhsm_hostname', self.register.server)
             self.update('rhsm_username', self.register.username)
             self.update('rhsm_password', self.register.password)
             self.update('rhsm_prefix', self.register.prefix)
             self.update('rhsm_port', self.register.port)
-            self.update('owner', self.register.default_org)
 
     def update(self, option, value):
         """Add or update an option
