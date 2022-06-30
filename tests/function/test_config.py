@@ -8,9 +8,9 @@ import pytest
 
 from virtwho import HYPERVISOR
 from virtwho import HYPERVISOR_FILE
+from virtwho import REGISTER
 
 from virtwho.base import hostname_get
-from virtwho.settings import config
 
 
 @pytest.mark.usefixtures('globalconf_clean')
@@ -339,7 +339,8 @@ class TestConfiguration:
                 and guest_uuid in result['log']
                 and msg in result['log'])
 
-    def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, register_data):
+    def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
+                                   register_data, owner_data, debug_true):
         """Test the owner option in /etc/virtwho.conf
 
         :title: virt-who: config: test owner option
@@ -350,24 +351,36 @@ class TestConfiguration:
         :upstream: no
         :steps:
 
-            1. Run virt-who with owner setting in [defaults] section in /etc/virt-who.conf
+            1. Run virt-who with incorrect owner setting in [defaults] section
+            in /etc/virt-who.conf
+            2. Run virt-who with the correct owner setting in [defaults] section
+            in /etc/virt-who.conf
 
         :expectedresults:
 
-            1. Succeeded to run the virt-who with owner setting
+            1. Virt-who runs failed with the incorrect owner setting
+            2. Succeeded to run the virt-who with correct owner setting
         """
         guest_uuid = hypervisor_data['guest_uuid']
-        owner = register_data['default_org']
         globalconf.update('global', 'debug', 'True')
+        hypervisor.delete('owner')
 
-        globalconf.update('defaults', 'owner', owner)
+        globalconf.update('defaults', 'owner', owner_data['bad_owner'])
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 1
+                and any(error in result['error_msg'] for error in owner_data['error']))
+
+        globalconf.update('defaults', 'owner', owner_data['owner'])
         result = virtwho.run_service()
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1
                 and guest_uuid in result['log'])
 
-    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data):
+    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
+                                           register_data, rhsm):
         """Test the hypervisor_id option in /etc/virtwho.conf
 
         :title: virt-who: config: test hypervisor_id option
@@ -388,37 +401,26 @@ class TestConfiguration:
             2. Succeeded to run the virt-who, the hypervisor_id in mapping info should be uuid
             3. Succeeded to run the virt-who, the hypervisor_id in mapping info should be hwuuid
         """
-        host_uuid = hypervisor_data['hypervisor_uuid']
-        host_name = hypervisor_data['hypervisor_hostname']
         globalconf.update('global', 'debug', 'True')
         # we default have the hypervisor_id section in the config file in /etc/virt-who.d/
         hypervisor.delete('hypervisor_id')
 
-        globalconf.update('defaults', 'hypervisor_id', 'hostname')
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and result['hypervisor_id'] == host_name)
-
-        globalconf.update('defaults', 'hypervisor_id', 'uuid')
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and result['hypervisor_id'] == host_uuid)
+        hypervisor_ids = ['hostname', 'uuid']
         if HYPERVISOR in ['esx', 'rhevm']:
-            host_hwuuid = hypervisor_data['hypervisor_hwuuid']
-            globalconf.update('defaults', 'hypervisor_id', 'hwuuid')
+            hypervisor_ids.append('hwuuid')
+        for hypervisor_id in hypervisor_ids:
+            # only esx and rhevm modes support hwuuid
+            globalconf.update('defaults', 'hypervisor_id', hypervisor_id)
             result = virtwho.run_service()
             assert (result['error'] == 0
                     and result['send'] == 1
                     and result['thread'] == 1
-                    and result['hypervisor_id'] == host_hwuuid)
+                    and result['hypervisor_id'] == hypervisor_data[f'hypervisor_{hypervisor_id}'])
 
-        #if register is stage, do we need to clean the consumer?
+        if REGISTER is 'rhsm':
+            rhsm.delete()
 
-    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf):
+    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
         :title: virt-who: config: test http_proxy, https_proxy and no_proxy options
@@ -445,58 +447,31 @@ class TestConfiguration:
             5. Virt-who runs error, succeeded to find expected proxy log in rhsm log
             6. Succeeded to run virt-who
         """
-        proxy = f'{config.virtwho.proxy_server}:{config.virtwho.proxy_port}'
-        http_proxy_url = f'http://{proxy}'
-        https_proxy_url = f'https://{proxy}'
-        unreach_proxy = '10.73.3.24:9999'
-        unreach_http_proxy = f'http://{unreach_proxy}'
-        unreach_https_proxy = f'https://{unreach_proxy}'
         globalconf.update('global', 'debug', 'True')
 
-        globalconf.update('system_environment', 'http_proxy', http_proxy_url)
-        result = virtwho.run_service()
-        connection_msg = f'Connection built: http_proxy={proxy}'
-        proxy_msg = f'Using proxy: {proxy}'
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and connection_msg in result['log']
-                and proxy_msg in result['log'])
+        for proxy in ['http_proxy', 'https_proxy']:
+            # run virt-who with http_proxy/https_proxy setting
+            globalconf.update('system_environment', proxy, proxy_data[proxy])
+            connection_msg = proxy_data['connection_log']
+            proxy_msg = proxy_data['proxy_log']
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and connection_msg in result['log']
+                    and proxy_msg in result['log'])
 
-        globalconf.update('system_environment', 'http_proxy', unreach_http_proxy)
-        result = virtwho.run_service()
-        assert (result['error'] == 1 or 2)
-        error_msgs = ['Connection refused', 'Cannot connect to proxy', 'Connection timed out',
-                      'Unable to connect']
-        assert (any(error_msg in result['error_msg'] for error_msg in error_msgs))
+            # run virt-who with unreachable http_proxy/https_proxy setting
+            globalconf.update('system_environment', proxy, proxy_data[f'bad_{proxy}'])
+            result = virtwho.run_service()
+            assert (result['error'] == 1 or 2)
+            assert (any(error_msg in result['error_msg'] for error_msg in proxy_data['error']))
 
-        globalconf.update('system_environment', 'no_proxy', '*')
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+            # run virt-who with unreachable http_proxy/https and no_proxy setting
+            globalconf.update('system_environment', 'no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
 
-        globalconf.delete('system_environment')
-
-        globalconf.update('system_environment', 'https_proxy', https_proxy_url)
-        result = virtwho.run_service()
-        connection_msg = f'Connection built: http_proxy={proxy}'
-        proxy_msg = f'Using proxy: {proxy}'
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and connection_msg in result['log']
-                and proxy_msg in result['log'])
-
-        globalconf.update('system_environment', 'https_proxy', unreach_https_proxy)
-        result = virtwho.run_service()
-        assert (result['error'] == 1 or 2)
-        error_msgs = ['Connection refused', 'Cannot connect to proxy', 'Connection timed out',
-                      'Unable to connect']
-        assert (any(error_msg in result['error_msg'] for error_msg in error_msgs))
-
-        globalconf.update('system_environment', 'no_proxy', '*')
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+            globalconf.delete('system_environment')
