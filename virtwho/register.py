@@ -69,9 +69,11 @@ class SubscriptionManager:
         ret, _ = self.ssh.runcmd('subscription-manager unregister;'
                                  'subscription-manager clean')
         if ret == 0:
+            if self.register_type == 'satellite':
+                self.satellite_cert_uninstall()
             logger.info(f'Succeeded to unregister host')
         else:
-            raise FailException(f'Failed to unregister {self.host}')
+            raise FailException(f'Failed to unregister {self.host}.')
 
     def satellite_cert_install(self):
         """
@@ -83,6 +85,17 @@ class SubscriptionManager:
         if ret != 0 and 'is already installed' not in output:
             raise FailException(
                 f'Failed to install satellite certification for {self.host}')
+
+    def satellite_cert_uninstall(self):
+        """
+        Uninstall certificate when after unregistering from satellite.
+        """
+        ret, output = self.ssh.runcmd('rpm -qa |grep katello-ca-consumer')
+        if ret == 0 and 'katello-ca-consumer' in output:
+            cert_pkg = output.strip()
+            ret, _ = self.ssh.runcmd(f'rpm -e {cert_pkg}')
+            if ret == 0:
+                logger.info('Succeeded to uninstall satellite cert package.')
 
     def attach(self, pool=None, quantity=None):
         """

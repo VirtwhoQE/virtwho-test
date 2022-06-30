@@ -4,6 +4,7 @@ from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
+from virtwho import logger
 
 
 class VirtwhoHypervisorConfig:
@@ -29,9 +30,11 @@ class VirtwhoHypervisorConfig:
         self.remote_file = f'/etc/virt-who.d/{mode}.conf'
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
-    def create(self):
+    def create(self, rhsm=True):
         """create virt-who config file under /etc/virt-who.d/.
+        :param rhsm: True is to add all rhsm related options, False will not.
         """
+        self.destroy()
         if self.mode == 'local':
             self.update('type', 'libvirt')
         else:
@@ -49,12 +52,13 @@ class VirtwhoHypervisorConfig:
             self.update('server', self.hypervisor.server)
             self.update('username', self.hypervisor.username)
             self.update('password', self.hypervisor.password)
-        self.update('rhsm_hostname', self.register.server)
-        self.update('rhsm_username', self.register.username)
-        self.update('rhsm_password', self.register.password)
-        self.update('rhsm_prefix', self.register.prefix)
-        self.update('rhsm_port', self.register.port)
         self.update('owner', self.register.default_org)
+        if rhsm is True:
+            self.update('rhsm_hostname', self.register.server)
+            self.update('rhsm_username', self.register.username)
+            self.update('rhsm_password', self.register.password)
+            self.update('rhsm_prefix', self.register.prefix)
+            self.update('rhsm_port', self.register.port)
 
     def update(self, option, value):
         """Add or update an option
@@ -73,6 +77,7 @@ class VirtwhoHypervisorConfig:
         """Remove both the local and remote files"""
         os.remove(self.local_file)
         self.remote_ssh.remove_file(self.remote_file)
+        self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
 
 class VirtwhoGlobalConfig:
