@@ -5,11 +5,13 @@
 :caseautomation: Automated
 """
 import pytest
+from virtwho import logger, REGISTER
 
 
 @pytest.mark.usefixtures('globalconf_clean')
 @pytest.mark.usefixtures('hypervisor_create')
 class TestSmoke:
+    @pytest.mark.notLocal
     def test_host_guest_association(self, virtwho, satellite, hypervisor_data,
                                     register_data, sm_guest, ssh_guest):
         """Test the host-to-guest association in mapping log and Satellite
@@ -88,6 +90,7 @@ class TestSmoke:
             assert (result['send'] == 1
                     and result['error'] == 0)
 
+    @pytest.mark.notLocal
     def test_rhsm_proxy(self, virtwho, hypervisor, proxy_data, register_data):
         """Test the rhsm_proxy in /etc/virt-who.d/hypervisor.conf
 
@@ -136,50 +139,137 @@ class TestSmoke:
         hypervisor.delete('rhsm_proxy_port')
         hypervisor.delete('rhsm_proxy_hostname')
 
-    # def test_hypervisor_id(self, hypervisor):
-    #     """Test hypervisor_id option in /etc/virt-who.d/hypervisor.conf
-    #
-    #     :title: virt-who: rhsm: test vdc sku unattach
-    #     :id: 0ee0c7ab-78b9-48d3-b028-f004cb802b15
-    #     :caseimportance: High
-    #     :tags: tier1
-    #     :customerscenario: false
-    #     :upstream: no
-    #     :steps:
-    #         1.
-    #     :expectedresults:
-    #         1.
-    #     """
-    #     pass
-    #
-    # def test_vdc_sku(self):
-    #     """Just a demo
-    #
-    #     :title: virt-who: rhsm: test vdc sku unattach
-    #     :id: 998ae998-c003-4495-ac3a-4da075cfcdc5
-    #     :caseimportance: High
-    #     :tags: tier1
-    #     :customerscenario: false
-    #     :upstream: no
-    #     :steps:
-    #         1.
-    #     :expectedresults:
-    #         1.
-    #     """
-    #     pass
-    #
-    # def test_temporary_sku(self):
-    #     """Just a demo
-    #
-    #     :title: virt-who: rhsm: test vdc sku unattach
-    #     :id: c016e44b-6de4-4585-a282-94189639025f
-    #     :caseimportance: High
-    #     :tags: tier1
-    #     :customerscenario: false
-    #     :upstream: no
-    #     :steps:
-    #         1.
-    #     :expectedresults:
-    #         1.
-    #     """
-    #     pass
+    @pytest.mark.notLocal
+    def test_hypervisor_id(self, virtwho, debug_true,
+                           hypervisor, hypervisor_data):
+        """Test hypervisor_id option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: satellite smoke: test hypervisor_id
+        :id: 0ee0c7ab-78b9-48d3-b028-f004cb802b15
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. run with hypervisor_id=uuid, then check mapping and Satellite web
+            2. test hypervisor_id=hostname, then check mapping and Satellite web
+            3. test hypervisor_id=hwuuid for esx and rhevm, then check mapping
+                and Satellite web
+        :expectedresults:
+            1. virt-who can report the hypervisor to Satellite WebUI with each
+                uuid/hostname/hwuuid, and keep only one host entry in WebUI
+        """
+        hypervisor_ids = {
+            'uuid': hypervisor_data['hypervisor_uuid'],
+            'hostname': hypervisor_data['hypervisor_hostname'],
+            'hwuuid': hypervisor_data['hypervisor_hwuuid']
+        }
+        try:
+            for key, value in sorted(hypervisor_ids.items(), key=lambda item:item[0]):
+                if value:
+                    logger.info(f'>> start to run with hypervisor_id={key}')
+                    hypervisor.update('hypervisor_id', key)
+                    result = virtwho.run_cli()
+                    assert (result['send'] == 1
+                            and result['error'] == 0
+                            and result['hypervisor_id'] == value)
+        finally:
+            hypervisor.update('hypervisor_id', 'hostname')
+
+    def test_vdc_sku(self, virtwho, sm_guest, register_guest, satellite,
+                     hypervisor_data, sku_data, vdc_pool_physical):
+        """Test the guest can get the vdc virtual bonus pool from hypervisor.
+
+        :title: virt-who: satellite smoke: test vdc sku attach/unattach
+        :id: 998ae998-c003-4495-ac3a-4da075cfcdc5
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. register guest to satelltie
+            2. run virt-who to report mapping
+            3. attach vdc physical pool for hypervisor
+            4. attach vdc virtual pool for guest (not temporary)
+            5. remove vdc pool from hypervisor
+            6. check vdc virtual pool status in guest
+        :expectedresults:
+            1. guest can get and subscribe virtual vdc from it's hypervisor's
+                phycial vdc pool.
+            2. guest virtual vdc pool is also removed when the physical vdc pool
+                is removed from it's hypervisor.
+        """
+        sku_virt = sku_data['vdc_virtual']
+        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        result = virtwho.run_cli()
+        assert (result['send'] == 1
+                and result['error'] == 0)
+        # attach vdc for hypervisor, guest can get the bonus virtual pool.
+        satellite.attach(host=hypervisor_hostname,
+                         pool=vdc_pool_physical)
+        sm_guest.refresh()
+        sku_data_virt = sm_guest.available(sku_virt, 'Virtual')
+        pool_virt = sku_data_virt['pool_id']
+        sm_guest.attach(pool=pool_virt)
+        consumed_data = sm_guest.consumed(sku_id=sku_virt)
+        assert (consumed_data['sku'] == sku_virt
+                and consumed_data['sku_type'] == 'Virtual'
+                and consumed_data['temporary'] is False)
+        # remove vdc from hypervisor, the bonus pool will be removed from guest.
+        satellite.unattach(host=hypervisor_hostname,
+                           pool=vdc_pool_physical)
+        sm_guest.refresh()
+        consumed_data = sm_guest.consumed(sku_id=sku_virt)
+        assert consumed_data is None
+
+    def test_temporary_sku(self, virtwho, satellite, sm_guest, register_guest,
+                           sku_data, hypervisor_data, vdc_pool_physical):
+        """Test the guest can get the vdc temporay bonus pool.
+
+        :title: virt-who: rhsm: test vdc temporary sku
+        :id: c016e44b-6de4-4585-a282-94189639025f
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. delete all hypervisor entries from register server
+            2. check the guest consumed status
+            3. attach physical vdc pool to hypervisor
+            4. check the guest consumed status
+        :expectedresults:
+            1. guest can get and subscribe vdc temporary pool when doesn't
+                associated with hyperviosr.
+            2. the temporary pool will changed to stable one after associate
+                with one hypervisor.
+        """
+        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        hypervisor_uuid = hypervisor_data['hypervisor_uuid']
+        hypervisor_hwuuid = hypervisor_data['hypervisor_hwuuid']
+        # delete all hypervisor entries from register server
+        satellite.host_delete(hypervisor_hostname)
+        satellite.host_delete(hypervisor_uuid)
+        if hypervisor_hwuuid:
+            satellite.host_delete(hypervisor_hwuuid)
+        # check guest can get and subscribe virtual temporary vdc
+        sku_virt = sku_data['vdc_virtual']
+        sm_guest.refresh()
+        sku_data_virt = sm_guest.available(sku_virt, 'Virtual')
+        pool_virt = sku_data_virt['pool_id']
+        sm_guest.attach(pool=pool_virt)
+        consumed_data = sm_guest.consumed(sku_id=sku_virt)
+        assert (consumed_data['sku'] == sku_virt
+                and consumed_data['sku_type'] == 'Virtual'
+                and consumed_data['temporary'] is True)
+        # attach physical vdc to hypervisor
+        result = virtwho.run_cli()
+        assert (result['send'] == 1
+                and result['error'] == 0)
+        satellite.attach(host=hypervisor_hostname,
+                         pool=vdc_pool_physical)
+        # check the temporary vdc changed to stable one in guest
+        sm_guest.refresh()
+        consumed_data = sm_guest.consumed(sku_id=sku_virt)
+        assert (consumed_data['sku'] == sku_virt
+                and consumed_data['sku_type'] == 'Virtual'
+                and consumed_data['temporary'] is False)
