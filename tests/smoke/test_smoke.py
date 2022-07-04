@@ -5,7 +5,7 @@
 :caseautomation: Automated
 """
 import pytest
-from virtwho import logger, REGISTER
+from virtwho import logger
 
 
 @pytest.mark.usefixtures('globalconf_clean')
