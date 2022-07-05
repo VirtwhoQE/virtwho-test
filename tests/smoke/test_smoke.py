@@ -11,7 +11,6 @@ from virtwho import logger
 @pytest.mark.usefixtures('globalconf_clean')
 @pytest.mark.usefixtures('hypervisor_create')
 class TestSmoke:
-    @pytest.mark.notLocal
     def test_host_guest_association(self, virtwho, satellite, hypervisor_data,
                                     register_data, sm_guest, ssh_guest):
         """Test the host-to-guest association in mapping log and Satellite
@@ -90,7 +89,6 @@ class TestSmoke:
             assert (result['send'] == 1
                     and result['error'] == 0)
 
-    @pytest.mark.notLocal
     def test_rhsm_proxy(self, virtwho, hypervisor, proxy_data, register_data):
         """Test the rhsm_proxy in /etc/virt-who.d/hypervisor.conf
 
@@ -139,7 +137,6 @@ class TestSmoke:
         hypervisor.delete('rhsm_proxy_port')
         hypervisor.delete('rhsm_proxy_hostname')
 
-    @pytest.mark.notLocal
     def test_hypervisor_id(self, virtwho, debug_true,
                            hypervisor, hypervisor_data):
         """Test hypervisor_id option in /etc/virt-who.d/hypervisor.conf
