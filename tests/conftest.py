@@ -39,7 +39,7 @@ def globalconf_clean(globalconf):
     globalconf.clean()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='class')
 def debug_true(globalconf):
     """Set the debug=True in /etc/virt-who.conf"""
     globalconf.update('global', 'debug', 'true')
