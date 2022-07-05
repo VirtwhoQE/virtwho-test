@@ -10,6 +10,7 @@ from virtwho import logger
 
 @pytest.mark.usefixtures('globalconf_clean')
 @pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('debug_true')
 class TestSmoke:
     def test_host_guest_association(self, virtwho, satellite, hypervisor_data,
                                     register_data, sm_guest, ssh_guest):
@@ -46,7 +47,7 @@ class TestSmoke:
         sm_guest.register()
         assert satellite.associate(hypervisor_hostname, guest_hostname) is not False
 
-    def test_rhsm_options(self, virtwho, hypervisor, sm_host, debug_true):
+    def test_rhsm_options(self, virtwho, hypervisor, sm_host):
         """Test the rhsm_hostname/username/password/prefix/port
 
         :title: virt-who: satellite smoke: test rhsm options
@@ -137,8 +138,7 @@ class TestSmoke:
         hypervisor.delete('rhsm_proxy_port')
         hypervisor.delete('rhsm_proxy_hostname')
 
-    def test_hypervisor_id(self, virtwho, debug_true,
-                           hypervisor, hypervisor_data):
+    def test_hypervisor_id(self, virtwho, hypervisor, hypervisor_data):
         """Test hypervisor_id option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: satellite smoke: test hypervisor_id
