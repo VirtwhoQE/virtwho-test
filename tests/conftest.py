@@ -98,10 +98,13 @@ def sm_guest():
     Instantication of class SubscriptionManager() for hypervisor guest
     with default org
     """
+    port = 22
+    if HYPERVISOR == 'kubevirt':
+        port = hypervisor_handler.guest_port
     return SubscriptionManager(host=hypervisor_handler.guest_ip,
                                username=hypervisor_handler.guest_username,
                                password=hypervisor_handler.guest_password,
-                               port=22,
+                               port=port,
                                register_type=REGISTER,
                                org=register_handler.default_org)
 
