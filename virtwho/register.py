@@ -169,10 +169,11 @@ class SubscriptionManager:
         logger.warning(f'Failed to find {sku_type}:{sku_id}' in {self.host})
         return None
 
-    def consumed(self, pool):
+    def consumed(self, sku_id, sku_type='Virtual'):
         """
         List and analyze the consumed subscription by Pool ID.
-        :param pool: Pool ID for checking.
+        :param sku_id: sku id, such as RH00049.
+        :param sku_type: 'Physical' or 'Virtual'.
         :return: a dict with sku attributes.
         """
         self.refresh()
@@ -183,10 +184,18 @@ class SubscriptionManager:
                 logger.info(f'No consumed subscription found in {self.host}.')
                 return None
             elif "Pool ID:" in output:
-                sku_attrs = output.strip().split('\n\n')
-                for attr in sku_attrs:
-                    sku_attr = self.attr_analyzer(attr)
-                    if sku_attr['pool_id'] == pool:
+                skus = output.strip().split('\n\n')
+                for sku in skus:
+                    sku_attr = self.attr_analyzer(sku)
+                    if 'system_type' in sku_attr.keys():
+                        sku_attr['sku_type'] = sku_attr['system_type']
+                    else:
+                        sku_attr['sku_type'] = sku_attr['entitlement_type']
+                    if (
+                            sku_attr['sku'] == sku_id
+                            and
+                            sku_attr['sku_type'] == sku_type
+                    ):
                         logger.info(f'Succeeded to get the consumed '
                                     f'subscription in {self.host}')
                         if '(Temporary)' in sku_attr['subscription_type']:
@@ -589,17 +598,18 @@ class Satellite:
         :return: True or raise Fail
         """
         host_id = self.host_id(host)
-        _, output = self.ssh.runcmd(f'hammer host delete '
-                                    f'--organization-id {self.org_id} '
-                                    f'--id {host_id}')
-        if (
-                ('Host deleted' in output or 'host not found' in output)
-                and
-                not self.host_id(host)
-        ):
-            logger.info(f'Succeeded to delete {host} from satellite')
+        if host_id:
+            _, _ = self.ssh.runcmd(f'hammer host delete '
+                                   f'--organization-id {self.org_id} '
+                                   f'--id {host_id}')
+            if self.host_id(host) is None:
+                logger.info(f'Succeeded to delete {host} from satellite')
+                return True
+            raise FailException(f'Failed to Delete {host} from satellite')
+        else:
+            logger.info(f'Did not find the {host} in satellite,'
+                        f'no need to delete.')
             return True
-        raise FailException(f'Failed to Delete {host} from satellite')
 
     def subscription_id(self, pool):
         """
@@ -613,8 +623,8 @@ class Satellite:
         output = json.loads(output)
         if ret == 0 and output:
             for item in output:
-                if item['UUID'] == pool:
-                    subscription_id = item['ID']
+                if item['Uuid'] == pool:
+                    subscription_id = item['Id']
                     return subscription_id
         raise FailException(f'Failed to get the subscription id for {pool}')
 

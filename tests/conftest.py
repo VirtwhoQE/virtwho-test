@@ -8,14 +8,14 @@ from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
-from virtwho import HYPERVISOR, REGISTER
+from virtwho import HYPERVISOR, REGISTER, FailException, logger
 from virtwho.base import hostname_get
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope='session')
 def hypervisor():
     """Instantication of class VirtwhoHypervisorConfig()"""
     return VirtwhoHypervisorConfig(HYPERVISOR, REGISTER)
@@ -27,7 +27,7 @@ def hypervisor_create(hypervisor):
     hypervisor.create(rhsm=True)
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope='session')
 def globalconf():
     """Instantication of class VirtwhoGlobalConfig()"""
     return VirtwhoGlobalConfig(HYPERVISOR)
@@ -39,13 +39,13 @@ def globalconf_clean(globalconf):
     globalconf.clean()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='class')
 def debug_true(globalconf):
     """Set the debug=True in /etc/virt-who.conf"""
     globalconf.update('global', 'debug', 'true')
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope='session')
 def virtwho():
     """Instantication of class VirtwhoRunner()"""
     return VirtwhoRunner(HYPERVISOR, REGISTER)
@@ -98,12 +98,27 @@ def sm_guest():
     Instantication of class SubscriptionManager() for hypervisor guest
     with default org
     """
+    port = 22
+    if HYPERVISOR == 'kubevirt':
+        port = hypervisor_handler.guest_port
     return SubscriptionManager(host=hypervisor_handler.guest_ip,
                                username=hypervisor_handler.guest_username,
                                password=hypervisor_handler.guest_password,
-                               port=22,
+                               port=port,
                                register_type=REGISTER,
                                org=register_handler.default_org)
+
+
+@pytest.fixture(scope='function')
+def register_host(sm_host):
+    """register the virt-who host"""
+    sm_host.register()
+
+
+@pytest.fixture(scope='function')
+def register_guest(sm_guest):
+    """register the guest"""
+    sm_guest.register()
 
 
 @pytest.fixture(scope='session')
@@ -188,4 +203,28 @@ def proxy_data():
                       'Connection timed out',
                       'Unable to connect']
     return proxy
+
+
+@pytest.fixture(scope='session')
+def sku_data():
+    """SKU data for testing from virtwho.ini file"""
+    data = dict()
+    data['vdc_physical'] = config.sku.vdc
+    data['vdc_virtual'] = config.sku.vdc_virtual
+    return data
+
+
+@pytest.fixture(scope='session')
+def vdc_pool_physical(sm_guest, sku_data):
+    """Get the vdc physical sku pool id"""
+    sku = sku_data['vdc_physical']
+    sm_guest.register()
+    sku_data = sm_guest.available(sku, 'Physical')
+    if sku_data is not None:
+        sku_pool = sku_data['pool_id']
+        logger.info(f'Succeeded to get the vdc physical sku pool id: '
+                    f'{sku_pool}')
+        return sku_pool
+    raise FailException('Failed to get the vdc physical sku pool id')
+
 
