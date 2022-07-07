@@ -4,7 +4,6 @@ from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
-from virtwho import logger
 
 
 class VirtwhoHypervisorConfig:
@@ -43,13 +42,14 @@ class VirtwhoHypervisorConfig:
         if self.mode == 'kubevirt':
             self.update('kubeconfig', self.hypervisor.config_file)
         if self.mode in ('esx', 'xen', 'hyperv', 'rhevm', 'libvirt', 'ahv'):
+            hypervisor_server = self.hypervisor.server
             if self.mode == 'rhevm':
                 ssh_rhevm = SSHConnect(host=self.hypervisor.server,
                                        user=self.hypervisor.ssh_username,
                                        pwd=self.hypervisor.ssh_password)
-                self.hypervisor.server = f'''https://{hostname_get(ssh_rhevm)}:
-                                             443/ovirt-engine'''
-            self.update('server', self.hypervisor.server)
+                hypervisor_server = f'https://{hostname_get(ssh_rhevm)}:' \
+                                    f'443/ovirt-engine'
+            self.update('server', hypervisor_server)
             self.update('username', self.hypervisor.username)
             self.update('password', self.hypervisor.password)
         self.update('owner', self.register.default_org)
