@@ -380,7 +380,7 @@ class TestConfiguration:
                 and guest_uuid in result['log'])
 
     def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
-                                           register_data, rhsm):
+                                           register_data, rhsm, satellite):
         """Test the hypervisor_id option in /etc/virtwho.conf
 
         :title: virt-who: config: test hypervisor_id option
@@ -406,19 +406,22 @@ class TestConfiguration:
         hypervisor.delete('hypervisor_id')
 
         hypervisor_ids = ['hostname', 'uuid']
+        # only esx and rhevm modes support hwuuid
         if HYPERVISOR in ['esx', 'rhevm']:
             hypervisor_ids.append('hwuuid')
         for hypervisor_id in hypervisor_ids:
-            # only esx and rhevm modes support hwuuid
             globalconf.update('defaults', 'hypervisor_id', hypervisor_id)
             result = virtwho.run_service()
             assert (result['error'] == 0
                     and result['send'] == 1
                     and result['thread'] == 1
                     and result['hypervisor_id'] == hypervisor_data[f'hypervisor_{hypervisor_id}'])
-
-        if REGISTER is 'rhsm':
-            rhsm.delete()
+            if REGISTER == 'rhsm':
+                assert rhsm.consumers(hypervisor_data['hypervisor_hostname'])
+                rhsm.delete(hypervisor_data['hypervisor_hostname'])
+            else:
+                assert satellite.host_id(hypervisor_data[f'hypervisor_{hypervisor_id}'])
+                satellite.host_delete(hypervisor_data[f'hypervisor_{hypervisor_id}'])
 
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
