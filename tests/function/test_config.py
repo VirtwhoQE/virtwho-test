@@ -420,8 +420,20 @@ class TestConfiguration:
                 assert rhsm.consumers(hypervisor_data['hypervisor_hostname'])
                 rhsm.delete(hypervisor_data['hypervisor_hostname'])
             else:
-                assert satellite.host_id(hypervisor_data[f'hypervisor_{hypervisor_id}'])
-                satellite.host_delete(hypervisor_data[f'hypervisor_{hypervisor_id}'])
+                if hypervisor_id == 'hostname':
+                    assert satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
+                    if hypervisor_id in ['esx', 'rhevm']:
+                        assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                elif hypervisor_id == 'uuid':
+                    assert satellite.host_id(hypervisor_data['hypervisor_uuid'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    if hypervisor_id in ['esx', 'rhevm']:
+                        assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                else:
+                    assert satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
 
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
