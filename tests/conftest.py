@@ -228,3 +228,12 @@ def vdc_pool_physical(sm_guest, sku_data):
     raise FailException('Failed to get the vdc physical sku pool id')
 
 
+def owner_data():
+    """Owner data for testing"""
+    owner = dict()
+    bad_owner = 'bad_owner'
+    owner['owner'] = register_handler.default_org
+    owner['bad_owner'] = bad_owner
+    owner['error'] = [f'Organization with id {bad_owner} could not be found',
+                      f"Couldn't find Organization '{bad_owner}'"]
+    return owner

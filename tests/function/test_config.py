@@ -5,6 +5,11 @@
 :caseautomation: Automated
 """
 import pytest
+
+from virtwho import HYPERVISOR
+from virtwho import HYPERVISOR_FILE
+from virtwho import REGISTER
+
 from virtwho.base import hostname_get
 
 
@@ -301,3 +306,187 @@ class TestConfiguration:
         result, contents = ssh_host.runcmd(f'cat {specific_log_file}')
         assert (guest_uuid in contents
                 and 'ERROR' not in contents)
+
+    def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
+        """Test the configs option in /etc/virtwho.conf
+
+        :title: virt-who: config: test configs option
+        :id: 03db48c3-4a98-4956-bd6f-a8ac4da7da8e
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who configs setting in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Succeeded to run the virt-who and ignore the configurations files in
+            /etc/virt-who.d/ dir
+        """
+        config_file = '/tmp/test_config_configs.conf'
+        guest_uuid = hypervisor_data['guest_uuid']
+        globalconf.update('global', 'debug', 'True')
+        ssh_host.runcmd(f'\\cp -f {HYPERVISOR_FILE} {config_file}')
+
+        globalconf.update('global', 'configs', config_file)
+        result = virtwho.run_service()
+        msg = "ignoring configuration files in '/etc/virt-who.d/'"
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and guest_uuid in result['log']
+                and msg in result['log'])
+
+    def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
+                                   register_data, owner_data, debug_true):
+        """Test the owner option in /etc/virtwho.conf
+
+        :title: virt-who: config: test owner option
+        :id: ce219d82-cf66-4019-af17-3197c53c72a0
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with incorrect owner setting in [defaults] section
+            in /etc/virt-who.conf
+            2. Run virt-who with the correct owner setting in [defaults] section
+            in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Virt-who runs failed with the incorrect owner setting
+            2. Succeeded to run the virt-who with correct owner setting
+        """
+        guest_uuid = hypervisor_data['guest_uuid']
+        globalconf.update('global', 'debug', 'True')
+        hypervisor.delete('owner')
+
+        globalconf.update('defaults', 'owner', owner_data['bad_owner'])
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 1
+                and any(error in result['error_msg'] for error in owner_data['error']))
+
+        globalconf.update('defaults', 'owner', owner_data['owner'])
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and guest_uuid in result['log'])
+
+    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
+                                           register_data, rhsm, satellite):
+        """Test the hypervisor_id option in /etc/virtwho.conf
+
+        :title: virt-who: config: test hypervisor_id option
+        :id: fed463a6-9538-4242-9990-2e4995d1f473
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with hypervisor_id=hostname in /etc/virt-who.conf
+            2. Run virt-who with hypervisor_id=uuid in /etc/virt-who.conf
+            3. Run virt-who with hypervisor_id=hwuuid in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Succeeded to run the virt-who, the hypervisor_id in mapping info should be hostname
+            2. Succeeded to run the virt-who, the hypervisor_id in mapping info should be uuid
+            3. Succeeded to run the virt-who, the hypervisor_id in mapping info should be hwuuid
+        """
+        globalconf.update('global', 'debug', 'True')
+        # we default have the hypervisor_id section in the config file in /etc/virt-who.d/
+        hypervisor.delete('hypervisor_id')
+
+        hypervisor_ids = ['hostname', 'uuid']
+        # only esx and rhevm modes support hwuuid
+        if HYPERVISOR in ['esx', 'rhevm']:
+            hypervisor_ids.append('hwuuid')
+        for hypervisor_id in hypervisor_ids:
+            globalconf.update('defaults', 'hypervisor_id', hypervisor_id)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and result['hypervisor_id'] == hypervisor_data[f'hypervisor_{hypervisor_id}'])
+            if REGISTER == 'rhsm':
+                assert rhsm.consumers(hypervisor_data['hypervisor_hostname'])
+                rhsm.delete(hypervisor_data['hypervisor_hostname'])
+            else:
+                if hypervisor_id == 'hostname':
+                    assert satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
+                    if hypervisor_id in ['esx', 'rhevm']:
+                        assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                elif hypervisor_id == 'uuid':
+                    assert satellite.host_id(hypervisor_data['hypervisor_uuid'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    if hypervisor_id in ['esx', 'rhevm']:
+                        assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                else:
+                    assert satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
+
+    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
+        """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
+
+        :title: virt-who: config: test http_proxy, https_proxy and no_proxy options
+        :id: f7d2d5fc-2446-46ae-8fd4-eda0109f75a5
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with http_proxy setting in /etc/virt-who.conf
+            2. Run virt-who with unreachable http_proxy setting in /etc/virt-who.conf
+            3. Run virt-who with unreachable http_proxy and no_proxy setting in /etc/virt-who.conf
+            4. Run virt-who with https_proxy setting in /etc/virt-who.conf
+            5. Run virt-who with unreachable https_proxy setting in /etc/virt-who.conf
+            6. Run virt-who with unreachable https_proxy and no_proxy setting in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Succeeded to run virt-who, succeeded to find expected proxy log in rhsm log
+            2. Virt-who runs error, succeeded to find expected proxy log in rhsm log
+            3. Succeeded to run virt-who
+            4. Succeeded to run virt-who, succeeded to find expected proxy log in rhsm log
+            5. Virt-who runs error, succeeded to find expected proxy log in rhsm log
+            6. Succeeded to run virt-who
+        """
+        globalconf.update('global', 'debug', 'True')
+
+        for proxy in ['http_proxy', 'https_proxy']:
+            # run virt-who with http_proxy/https_proxy setting
+            globalconf.update('system_environment', proxy, proxy_data[proxy])
+            connection_msg = proxy_data['connection_log']
+            proxy_msg = proxy_data['proxy_log']
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and connection_msg in result['log']
+                    and proxy_msg in result['log'])
+
+            # run virt-who with unreachable http_proxy/https_proxy setting
+            globalconf.update('system_environment', proxy, proxy_data[f'bad_{proxy}'])
+            result = virtwho.run_service()
+            assert (result['error'] == 1 or 2)
+            assert (any(error_msg in result['error_msg'] for error_msg in proxy_data['error']))
+
+            # run virt-who with unreachable http_proxy/https and no_proxy setting
+            globalconf.update('system_environment', 'no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            globalconf.delete('system_environment')
