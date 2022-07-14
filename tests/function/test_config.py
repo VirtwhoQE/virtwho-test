@@ -490,3 +490,108 @@ class TestConfiguration:
                     and result['thread'] == 1)
 
             globalconf.delete('system_environment')
+
+
+@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('hypervisor_create')
+class TestSysConfiguration:
+    @pytest.mark.tier1
+    def test_debug_in_virtwho_sysconfig(self, virtwho, sysconfig):
+        """Test the VIRTWHO_DEBUG option in /etc/sysconfig/virt-who
+
+        :title: virt-who: config: test VIRTWHO_DEBUG option
+        :id: 0b60fbdb-4554-4f92-bbc9-fdd43ff71adb
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with "VIRTWHO_DEBUG=1" in /etc/sysconfig/virt-who file
+            2. Run virt-who with "VIRTWHO_DEBUG=0" in /etc/sysconfig/virt-who file
+
+        :expectedresults:
+
+            1. no [DEBUG] log printed
+            2. [DEBUG] logs are printed with the configuration
+        """
+        sysconfig.update(**{'VIRTWHO_DEBUG': '1'})
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['debug'] is True)
+
+        sysconfig.update(**{'VIRTWHO_DEBUG': '0'})
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['debug'] is False)
+
+    def test_oneshot_in_virtwho_sysocnfig(self, virtwho, sysconfig):
+        """Test the VIRTWHO_ONE_SHOT option in /etc/sysconfig/virt-who
+
+        :title: virt-who: config: test VIRTWHO_ONE_SHOT option
+        :id: 8f8204c7-6c6d-4189-8947-774ed5018835
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with "VIRTWHO_ONE_SHOT=1" in /etc/sysconfig/virt-who
+            2. Run virt-who with "VIRTWHO_ONE_SHOT=0" in /etc/sysconfig/virt-who
+
+        :expectedresults:
+
+            1. Can see 'Thread X stopped after running once' log in rhsm.log
+            2. Cannot see 'Thread X stopped after running once' log in rhsm.log
+        """
+        sysconfg_options = {'VIRTWHO_DEBUG': '1',
+                            'VIRTWHO_ONE_SHOT': '1'}
+        sysconfig.update(**sysconfg_options)
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['terminate'] == 1
+                and result['oneshot'] is True)
+
+        sysconfg_options['VIRTWHO_ONE_SHOT'] = 0
+        sysconfig.update(**sysconfg_options)
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['terminate'] == 0
+                and result['oneshot'] is False)
+
+    def test_interval_in_virtwho_sysocnfig(self, virtwho, sysconfig):
+        """Test the VIRTWHO_INTERVAL option in /etc/sysconfig/virt-who
+
+        :title: virt-who: config: test VIRTWHO_INTERVAL option
+        :id: e46ceb4c-e4ed-47c2-9d3e-2a15a0c34d83
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Enable interval and set to 10 in /etc/sysconfig/virt-who
+            2. Enable interval and set to 60 in /etc/sysconfig/virt-who
+        :expectedresults:
+
+            1. Default value of 3600 seconds will be used when configure lower than 60 seconds
+            2. Configure successfully, and virt-who starting infinite loop with 60 seconds interval
+        """
+        sysconfg_options = {'VIRTWHO_DEBUG': '1',
+                            'VIRTWHO_INTERVAL': '10'}
+        sysconfig.update(**sysconfg_options)
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['interval'] == 3600)
+
+        sysconfg_options['VIRTWHO_INTERVAL'] = 60
+        sysconfig.update(**sysconfg_options)
+        result = virtwho.run_service(wait=60)
+        assert (result['send'] == 1
+                and result['error'] == 0
+                and result['loop'] == 60)

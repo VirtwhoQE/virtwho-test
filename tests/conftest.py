@@ -2,6 +2,7 @@ import pytest
 
 from virtwho.settings import config
 from virtwho.runner import VirtwhoRunner
+from virtwho.configure import VirtwhoSysConfig
 from virtwho.configure import VirtwhoHypervisorConfig
 from virtwho.configure import VirtwhoGlobalConfig
 from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
@@ -38,6 +39,9 @@ def globalconf_clean(globalconf):
     """Clean all the settings in /etc/virt-who.conf"""
     globalconf.clean()
 
+@pytest.fixture()
+def sysconfig():
+    return VirtwhoSysConfig(HYPERVISOR)
 
 @pytest.fixture(scope='class')
 def debug_true(globalconf):

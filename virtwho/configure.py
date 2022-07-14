@@ -125,6 +125,46 @@ class VirtwhoGlobalConfig:
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
 
+class VirtwhoSysConfig:
+    """Able to manage /etc/sysconfig/virt-who file when call this class"""
+
+    def __init__(self, mode=None):
+        """virt-who file is backed up to /temp directory of the
+        project root.
+        :param mode: Hypervisor mode. When mode is local, will manage
+            the local libvirt host, othervise will manage the host for
+            all other remote modes.
+        """
+        self.mode = mode
+        self.remote_ssh = virtwho_ssh_connect(self.mode)
+        if not os.path.exists(TEMP_DIR):
+            os.mkdir(TEMP_DIR)
+        self.local_file = os.path.join(TEMP_DIR, 'virt-who')
+        self.remote_file = '/etc/sysconfig/virt-who'
+        self.save_file = os.path.join(TEMP_DIR, 'virt-who.save')
+        if not os.path.exists(self.save_file):
+            self.remote_ssh.get_file(self.remote_file, self.save_file)
+
+    def update(self, **configs):
+        """
+        add option or update option
+        :param configs: the sysconfigs would like to update/add, should be dict, example:
+        options = {'VIRTWHO_DEBUG' : '0', 'VIRTWHO_ONE_SHOT': '0' }
+        """
+        with open(self.local_file, 'w') as fp:
+            for option in configs.keys():
+                assert option in ['VIRTWHO_DEBUG', 'VIRTWHO_ONE_SHOT', 'VIRTWHO_INTERVAL']
+                fp.write(f"{option}={configs[f'{option}']}\n")
+        self.remote_ssh.put_file(self.local_file, self.remote_file)
+
+    def clean(self):
+        """
+        Delete all configurations in /etc/sysconfig/virt-who.
+        """
+        os.system(f"echo '' > {self.local_file}")
+        self.remote_ssh.put_file(self.local_file, self.remote_file)
+
+
 def virtwho_ssh_connect(mode=None):
     """Define the ssh connection of virt-who host, get data from
     virtwho.ini file.
