@@ -138,7 +138,8 @@ class TestSmoke:
         hypervisor.delete('rhsm_proxy_port')
         hypervisor.delete('rhsm_proxy_hostname')
 
-    def test_hypervisor_id(self, virtwho, hypervisor, hypervisor_data):
+    def test_hypervisor_id(self, virtwho, satellite, hypervisor,
+                           hypervisor_data):
         """Test hypervisor_id option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: satellite smoke: test hypervisor_id
@@ -169,7 +170,18 @@ class TestSmoke:
                     result = virtwho.run_cli()
                     assert (result['send'] == 1
                             and result['error'] == 0
-                            and result['hypervisor_id'] == value)
+                            and result['hypervisor_id'] == value
+                            and satellite.host_id(value))
+                    if hypervisor_ids['hwuuid']:
+                        if key == 'uuid':
+                            assert not satellite.host_id(hypervisor_ids['hostname'])
+                            assert not satellite.host_id(hypervisor_ids['hwuuid'])
+                        if key == 'hostname':
+                            assert not satellite.host_id(hypervisor_ids['uuid'])
+                            assert not satellite.host_id(hypervisor_ids['hwuuid'])
+                    if key == 'hwuuid':
+                        assert not satellite.host_id(hypervisor_ids['uuid'])
+                        assert not satellite.host_id(hypervisor_ids['hostname'])
         finally:
             hypervisor.update('hypervisor_id', 'hostname')
 
