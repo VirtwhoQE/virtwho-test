@@ -36,7 +36,7 @@ def globalconf():
 
 @pytest.fixture(scope='function')
 def globalconf_clean(globalconf):
-    """Clean all the settings in /etc/virt-who.conf"""
+    """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
     globalconf.clean()
     if 'RHEL-8' in RHEL_COMPOSE:
         sysconfig = VirtwhoSysConfig(HYPERVISOR)
