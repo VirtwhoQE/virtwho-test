@@ -318,6 +318,12 @@ class RHSM:
         self.org = config.rhsm.default_org
         self.api = f'https://{config.rhsm.server}/subscription'
         self.auth = (config.rhsm.username, config.rhsm.password)
+        # self.headers = '-H "accept: application/json" ' \
+        #                '-H "Content-Type: application/json"'
+        # self.headers = {
+        #     'accept': 'application/json',
+        #     'Content-Type': 'application/json',
+        # }
 
     def consumers(self, host_name=None):
         """
@@ -488,6 +494,27 @@ class RHSM:
             return True
         logger.warning("Hypervisor and Guest are not associated on stage web")
         return False
+
+    def sca(self, sca='disable'):
+        """
+        Enable/disable simple content access.
+        :param sca: enable/disable.
+        :return: True or raise fail.
+        """
+        headers = {'accept': 'application/json'}
+        data = {'contentAccessMode': 'entitlement'}
+        if sca == 'enable':
+            data = {'contentAccessMode': 'org_environment'}
+        status = request_put(
+            url=f'{self.api}/owners/{self.org}',
+            auth=self.auth,
+            headers=headers,
+            json_data=data
+        )
+        if status == 200:
+            logger.info(f'Succeeded to {sca} SCA for rhsm')
+            return True
+        raise FailException(f'Failed to {sca} SCA for rhsm')
 
 
 class Satellite:
@@ -827,6 +854,19 @@ class Satellite:
                     'Failed to find the associated hypervisor in guest page')
                 return False
 
+    def sca(self, sca='disable'):
+        """
+        Enable/disable simple content access.
+        :param sca: enable/disable.
+        :return: True or raise fail.
+        """
+        ret, output = self.ssh.runcmd(f'hammer simple-content-access {sca} '
+                                      f'--organization-id {self.org_id}')
+        if ret == 0 and '100%' in output:
+            logger.info(f'Succeeded to {sca} SCA for satellite')
+            return True
+        raise FailException(f'Failed to {sca} SCA for satellite')
+
 
 def request_get(url, auth, verify=False):
     res = requests.get(url=url, auth=auth, verify=verify)
@@ -835,6 +875,11 @@ def request_get(url, auth, verify=False):
 
 def request_post(url, auth, params, verify=False):
     res = requests.post(url=url, auth=auth, params=params, verify=verify)
+    return res.status_code
+
+
+def request_put(url, auth, headers, json_data, verify=False):
+    res = requests.put(url=url, auth=auth, headers=headers, json=json_data, verify=verify)
     return res.status_code
 
 
