@@ -117,6 +117,7 @@ class TestConfiguration:
                 and result['terminate'] == 0
                 and result['oneshot'] is False)
 
+    @pytest.mark.tier1
     def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data):
         """Test the print_ option in /etc/virtwho.conf
 
@@ -161,6 +162,7 @@ class TestConfiguration:
                 and result['debug'] is False
                 and guest_id not in result['log'])
 
+    @pytest.mark.tier1
     def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf, ssh_host, hypervisor_data):
         """Test the reporter_id option in /etc/virtwho.conf
 
@@ -195,6 +197,7 @@ class TestConfiguration:
                 and result['thread'] == 1
                 and result['reporter_id'] == reporter_id)
 
+    @pytest.mark.tier1
     def test_log_per_config_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the log_per_config option in /etc/virtwho.conf
 
@@ -260,6 +263,7 @@ class TestConfiguration:
                         and 'virtwho.destination' not in file_content
                         and 'virtwho.main' not in file_content)
 
+    @pytest.mark.tier1
     def test_log_dir_and_log_file_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the log_dir and log_file option in /etc/virtwho.conf
 
@@ -307,6 +311,7 @@ class TestConfiguration:
         assert (guest_uuid in contents
                 and 'ERROR' not in contents)
 
+    @pytest.mark.tier1
     def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the configs option in /etc/virtwho.conf
 
@@ -339,6 +344,7 @@ class TestConfiguration:
                 and guest_uuid in result['log']
                 and msg in result['log'])
 
+    @pytest.mark.tier1
     def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
                                    register_data, owner_data, debug_true):
         """Test the owner option in /etc/virtwho.conf
@@ -379,6 +385,7 @@ class TestConfiguration:
                 and result['thread'] == 1
                 and guest_uuid in result['log'])
 
+    @pytest.mark.tier1
     def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
                                            register_data, rhsm, satellite):
         """Test the hypervisor_id option in /etc/virtwho.conf
@@ -435,6 +442,7 @@ class TestConfiguration:
                     assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
                     assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
 
+    @pytest.mark.tier1
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
@@ -494,6 +502,7 @@ class TestConfiguration:
 
 @pytest.mark.usefixtures('globalconf_clean')
 @pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.rhel8
 class TestSysConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_sysconfig(self, virtwho, sysconfig):
@@ -527,6 +536,9 @@ class TestSysConfiguration:
                 and result['error'] == 0
                 and result['debug'] is False)
 
+        sysconfig.clean()
+
+    @pytest.mark.tier1
     def test_oneshot_in_virtwho_sysocnfig(self, virtwho, sysconfig):
         """Test the VIRTWHO_ONE_SHOT option in /etc/sysconfig/virt-who
 
@@ -563,6 +575,9 @@ class TestSysConfiguration:
                 and result['terminate'] == 0
                 and result['oneshot'] is False)
 
+        sysconfig.clean()
+
+    @pytest.mark.tier1
     def test_interval_in_virtwho_sysocnfig(self, virtwho, sysconfig):
         """Test the VIRTWHO_INTERVAL option in /etc/sysconfig/virt-who
 
@@ -595,3 +610,5 @@ class TestSysConfiguration:
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['loop'] == 60)
+
+        sysconfig.clean()
