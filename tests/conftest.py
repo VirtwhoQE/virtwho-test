@@ -2,13 +2,14 @@ import pytest
 
 from virtwho.settings import config
 from virtwho.runner import VirtwhoRunner
+from virtwho.configure import VirtwhoSysConfig
 from virtwho.configure import VirtwhoHypervisorConfig
 from virtwho.configure import VirtwhoGlobalConfig
 from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
-from virtwho import HYPERVISOR, REGISTER, FailException, logger
+from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, FailException, logger
 from virtwho.base import hostname_get
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
@@ -35,8 +36,16 @@ def globalconf():
 
 @pytest.fixture(scope='function')
 def globalconf_clean(globalconf):
-    """Clean all the settings in /etc/virt-who.conf"""
+    """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
     globalconf.clean()
+    if 'RHEL-8' in RHEL_COMPOSE:
+        sysconfig = VirtwhoSysConfig(HYPERVISOR)
+        sysconfig.clean()
+
+
+@pytest.fixture()
+def sysconfig():
+    return VirtwhoSysConfig(HYPERVISOR)
 
 
 @pytest.fixture(scope='class')
