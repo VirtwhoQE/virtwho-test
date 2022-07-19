@@ -318,12 +318,6 @@ class RHSM:
         self.org = config.rhsm.default_org
         self.api = f'https://{config.rhsm.server}/subscription'
         self.auth = (config.rhsm.username, config.rhsm.password)
-        # self.headers = '-H "accept: application/json" ' \
-        #                '-H "Content-Type: application/json"'
-        # self.headers = {
-        #     'accept': 'application/json',
-        #     'Content-Type': 'application/json',
-        # }
 
     def consumers(self, host_name=None):
         """
