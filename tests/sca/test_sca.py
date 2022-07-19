@@ -110,7 +110,8 @@ class TestSCA:
             assert register.associate(hypervisor_hostname,
                                       guest_uuid) is not False
 
-    def test_guest_entitlement_status(self, ssh_guest, register_guest):
+    def test_guest_entitlement_status(self, ssh_guest, register_guest,
+                                      hypervisor_data):
         """Test the guest entitlement status.
 
         :title: virt-who: sca: test guest entitlement status
@@ -120,26 +121,50 @@ class TestSCA:
         :customerscenario: false
         :upstream: no
         :steps:
-            1. register guest and check the #subscription-manager status
+            1. register guest
+            2. check the #subscription-manager status
+            3. try to auto-attach subscription for guest
         :expectedresults:
-            get the output with 'Content Access Mode is set to Simple Content
-            Access'
+            1. get the output with 'Content Access Mode is set to Simple Content
+                Access' by #subscription-manager status
+            2. get the 'This host's organization is in Simple Content Access
+                mode. Auto-attach is disabled'
         """
         ret, output = ssh_guest.runcmd('subscription-manager status')
         assert ('Content Access Mode is set to Simple Content Access' in output)
 
-    def test_hypervisor_status(self, virtwho):
-        """Test the hypervisor status in register server.
+        guest_hostname = hypervisor_data['guest_hostname']
+        if 'satellite' in REGISTER:
+            msg = "This host's organization is in Simple Content Access mode." \
+                  " Auto-attach is disabled"
+            result = register.attach(host=guest_hostname)
+            assert msg in result
+        else:
+            # pending on bz2108415
+            pass
 
-        :title: virt-who: sca: test hypervisor status
+    def test_hypervisor_entitlement_status(self, virtwho, hypervisor_data):
+        """Test the hypervisor entitlement status.
+
+        :title: virt-who: sca: test hypervisor entilement status
         :id: 15a23e94-934f-462e-b190-2942b33d6418
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. run virt-who to report mappings
+            2. try to auto-attach subscription for hypervisor
         :expectedresults:
-            1.
+            get the 'This host's organization is in Simple Content Access
+                mode. Auto-attach is disabled'
         """
-        pass
+        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        if 'satellite' in REGISTER:
+            msg = "This host's organization is in Simple Content Access mode." \
+                  " Auto-attach is disabled"
+            result = register.attach(host=hypervisor_hostname)
+            assert msg in result
+        else:
+            # pending on bz2108415
+            pass

@@ -661,7 +661,7 @@ class Satellite:
         :param host: host name/uuid/hwuuid
         :param pool: pool id, run auto attach when pool=None.
         :param quantity: the subscription quantity to attach.
-        :return: True or raise Fail.
+        :return: True, output or raise Fail.
         """
         host_id = self.host_id(host)
         cmd = f'hammer host subscription auto-attach --host-id {host_id}'
@@ -677,6 +677,11 @@ class Satellite:
         if ret == 0 and msg in output:
             logger.info(f'Succeeded to attach subscription for {host}')
             return True
+        elif (ret != 0 and "This host's organization is in Simple Content "
+                           "Access mode" in output):
+            logger.info(f'The organizaiton is in SCA mode, no need to '
+                        f'attach subscription')
+            return output
         raise FailException(f'Failed to attach subscription for {host}')
 
     def unattach(self, host, pool, quantity=1):
