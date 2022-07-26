@@ -104,11 +104,9 @@ class TestSCA:
                 and associated_hypervisor_in_mapping == hypervisor_hostname)
         # assert the association in Satellite web
         if REGISTER == 'satellite':
-            assert register.associate(hypervisor_hostname,
-                                      guest_hostname) is not False
+            assert register.associate(hypervisor_hostname, guest_hostname)
         else:
-            assert register.associate(hypervisor_hostname,
-                                      guest_uuid) is not False
+            assert register.associate(hypervisor_hostname, guest_uuid)
 
     def test_guest_entitlement_status(self, ssh_guest, register_guest,
                                       hypervisor_data):
