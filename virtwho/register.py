@@ -868,20 +868,52 @@ class Satellite:
 
 
 def request_get(url, auth, verify=False):
+    """Sends a GET request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code and json output.
+    """
     res = requests.get(url=url, auth=auth, verify=verify)
     return res.status_code, res.json()
 
 
 def request_post(url, auth, params, verify=False):
+    """Sends a POST request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param params: Dictionary, list of tuples or bytes to send
+        in the query string
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code
+    """
     res = requests.post(url=url, auth=auth, params=params, verify=verify)
     return res.status_code
 
 
 def request_put(url, auth, headers, json_data, verify=False):
+    """Sends a PUT request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param headers: dictionary of HTTP Headers
+    :param json_data: json data to send in the body
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code
+    """
     res = requests.put(url=url, auth=auth, headers=headers, json=json_data, verify=verify)
     return res.status_code
 
 
 def request_delete(url, auth, verify=False):
+    """Sends a DELETE request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code
+    """
     res = requests.delete(url=url, auth=auth, verify=verify)
     return res.status_code
