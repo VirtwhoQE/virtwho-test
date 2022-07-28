@@ -489,6 +489,27 @@ class RHSM:
         logger.warning("Hypervisor and Guest are not associated on stage web")
         return False
 
+    def sca(self, sca='disable'):
+        """
+        Enable/disable simple content access.
+        :param sca: enable/disable.
+        :return: True or raise fail.
+        """
+        headers = {'accept': 'application/json'}
+        data = {'contentAccessMode': 'entitlement'}
+        if sca == 'enable':
+            data = {'contentAccessMode': 'org_environment'}
+        status = request_put(
+            url=f'{self.api}/owners/{self.org}',
+            auth=self.auth,
+            headers=headers,
+            json_data=data
+        )
+        if status == 200:
+            logger.info(f'Succeeded to {sca} SCA for rhsm')
+            return True
+        raise FailException(f'Failed to {sca} SCA for rhsm')
+
 
 class Satellite:
 
@@ -634,7 +655,7 @@ class Satellite:
         :param host: host name/uuid/hwuuid
         :param pool: pool id, run auto attach when pool=None.
         :param quantity: the subscription quantity to attach.
-        :return: True or raise Fail.
+        :return: True, output or raise Fail.
         """
         host_id = self.host_id(host)
         cmd = f'hammer host subscription auto-attach --host-id {host_id}'
@@ -650,6 +671,11 @@ class Satellite:
         if ret == 0 and msg in output:
             logger.info(f'Succeeded to attach subscription for {host}')
             return True
+        elif (ret != 0 and "This host's organization is in Simple Content "
+                           "Access mode" in output):
+            logger.info(f'The organizaiton is in SCA mode, no need to '
+                        f'attach subscription')
+            return output
         raise FailException(f'Failed to attach subscription for {host}')
 
     def unattach(self, host, pool, quantity=1):
@@ -812,6 +838,7 @@ class Satellite:
             if guest.lower() in str(output):
                 logger.info(
                     'Succeeded to find the associated guest in hypervisor page')
+
             else:
                 logger.warning(
                     'Failed to find the associated guest in hypervisor page')
@@ -826,18 +853,69 @@ class Satellite:
                 logger.warning(
                     'Failed to find the associated hypervisor in guest page')
                 return False
+            return True
+
+    def sca(self, sca='disable'):
+        """
+        Enable/disable simple content access.
+        :param sca: enable/disable.
+        :return: True or raise fail.
+        """
+        ret, output = self.ssh.runcmd(f'hammer simple-content-access {sca} '
+                                      f'--organization-id {self.org_id}')
+        if ret == 0 and '100%' in output:
+            logger.info(f'Succeeded to {sca} SCA for satellite')
+            return True
+        raise FailException(f'Failed to {sca} SCA for satellite')
 
 
 def request_get(url, auth, verify=False):
+    """Sends a GET request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code and json output.
+    """
     res = requests.get(url=url, auth=auth, verify=verify)
     return res.status_code, res.json()
 
 
 def request_post(url, auth, params, verify=False):
+    """Sends a POST request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param params: Dictionary, list of tuples or bytes to send
+        in the query string
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code
+    """
     res = requests.post(url=url, auth=auth, params=params, verify=verify)
     return res.status_code
 
 
+def request_put(url, auth, headers, json_data, verify=False):
+    """Sends a PUT request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param headers: dictionary of HTTP Headers
+    :param json_data: json data to send in the body
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code
+    """
+    res = requests.put(url=url, auth=auth, headers=headers, json=json_data, verify=verify)
+    return res.status_code
+
+
 def request_delete(url, auth, verify=False):
+    """Sends a DELETE request.
+    :param url: API URL
+    :param auth: authentication with format (username, password)
+    :param verify: a boolean to control whether we verify the server's
+        TLS certificate
+    :return: response status code
+    """
     res = requests.delete(url=url, auth=auth, verify=verify)
     return res.status_code

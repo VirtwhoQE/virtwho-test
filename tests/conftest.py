@@ -154,20 +154,32 @@ def hypervisor_data(ssh_guest):
     data['guest_ip'] = hypervisor_handler.guest_ip
     data['guest_uuid'] = hypervisor_handler.guest_uuid
     data['guest_hostname'] = hostname_get(ssh_guest)
-    data['hypervisor_uuid'] = ''
-    data['hypervisor_hostname'] = ''
     data['hypervisor_hwuuid'] = ''
+    data['cluster'] = ''
     if HYPERVISOR == 'esx':
         data['hypervisor_uuid'] = hypervisor_handler.esx_uuid
         data['hypervisor_hostname'] = hypervisor_handler.esx_hostname
         data['hypervisor_hwuuid'] = hypervisor_handler.esx_hwuuid
+        data['type'] = hypervisor_handler.esx_type
+        data['version'] = hypervisor_handler.esx_version
+        data['cpu'] = hypervisor_handler.esx_cpu
+        data['cluster'] = hypervisor_handler.esx_cluster
     elif HYPERVISOR == 'rhevm':
         data['hypervisor_uuid'] = hypervisor_handler.vdsm_uuid
         data['hypervisor_hostname'] = hypervisor_handler.vdsm_hostname
         data['hypervisor_hwuuid'] = hypervisor_handler.vdsm_hwuuid
+        data['type'] = hypervisor_handler.vdsm_type
+        data['version'] = hypervisor_handler.vdsm_version
+        data['cpu'] = hypervisor_handler.vdsm_cpu
+        data['cluster'] = hypervisor_handler.vdsm_cluster
     else:
         data['hypervisor_uuid'] = hypervisor_handler.uuid
         data['hypervisor_hostname'] = hypervisor_handler.hostname
+        data['type'] = hypervisor_handler.type
+        data['version'] = hypervisor_handler.version
+        data['cpu'] = hypervisor_handler.cpu
+    if HYPERVISOR == 'ahv':
+        data['cluster'] = hypervisor_handler.cluster
     return data
 
 
