@@ -838,6 +838,7 @@ class Satellite:
             if guest.lower() in str(output):
                 logger.info(
                     'Succeeded to find the associated guest in hypervisor page')
+
             else:
                 logger.warning(
                     'Failed to find the associated guest in hypervisor page')
@@ -852,6 +853,7 @@ class Satellite:
                 logger.warning(
                     'Failed to find the associated hypervisor in guest page')
                 return False
+            return True
 
     def sca(self, sca='disable'):
         """
