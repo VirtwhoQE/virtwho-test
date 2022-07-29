@@ -36,6 +36,12 @@ def satellite_deploy(args):
         satellite_repo_enable_cdn(sm, rhel_ver, sat_ver)
     if 'dogfood' in sat_repo:
         satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver)
+    if 'repo' in sat_repo:
+        sm = SubscriptionManager(host=args.server,
+                                 username=args.ssh_username,
+                                 password=args.ssh_password,
+                                 register_type='rhsm')
+        satellite_repo_enable(sm, ssh, rhel_ver, sat_ver)
 
     # Install satellite
     satellite_pkg_install(ssh)
@@ -66,6 +72,43 @@ def satellite_repo_enable_cdn(sm, rhel_ver, sat_ver):
     sm.repo('disable', '*')
     sm.repo('enable', satellite_repos_cdn(rhel_ver, sat_ver))
 
+
+def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver):
+    """
+    Enable the required repos for installing satellite that is still
+    in development.
+    :param sm: subscription-manager instance
+    :param ssh: ssh access to satellite host.
+    :param sat_ver: satellite version, such as 6.8, 6.9.
+    :param rhel_ver: rhel version, such as 6, 7, 8.
+    :return: True or raise Fail.
+    """
+    sm.register()
+    employee_sku_pool = sm.available(
+        config.sku.employee, 'Physical')['pool_id']
+    sm.attach(pool=employee_sku_pool)
+    sm.repo('disable', '*')
+    if rhel_ver == '8':
+        sm.repo('enable', f'rhel-{rhel_ver}-for-x86_64-baseos-rpms')
+        sm.repo('enable', f'rhel-{rhel_ver}-for-x86_64-appstream-rpms')
+    elif rhel_ver == '7':
+        sm.repo('enable', f'rhel-{rhel_ver}-server-rpms')
+        sm.repo('enable', f'rhel-server-rhscl-{rhel_ver}-rpms')
+        sm.repo('enable', f'rhel-{rhel_ver}-server-ansible-2.9-rpms')
+
+    ssh.runcmd('curl -o /etc/pki/ca-trust/source/anchors/satellite-sat-engineering-ca.crt '
+               'http://satellite.sat.engineering.redhat.com/pub/katello-server-ca.crt; '
+               'update-ca-trust')
+
+    ret, _ = ssh.runcmd(
+        f'curl -o /etc/yum.repos.d/satellite-capsule.repo '
+        f'http://ohsnap.sat.engineering.redhat.com/api/releases/'
+        f'{sat_ver}.0/el{rhel_ver}/satellite/repo_file')
+
+    if ret == 0:
+        ssh.runcmd(f'dnf -y module enable satellite:el{rhel_ver}')
+        return True
+    raise FailException('Failed to enable repo.')
 
 def satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver,
                                   repo_type='satellite'):
@@ -108,9 +151,7 @@ def satellite_repos_cdn(rhel_ver, sat_ver):
     :return: A string with comma to separate repos.
     """
     repos_sat = (f'rhel-{rhel_ver}-server-satellite-maintenance-6-rpms,'
-                 f'rhel-{rhel_ver}-server-satellite-capsule-{sat_ver}-rpms,'
                  f'rhel-{rhel_ver}-server-satellite-{sat_ver}-rpms,'
-                 f'rhel-{rhel_ver}-server-satellite-tools-{sat_ver}-rpms,'
                  f'rhel-{rhel_ver}-server-ansible-2.9-rpms')
     repos_rhel = (f'rhel-{rhel_ver}-server-rpms,'
                   f'rhel-{rhel_ver}-server-optional-rpms,'
