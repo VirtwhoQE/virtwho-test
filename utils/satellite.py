@@ -106,9 +106,11 @@ def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver):
         f'{sat_ver}.0/el{rhel_ver}/satellite/repo_file')
 
     if ret == 0:
-        ssh.runcmd(f'dnf -y module enable satellite:el{rhel_ver}')
+        if rhel_ver == '8':
+            ssh.runcmd(f'dnf -y module enable satellite:el{rhel_ver}')
         return True
     raise FailException('Failed to enable repo.')
+
 
 def satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver,
                                   repo_type='satellite'):
