@@ -88,7 +88,6 @@ def libvirt_test(args):
     finally:
         logger.info(f'>>>Libvirt: Compare and update the data.')
         libvirt_dict = {
-            'status': status,
             'server': server,
             'guest_ip': guest_ip,
         }
@@ -104,8 +103,12 @@ def libvirt_test(args):
             for key, value in compare_dict.items():
                 if value[0] != value[1]:
                     logger.info(f'The libvirt {key} changed.')
-                    libvirt_dict['status'] = 'UPDATED'
                     libvirt_dict[key] = f'{value[1]} (Updated)'
+                    status = 'UPDATED'
+        args.section, args.option, args.value = (
+            'status', 'libvirt', status
+        )
+        virtwho_ini_props_update(args)
         for (args.option, args.value) in libvirt_dict.items():
             args.section = 'libvirt'
             virtwho_ini_props_update(args)
@@ -125,6 +128,7 @@ def arguments_parser():
         help='Test the libvirt environment')
 
     # esx
+    # pending
     return parser.parse_args()
 
 
