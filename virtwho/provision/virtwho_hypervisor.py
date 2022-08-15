@@ -15,7 +15,7 @@ from virtwho.base import hostname_get
 from utils.properties_update import virtwho_ini_props_update
 
 
-def libvirt_test(args):
+def libvirt_check(args):
     """
     """
     logger.info(f'+++ Start to test the Libvirt Environment +++')
@@ -106,7 +106,7 @@ def libvirt_test(args):
                     libvirt_dict[key] = f'{value[1]} (Updated)'
                     status = 'UPDATED'
         args.section, args.option, args.value = (
-            'status', 'libvirt', status
+            'hypervisors_status', 'libvirt', status
         )
         virtwho_ini_props_update(args)
         for (args.option, args.value) in libvirt_dict.items():
@@ -135,4 +135,4 @@ def arguments_parser():
 if __name__ == "__main__":
     args = arguments_parser()
     if args.command == 'libvirt':
-        libvirt_test(args)
+        libvirt_check(args)
