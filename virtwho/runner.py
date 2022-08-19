@@ -455,7 +455,7 @@ class VirtwhoRunner:
                     facts = dict()
                     facts['name'] = hypervisor_name
                     facts['type'] = item['facts']['hypervisor.type']
-                    facts['version'] = item['facts']['hypervisor.version']
+                    facts['version'] = str(item['facts']['hypervisor.version'])
                     facts['socket'] = item['facts']['cpu.cpu_socket(s)']
                     facts['dmi'] = item['facts']['dmi.system.uuid']
                     if 'hypervisor.cluster' in item['facts'].keys():

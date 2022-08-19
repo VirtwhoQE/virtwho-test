@@ -45,66 +45,74 @@ def esx_check(args):
     )
     try:
         logger.info(f'>>>vCenter: Check if the vCenter server is running.')
-        ret = os.system(f'ping -c 2 -w 5 {server}')
-        if ret != 0:
-            esx_status, server, guest_ip = (
-                status_server_bad, server_broke, guest_none
-            )
-            raise FailException(
+        ret1 = os.system(f'ping -c 2 -w 5 {server}')
+        if ret1 != 0:
+            esx_status, server = (status_server_bad, server_broke)
+            logger.error(
                 f'The vCenter Server has broken, please repaire it.'
             )
 
         logger.info(f'>>>vCenter: Check if the esxi host is running.')
-        ret = os.system(f'ping -c 2 -w 5 {esx_ip}')
-        if ret != 0:
-            esx_status, esx_ip, guest_ip = (
-                'BAD (ESXi Host Down)', 'Broke', guest_none
-            )
-            raise FailException(
+        ret2 = os.system(f'ping -c 2 -w 5 {esx_ip}')
+        if ret2 != 0:
+            esx_status, esx_ip = ('BAD (ESXi Host Down)', 'Broke')
+            logger.error(
                 f'The esxi host has broken, please repaire it.'
             )
 
         logger.info(f'>>>vCenter: Check if the windows client is running.')
-        ret = os.system(f'ping -c 2 -w 5 {client_server}')
-        if ret != 0:
-            env_status, esx_ip, guest_ip = (
-                'BAD (Windows Client Down)', 'Broke', guest_none
-            )
-            raise FailException(
+        ret3 = os.system(f'ping -c 2 -w 5 {client_server}')
+        if ret3 != 0:
+            esx_status, esx_ip = ('BAD (Windows Client Down)', 'Broke')
+            logger.error(
                 f'The windows Client has broken, please repaire it.'
             )
 
-        logger.info(f'>>>vCenter: Check if the rhel guest exists.')
-        ret = esx.guest_exist(guest_name)
-        if not ret:
-            logger.warning(f'Did not find the rhel guest ({guest_name}), '
-                           f'will deploy a new one.')
-            # esx.guest_add()
+        if ret1 == 0 and ret2 == 0 and ret3 == 0:
+            logger.info(f'>>>vCenter: Check if the rhel guest exists.')
+            ret4 = esx.guest_exist(guest_name)
+            if not ret4:
+                logger.warning(f'Did not find the rhel guest ({guest_name}), '
+                               f'will deploy a new one.')
+                ret4 = esx.guest_add(
+                    host=esx_ip,
+                    host_ssh_user=config.esx.esx_username,
+                    host_ssh_pwd=config.esx.esx_password,
+                    guest_name=guest_name,
+                    image_path=''
+                )
 
-        logger.info(f'>>>vCenter: Check the rhel guest state.')
-        guest_state = esx.guest_search(guest_name)['guest_state']
-        if guest_state == 1:
-            logger.info(f'The rhel guest({guest_name}) is running well.')
-        if guest_state == 2:
-            logger.info(f'The rhel guest({guest_name}) is paused, '
-                        f'will resume it.')
-            ret = esx.guest_resume(guest_name)
-            if ret is False:
-                esx_status, guest_ip = (status_guest_bad, guest_paused)
-                raise FailException(f'Failed to resume the rhel guest'
-                                    f'({guest_name}) from paused status.')
-        if guest_state == 0:
-            logger.info(f'The rhel guest({guest_name}) was power off, '
-                        f'will start it.')
-            ret = esx.guest_start(guest_name)
-            if ret is False:
-                esx_status, guest_ip = (status_guest_bad, guest_off)
-                raise FailException(f'Failed to start the rhel guest'
-                                    f'({guest_name}) from power off status.')
+            if ret4:
+                logger.info(f'>>>vCenter: Check the rhel guest state.')
+                guest_state = esx.guest_search(guest_name)['guest_state']
+                if guest_state == 1:
+                    logger.info(
+                        f'The rhel guest({guest_name}) is running well.')
+                if guest_state == 2:
+                    logger.info(f'The rhel guest({guest_name}) is paused, '
+                                f'will resume it.')
+                    ret = esx.guest_resume(guest_name)
+                    if ret is False:
+                        esx_status, guest_ip = (status_guest_bad, guest_paused)
+                        logger.error(f'Failed to resume the rhel guest'
+                                     f'({guest_name}) from paused status.')
+                if guest_state == 0:
+                    logger.info(f'The rhel guest({guest_name}) was power off, '
+                                f'will start it.')
+                    ret = esx.guest_start(guest_name)
+                    if ret is False:
+                        esx_status, guest_ip = (status_guest_bad, guest_off)
+                        logger.error(f'Failed to start the rhel guest'
+                                     f'({guest_name}) from power off status.')
 
-        logger.info(f'>>>vCenter: Get all the necessary data.')
-        esx_data = esx.guest_search(guest_name, uuid_info=True)
-        logger.info(f'=== Succeeded to get the vCenter data\n{esx_data}\n===')
+                logger.info(f'>>>vCenter: Get all the necessary data.')
+                esx_data = esx.guest_search(guest_name, uuid_info=True)
+                logger.info(
+                    f'=== Succeeded to get the vCenter data\n{esx_data}\n===')
+            else:
+                esx_status, guest_ip = (status_guest_bad, guest_none)
+        else:
+            guest_ip = guest_none
 
     finally:
         logger.info(f'>>>vCenter: Update the data of virtwho.ini.')
@@ -173,46 +181,53 @@ def libvirt_check(args):
     )
     try:
         logger.info(f'>>>Libvirt: Check if the libvirt host is running.')
-        ret = os.system(f'ping -c 2 -w 5 {server}')
-        if ret != 0:
+        ret1 = os.system(f'ping -c 2 -w 5 {server}')
+        if ret1 != 0:
             libvirt_status, server, guest_ip = (
                 status_server_bad, server_broke, guest_none
             )
-            raise FailException(
-                f'The libvirt host has broken, please repaire it.'
-            )
+            logger.error(f'The libvirt host has broken, please repaire it.')
 
-        logger.info(f'>>>Libvirt: Check if the rhel guest exists.')
-        ret = libvirt.guest_exist(guest_name)
-        if not ret:
-            logger.warning(f'Did not find the rhel guest ({guest_name}), '
-                           f'will deploy a new one.')
-            # libvirt.guest_add(args.guest_name)
+        else:
+            logger.info(f'>>>Libvirt: Check if the rhel guest exists.')
+            ret2 = libvirt.guest_exist(guest_name)
+            if not ret2:
+                logger.error(f'Did not find the rhel guest ({guest_name}), '
+                             f'will deploy a new one.')
+                # ret = libvirt.guest_add(args.guest_name)  #not ready
+                ret2 = True
 
-        logger.info(f'>>>Libvirt: Check the rhel guest state.')
-        guest_state = libvirt.guest_status(guest_name)
-        if guest_state == 'running':
-            logger.info(f'The rhel guest({guest_name}) is running well.')
-        if guest_state == 'paused':
-            logger.info(f'The rhel guest({guest_name}) is paused, '
-                        f'will resume it.')
-            ret = libvirt.guest_resume(guest_name)
-            if ret is False:
-                libvirt_status, guest_ip = (status_guest_bad, guest_paused)
-                raise FailException(f'Failed to resume the rhel guest'
-                                    f'({guest_name}) from paused status.')
-        if guest_state in ['shut off', 'false']:
-            logger.info(f'The rhel guest({guest_name}) was down, '
-                        f'will start it.')
-            ret = libvirt.guest_start(guest_name)
-            if ret is False:
-                libvirt_status, guest_ip = (status_guest_bad, guest_off)
-                raise FailException(f'Failed to start the rhel guest'
-                                    f'({guest_name}) from shut off status.')
+            if ret2:
+                logger.info(f'>>>Libvirt: Check the rhel guest state.')
+                guest_state = libvirt.guest_status(guest_name)
+                if guest_state == 'running':
+                    logger.info(
+                        f'The rhel guest({guest_name}) is running well.')
+                if guest_state == 'paused':
+                    logger.info(f'The rhel guest({guest_name}) is paused, '
+                                f'will resume it.')
+                    ret = libvirt.guest_resume(guest_name)
+                    if ret is False:
+                        libvirt_status, guest_ip = (
+                            status_guest_bad, guest_paused
+                        )
+                        logger.error(f'Failed to resume the rhel guest'
+                                     f'({guest_name}) from paused status.')
+                if guest_state in ['shut off', 'false']:
+                    logger.info(f'The rhel guest({guest_name}) was down, '
+                                f'will start it.')
+                    ret = libvirt.guest_start(guest_name)
+                    if ret is False:
+                        libvirt_status, guest_ip = (status_guest_bad, guest_off)
+                        logger.error(f'Failed to start the rhel guest'
+                                     f'({guest_name}) from shut off status.')
 
-        logger.info(f'>>>Libvirt: Get the libvirt env data.')
-        libvirt_data = libvirt.guest_search(guest_name)
-        logger.info(f'=== Succeeded to get the libvirt data\n{libvirt_data}\n===')
+                logger.info(f'>>>Libvirt: Get the libvirt env data.')
+                libvirt_data = libvirt.guest_search(guest_name)
+                logger.info(
+                    f'=== Succeeded to get the libvirt data\n{libvirt_data}\n===')
+            else:
+                libvirt_status, guest_ip = (status_guest_bad, guest_none)
 
     finally:
         logger.info(f'>>>Libvirt: Compare and update the data in virtwho.ini.')
@@ -223,11 +238,14 @@ def libvirt_check(args):
         if libvirt_data:
             compare_dict = {
                 'uuid': [config.libvirt.uuid, libvirt_data['host_uuid']],
-                'hostname': [config.libvirt.hostname, hostname_get(ssh_libvirt)],
-                'version': [config.libvirt.version, libvirt_data['host_version']],
+                'hostname': [config.libvirt.hostname,
+                             hostname_get(ssh_libvirt)],
+                'version': [config.libvirt.version,
+                            libvirt_data['host_version']],
                 'cpu': [config.libvirt.cpu, libvirt_data['host_cpu']],
                 'guest_ip': [guest_ip, libvirt_data['guest_ip']],
-                'guest_uuid': [config.libvirt.guest_uuid, libvirt_data['guest_uuid']]
+                'guest_uuid': [config.libvirt.guest_uuid,
+                               libvirt_data['guest_uuid']]
             }
             for key, value in compare_dict.items():
                 if value[0] != value[1]:
