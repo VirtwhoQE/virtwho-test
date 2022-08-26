@@ -8,13 +8,16 @@ import pytest
 from virtwho import logger
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
+from virtwho import HYPERVISOR
+from virtwho.configure import VirtwhoHypervisorConfig
 
 
-@pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
 @pytest.mark.usefixtures('debug_true')
+@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('virtwho_d_conf_clean')
 class TestEsx:
-    @pytest.mark.tier1
+    @pytest.mark.tier2
     def test_type(self, virtwho, hypervisor, hypervisor_data):
         """Test the type= option in /etc/virt-who.d/hypervisor.conf
 
@@ -29,38 +32,54 @@ class TestEsx:
         :expectedresults:
             1.
         """
-        # type option is wrong value
-        validate_values = ['xxx', '红帽€467aa', '']
-        for value in validate_values:
-            hypervisor.update('type', value)
-            result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and "virt-who can't be started" in result['error_msg'])
-            if 'RHEL-9' in RHEL_COMPOSE:
-                assert f"Unsupported virtual type '{value}' is set" in result['error_msg']
-            else:
-                assert "virt-who can't be started" in result['error_msg']
+        # # # type option is wrong value
+        # validate_values = ['xxx', '红帽€467aa', '']
+        # for value in validate_values:
+        #     hypervisor.update('type', value)
+        #     result = virtwho.run_service()
+        #     assert (result['error'] is not 0
+        #             and result['send'] == 0
+        #             and result['thread'] == 0)
+        #     if 'RHEL-9' in RHEL_COMPOSE:
+        #         assert f"Unsupported virtual type '{value}' is set" in result['error_msg']
+        #     else:
+        #         assert "virt-who can't be started" in result['error_msg']
 
         # type option is disable
         hypervisor.delete('type')
-        hypervisor.update('#type', '')
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 0
                 and result['thread'] == 1
-                and "Error in .* backend" in result['error_msg'])
+                and 'Error in libvirt backend' in result['error_msg'])
 
-        # type option is disable but another config is ok
+        # # type option is disable but another config is ok
+        new_file = '/etc/virt-who.d/new_config.conf'
+        section_name = 'virtwho-config'
+        new_hypervisor = VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, new_file, section_name)
+        new_hypervisor.create()
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and 'Error in libvirt backend' in result['error_msg'])
 
         # type option is null but another config is ok
+        hypervisor.update('type', '')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['thread'] == 1)
+        if 'RHEL-9' in RHEL_COMPOSE:
+            assert result['error'] == 1
+        else:
+            assert result['error'] == 0
 
-    @pytest.mark.tier1
-    def test_owner(self, virtwho, hypervisor, hypervisor_data, owner_data):
-        """Test the owner= option in /etc/virt-who.d/hypervisor.conf
 
-        :title: virt-who: esx: test owner option
+    @pytest.mark.tier2
+    def test_server(self, virtwho, hypervisor, hypervisor_data, owner_data):
+        """Test the server= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test server option
         :id: 0f2fcf4f-ac60-4c3c-905a-fabe22536ab2
         :caseimportance: High
         :tags: tier1
@@ -71,28 +90,8 @@ class TestEsx:
         :expectedresults:
             1.
         """
-        # owner option is wrong value
-        validate_values = ['xxxxxx', '']
-        for value in validate_values:
-            hypervisor.update('owner', value)
-            result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and any(error in result['error_msg'] for error in owner_data['error']))
 
-        # owner option is disable
-        hypervisor.delete('owner')
-        hypervisor.update('#owner', '')
-        result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and any(error in result['error_msg'] for error in owner_data['error']))
 
-        # owner option is disable but another config is ok
-
-        # owner option is null but another config is ok
 
     @pytest.mark.tier1
     def test_hypervisor_id(self, virtwho, hypervisor, hypervisor_data, globalconf, rhsm, satellite):

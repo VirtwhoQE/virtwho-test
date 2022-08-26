@@ -29,13 +29,20 @@ def globalconf():
     return VirtwhoGlobalConfig(HYPERVISOR)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='class')
 def globalconf_clean(globalconf):
     """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
     globalconf.clean()
     if 'RHEL-8' in RHEL_COMPOSE:
         sysconfig = VirtwhoSysConfig(HYPERVISOR)
         sysconfig.clean()
+
+
+@pytest.fixture(scope='class')
+def virtwho_d_conf_clean(ssh_host):
+    """Clean all config files in /etc/virt-who.d/ folder"""
+    cmd = "rm -rf /etc/virt-who.d/*"
+    ssh_host.runcmd(cmd)
 
 
 @pytest.fixture()

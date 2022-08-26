@@ -10,7 +10,7 @@ class VirtwhoHypervisorConfig:
     """Able to create and manage /etc/virt-who.d/xxx.conf file when
     call this class"""
 
-    def __init__(self, mode='esx', register_type='rhsm'):
+    def __init__(self, mode='esx', register_type='rhsm', config_name=None, section=None):
         """Create virt-who configuration file with basic options. All
         data come from virtwho.ini. All local files are backed up
         to /temp directory of the project root.
@@ -19,14 +19,14 @@ class VirtwhoHypervisorConfig:
         :param register_type: The subscription server. (rhsm, satellite)
         """
         self.mode = mode
-        self.section = f'virtwho-{self.mode}'
+        self.section = section or f'virtwho-{self.mode}'
         self.register = get_register_handler(register_type)
         self.hypervisor = get_hypervisor_handler(mode)
         self.remote_ssh = virtwho_ssh_connect(mode)
         if not os.path.exists(TEMP_DIR):
             os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, f'{mode}.conf')
-        self.remote_file = f'/etc/virt-who.d/{mode}.conf'
+        self.remote_file = config_name or f'/etc/virt-who.d/{mode}.conf'
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
     def create(self, rhsm=True):
