@@ -23,6 +23,13 @@ def hypervisor():
     return VirtwhoHypervisorConfig(HYPERVISOR, REGISTER)
 
 
+@pytest.fixture(scope='function')
+def function_hypervisor(config_name=None):
+    """Create virt-who hypervisor test file with all rhsm options"""
+    VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, config_name).create()
+    return VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, config_name)
+
+
 @pytest.fixture(scope='session')
 def globalconf():
     """Instantication of class VirtwhoGlobalConfig()"""
@@ -38,8 +45,17 @@ def globalconf_clean(globalconf):
         sysconfig.clean()
 
 
-@pytest.fixture(scope='class')
-def virtwho_d_conf_clean(ssh_host):
+@pytest.fixture(scope='function')
+def function_globalconf_clean(globalconf):
+    """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
+    globalconf.clean()
+    if 'RHEL-8' in RHEL_COMPOSE:
+        sysconfig = VirtwhoSysConfig(HYPERVISOR)
+        sysconfig.clean()
+
+
+@pytest.fixture(scope='function')
+def function_virtwho_d_conf_clean(ssh_host):
     """Clean all config files in /etc/virt-who.d/ folder"""
     cmd = "rm -rf /etc/virt-who.d/*"
     ssh_host.runcmd(cmd)
