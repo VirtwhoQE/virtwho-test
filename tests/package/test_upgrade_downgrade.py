@@ -12,7 +12,7 @@ from virtwho.testing import virtwho_pacakge_url
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('hypervisor')
 class TestUpgradeDowngrade:
     @pytest.mark.tier1
     def test_upgrade_downgrade_by_yum(self, ssh_host, virtwho, globalconf):

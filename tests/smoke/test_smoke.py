@@ -9,7 +9,7 @@ from virtwho import logger
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('hypervisor')
 @pytest.mark.usefixtures('debug_true')
 class TestSmoke:
     def test_host_guest_association(self, virtwho, satellite, hypervisor_data,

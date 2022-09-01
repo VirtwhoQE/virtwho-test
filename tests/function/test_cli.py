@@ -9,7 +9,7 @@ from virtwho import HYPERVISOR_FILE
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('hypervisor')
 class TestCli:
     @pytest.mark.tier1
     def test_debug(self, virtwho):

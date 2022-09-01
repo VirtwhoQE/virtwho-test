@@ -16,16 +16,11 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='class')
 def hypervisor():
     """Instantication of class VirtwhoHypervisorConfig()"""
+    VirtwhoHypervisorConfig(HYPERVISOR, REGISTER).create(rhsm=True)
     return VirtwhoHypervisorConfig(HYPERVISOR, REGISTER)
-
-
-@pytest.fixture(scope='class')
-def hypervisor_create(hypervisor):
-    """Create virt-who hypervisor test file with all rhsm options"""
-    hypervisor.create(rhsm=True)
 
 
 @pytest.fixture(scope='session')

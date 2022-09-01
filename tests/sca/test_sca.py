@@ -33,7 +33,7 @@ def sca_disable():
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('hypervisor')
 @pytest.mark.usefixtures('debug_true')
 @pytest.mark.usefixtures('sca_enable')
 @pytest.mark.usefixtures('sca_disable')
