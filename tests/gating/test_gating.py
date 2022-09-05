@@ -9,7 +9,7 @@ from virtwho import logger
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('hypervisor')
 class TestGating:
     def test_debug(self, virtwho):
         """Test the '-d' option in virt-who command line

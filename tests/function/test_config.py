@@ -14,7 +14,7 @@ from virtwho.base import hostname_get
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('hypervisor')
 class TestConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
@@ -346,7 +346,7 @@ class TestConfiguration:
 
     @pytest.mark.tier1
     def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
-                                   register_data, owner_data, debug_true):
+                                   owner_data, debug_true):
         """Test the owner option in /etc/virtwho.conf
 
         :title: virt-who: config: test owner option
@@ -501,7 +501,7 @@ class TestConfiguration:
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
+@pytest.mark.usefixtures('hypervisor')
 @pytest.mark.rhel8
 class TestSysConfiguration:
     @pytest.mark.tier1

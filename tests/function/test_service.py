@@ -8,7 +8,6 @@ import pytest
 
 
 @pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor_create')
 class TestVirtwhoService:
     @pytest.mark.tier1
     def test_start_and_stop(self, virtwho):
