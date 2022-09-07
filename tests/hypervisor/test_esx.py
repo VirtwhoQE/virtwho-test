@@ -38,18 +38,18 @@ class TestEsx:
             4. The good config works fine
         """
         # type option is invalid value
-        validate_values = esx_assertion['type']
-        validate_values_list = list(validate_values['invalid'].keys())
-        for value in validate_values_list:
+        assertion = esx_assertion['type']
+        assertion_invalid_list = list(assertion['invalid'].keys())
+        for value in assertion_invalid_list:
             function_hypervisor.update('type', value)
             result = virtwho.run_service()
             assert (result['error'] is not 0
                     and result['send'] == 0
                     and result['thread'] == 0)
             if 'RHEL-9' in RHEL_COMPOSE:
-                assert validate_values['invalid'][f'{value}'] in result['error_msg']
+                assert assertion['invalid'][f'{value}'] in result['error_msg']
             else:
-                assert validate_values['non_rhel9'] in result['error_msg']
+                assert assertion['non_rhel9'] in result['error_msg']
 
         # type option is disable
         function_hypervisor.delete('type')
@@ -57,7 +57,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 0
                 and result['thread'] == 1
-                and validate_values['disable'] in result['error_msg'])
+                and assertion['disable'] in result['error_msg'])
 
         # type option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
@@ -68,7 +68,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and validate_values['disable_multi_configs'] in result['error_msg'])
+                and assertion['disable_multi_configs'] in result['error_msg'])
 
         # type option is null but another config is ok
         function_hypervisor.update('type', '')
@@ -104,14 +104,14 @@ class TestEsx:
             works fine
         """
         # server option is invalid value
-        validate_values = esx_assertion['server']
-        validate_values_list = list(validate_values['invalid'].keys())
-        for value in validate_values_list:
+        assertion = esx_assertion['server']
+        assertion_invalid_list = list(assertion['invalid'].keys())
+        for value in assertion_invalid_list:
             function_hypervisor.update('server', value)
             result = virtwho.run_service()
             assert (result['error'] is not 0
                     and result['send'] == 0
-                    and validate_values['invalid'][f'{value}'] in result['error_msg'])
+                    and assertion['invalid'][f'{value}'] in result['error_msg'])
 
         # server option is disable
         function_hypervisor.delete('server')
@@ -119,7 +119,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 0
                 and result['thread'] == 0
-                and validate_values['disable'] in result['error_msg'])
+                and assertion['disable'] in result['error_msg'])
 
         # server option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
@@ -130,7 +130,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and validate_values['disable_multi_configs'] in result['error_msg'])
+                and assertion['disable_multi_configs'] in result['error_msg'])
 
         # server option is null but another config is ok
         function_hypervisor.update('server', '')
@@ -138,7 +138,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and validate_values['null_multi_configs'] in result['error_msg'])
+                and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
     def test_username(self, function_hypervisor, virtwho, esx_assertion):
@@ -164,15 +164,15 @@ class TestEsx:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # username option is invalid value
-        validate_values = esx_assertion['username']
-        validate_values_list = list(validate_values['invalid'].keys())
-        for value in validate_values_list:
+        assertion = esx_assertion['username']
+        assertion_invalid_list = list(assertion['invalid'].keys())
+        for value in assertion_invalid_list:
             function_hypervisor.update('username', value)
             result = virtwho.run_service()
             assert (result['error'] is not 0
                     and result['send'] == 0
                     and result['thread'] == 1
-                    and validate_values['invalid'][f'{value}'] in result['error_msg'])
+                    and assertion['invalid'][f'{value}'] in result['error_msg'])
 
         # username option is disable
         function_hypervisor.delete('username')
@@ -180,7 +180,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 0
                 and result['thread'] == 0
-                and validate_values['disable'] in result['error_msg'])
+                and assertion['disable'] in result['error_msg'])
 
         # username option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
@@ -191,7 +191,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and validate_values['disable_multi_configs'] in result['error_msg'])
+                and assertion['disable_multi_configs'] in result['error_msg'])
 
         # username option is null but another config is ok
         function_hypervisor.update('username', '')
@@ -199,7 +199,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and validate_values['null_multi_configs'] in result['error_msg'])
+                and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
     def test_password(self, virtwho, function_hypervisor, esx_assertion):
@@ -225,15 +225,15 @@ class TestEsx:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # password option is invalid value
-        validate_values = esx_assertion['password']
-        validate_values_list = list(validate_values['invalid'].keys())
-        for value in validate_values_list:
+        assertion = esx_assertion['password']
+        assertion_invalid_list = list(assertion['invalid'].keys())
+        for value in assertion_invalid_list:
             function_hypervisor.update('password', value)
             result = virtwho.run_service()
             assert (result['error'] is not 0
                     and result['send'] == 0
                     and result['thread'] == 1
-                    and validate_values['invalid'][f'{value}'] in result['error_msg'])
+                    and assertion['invalid'][f'{value}'] in result['error_msg'])
 
         # password option is disable
         function_hypervisor.delete('password')
@@ -241,7 +241,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 0
                 and result['thread'] == 0
-                and validate_values['disable'] in result['error_msg'])
+                and assertion['disable'] in result['error_msg'])
 
         # password option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
@@ -252,7 +252,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and validate_values['disable_multi_configs'] in result['error_msg'])
+                and assertion['disable_multi_configs'] in result['error_msg'])
 
         # password option is null but another config is ok
         function_hypervisor.update('password', '')
@@ -260,7 +260,7 @@ class TestEsx:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and validate_values['null_multi_configs'] in result['error_msg'])
+                and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier1
     def test_hypervisor_id(self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite):

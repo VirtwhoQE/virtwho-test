@@ -7,17 +7,17 @@ def esx_assertion():
     Collect all the assertion info for esx to this fixture
     :return:
     """
+    login_error = 'Unable to login to ESX'
     data = {
         'type': {
             'invalid': {
                 'xxx': "Unsupported virtual type 'xxx' is set",
                 '红帽€467aa': "Unsupported virtual type '红帽€467aa' is set",
-                '': "Unsupported virtual type '红帽€467aa' is set",
-
+                '': "Unsupported virtual type '' is set",
             },
             'non_rhel9': "virt-who can't be started",
-            'disable': 'Error in libvirt backend',
-            'disable_multi_configs': 'Error in libvirt backend'
+            'disable': 'no connection driver available',
+            'disable_multi_configs': 'no connection driver available'
         },
         'server': {
             'invalid': {
@@ -31,23 +31,23 @@ def esx_assertion():
         },
         'username': {
             'invalid': {
-                'xxx': 'Unable to login to ESX',
-                '红帽€467aa': 'Unable to login to ESX',
-                '': 'Unable to login to ESX',
+                'xxx': login_error,
+                '红帽€467aa': login_error,
+                '': login_error,
             },
-            'disable': 'Required option: "username" not set' ,
+            'disable': 'Required option: "username" not set',
             'disable_multi_configs': 'Required option: "username" not set',
-            'null_multi_configs': 'Unable to login to ESX',
+            'null_multi_configs': login_error,
         },
         'password': {
             'invalid': {
-                'xxx': 'Unable to login to ESX',
-                '红帽€467aa': 'Unable to login to ESX',
-                '': 'Unable to login to ESX',
+                'xxx': login_error,
+                '红帽€467aa': login_error,
+                '': login_error,
             },
             'disable': 'Required option: "password" not set',
             'disable_multi_configs': 'Required option: "password" not set',
-            'null_multi_configs': 'Unable to login to ESX',
+            'null_multi_configs': login_error,
         }
 
     }
