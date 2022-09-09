@@ -200,3 +200,16 @@ def get_hypervisor_handler(mode):
     if mode in ['xen', 'hyperv', 'rhevm', 'libvirt', 'kubevirt', 'ahv', 'local']:
         hypervisor = getattr(config, mode)
     return hypervisor
+
+
+def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, section=None):
+    """ Create the hypervisor config file
+    :param mode: The hypervisor mode.
+    :param register_type: The subscription server. (rhsm, satellite)
+    :param config_name: the file name for the virt-who config
+    :param section: the name for the virt-who config section
+    :return:
+    """
+    hypervisor = VirtwhoHypervisorConfig(mode, register_type, config_name, section)
+    hypervisor.create()
+    return hypervisor

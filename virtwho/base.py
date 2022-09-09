@@ -440,12 +440,12 @@ def random_string(num=8):
     return random_str
 
 
-def encrypted_password(ssh, password):
+def encrypt_password(ssh, password):
     """
     Encrypt password by virt-who-password command
     :param ssh: ssh access of testing host
     :param password: the password would like to Encrypt
-    :return: the Encrypted password
+    :return: the encrypted password
     """
     cmd = f'virt-who-password -p {password} > /tmp/vw.log'
     ret, output = ssh.runcmd(cmd)

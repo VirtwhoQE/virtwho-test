@@ -10,8 +10,8 @@ from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
 from virtwho import HYPERVISOR
 
-from virtwho.base import encrypted_password
-from virtwho.configure import VirtwhoHypervisorConfig
+from virtwho.base import encrypt_password
+from virtwho.configure import hypervisor_create
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
@@ -65,8 +65,7 @@ class TestEsx:
         # type option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
         section_name = 'virtwho-config'
-        new_hypervisor = VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, new_file, section_name)
-        new_hypervisor.create()
+        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -127,8 +126,7 @@ class TestEsx:
         # server option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
         section_name = 'virtwho-config'
-        new_hypervisor = VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, new_file, section_name)
-        new_hypervisor.create()
+        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -188,8 +186,7 @@ class TestEsx:
         # username option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
         section_name = 'virtwho-config'
-        new_hypervisor = VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, new_file, section_name)
-        new_hypervisor.create()
+        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -249,8 +246,7 @@ class TestEsx:
         # password option is disable but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
         section_name = 'virtwho-config'
-        new_hypervisor = VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, new_file, section_name)
-        new_hypervisor.create()
+        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -290,7 +286,7 @@ class TestEsx:
         """
         # encrypted_password option is valid value
         function_hypervisor.delete('password')
-        encrypted_pwd = encrypted_password(ssh_host, hypervisor_data['hypervisor_password'])
+        encrypted_pwd = encrypt_password(ssh_host, hypervisor_data['hypervisor_password'])
         function_hypervisor.update('encrypted_password', encrypted_pwd)
         result = virtwho.run_service()
         assert (result['error'] == 0
@@ -311,8 +307,7 @@ class TestEsx:
         # encrypted_password option is valid but another config is ok
         new_file = '/etc/virt-who.d/new_config.conf'
         section_name = 'virtwho-config'
-        new_hypervisor = VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, new_file, section_name)
-        new_hypervisor.create()
+        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1

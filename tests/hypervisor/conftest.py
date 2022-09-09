@@ -1,9 +1,5 @@
 import pytest
 
-from virtwho import HYPERVISOR, FailException, logger
-
-from virtwho.configure import virtwho_ssh_connect
-
 
 @pytest.fixture(scope='session')
 def esx_assertion():
@@ -64,18 +60,3 @@ def esx_assertion():
     }
 
     return data
-
-
-def encrypted_password(password):
-    cmd = f'virt-who-password -p {password} > /tmp/vw.log'
-    ret, output = virtwho_ssh_connect(HYPERVISOR).runcmd(cmd)
-    if ret == 0:
-        ret, output = virtwho_ssh_connect(HYPERVISOR).runcmd("cat /tmp/vw.log")
-        if output is not None and output != '':
-            encrypted_value = output.strip()
-            logger.info(f'Succeeded to get encrypted_password : {encrypted_value}')
-            return encrypted_value
-        else:
-            raise FailException("Failed to run virt-who-password")
-    else:
-        raise FailException("Failed to run virt-who-password")
