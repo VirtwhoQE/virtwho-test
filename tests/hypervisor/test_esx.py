@@ -9,6 +9,8 @@ import pytest
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
 from virtwho import HYPERVISOR
+from virtwho import DEFAULT_HYPERVISOR_FILE
+from virtwho import SECTION_NAME
 
 from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
@@ -17,7 +19,85 @@ from virtwho.configure import hypervisor_create
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('debug_true')
 @pytest.mark.usefixtures('globalconf_clean')
-class TestEsx:
+class TestEsxPositive:
+    @pytest.mark.tier1
+    def test_encrypted_password(self, virtwho, function_hypervisor,
+                                hypervisor_data, ssh_host):
+        """Test the encrypted_password= option in /etc/virt-who.d/test_esx.conf
+
+        :title: virt-who: esx: test encrypted_password option
+        :id: f07205a4-8f18-4c6b-8a2c-285664b59ed3
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Delete the password option, encrypted password for the hypervisor.
+            2. Configure encrypted_password option with valid value, run the virt-who service.
+
+        :expectedresults:
+            2. Succeeded to run the virt-who, no error messages in the log info
+        """
+        # encrypted_password option is valid value
+        function_hypervisor.delete('password')
+        encrypted_pwd = encrypt_password(ssh_host, hypervisor_data['hypervisor_password'])
+        function_hypervisor.update('encrypted_password', encrypted_pwd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+    @pytest.mark.tier1
+    def test_hypervisor_id(self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite):
+        """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test hypervisor_id function
+        :id: be5877d9-3a59-46aa-bd9a-6c1e3ed5f5ee
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. clean all virt-who global configurations
+            2. run virt-who with hypervisor_id=uuid
+            3. run virt-who with hypervisor_id=hostname
+            4. run virt-who with hypervisor_id=hwuuid
+
+        :expectedresults:
+
+            hypervisor id shows uuid/hostname/hwuuid in mapping as the setting.
+        """
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and result['hypervisor_id'] == hypervisor_data[f'hypervisor_{hypervisor_id}'])
+            if REGISTER == 'rhsm':
+                assert rhsm.consumers(hypervisor_data['hypervisor_hostname'])
+                rhsm.delete(hypervisor_data['hypervisor_hostname'])
+            else:
+                if hypervisor_id == 'hostname':
+                    assert satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                elif hypervisor_id == 'uuid':
+                    assert satellite.host_id(hypervisor_data['hypervisor_uuid'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                else:
+                    assert satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
+
+
+@pytest.mark.usefixtures('function_virtwho_d_conf_clean')
+@pytest.mark.usefixtures('debug_true')
+@pytest.mark.usefixtures('globalconf_clean')
+class TestEsxNegative:
     @pytest.mark.tier2
     def test_type(self, virtwho, function_hypervisor, esx_assertion):
         """Test the type= option in /etc/virt-who.d/test_esx.conf
@@ -63,9 +143,7 @@ class TestEsx:
                 and assertion['disable'] in result['error_msg'])
 
         # type option is disable but another config is ok
-        new_file = '/etc/virt-who.d/new_config.conf'
-        section_name = 'virtwho-config'
-        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
+        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -124,9 +202,7 @@ class TestEsx:
                 and assertion['disable'] in result['error_msg'])
 
         # server option is disable but another config is ok
-        new_file = '/etc/virt-who.d/new_config.conf'
-        section_name = 'virtwho-config'
-        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
+        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -184,9 +260,7 @@ class TestEsx:
                 and assertion['disable'] in result['error_msg'])
 
         # username option is disable but another config is ok
-        new_file = '/etc/virt-who.d/new_config.conf'
-        section_name = 'virtwho-config'
-        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
+        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -244,9 +318,7 @@ class TestEsx:
                 and assertion['disable'] in result['error_msg'])
 
         # password option is disable but another config is ok
-        new_file = '/etc/virt-who.d/new_config.conf'
-        section_name = 'virtwho-config'
-        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
+        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -267,33 +339,22 @@ class TestEsx:
         """Test the encrypted_password= option in /etc/virt-who.d/test_esx.conf
 
         :title: virt-who: esx: test encrypted_password option
-        :id: f07205a4-8f18-4c6b-8a2c-285664b59ed3
+        :id: 5014c314-8d57-44ce-820b-6de88810044e
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
         :upstream: no
         :steps:
-            1. Delete the password option, encrypted password for the hypervisor.
-            2. Configure encrypted_password option with valid value, run the virt-who service.
-            3. Configure password option with invalid value.
-            4. Create another valid config file, run the virt-who service
+            1. Configure password option with invalid value.
+            2. Create another valid config file, run the virt-who service
 
         :expectedresults:
-            2. Succeeded to run the virt-who, no error messages in the log info
-            3. Failed to run the virt-who service, find warning message:
+            1. Failed to run the virt-who service, find warning message:
             'Option "encrypted_password" cannot be decrypted'
-            4. Find warning message: 'Option "encrypted_password" cannot be decrypted'
+            2. Find warning message: 'Option "encrypted_password" cannot be decrypted'
         """
-        # encrypted_password option is valid value
-        function_hypervisor.delete('password')
-        encrypted_pwd = encrypt_password(ssh_host, hypervisor_data['hypervisor_password'])
-        function_hypervisor.update('encrypted_password', encrypted_pwd)
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
-
         # encrypted_password option is invalid value
+        function_hypervisor.delete('password')
         assertion = esx_assertion['encrypted_password']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
@@ -305,57 +366,9 @@ class TestEsx:
                     and assertion['invalid'][f'{value}'] in result['warning_msg'])
 
         # encrypted_password option is valid but another config is ok
-        new_file = '/etc/virt-who.d/new_config.conf'
-        section_name = 'virtwho-config'
-        hypervisor_create(HYPERVISOR, REGISTER, new_file, section_name)
+        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
                 and assertion['valid_multi_configs'] in result['warning_msg'])
-
-    @pytest.mark.tier1
-    def test_hypervisor_id(self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite):
-        """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
-
-        :title: virt-who: esx: test hypervisor_id function
-        :id: be5877d9-3a59-46aa-bd9a-6c1e3ed5f5ee
-        :caseimportance: High
-        :tags: tier1
-        :customerscenario: false
-        :upstream: no
-        :steps:
-
-            1. clean all virt-who global configurations
-            2. run virt-who with hypervisor_id=uuid
-            3. run virt-who with hypervisor_id=hostname
-            4. run virt-who with hypervisor_id=hwuuid
-
-        :expectedresults:
-
-            hypervisor id shows uuid/hostname/hwuuid in mapping as the setting.
-        """
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
-        for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and result['hypervisor_id'] == hypervisor_data[f'hypervisor_{hypervisor_id}'])
-            if REGISTER == 'rhsm':
-                assert rhsm.consumers(hypervisor_data['hypervisor_hostname'])
-                rhsm.delete(hypervisor_data['hypervisor_hostname'])
-            else:
-                if hypervisor_id == 'hostname':
-                    assert satellite.host_id(hypervisor_data['hypervisor_hostname'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
-                elif hypervisor_id == 'uuid':
-                    assert satellite.host_id(hypervisor_data['hypervisor_uuid'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
-                else:
-                    assert satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
