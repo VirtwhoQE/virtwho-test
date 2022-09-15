@@ -9,8 +9,8 @@ import pytest
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
 from virtwho import HYPERVISOR
-from virtwho import DEFAULT_HYPERVISOR_FILE
-from virtwho import SECTION_NAME
+from virtwho import SECOND_HYPERVISOR_FILE
+from virtwho import SECOND_HYPERVISOR_SECTION
 
 from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
@@ -143,7 +143,7 @@ class TestEsxNegative:
                 and assertion['disable'] in result['error_msg'])
 
         # type option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
+        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -202,7 +202,7 @@ class TestEsxNegative:
                 and assertion['disable'] in result['error_msg'])
 
         # server option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
+        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -260,7 +260,7 @@ class TestEsxNegative:
                 and assertion['disable'] in result['error_msg'])
 
         # username option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
+        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -318,7 +318,7 @@ class TestEsxNegative:
                 and assertion['disable'] in result['error_msg'])
 
         # password option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
+        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1
@@ -366,7 +366,7 @@ class TestEsxNegative:
                     and assertion['invalid'][f'{value}'] in result['warning_msg'])
 
         # encrypted_password option is valid but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, DEFAULT_HYPERVISOR_FILE, SECTION_NAME)
+        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 1

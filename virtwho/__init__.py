@@ -9,9 +9,9 @@ HYPERVISOR = config.job.hypervisor
 
 HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}.conf'
 
-DEFAULT_HYPERVISOR_FILE = '/etc/virt-who.d/virtwho-config.conf'
+SECOND_HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}-second.conf'
 
-SECTION_NAME = 'virtwho-config'
+SECOND_HYPERVISOR_SECTION = f'virtwho-{HYPERVISOR}-second'
 
 REGISTER = config.job.register
 
