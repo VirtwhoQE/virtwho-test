@@ -93,6 +93,95 @@ class TestEsxPositive:
                     assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
                     assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
 
+    @pytest.mark.tier1
+    def test_filter_and_exclude_hosts(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the filter_hosts= and exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test filter_hosts and exclude_hosts function
+        :id: 3c4f3f42-a10c-4205-baa9-7464e3f6870a
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+        """
+        host_uuid = hypervisor_data['hypervisor_uuid']
+        host_string = f'"hypervisorId": "{host_uuid}"'
+        function_hypervisor.update('hypervisor_id', 'uuid')
+
+        # run virt-who with filter_hosts option
+        function_hypervisor.update('filter_hosts', host_uuid)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string in result['log'])
+
+        function_hypervisor.update('filter_hosts', '*')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string in result['log'])
+
+        function_hypervisor.update('filter_hosts', '')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string not in result['log'])
+
+        function_hypervisor.delete('filter_hosts')
+
+        # run virt-who with exclude_hosts option
+        function_hypervisor.update('exclude_hosts', host_uuid)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string not in result['log'])
+
+        function_hypervisor.update('exclude_hosts', '*')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string not in result['log'])
+
+        function_hypervisor.update('exclude_hosts', '')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string in result['log'])
+
+        # run virt-who with filter_hosts=[host_uuid] and exclude_hosts=[host_uuid]
+        function_hypervisor.update('filter_hosts', host_uuid)
+        function_hypervisor.update('exclude_hosts', host_uuid)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string not in result['log'])
+
+        # run virt-who with filter_hosts=* and exclude_hosts=[host_uuid]
+        function_hypervisor.update('filter_hosts', '*')
+        function_hypervisor.update('exclude_hosts', host_uuid)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string not in result['log'])
+
+        # run virt-who with exclude_hosts= and filter_hosts=[host_uuid]
+        function_hypervisor.update('filter_hosts', host_uuid)
+        function_hypervisor.update('exclude_hosts', '')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_string in result['log'])
+
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('debug_true')
