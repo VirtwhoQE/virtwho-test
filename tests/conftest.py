@@ -3,10 +3,10 @@ import pytest
 from virtwho.settings import config
 from virtwho.runner import VirtwhoRunner
 from virtwho.configure import VirtwhoSysConfig
-from virtwho.configure import VirtwhoHypervisorConfig
 from virtwho.configure import VirtwhoGlobalConfig
 from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
+from virtwho.configure import hypervisor_create
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
 from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, FailException, logger
@@ -19,15 +19,13 @@ register_handler = get_register_handler(REGISTER)
 @pytest.fixture(scope='class')
 def hypervisor():
     """Instantication of class VirtwhoHypervisorConfig()"""
-    VirtwhoHypervisorConfig(HYPERVISOR, REGISTER).create(rhsm=True)
-    return VirtwhoHypervisorConfig(HYPERVISOR, REGISTER)
+    return hypervisor_create(HYPERVISOR, REGISTER)
 
 
 @pytest.fixture(scope='function')
-def function_hypervisor(config_name=None):
+def function_hypervisor():
     """Create virt-who hypervisor test file with all rhsm options"""
-    VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, config_name).create()
-    return VirtwhoHypervisorConfig(HYPERVISOR, REGISTER, config_name)
+    return hypervisor_create(HYPERVISOR, REGISTER)
 
 
 @pytest.fixture(scope='session')
@@ -198,6 +196,8 @@ def hypervisor_data(ssh_guest):
         data['cpu'] = hypervisor_handler.cpu
     if HYPERVISOR == 'ahv':
         data['cluster'] = hypervisor_handler.cluster
+    if HYPERVISOR is not 'kubevirt':
+        data['hypervisor_password'] = hypervisor_handler.password
     return data
 
 

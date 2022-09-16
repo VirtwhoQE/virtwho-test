@@ -48,6 +48,13 @@ def esx_assertion():
             'disable': 'Required option: "password" not set',
             'disable_multi_configs': 'Required option: "password" not set',
             'null_multi_configs': login_error,
+        },
+        'encrypted_password': {
+            'invalid': {
+                'xxx': 'Option "encrypted_password" cannot be decrypted',
+                '': 'Option "encrypted_password" cannot be decrypted',
+            },
+            'valid_multi_configs': 'Option "encrypted_password" cannot be decrypted'
         }
 
     }

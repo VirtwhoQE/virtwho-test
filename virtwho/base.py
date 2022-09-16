@@ -438,3 +438,24 @@ def random_string(num=8):
         random.sample(string.ascii_letters + string.digits, num)
     )
     return random_str
+
+
+def encrypt_password(ssh, password):
+    """
+    Encrypt password by virt-who-password command
+    :param ssh: ssh access of testing host
+    :param password: the password would like to Encrypt
+    :return: the encrypted password
+    """
+    cmd = f'virt-who-password -p {password} > /tmp/vw.log'
+    ret, output = ssh.runcmd(cmd)
+    if ret == 0:
+        ret, output = ssh.runcmd("cat /tmp/vw.log")
+        if output is not None and output != '':
+            encrypted_value = output.strip()
+            logger.info(f'Succeeded to get encrypted_password : {encrypted_value}')
+            return encrypted_value
+        else:
+            raise FailException("Failed to run virt-who-password")
+    else:
+        raise FailException("Failed to run virt-who-password")
