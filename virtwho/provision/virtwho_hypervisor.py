@@ -96,20 +96,24 @@ def esx_monitor(args):
                     logger.info(
                         f'The rhel guest({guest_name}) is running well.')
                 if guest_state == 2:
-                    logger.info(f'The rhel guest({guest_name}) is paused, '
-                                f'will resume it.')
+                    # logger.info(f'The rhel guest({guest_name}) is paused, '
+                    #             f'will resume it.')
                     # Skip to resume guest to avoid impacting the testing
                     # ret = esx.guest_resume(guest_name)
                     # if not ret:
                     #     esx_state, guest_ip = (state_guest_bad, guest_paused)
+                    logger.warning(f'The rhel guest({guest_name}) is paused, '
+                                   f'please resume it.')
                     esx_state, guest_ip = (state_guest_bad, guest_paused)
                 if guest_state == 0:
-                    logger.info(f'The rhel guest({guest_name}) was power off, '
-                                f'will start it.')
+                    # logger.info(f'The rhel guest({guest_name}) was power off, '
+                    #             f'will start it.')
                     # Skip to start guest to avoid impacting the testing
                     # ret = esx.guest_start(guest_name)
                     # if not ret:
                     #     esx_state, guest_ip = (state_guest_bad, guest_off)
+                    logger.warning(f'The rhel guest({guest_name}) was power off, '
+                                   f'please start it.')
                     esx_state, guest_ip = (state_guest_bad, guest_off)
 
                 logger.info(f'>>>vCenter: Get all the necessary data.')
@@ -198,19 +202,25 @@ def hyperv_monitor(args):
                     logger.info(
                         f'The rhel guest({guest_name}) is running well.')
                 if guest_state == 9:
-                    logger.info(f'The rhel guest({guest_name}) is paused, '
-                                f'will resume it.')
-                    ret = hyperv.guest_resume(guest_name)
-                    if not ret:
-                        hyperv_state, guest_ip = (
-                            state_guest_bad, guest_paused
-                        )
+                    # logger.info(f'The rhel guest({guest_name}) is paused, '
+                    #             f'will resume it.')
+                    # ret = hyperv.guest_resume(guest_name)
+                    # if not ret:
+                    #     hyperv_state, guest_ip = (
+                    #         state_guest_bad, guest_paused
+                    #     )
+                    logger.warning(f'The rhel guest({guest_name}) is paused, '
+                                   f'please resume it.')
+                    hyperv_state, guest_ip = (state_guest_bad, guest_paused)
                 if guest_state == 3:
-                    logger.info(f'The rhel guest({guest_name}) was power off, '
-                                f'will start it.')
-                    ret = hyperv.guest_start(guest_name)
-                    if not ret:
-                        hyperv_state, guest_ip = (state_guest_bad, guest_off)
+                    # logger.info(f'The rhel guest({guest_name}) was power off, '
+                    #             f'will start it.')
+                    # ret = hyperv.guest_start(guest_name)
+                    # if not ret:
+                    #     hyperv_state, guest_ip = (state_guest_bad, guest_off)
+                    logger.warning(f'The rhel guest({guest_name}) was power off, '
+                                   f'please start it.')
+                    hyperv_state, guest_ip = (state_guest_bad, guest_off)
 
                 logger.info(f'>>>Hyperv: Get the hypervisor data.')
                 hyperv_data = hyperv.guest_search(guest_name, uuid_info=True)
@@ -309,17 +319,23 @@ def libvirt_monitor(args):
                     logger.info(
                         f'The rhel guest({guest_name}) is running well.')
                 if guest_state == 'paused':
-                    logger.info(f'The rhel guest({guest_name}) is paused, '
-                                f'will resume it.')
-                    ret = libvirt.guest_resume(guest_name)
-                    if ret is False:
-                        libvirt_state, guest_ip = (state_guest_bad, guest_paused)
+                    # logger.info(f'The rhel guest({guest_name}) is paused, '
+                    #             f'will resume it.')
+                    # ret = libvirt.guest_resume(guest_name)
+                    # if ret is False:
+                    #     libvirt_state, guest_ip = (state_guest_bad, guest_paused)
+                    logger.warning(f'The rhel guest({guest_name}) is paused, '
+                                   f'please resume it.')
+                    libvirt_state, guest_ip = (state_guest_bad, guest_paused)
                 if guest_state in ['shut off', 'false']:
-                    logger.info(f'The rhel guest({guest_name}) was down, '
-                                f'will start it.')
-                    ret = libvirt.guest_start(guest_name)
-                    if ret is False:
-                        libvirt_state, guest_ip = (state_guest_bad, guest_off)
+                    # logger.info(f'The rhel guest({guest_name}) was down, '
+                    #             f'will start it.')
+                    # ret = libvirt.guest_start(guest_name)
+                    # if ret is False:
+                    #     libvirt_state, guest_ip = (state_guest_bad, guest_off)
+                    logger.warning(f'The rhel guest({guest_name}) was down, '
+                                   f'please start it.')
+                    libvirt_state, guest_ip = (state_guest_bad, guest_off)
 
                 logger.info(f'>>>Libvirt: Get the libvirt env data.')
                 libvirt_data = libvirt.guest_search(guest_name)
