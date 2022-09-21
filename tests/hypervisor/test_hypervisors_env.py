@@ -11,34 +11,34 @@ class TestHypervisorsEnvironment:
     def test_esx(self):
         """
         """
-        assert config.hypervisors_status.esx == 'GOOD'
+        assert config.hypervisors_state.esx == 'GOOD'
 
     def test_hyperv(self):
         """
         """
-        assert config.hypervisors_status.hyperv == 'GOOD'
+        assert config.hypervisors_state.hyperv == 'GOOD'
 
     def test_kubevirt(self):
         """
         """
-        assert config.hypervisors_status.kubevirt == 'GOOD'
+        assert config.hypervisors_state.kubevirt == 'GOOD'
 
     def test_ahv(self):
         """
         """
-        assert config.hypervisors_status.ahv == 'GOOD'
+        assert config.hypervisors_state.ahv == 'GOOD'
 
     def test_libvirt(self):
         """
         """
-        assert config.hypervisors_status.libvirt == 'GOOD'
+        assert config.hypervisors_state.libvirt == 'GOOD'
 
     def test_rhevm(self):
         """
         """
-        assert config.hypervisors_status.rhevm == 'GOOD'
+        assert config.hypervisors_state.rhevm == 'GOOD'
 
     def test_xen(self):
         """
         """
-        assert config.hypervisors_status.xen == 'GOOD'
+        assert config.hypervisors_state.xen == 'GOOD'
