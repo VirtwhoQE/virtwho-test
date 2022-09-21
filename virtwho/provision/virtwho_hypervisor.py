@@ -98,15 +98,19 @@ def esx_monitor(args):
                 if guest_state == 2:
                     logger.info(f'The rhel guest({guest_name}) is paused, '
                                 f'will resume it.')
-                    ret = esx.guest_resume(guest_name)
-                    if not ret:
-                        esx_state, guest_ip = (state_guest_bad, guest_paused)
+                    # Skip to resume guest to avoid impacting the testing
+                    # ret = esx.guest_resume(guest_name)
+                    # if not ret:
+                    #     esx_state, guest_ip = (state_guest_bad, guest_paused)
+                    esx_state, guest_ip = (state_guest_bad, guest_paused)
                 if guest_state == 0:
                     logger.info(f'The rhel guest({guest_name}) was power off, '
                                 f'will start it.')
-                    ret = esx.guest_start(guest_name)
-                    if not ret:
-                        esx_state, guest_ip = (state_guest_bad, guest_off)
+                    # Skip to start guest to avoid impacting the testing
+                    # ret = esx.guest_start(guest_name)
+                    # if not ret:
+                    #     esx_state, guest_ip = (state_guest_bad, guest_off)
+                    esx_state, guest_ip = (state_guest_bad, guest_off)
 
                 logger.info(f'>>>vCenter: Get all the necessary data.')
                 esx_data = esx.guest_search(guest_name, uuid_info=True)
@@ -141,6 +145,9 @@ def esx_monitor(args):
                     logger.info(f'The vCenter {key} changed.')
                     esx_dict[key] = f'{value[1]} (Updated)'
                     esx_state = state_update
+        else:
+            esx_state = state_guest_bad
+        logger.info(f'vCenter: the test result is ({esx_state})')
         args.section, args.option, args.value = (
             state_section_name, 'esx', esx_state
         )
@@ -156,7 +163,7 @@ def hyperv_monitor(args):
     the rhel guest state testing. At last it will update the test result
     to the virtwho.ini file.
     """
-    hyperv_state = state_good
+    hyperv_state = ''
     hyperv_data = {}
     server = config.hyperv.server
     guest_ip = config.hyperv.guest_ip
@@ -168,8 +175,7 @@ def hyperv_monitor(args):
     )
     try:
         logger.info(f'>>>Hyperv: Check if the hypervisor is running.')
-        hyperv_info = hyperv.info()
-        if 'Get Hyperv master' not in hyperv_info:
+        if not host_ping(host=server):
             hyperv_state, server, guest_ip = (
                 state_server_bad, server_broke, guest_none
             )
@@ -237,6 +243,9 @@ def hyperv_monitor(args):
                     logger.info(f'The hyperv({key}) changed.')
                     hyperv_dict[key] = f'{value[1]} (Updated)'
                     hyperv_state = state_update
+        else:
+            hyperv_state = state_guest_bad
+        logger.info(f'Hyperv: the test result is ({hyperv_state})')
         args.section, args.option, args.value = (
             state_section_name, 'hyperv', hyperv_state
         )
@@ -339,6 +348,9 @@ def libvirt_monitor(args):
                     logger.info(f'The libvirt {key} changed.')
                     libvirt_dict[key] = f'{value[1]} (Updated)'
                     libvirt_state = state_update
+        else:
+            libvirt_state = state_guest_bad
+        logger.info(f'Libvirt: the test result is ({libvirt_state})')
         args.section, args.option, args.value = (
             state_section_name, 'libvirt', libvirt_state
         )
