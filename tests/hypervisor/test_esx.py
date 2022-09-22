@@ -104,7 +104,27 @@ class TestEsxPositive:
         :customerscenario: false
         :upstream: no
         :steps:
+            1. Set hypervisor_id=host_uuid.
+            2. Configure filter_hosts=host_uuid, run the virt-who service.
+            3. Configure filter_hosts='*', run the virt-who service.
+            4. Configure filter_hosts='', run the virt-who service.
+            5. Delete filter_hosts, Configure exclude_hosts=host_uuid, run the virt-who service.
+            6. Configure exclude_hosts='*', run the virt-who service.
+            7. Configure exclude_hosts='', run the virt-who service.
+            8. run virt-who with filter_hosts=[host_uuid] and exclude_hosts=[host_uuid]
+            9. run virt-who with filter_hosts=* and exclude_hosts=[host_uuid]
+            10. run virt-who with exclude_hosts= and filter_hosts=[host_uuid]
 
+        :expectedresults:
+            2. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
+            3. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
+            4. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
+            5. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
+            6. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
+            7. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
+            8. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
+            9. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
+            10. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
 
         """
         host_uuid = hypervisor_data['hypervisor_uuid']
@@ -175,12 +195,24 @@ class TestEsxPositive:
         """Test the filter_hosts= and exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: esx: test filter_hosts and exclude_hosts function
-        :id:
+        :id: fb5e45d1-9a0c-4dbe-82a1-5680bbcb702c
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
         :upstream: no
         :steps:
+            1. Set hypervisor_id=hostname.
+            2. Configure filter_hosts=hostname, run the virt-who service.
+            3. Configure filter_hosts='*', run the virt-who service.
+            4. Configure filter_hosts=wildcard, run the virt-who service.
+            5. Configure filter_hosts='*' and exclude_hosts=wildcard
+            5. set the hypervisor_id=uuid and hwuuid, run the above steps
+
+        :expectedresults:
+            2. Succeeded to run the virt-who, can find hostname in the log message
+            3. Succeeded to run the virt-who, can find hostname in the log message
+            4. Succeeded to run the virt-who, can find hostname the log message
+            5. The same as above
 
         """
         hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
@@ -194,7 +226,7 @@ class TestEsxPositive:
                 assert (result['error'] == 0
                         and result['send'] == 1
                         and result['thread'] == 1
-                        and hypervisor_id in result['log'])
+                        and hypervisor_data[f'hypervisor_{hypervisor_id}'] in result['log'])
                 function_hypervisor.delete('filter_hosts')
 
             function_hypervisor.update('filter_hosts', '*')
@@ -203,7 +235,7 @@ class TestEsxPositive:
             assert (result['error'] == 0
                     and result['send'] == 1
                     and result['thread'] == 1
-                    and hypervisor_id in result['log'])
+                    and hypervisor_data[f'hypervisor_{hypervisor_id}'] in result['log'])
             function_hypervisor.delete('exclude_hosts')
 
             function_hypervisor.delete('hypervisor_id')
@@ -490,49 +522,67 @@ class TestEsxNegative:
 
     @pytest.mark.tier2
     def test_filter_and_exclude_hosts(self, virtwho, function_hypervisor, hypervisor_data):
-        """Test the filter_hosts= and exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
+        """Test the negative filter_hosts= and exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
 
-        :title: virt-who: esx: test filter_hosts and exclude_hosts function
-        :id: 3c4f3f42-a10c-4205-baa9-7464e3f6870a
+        :title: virt-who: esx: test filter_hosts and exclude_hosts function for negative cases
+        :id: 98ac729e-ddf4-4ab2-936e-50d66a6a7260
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
+            1. Set hypervisor_id=host_uuid.
+            2. Configure filter_hosts='', run the virt-who service.
+            3. Configure filter_hosts="", run the virt-who service.
+            4. Configure filter_hosts='{host_uuid}', run the virt-who service.
+            5. Configure filter_hosts="{host_uuid}, run the virt-who service.
+            6. Delete filter_hosts, configure exclude_hosts='', run the virt-who service.
+            7. Configure exclude_hosts="", run the virt-who service.
+            8. Configure exclude_hosts='{host_uuid}', run the virt-who service.
+            9. Configure exclude_hosts="{host_uuid}, run the virt-who service.
 
+        :expectedresults:
+            2. Succeeded to run the virt-who, cannot find host_uuid in the log message
+            3. Succeeded to run the virt-who, cannot find host_uuid in the log message
+            4. Succeeded to run the virt-who, can find host_uuid in the log message
+            5. Succeeded to run the virt-who, can find host_uuid in the log message
+            6. Succeeded to run the virt-who, can find host_uuid in the log message
+            7. Succeeded to run the virt-who, can find host_uuid in the log message
+            8. Succeeded to run the virt-who, cannot find host_uuid in the log message
+            9. Succeeded to run the virt-who, cannot find host_uuid in the log message
 
         """
         host_uuid = hypervisor_data['hypervisor_uuid']
         function_hypervisor.update('hypervisor_id', 'uuid')
 
         # run virt-who with filter_hosts option
-        for filter_hosts in [r"''", r'\"\"', f"'{host_uuid}'", f'\\"{host_uuid}\\"']:
+        for filter_hosts in ["''", '""', f"'{host_uuid}'", f'"{host_uuid}"']:
             function_hypervisor.update('filter_hosts', filter_hosts)
             result = virtwho.run_service()
-            if filter_hosts == r"''" or r'\"\"':
+            if filter_hosts in ["''", '""']:
                 assert (result['error'] == 0
                         and result['send'] == 1
                         and result['thread'] == 1
-                        and host_uuid not in result['log'])
+                        and host_uuid not in str(result['mappings']))
             else:
                 assert (result['error'] == 0
                         and result['send'] == 1
                         and result['thread'] == 1
-                        and host_uuid in result['log'])
+                        and host_uuid in str(result['mappings']))
 
         function_hypervisor.delete('filter_hosts')
 
         # run virt-who with exclude_hosts option
-        for exclude_hosts in [r"''", r'\"\"', f"'{host_uuid}'", f'\\"{host_uuid}\\"']:
+        for exclude_hosts in ["''", '""', f"'{host_uuid}'", f'"{host_uuid}"']:
             function_hypervisor.update('exclude_hosts', exclude_hosts)
             result = virtwho.run_service()
-            if exclude_hosts == r"''" or r'\"\"':
+            if exclude_hosts in ["''", '""']:
                 assert (result['error'] == 0
                         and result['send'] == 1
                         and result['thread'] == 1
-                        and host_uuid in result['log'])
+                        and host_uuid in str(result['mappings']))
             else:
                 assert (result['error'] == 0
                         and result['send'] == 1
                         and result['thread'] == 1
-                        and host_uuid not in result['log'])
+                        and host_uuid not in str(result['mappings']))
