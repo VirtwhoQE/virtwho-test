@@ -167,7 +167,7 @@ def hyperv_monitor(args):
     the rhel guest state testing. At last it will update the test result
     to the virtwho.ini file.
     """
-    hyperv_state = ''
+    hyperv_state = state_good
     hyperv_data = {}
     server = config.hyperv.server
     guest_ip = config.hyperv.guest_ip
@@ -197,7 +197,7 @@ def hyperv_monitor(args):
                              f'please install one.')
             else:
                 logger.info(f'>>>Hyperv: Check the rhel guest state.')
-                guest_state = hyperv.guest_search(guest_name)['guest_state']
+                guest_state = hyperv.guest_info(guest_name)['guest_state']
                 if guest_state == 2:
                     logger.info(
                         f'The rhel guest({guest_name}) is running well.')
@@ -222,10 +222,12 @@ def hyperv_monitor(args):
                                    f'please start it.')
                     hyperv_state, guest_ip = (state_guest_bad, guest_off)
 
-                logger.info(f'>>>Hyperv: Get the hypervisor data.')
-                hyperv_data = hyperv.guest_search(guest_name, uuid_info=True)
-                logger.info(
-                    f'=== Succeeded to get the hyperv data\n{hyperv_data}\n===')
+        logger.info(f'>>>Hyperv: Get the hypervisor data.')
+        guest_data = hyperv.guest_info(guest_name, uuid_info=True)
+        host_data = hyperv.host_info()
+        hyperv_data = dict(guest_data, **host_data)
+        logger.info(
+            f'=== Succeeded to get the hyperv data\n{hyperv_data}\n===')
 
     finally:
         logger.info(f'>>>Hyperv: Compare and update the data in virtwho.ini.')
@@ -237,10 +239,10 @@ def hyperv_monitor(args):
             compare_dict = {
                 'uuid': [config.hyperv.uuid,
                          hyperv_data['hyperv_uuid']],
-                'hostname': [config.libvirt.hostname,
+                'hostname': [config.hyperv.hostname,
                              hyperv_data['hyperv_hostname']],
-                'version': [config.hyperv.version,
-                            hyperv_data['hyperv_version']],
+                # 'version': [config.hyperv.version,
+                #             hyperv_data['hyperv_version']],
                 'cpu': [config.hyperv.cpu,
                         hyperv_data['hyperv_cpu']],
                 'guest_ip': [guest_ip,
