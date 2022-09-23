@@ -11,7 +11,8 @@ from virtwho import logger, FailException
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get, ipaddr_get, host_ping
-from utils.properties_update import virtwho_ini_props_update
+from utils.properties_update import virtwho_ini_update
+# from utils.properties_update import virtwho_ini_props_update
 from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 from hypervisor.virt.esx.powercli import PowerCLI
 from hypervisor.virt.hyperv.hypervcli import HypervCLI
@@ -24,7 +25,6 @@ server_broke = 'Broke'
 guest_none = 'None'
 guest_paused = 'Paused'
 guest_off = 'Off'
-state_section_name = 'hypervisors_state'
 
 
 def esx_monitor(args):
@@ -152,13 +152,9 @@ def esx_monitor(args):
         else:
             esx_state = state_guest_bad
         logger.info(f'vCenter: the test result is ({esx_state})')
-        args.section, args.option, args.value = (
-            state_section_name, 'esx', esx_state
-        )
-        virtwho_ini_props_update(args)
-        for (args.option, args.value) in esx_dict.items():
-            args.section = 'esx'
-            virtwho_ini_props_update(args)
+        virtwho_ini_update('esx', 'state', esx_state)
+        for (option, value) in esx_dict.items():
+            virtwho_ini_update('esx', option, value)
 
 
 def hyperv_monitor(args):
@@ -258,13 +254,9 @@ def hyperv_monitor(args):
         else:
             hyperv_state = state_guest_bad
         logger.info(f'Hyperv: the test result is ({hyperv_state})')
-        args.section, args.option, args.value = (
-            state_section_name, 'hyperv', hyperv_state
-        )
-        virtwho_ini_props_update(args)
-        for (args.option, args.value) in hyperv_dict.items():
-            args.section = 'hyperv'
-            virtwho_ini_props_update(args)
+        virtwho_ini_update('hyperv', 'state', hyperv_state)
+        for (option, value) in hyperv_dict.items():
+            virtwho_ini_update('hyperv', option, value)
 
 
 def kubevirt_monitor(args):
@@ -369,13 +361,9 @@ def libvirt_monitor(args):
         else:
             libvirt_state = state_guest_bad
         logger.info(f'Libvirt: the test result is ({libvirt_state})')
-        args.section, args.option, args.value = (
-            state_section_name, 'libvirt', libvirt_state
-        )
-        virtwho_ini_props_update(args)
-        for (args.option, args.value) in libvirt_dict.items():
-            args.section = 'libvirt'
-            virtwho_ini_props_update(args)
+        virtwho_ini_update('libvirt', 'state', libvirt_state)
+        for (option, value) in libvirt_dict.items():
+            virtwho_ini_update('libvirt', option, value)
 
 
 def rhevm_monitor(args):
@@ -441,3 +429,9 @@ if __name__ == "__main__":
         rhevm_monitor(args)
     if args.command == 'xen':
         xen_monitor(args)
+
+
+def hypervisor_state(mode):
+    os.system(
+        f'python {curPath}/virtwho_hypervisor.py {mode}'
+    )
