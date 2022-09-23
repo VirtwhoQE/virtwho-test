@@ -43,7 +43,9 @@ def ipaddr_get(ssh):
                              "awk '/src/ { print $7 }'")
     if ret == 0 and output:
         return output.strip()
-    raise FailException(f'Failed to get ip address.')
+    else:
+        logger.error(f'Failed to get ip address.')
+        return None
 
 
 def hostname_get(ssh):
@@ -54,7 +56,9 @@ def hostname_get(ssh):
     ret, output = ssh.runcmd('hostname')
     if ret == 0 and output:
         return output.strip()
-    raise FailException('Failed to get hostname.')
+    else:
+        logger.error('Failed to get hostname.')
+        return None
 
 
 def hostname_set(ssh, hostname):

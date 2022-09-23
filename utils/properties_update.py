@@ -45,3 +45,16 @@ def arguments_parser():
 if __name__ == "__main__":
     args = arguments_parser()
     virtwho_ini_props_update(args)
+
+
+def virtwho_ini_update(section, option, value):
+    """
+    Update the property of virtwho.ini for testing/using
+    Used to called by other functions
+    """
+    os.system(
+        f'python {curPath}/properties_update.py '
+        f'--section={section} '
+        f'--option={option} '
+        f'--value="{value}"'
+    )
