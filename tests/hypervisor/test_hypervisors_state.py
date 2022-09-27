@@ -5,38 +5,40 @@
 :caseautomation: Automated
 """
 
-from virtwho.settings import config
-from virtwho.provision.virtwho_hypervisor import hypervisor_state
+from virtwho.provision.virtwho_hypervisor import hyperv_monitor
+from virtwho.provision.virtwho_hypervisor import esx_monitor
+from virtwho.provision.virtwho_hypervisor import kubevirt_monitor
+from virtwho.provision.virtwho_hypervisor import libvirt_monitor
+from virtwho.provision.virtwho_hypervisor import ahv_monitor
+from virtwho.provision.virtwho_hypervisor import rhevm_monitor
+from virtwho.provision.virtwho_hypervisor import xen_monitor
 
 
 class TestHypervisorsState:
     def test_state_esx(self):
         """Test the esx state"""
-        hypervisor_state(mode='esx')
-        assert config.esx.state == 'GOOD'
+        assert esx_monitor() == 'GOOD'
 
     def test_state_hyperv(self):
         """Test the hyperv state"""
-        hypervisor_state(mode='hyperv')
-        assert config.hyperv.state == 'GOOD'
+        assert hyperv_monitor() == 'GOOD'
 
     def test_state_kubevirt(self):
         """Test the kubevirt state"""
-        assert config.kubevirt.state == 'GOOD'
+        assert kubevirt_monitor() == 'GOOD'
 
     def test_state_ahv(self):
         """Test the ahv state"""
-        assert config.ahv.state == 'GOOD'
+        assert ahv_monitor() == 'GOOD'
 
     def test_state_libvirt(self):
         """Test the libvirt state"""
-        hypervisor_state(mode='libvirt')
-        assert config.libvirt.state == 'GOOD'
+        assert libvirt_monitor() == 'GOOD'
 
     def test_state_rhevm(self):
         """Test the rhevm state"""
-        assert config.rhevm.state == 'GOOD'
+        assert rhevm_monitor() == 'GOOD'
 
     def test_state_xen(self):
         """Test the xen state"""
-        assert config.xen.state == 'GOOD'
+        assert xen_monitor() == 'GOOD'

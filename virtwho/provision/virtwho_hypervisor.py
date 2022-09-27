@@ -7,12 +7,11 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
-from virtwho import logger, FailException
+from virtwho import logger
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get, ipaddr_get, host_ping
 from utils.properties_update import virtwho_ini_update
-# from utils.properties_update import virtwho_ini_props_update
 from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 from hypervisor.virt.esx.powercli import PowerCLI
 from hypervisor.virt.hyperv.hypervcli import HypervCLI
@@ -27,7 +26,7 @@ guest_paused = 'Paused'
 guest_off = 'Off'
 
 
-def esx_monitor(args):
+def esx_monitor():
     """
     Check the vCenter state, including the vCenter server testing, the
     ESXi host testing and the rhel guest state testing. At last it will
@@ -96,22 +95,10 @@ def esx_monitor(args):
                     logger.info(
                         f'The rhel guest({guest_name}) is running well.')
                 if guest_state == 2:
-                    # logger.info(f'The rhel guest({guest_name}) is paused, '
-                    #             f'will resume it.')
-                    # Skip to resume guest to avoid impacting the testing
-                    # ret = esx.guest_resume(guest_name)
-                    # if not ret:
-                    #     esx_state, guest_ip = (state_guest_bad, guest_paused)
                     logger.warning(f'The rhel guest({guest_name}) is paused, '
                                    f'please resume it.')
                     esx_state, guest_ip = (state_guest_bad, guest_paused)
                 if guest_state == 0:
-                    # logger.info(f'The rhel guest({guest_name}) was power off, '
-                    #             f'will start it.')
-                    # Skip to start guest to avoid impacting the testing
-                    # ret = esx.guest_start(guest_name)
-                    # if not ret:
-                    #     esx_state, guest_ip = (state_guest_bad, guest_off)
                     logger.warning(f'The rhel guest({guest_name}) was power off, '
                                    f'please start it.')
                     esx_state, guest_ip = (state_guest_bad, guest_off)
@@ -151,13 +138,15 @@ def esx_monitor(args):
                     esx_state = state_update
         else:
             esx_state = state_guest_bad
+
         logger.info(f'vCenter: the test result is ({esx_state})')
         virtwho_ini_update('esx', 'state', esx_state)
         for (option, value) in esx_dict.items():
             virtwho_ini_update('esx', option, value)
+        return esx_state
 
 
-def hyperv_monitor(args):
+def hyperv_monitor():
     """
     Check the Hyperv state, including the Hyperv server testing and the
     the rhel guest state testing. At last it will update the test result
@@ -198,30 +187,16 @@ def hyperv_monitor(args):
                     logger.info(
                         f'The rhel guest({guest_name}) is running well.')
                 if guest_state == 9:
-                    # logger.info(f'The rhel guest({guest_name}) is paused, '
-                    #             f'will resume it.')
-                    # ret = hyperv.guest_resume(guest_name)
-                    # if not ret:
-                    #     hyperv_state, guest_ip = (
-                    #         state_guest_bad, guest_paused
-                    #     )
                     logger.warning(f'The rhel guest({guest_name}) is paused, '
                                    f'please resume it.')
                     hyperv_state, guest_ip = (state_guest_bad, guest_paused)
                 if guest_state == 3:
-                    # logger.info(f'The rhel guest({guest_name}) was power off, '
-                    #             f'will start it.')
-                    # ret = hyperv.guest_start(guest_name)
-                    # if not ret:
-                    #     hyperv_state, guest_ip = (state_guest_bad, guest_off)
                     logger.warning(f'The rhel guest({guest_name}) was power off, '
                                    f'please start it.')
                     hyperv_state, guest_ip = (state_guest_bad, guest_off)
 
         logger.info(f'>>>Hyperv: Get the hypervisor data.')
-        guest_data = hyperv.guest_info(guest_name, uuid_info=True)
-        host_data = hyperv.host_info()
-        hyperv_data = dict(guest_data, **host_data)
+        hyperv_data = hyperv.guest_search(guest_name)
         logger.info(
             f'=== Succeeded to get the hyperv data\n{hyperv_data}\n===')
 
@@ -253,21 +228,23 @@ def hyperv_monitor(args):
                     hyperv_state = state_update
         else:
             hyperv_state = state_guest_bad
+
         logger.info(f'Hyperv: the test result is ({hyperv_state})')
         virtwho_ini_update('hyperv', 'state', hyperv_state)
         for (option, value) in hyperv_dict.items():
             virtwho_ini_update('hyperv', option, value)
+        return hyperv_state
 
 
-def kubevirt_monitor(args):
-    pass
+def kubevirt_monitor():
+    return 'SKIP'
 
 
-def ahv_monitor(args):
-    pass
+def ahv_monitor():
+    return 'SKIP'
 
 
-def libvirt_monitor(args):
+def libvirt_monitor():
     """
     Check the Libvirt state, including the Libvirt server testing and the
     the rhel guest state testing. At last it will update the test result
@@ -313,20 +290,10 @@ def libvirt_monitor(args):
                     logger.info(
                         f'The rhel guest({guest_name}) is running well.')
                 if guest_state == 'paused':
-                    # logger.info(f'The rhel guest({guest_name}) is paused, '
-                    #             f'will resume it.')
-                    # ret = libvirt.guest_resume(guest_name)
-                    # if ret is False:
-                    #     libvirt_state, guest_ip = (state_guest_bad, guest_paused)
                     logger.warning(f'The rhel guest({guest_name}) is paused, '
                                    f'please resume it.')
                     libvirt_state, guest_ip = (state_guest_bad, guest_paused)
                 if guest_state in ['shut off', 'false']:
-                    # logger.info(f'The rhel guest({guest_name}) was down, '
-                    #             f'will start it.')
-                    # ret = libvirt.guest_start(guest_name)
-                    # if ret is False:
-                    #     libvirt_state, guest_ip = (state_guest_bad, guest_off)
                     logger.warning(f'The rhel guest({guest_name}) was down, '
                                    f'please start it.')
                     libvirt_state, guest_ip = (state_guest_bad, guest_off)
@@ -360,18 +327,20 @@ def libvirt_monitor(args):
                     libvirt_state = state_update
         else:
             libvirt_state = state_guest_bad
+
         logger.info(f'Libvirt: the test result is ({libvirt_state})')
         virtwho_ini_update('libvirt', 'state', libvirt_state)
         for (option, value) in libvirt_dict.items():
             virtwho_ini_update('libvirt', option, value)
+        return libvirt_state
 
 
-def rhevm_monitor(args):
-    pass
+def rhevm_monitor():
+    return 'SKIP'
 
 
-def xen_monitor(args):
-    pass
+def xen_monitor():
+    return 'SKIP'
 
 
 def arguments_parser():
@@ -416,22 +385,16 @@ def arguments_parser():
 if __name__ == "__main__":
     args = arguments_parser()
     if args.command == 'esx':
-        esx_monitor(args)
+        esx_monitor()
     if args.command == 'hyperv':
-        hyperv_monitor(args)
+        hyperv_monitor()
     if args.command == 'kubevirt':
-        kubevirt_monitor(args)
+        kubevirt_monitor()
     if args.command == 'ahv':
-        ahv_monitor(args)
+        ahv_monitor()
     if args.command == 'libvirt':
-        libvirt_monitor(args)
+        libvirt_monitor()
     if args.command == 'rhevm':
-        rhevm_monitor(args)
+        rhevm_monitor()
     if args.command == 'xen':
-        xen_monitor(args)
-
-
-def hypervisor_state(mode):
-    os.system(
-        f'python {curPath}/virtwho_hypervisor.py {mode}'
-    )
+        xen_monitor()
