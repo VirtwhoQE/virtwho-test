@@ -263,6 +263,38 @@ class TestEsxPositive:
                 and result['send'] == 1
                 and result['thread'] == 1)
 
+    def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the fake type in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test fake type
+        :id: 14d3af84-92c3-4335-8bff-8a96cf211c1d
+            1. Generate the json file by virt-who -p -d command
+            2. Create the virt-who config for the fake mode testing
+            3. Check the rhsm.log
+
+        :expectedresults:
+            1. Can find the json data in the specific path
+            2. Succeed to run the virt-who service, can find the host_uuid and guest_uuid in the
+            rhsm.log file
+        """
+        print_json_file = "/root/print.json"
+        host_uuid = hypervisor_data['hypervisor_uuid']
+        guest_uuid = hypervisor_data['guest_uuid']
+        virtwho.run_cli(prt=True, oneshot=False)
+        function_hypervisor.destroy()
+
+        fake_config = hypervisor_create('fake', REGISTER, rhsm=False)
+        fake_config.update('file', print_json_file)
+        fake_config.update('is_hypervisor', 'True')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and host_uuid in result['log']
+                and guest_uuid in result['log'])
+        # Todo: Need to add the test cases for host-guest association in mapping, web and the test
+        #  cases for the vdc pool's subscription.
+
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('debug_true')

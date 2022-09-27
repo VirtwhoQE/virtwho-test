@@ -268,7 +268,7 @@ class VirtwhoRunner:
         Clean the json file created by print function of virt-who
         """
         _, _ = self.ssh.runcmd("rm -rf /var/log/rhsm/*")
-        _, _ = self.ssh.runcmd(f"rm -rf {self.print_json_file}")
+        # _, _ = self.ssh.runcmd(f"rm -rf {self.print_json_file}")
 
     def error_warning(self, msg='error'):
         """
