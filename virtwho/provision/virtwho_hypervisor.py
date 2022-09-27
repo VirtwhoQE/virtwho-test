@@ -400,9 +400,3 @@ if __name__ == "__main__":
         rhevm_monitor()
     if args.command == 'xen':
         xen_monitor()
-
-
-# def hypervisor_state(mode):
-#     os.system(
-#         f'python {curPath}/virtwho_hypervisor.py {mode}'
-#     )
