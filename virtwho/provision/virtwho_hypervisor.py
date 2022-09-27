@@ -105,6 +105,8 @@ def esx_monitor():
         }
         if esx_data:
             compare_dict = {
+                'esx_ip': [config.esx.esx_ip,
+                           esx_data['esx_ip']],
                 'esx_uuid': [config.esx.esx_uuid,
                              esx_data['esx_uuid']],
                 'esx_hwuuid': [config.esx.esx_hwuuid,
@@ -127,8 +129,6 @@ def esx_monitor():
                     logger.info(f'The vCenter:({key}) changed.')
                     esx_dict[key] = f'{value[1]} (Updated)'
                     esx_state = state_update
-        else:
-            esx_state = state_guest_bad
 
         logger.info(f'>>>vCenter: the test result is ({esx_state})')
         virtwho_ini_update('esx', 'state', esx_state)
@@ -207,8 +207,6 @@ def hyperv_monitor():
                     logger.info(f'The hyperv({key}) changed.')
                     hyperv_dict[key] = f'{value[1]} (Updated)'
                     hyperv_state = state_update
-        else:
-            hyperv_state = state_guest_bad
 
         logger.info(f'Hyperv: the test result is ({hyperv_state})')
         virtwho_ini_update('hyperv', 'state', hyperv_state)
@@ -286,8 +284,6 @@ def kubevirt_monitor():
                     logger.info(f'The kubevirt({key}) changed.')
                     kubevirt_dict[key] = f'{value[1]} (Updated)'
                     kubevirt_state = state_update
-        else:
-            kubevirt_state = state_guest_bad
 
         logger.info(f'Kubevirt: the test result is ({kubevirt_state})')
         virtwho_ini_update('kubevirt', 'state', kubevirt_state)
@@ -368,8 +364,6 @@ def ahv_monitor():
                     logger.info(f'The Nutanix({key}) changed.')
                     ahv_dict[key] = f'{value[1]} (Updated)'
                     ahv_state = state_update
-        else:
-            ahv_state = state_guest_bad
 
         logger.info(f'Nutanix: the test result is ({ahv_state})')
         virtwho_ini_update('ahv', 'state', ahv_state)
@@ -450,8 +444,6 @@ def libvirt_monitor():
                     logger.info(f'The libvirt {key} changed.')
                     libvirt_dict[key] = f'{value[1]} (Updated)'
                     libvirt_state = state_update
-        else:
-            libvirt_state = state_guest_bad
 
         logger.info(f'Libvirt: the test result is ({libvirt_state})')
         virtwho_ini_update('libvirt', 'state', libvirt_state)
