@@ -2,7 +2,6 @@
 import os
 import sys
 import argparse
-import time
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
