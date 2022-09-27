@@ -196,7 +196,7 @@ def hyperv_monitor():
                     hyperv_state, guest_ip = (state_guest_bad, guest_off)
 
         logger.info(f'>>>Hyperv: Get the hypervisor data.')
-        hyperv_data = hyperv.guest_search(guest_name, )
+        hyperv_data = hyperv.guest_search(guest_name)
         logger.info(
             f'=== Succeeded to get the hyperv data\n{hyperv_data}\n===')
 
