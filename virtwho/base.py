@@ -127,12 +127,13 @@ def ssh_connect(ssh):
         logger.info(f'Suceeded to ssh connect the host')
 
 
-def host_ping(host):
+def host_ping(host, port=22):
     """
     Test if the host is available to ping successfully.
     :param host: host ip/fqdn
+    :param port: host port
     """
-    ret = os.system(f'ping -w 5 {host}')
+    ret = os.system(f'ping -w 5 {host} -p {port}')
     if ret == 0:
         return True
     return False
