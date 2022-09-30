@@ -304,7 +304,80 @@ def ahv_monitor():
     the rhel guest state testing. At last it will update the test result
     to the virtwho.ini file.
     """
-    return 'SKIP'
+    ahv_state = state_good
+    ahv_data = {}
+    server = config.ahv.server
+    guest_ip = config.ahv.guest_ip
+    guest_name = config.ahv.guest_name
+    ahv = AHVApi(
+        server=server,
+        username=config.ahv.username,
+        password=config.ahv.password
+    )
+
+    try:
+        logger.info(f'>>>Nutanix: Check if the hypervisor is running well.')
+        if not host_ping(host=server):
+            ahv_state, server, guest_ip = (
+                state_server_bad, server_broke, guest_none
+            )
+            logger.error(f'The Nutanix host has broken, please repaire it.')
+
+        else:
+            logger.info(f'>>>Nutanix: Get the hypervisor data.')
+            ahv_data = ahv.guest_search('rhel90_guest')
+            logger.info(
+                f'===Nutanix data:\n{ahv_data}\n===')
+
+            logger.info(f'>>>Nutanix: Check if the rhel guest is running well.')
+            if not ahv_data:
+                ahv_state, guest_ip = (state_guest_bad, guest_none)
+                logger.error(f'Did not find the rhel guest({guest_name}), '
+                             f'please install one.')
+            else:
+                if ahv_data['guest_state'] and host_ping(host=guest_ip):
+                    logger.info(f'The rhel guest{guest_name} is running well.')
+                else:
+                    ahv_state, guest_ip = (state_guest_bad, guest_down)
+                    logger.warning(f'The rhel guest({guest_name}) is down, '
+                                   f'please start it.')
+
+    finally:
+        logger.info(f'>>>Nutanix: Compare and update the data in virtwho.ini.')
+        ahv_dict = {
+            'server': server,
+            'guest_ip': guest_ip,
+        }
+        if ahv_data:
+            compare_dict = {
+                'uuid': [config.ahv.uuid,
+                         ahv_data['uuid']],
+                'hostname': [config.ahv.hostname,
+                             ahv_data['hostname']],
+                'version': [config.ahv.version,
+                            ahv_data['version']],
+                'cpu': [config.ahv.cpu,
+                        ahv_data['cpu']],
+                'cluster': [config.ahv.cluster,
+                            ahv_data['cluster']],
+                'guest_ip': [guest_ip,
+                             ahv_data['guest_ip']],
+                'guest_uuid': [config.ahv.guest_uuid,
+                               ahv_data['guest_uuid']]
+            }
+            for key, value in compare_dict.items():
+                if value[0] != value[1]:
+                    logger.info(f'The Nutanix({key}) changed.')
+                    ahv_dict[key] = f'{value[1]} (Updated)'
+                    ahv_state = state_update
+        else:
+            ahv_state = state_server_bad
+
+        logger.info(f'Nutanix: the test result is ({ahv_state})')
+        virtwho_ini_update('ahv', 'state', ahv_state)
+        for (option, value) in ahv_dict.items():
+            virtwho_ini_update('ahv', option, value)
+        return ahv_state
 
 
 def libvirt_monitor():
