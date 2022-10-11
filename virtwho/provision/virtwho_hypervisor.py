@@ -11,7 +11,7 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho import logger
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
-from virtwho.base import hostname_get, host_ping
+from virtwho.base import hostname_get, host_ping, ssh_connect
 from utils.properties_update import virtwho_ini_update
 from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 from hypervisor.virt.esx.powercli import PowerCLI
@@ -49,6 +49,11 @@ def esx_monitor():
         client_user=config.esx.ssh_username,
         client_passwd=config.esx.ssh_password
     )
+    ssh_esx = SSHConnect(
+        host=esx_ip,
+        user=config.esx.esx_username,
+        pwd=config.esx.esx_password,
+    )
     try:
         logger.info(f'>>>vCenter: Check if the vCenter server is running well.')
         ret1 = host_ping(host=server)
@@ -77,6 +82,7 @@ def esx_monitor():
         if ret1 and ret2 and ret3:
             logger.info(f'>>>vCenter: Get the Hypervisor data.')
             esx_data = esx.guest_search(guest_name, uuid_info=True)
+            esx_data['esx_hostname'] = hostname_get(ssh_esx)
             logger.info(
                 f'=== vCenter Data:\n{esx_data}\n===')
 
@@ -233,6 +239,12 @@ def kubevirt_monitor():
     endpoint = config.kubevirt.endpoint
     server = re.findall(r'https://(.+?):6443', endpoint)[0]
     kubevirt = KubevirtApi(endpoint, config.kubevirt.token)
+    ssh_guest = SSHConnect(
+        host=guest_ip,
+        user=config.kubevirt.guest_name,
+        pwd=config.kubevirt.guest_password,
+        port=guest_port
+    )
     try:
         logger.info(f'>>>Kubevirt: Check if the hypervisor is running.')
         if not host_ping(host=server):
@@ -255,7 +267,7 @@ def kubevirt_monitor():
                 logger.error(f'Did not find the rhel guest({guest_name}), '
                              f'please install one.')
             else:
-                if host_ping(guest_ip, guest_port):
+                if ssh_connect(ssh_guest):
                     logger.info(f'The rhel guest({guest_name}) is running well.')
                 else:
                     kubevirt_state, guest_ip = (state_guest_bad, guest_down)
