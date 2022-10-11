@@ -157,6 +157,36 @@ class TestEsxPositive:
                     and result['thread'] == 1
                     and hypervisor_id_data not in str(result['mappings']))
 
+    @pytest.mark.tier1
+    def test_simplified_vim(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the simplified_vim option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test simplified_vim option
+        :id: 4e0a0ab3-8426-4121-8bbd-2e39794043d8
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. run virt-who with simplified_vim=true
+            2. run virt-who with simplified_vim=false
+
+        :expectedresults:
+            1. Succeed to run the virt-who
+            2. Succeed to run the virt-who
+        """
+        function_hypervisor.update('simplified_vim', 'true')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        function_hypervisor.update('simplified_vim', 'false')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('debug_true')
