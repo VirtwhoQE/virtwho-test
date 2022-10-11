@@ -4,7 +4,7 @@ import queue
 import re
 import threading
 import time
-from virtwho import logger, FailException
+from virtwho import logger, FailException, PRINT_JSON_FILE
 from virtwho.configure import virtwho_ssh_connect, get_hypervisor_handler
 
 
@@ -24,7 +24,6 @@ class VirtwhoRunner:
         self.register_type = register_type
         self.config_file = f"/etc/virt-who.d/{self.mode}.conf"
         self.rhsm_log_file = "/var/log/rhsm/rhsm.log"
-        self.print_json_file = "/root/print.json"
         self.ssh = virtwho_ssh_connect(self.mode)
 
     def run_cli(self,
@@ -70,7 +69,7 @@ class VirtwhoRunner:
         if jsn:
             cmd += '-j '
         if prt:
-            cmd = f'{cmd} > {self.print_json_file}'
+            cmd = f'{cmd} > {PRINT_JSON_FILE}'
 
         if status:
             result_data = self.status(cmd)
@@ -268,7 +267,9 @@ class VirtwhoRunner:
         Clean the json file created by print function of virt-who
         """
         _, _ = self.ssh.runcmd("rm -rf /var/log/rhsm/*")
-        # _, _ = self.ssh.runcmd(f"rm -rf {self.print_json_file}")
+
+        # comment this line as we need the print json file for fake mode testing
+        # self.ssh.runcmd(f"rm -rf {PRINT_JSON_FILE}")
 
     def error_warning(self, msg='error'):
         """
@@ -495,7 +496,7 @@ class VirtwhoRunner:
         Get and return the json created by print function.
         :return: json output
         """
-        ret, output = self.ssh.runcmd(f"cat {self.print_json_file}")
+        ret, output = self.ssh.runcmd(f"cat {PRINT_JSON_FILE}")
         if ret == 0 and output != "":
             return output
         else:

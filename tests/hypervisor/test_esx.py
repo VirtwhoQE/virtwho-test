@@ -9,8 +9,10 @@ import pytest
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
 from virtwho import HYPERVISOR
+from virtwho import PRINT_JSON_FILE
 from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
+
 
 from virtwho.base import encrypt_password
 from virtwho.base import get_host_domain_id
@@ -277,14 +279,13 @@ class TestEsxPositive:
             2. Succeed to run the virt-who service, can find the host_uuid and guest_uuid in the
             rhsm.log file
         """
-        print_json_file = "/root/print.json"
         host_uuid = hypervisor_data['hypervisor_uuid']
         guest_uuid = hypervisor_data['guest_uuid']
         virtwho.run_cli(prt=True, oneshot=False)
         function_hypervisor.destroy()
 
         fake_config = hypervisor_create('fake', REGISTER, rhsm=False)
-        fake_config.update('file', print_json_file)
+        fake_config.update('file', PRINT_JSON_FILE)
         fake_config.update('is_hypervisor', 'True')
         result = virtwho.run_service()
         assert (result['error'] == 0
