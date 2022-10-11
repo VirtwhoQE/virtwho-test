@@ -125,6 +125,8 @@ def ssh_connect(ssh):
     ret, output = ssh.runcmd('rpm -qa filesystem')
     if ret == 0 and 'filesystem' in output:
         logger.info(f'Suceeded to ssh connect the host')
+        return True
+    return False
 
 
 def host_ping(host, port=22):
