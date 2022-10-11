@@ -93,6 +93,70 @@ class TestEsxPositive:
                     assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
                     assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
 
+    @pytest.mark.tier1
+    def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the filter_hosts= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test filter_hosts option
+        :id: fd3e4f83-af37-4947-aa45-297ec47ccade
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Set hypervisor_id=hostname.
+            2. Configure filter_hosts={hostname}, run the virt-who service.
+            3. Configure filter_hosts={host_uuid}, run the virt-who service.
+            4. Configure filter_hosts={host_hwuuid}, run the virt-who service.
+        :expectedresults:
+            2. Succeeded to run the virt-who, can find hostname in the log message
+            3. Succeeded to run the virt-who, can find host_uuid in the log message
+            4. Succeeded to run the virt-who, can find host_hwuuid in the log message
+        """
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+
+            function_hypervisor.update('filter_hosts', hypervisor_id_data)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hypervisor_id_data in str(result['mappings']))
+
+    @pytest.mark.tier1
+    def test_exclude_hosts(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test exclude_hosts option
+        :id: ca2f2c5e-cb2a-4dea-9d8e-010058e31947
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Set hypervisor_id=hostname.
+            2. Configure exclude_hosts={hostname}, run the virt-who service.
+            3. Configure exclude_hosts={host_uuid}, run the virt-who service.
+            4. Configure exclude_hosts={host_hwuuid}, run the virt-who service.
+        :expectedresults:
+            2. Succeeded to run the virt-who, cannot find hostname in the log message
+            3. Succeeded to run the virt-who, cannot find host_uuid in the log message
+            4. Succeeded to run the virt-who, cannot find host_hwuuid in the log message
+        """
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+
+            function_hypervisor.update('exclude_hosts', hypervisor_id_data)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hypervisor_id_data not in str(result['mappings']))
+
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('debug_true')
@@ -372,3 +436,182 @@ class TestEsxNegative:
                 and result['send'] == 1
                 and result['thread'] == 1
                 and assertion['valid_multi_configs'] in result['warning_msg'])
+
+    @pytest.mark.tier2
+    def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the filter_hosts= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test filter_hosts negative option
+        :id: a32bacac-77e8-46a3-a2ca-b1f4691acb70
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Set hypervisor_id=hostname.
+            2. Configure filter_hosts='*', run the virt-who service.
+            3. Configure filter_hosts=wildcard, run the virt-who service.
+            4. Configure filter_hosts=, run the virt-who service.
+            5. Configure filter_hosts='', run the virt-who service.
+            6. Configure filter_hosts="", run the virt-who service.
+            7. Configure filter_hosts='{hostname}', run the virt-who service.
+            8. Configure filter_hosts="{hostname}, run the virt-who service.
+        :expectedresults:
+            2. Succeeded to run the virt-who, can find hostname in the log message
+            3. Succeeded to run the virt-who, can find hostname in the log message
+            4. Succeeded to run the virt-who, cannot find hostname in the log message
+            5. Succeeded to run the virt-who, cannot find hostname in the log message
+            6. Succeeded to run the virt-who, cannot find hostname in the log message
+            7. Succeeded to run the virt-who, can find hostname in the log message
+            8. Succeeded to run the virt-who, can find hostname in the log message
+        """
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            wildcard = hypervisor_id_data[:3] + '*' + hypervisor_id_data[4:]
+
+            for filter_hosts in ['*', wildcard]:
+                function_hypervisor.update('filter_hosts', filter_hosts)
+                result = virtwho.run_service()
+                assert (result['error'] == 0
+                        and result['send'] == 1
+                        and result['thread'] == 1
+                        and hypervisor_id_data in str(result['mappings']))
+
+            function_hypervisor.delete('hypervisor_id')
+
+        hostname = hypervisor_data['hypervisor_hostname']
+        function_hypervisor.update('hypervisor_id', 'hostname')
+
+        # config filter_hosts with null option
+        for filter_hosts in ['', "''", '""']:
+            function_hypervisor.update('filter_hosts', filter_hosts)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hostname not in str(result['mappings']))
+
+        # config filter_hosts with 'hostname' and "hostname"
+        for filter_hosts in [f"'{hostname}'", f'"{hostname}"']:
+            function_hypervisor.update('filter_hosts', filter_hosts)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hostname in str(result['mappings']))
+
+    @pytest.mark.tier2
+    def test_exclude_host(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test exclude_hosts negative option
+        :id: fc8cd6bb-3e14-4929-8240-134d13995bfa
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Set hypervisor_id=hostname.
+            2. Configure exclude_hosts='*', run the virt-who service.
+            3. Configure exclude_hosts=wildcard, run the virt-who service.
+            4. Configure exclude_hosts=, run the virt-who service.
+            5. Configure exclude_hosts='', run the virt-who service.
+            6. Configure exclude_hosts="", run the virt-who service.
+            7. Configure exclude_hosts='{hostname}', run the virt-who service.
+            8. Configure exclude_hosts="{hostname}, run the virt-who service.
+        :expectedresults:
+            2. Succeeded to run the virt-who, cannot find hostname in the log message
+            3. Succeeded to run the virt-who, cannot find hostname in the log message
+            4. Succeeded to run the virt-who, can find hostname in the log message
+            5. Succeeded to run the virt-who, can find hostname in the log message
+            6. Succeeded to run the virt-who, can find hostname in the log message
+            7. Succeeded to run the virt-who, cannot find hostname in the log message
+            8. Succeeded to run the virt-who, cannot find hostname in the log message
+        """
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            wildcard = hypervisor_id_data[:3] + '*' + hypervisor_id_data[4:]
+
+            for exclude_hosts in ['*', wildcard]:
+                function_hypervisor.update('exclude_hosts', exclude_hosts)
+                result = virtwho.run_service()
+                assert (result['error'] == 0
+                        and result['send'] == 1
+                        and result['thread'] == 1
+                        and hypervisor_id_data not in str(result['mappings']))
+
+        hostname = hypervisor_data['hypervisor_hostname']
+        function_hypervisor.update('hypervisor_id', 'hostname')
+
+        for exclude_hosts in ['', "''", '""']:
+            function_hypervisor.update('exclude_hosts', exclude_hosts)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hostname in str(result['mappings']))
+
+        for exclude_hosts in [f"'{hostname}'", f'"{hostname}"']:
+            function_hypervisor.update('exclude_hosts', exclude_hosts)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hostname not in str(result['mappings']))
+
+    @pytest.mark.tier2
+    def test_filter_exclude_mix(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the filter_hosts= and exclude_hosts= mix option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test filter_hosts and exclude_hosts related mix function
+        :id: da952c46-6983-4c60-8b3d-c5704643ea2a
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Set hypervisor_id=host_uuid.
+            2. run virt-who with filter_hosts=[host_uuid] and exclude_hosts=[host_uuid]
+            3. run virt-who with filter_hosts=* and exclude_hosts=[host_uuid]
+            4. run virt-who with exclude_hosts= and filter_hosts=[host_uuid]
+
+        :expectedresults:
+            2. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
+            3. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
+            4. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
+
+        """
+        # TODO: will add the filter_host_parents and exclude_host_parants related cases in next pr
+        function_hypervisor.update('hypervisor_id', 'uuid')
+        hypervisor_uuid = hypervisor_data['hypervisor_uuid']
+
+        # run virt-who with filter_hosts=[host_uuid] and exclude_hosts=[host_uuid]
+        function_hypervisor.update('filter_hosts', hypervisor_uuid)
+        function_hypervisor.update('exclude_hosts', hypervisor_uuid)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and hypervisor_uuid not in str(result['mappings']))
+
+        # run virt-who with filter_hosts=* and exclude_hosts=[host_uuid]
+        function_hypervisor.update('filter_hosts', '*')
+        function_hypervisor.update('exclude_hosts', hypervisor_uuid)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and hypervisor_uuid not in str(result['mappings']))
+
+        # run virt-who with exclude_hosts= and filter_hosts=[host_uuid]
+        function_hypervisor.update('filter_hosts', hypervisor_uuid)
+        function_hypervisor.update('exclude_hosts', '')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and hypervisor_uuid in str(result['mappings']))
