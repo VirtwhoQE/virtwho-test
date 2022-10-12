@@ -13,6 +13,7 @@ from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
 
 from virtwho.base import encrypt_password
+from virtwho.base import get_host_domain_id
 from virtwho.configure import hypervisor_create
 
 
@@ -100,7 +101,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test filter_hosts option
         :id: fd3e4f83-af37-4947-aa45-297ec47ccade
         :caseimportance: High
-        :tags: tier2
+        :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -132,7 +133,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test exclude_hosts option
         :id: ca2f2c5e-cb2a-4dea-9d8e-010058e31947
         :caseimportance: High
-        :tags: tier2
+        :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -158,6 +159,82 @@ class TestEsxPositive:
                     and hypervisor_id_data not in str(result['mappings']))
 
     @pytest.mark.tier1
+    def test_filter_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the filter_host_parents= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test filter_host_parents option
+        :id: 8569eb02-3953-4c00-bfe6-df55fc386e90
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Run virt-who with filter_host_parents='' to get domain_id
+            2. Set the hypervisor_id=hostname, run virt-who with filter_host_parents=[domain_id]
+            3. Set the hypervisor_id=uuid, run virt-who with filter_host_parents=[domain_id]
+            4. Set the hypervisor_id=hwuuid, run virt-who with filter_host_parents=[domain_id]
+
+        :expectedresults:
+            1. Succeeded to find the domain_id from the rhsm.log
+            2. Succeeded to run virt-who, can find hostname from the mapping info in rhsm.log
+            3. Succeeded to run virt-who, can find uuid from the mapping info in rhsm.log
+            4. Succeeded to run virt-who, can find hwuuid from the mapping info in rhsm.log
+        """
+        host_hwuuid = hypervisor_data['hypervisor_hwuuid']
+        function_hypervisor.update('filter_host_parents', '')
+        result = virtwho.run_service()
+        domain_id = get_host_domain_id(host_hwuuid, result['log'])
+
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            function_hypervisor.update('filter_host_parents', domain_id)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hypervisor_id_data in str(result['mappings']))
+
+    @pytest.mark.tier1
+    def test_exclude_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the exclude_host_parents= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test exclude_host_parents option
+        :id: 6b8d2dc1-f4ea-4f82-b39d-2fc1260c949d
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Run virt-who with exclude_host_parents='' to get domain_id
+            2. Set the hypervisor_id=hostname, run virt-who with filter_host_parents=[domain_id]
+            3. Set the hypervisor_id=uuid, run virt-who with filter_host_parents=[domain_id]
+            4. Set the hypervisor_id=hwuuid, run virt-who with filter_host_parents=[domain_id]
+
+        :expectedresults:
+            1. Succeeded to find the domain_id from the rhsm.log
+            2. Succeeded to run virt-who, cannot find hostname from the mapping info in rhsm.log
+            3. Succeeded to run virt-who, cannot find uuid from the mapping info in rhsm.log
+            4. Succeeded to run virt-who, cannot find hwuuid from the mapping info in rhsm.log
+        """
+        host_hwuuid = hypervisor_data['hypervisor_hwuuid']
+        function_hypervisor.update('exclude_host_parents', '*')
+        result = virtwho.run_service()
+        domain_id = get_host_domain_id(host_hwuuid, result['log'])
+
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            function_hypervisor.update('exclude_host_parents', domain_id)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hypervisor_id_data not in str(result['mappings']))
+
+    @pytest.mark.tier1
     def test_simplified_vim(self, virtwho, function_hypervisor, hypervisor_data):
         """Test the simplified_vim option in /etc/virt-who.d/hypervisor.conf
 
@@ -170,7 +247,6 @@ class TestEsxPositive:
         :steps:
             1. run virt-who with simplified_vim=true
             2. run virt-who with simplified_vim=false
-
         :expectedresults:
             1. Succeed to run the virt-who
             2. Succeed to run the virt-who
@@ -615,7 +691,6 @@ class TestEsxNegative:
             4. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
 
         """
-        # TODO: will add the filter_host_parents and exclude_host_parants related cases in next pr
         function_hypervisor.update('hypervisor_id', 'uuid')
         hypervisor_uuid = hypervisor_data['hypervisor_uuid']
 
@@ -645,3 +720,103 @@ class TestEsxNegative:
                 and result['send'] == 1
                 and result['thread'] == 1
                 and hypervisor_uuid in str(result['mappings']))
+
+    @pytest.mark.tier2
+    def test_filter_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the filter_host_parents option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test filter_host_parents negative function
+        :id: c16e70f8-a343-4a66-b206-644011688a34
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+            1. Run virt-who with filter_host_parents='' to get domain_id
+            2. Set hypervisor_id=hostname.
+            3. Configure filter_host_parents='', run the virt-who service.
+            4. Configure filter_host_parents='*', run the virt-who service.
+            5. Configure filter_hosts=wildcard, run the virt-who service.
+            6. Set hypervisor_id=uuid and hwuuid, run the above steps.
+        :expectedresults:
+            1. Succeeded to find the domain_id from the rhsm.log
+            3. Succeeded to run the virt-who, cannot find hostname in the log message
+            4. Succeeded to run the virt-who, can find hostname in the log message
+            5. Succeeded to run the virt-who, can find hostname in the log message
+            6. The same as above
+        """
+        function_hypervisor.update('filter_host_parents', '')
+        result = virtwho.run_service()
+        domain_id = get_host_domain_id(hypervisor_data['hypervisor_hwuuid'], result['log'])
+
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            wildcard = domain_id[:3] + '*' + domain_id[4:]
+
+            for filter_host_parents in ['', '*', wildcard]:
+                function_hypervisor.update('filter_host_parents', filter_host_parents)
+                result = virtwho.run_service()
+                if filter_host_parents == '':
+                    assert (result['error'] == 0
+                            and result['send'] == 1
+                            and result['thread'] == 1
+                            and hypervisor_id_data not in str(result['mappings']))
+                else:
+                    assert (result['error'] == 0
+                            and result['send'] == 1
+                            and result['thread'] == 1
+                            and hypervisor_id_data in str(result['mappings']))
+
+            function_hypervisor.delete('hypervisor_id')
+
+    @pytest.mark.tier2
+    def test_exclude_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the exclude_host_parents option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: esx: test exclude_host_parents negative function
+        :id: fd3534a1-4c79-4c3d-bdc5-b795919dea0a
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Run virt-who with exclude_host_parents='*' to get domain_id
+            2. Set hypervisor_id=hostname.
+            3. Configure exclude_host_parents='', run the virt-who service.
+            4. Configure exclude_host_parents='*', run the virt-who service.
+            5. Configure exclude_host_parents=wildcard, run the virt-who service.
+            6. Set hypervisor_id=uuid and hwuuid, run the above steps.
+        :expectedresults:
+            1. Succeeded to find the domain_id from the rhsm.log
+            3. Succeeded to run the virt-who, can find hostname in the log message
+            4. Succeeded to run the virt-who, cannot find hostname in the log message
+            5. Succeeded to run the virt-who, cannot find hostname in the log message
+            6. The same as above
+
+        """
+        function_hypervisor.update('exclude_host_parents', '*')
+        result = virtwho.run_service()
+        domain_id = get_host_domain_id(hypervisor_data['hypervisor_hwuuid'], result['log'])
+
+        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        for hypervisor_id in hypervisor_ids:
+            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            wildcard = domain_id[:3] + '*' + domain_id[4:]
+
+            for exclude_host_parents in ['', '*', wildcard]:
+                function_hypervisor.update('exclude_host_parents', exclude_host_parents)
+                result = virtwho.run_service()
+                if exclude_host_parents == '':
+                    assert (result['error'] == 0
+                            and result['send'] == 1
+                            and result['thread'] == 1
+                            and hypervisor_id_data in str(result['mappings']))
+                else:
+                    assert (result['error'] == 0
+                            and result['send'] == 1
+                            and result['thread'] == 1
+                            and hypervisor_id_data not in str(result['mappings']))
+
+            function_hypervisor.delete('hypervisor_id')
