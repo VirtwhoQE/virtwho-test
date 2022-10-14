@@ -466,3 +466,15 @@ def encrypt_password(ssh, password):
             raise FailException("Failed to run virt-who-password")
     else:
         raise FailException("Failed to run virt-who-password")
+
+
+def get_host_domain_id(host_hwuuid, log_info):
+    """
+    Get the host domain_id from rhsm.log using the regular expression
+    :param host_hwuuid: the hwuuid for the host
+    :param log_info: log info from the rhsm.log
+    :return: the domain_id from the host
+    """
+    domain_id = re.findall(
+        fr"Skipping host '{host_hwuuid}' because its parent '(.*?)'", log_info)[0]
+    return domain_id
