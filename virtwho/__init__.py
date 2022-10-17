@@ -9,6 +9,8 @@ HYPERVISOR = config.job.hypervisor
 
 HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}.conf'
 
+PRINT_JSON_FILE = '/root/print.json'
+
 SECOND_HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}-second.conf'
 
 SECOND_HYPERVISOR_SECTION = f'virtwho-{HYPERVISOR}-second'

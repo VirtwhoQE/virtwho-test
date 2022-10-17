@@ -202,14 +202,15 @@ def get_hypervisor_handler(mode):
     return hypervisor
 
 
-def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, section=None):
+def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, section=None, rhsm=True):
     """ Create the hypervisor config file
     :param mode: The hypervisor mode.
     :param register_type: The subscription server. (rhsm, satellite)
     :param config_name: the file name for the virt-who config
     :param section: the name for the virt-who config section
+    :param rhsm: True is to add all rhsm related options, False will not
     :return:
     """
     hypervisor = VirtwhoHypervisorConfig(mode, register_type, config_name, section)
-    hypervisor.create()
+    hypervisor.create(rhsm=rhsm)
     return hypervisor
