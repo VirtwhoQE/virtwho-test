@@ -175,6 +175,7 @@ class TestRHEVMPositive:
         """
         host_uuid = hypervisor_data['hypervisor_uuid']
         guest_uuid = hypervisor_data['guest_uuid']
+        function_hypervisor.update('hypervisor_id', 'uuid')
         virtwho.run_cli(prt=True, oneshot=False)
         function_hypervisor.destroy()
 
