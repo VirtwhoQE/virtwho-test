@@ -1,10 +1,10 @@
 import json
-import os
 import queue
 import re
 import threading
 import time
 from virtwho import logger, FailException, PRINT_JSON_FILE
+from virtwho.base import msg_search
 from virtwho.configure import virtwho_ssh_connect, get_hypervisor_handler
 
 
@@ -110,11 +110,11 @@ class VirtwhoRunner:
             warning_msg: get all warning lines
         """
         data = dict()
-        data['debug'] = self.msg_search(rhsm_log, "\\[.*DEBUG\\]")
-        data['oneshot'] = self.msg_search(
+        data['debug'] = msg_search(rhsm_log, "\\[.*DEBUG\\]")
+        data['oneshot'] = msg_search(
             rhsm_log, "Thread '.*' stopped after running once"
         )
-        data['terminate'] = self.msg_search(rhsm_log, "virt-who terminated")
+        data['terminate'] = msg_search(rhsm_log, "virt-who terminated")
         data['thread'] = self.thread_number()
         data['send'] = self.send_number(rhsm_log)
         data['reporter_id'] = self.reporter_id(rhsm_log)
@@ -125,6 +125,7 @@ class VirtwhoRunner:
         data['print_json'] = self.print_json()
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
+        logger.info(f'Got the data after run virt-who:-----\n{data}\n------')
         data['log'] = rhsm_log
         return data
 
@@ -139,16 +140,16 @@ class VirtwhoRunner:
         """
         for i in range(4):
             rhsm_output = self.thread_start(cli, wait)
-            if self.msg_search(rhsm_output, "status=429"):
+            if msg_search(rhsm_output, "status=429"):
                 wait_time = 60 * (i + 3)
                 logger.warning(
                     f"429 code found, re-register virt-who host and try again "
                     f"after {wait_time} seconds...")
                 # self.re_register() need to be defined here later
                 time.sleep(wait_time)
-            elif self.msg_search(rhsm_output,
-                                 "RemoteServerException: Server error "
-                                 "attempting a GET.*returned status 500"):
+            elif msg_search(rhsm_output,
+                            "RemoteServerException: Server error "
+                            "attempting a GET.*returned status 500"):
                 logger.warning(
                     "RemoteServerException return 500 code, restart "
                     "virt-who again after 60s")
@@ -244,13 +245,13 @@ class VirtwhoRunner:
         for i in range(30):
             time.sleep(15)
             _, rhsm_output = self.ssh.runcmd(f"cat {self.rhsm_log_file}")
-            if self.msg_search(rhsm_output, "status=429") is True:
+            if msg_search(rhsm_output, "status=429") is True:
                 logger.warning("429 code found when run virt-who")
                 break
             if self.thread_number() == 0:
                 logger.info("Virt-who is terminated after run once")
                 break
-            if self.msg_search(rhsm_output, "\\[.*ERROR.*\\]") is True:
+            if msg_search(rhsm_output, "\\[.*ERROR.*\\]") is True:
                 logger.info("Error found when run virt-who")
                 break
             if self.send_number(rhsm_output) > 0:
@@ -545,43 +546,3 @@ class VirtwhoRunner:
             return True
         else:
             return False
-
-    def msg_search(self, output, msgs):
-        """
-        Check if the key messages exist or not in output.
-        :param output: messages to search around
-        :param msgs: key messages to be searched.
-            msgs could be a string or a list.
-            If '|' in string, it means 'or' for the left and right.
-        :return: Ture or False
-        """
-        if type(msgs) is str:
-            msgs = [msgs]
-        search_list = list()
-        for msg in msgs:
-            if_find = "No"
-            if "|" in msg:
-                keys = msg.split("|")
-                for key in keys:
-                    if self.msg_number(output, key) > 0:
-                        if_find = "Yes"
-            else:
-                if self.msg_number(output, msg) > 0:
-                    if_find = "Yes"
-            search_list.append(if_find)
-        if "No" in search_list:
-            return False
-        else:
-            return True
-
-    def msg_number(self, output, msg):
-        """
-        Get message numbers.
-        :param output: output string to search around
-        :param msg: message string to be searched
-        :return: the message number
-        """
-        number = len(re.findall(msg, output, re.I))
-        logger.info(f"Find '{msg}' {number} times")
-        return number
-

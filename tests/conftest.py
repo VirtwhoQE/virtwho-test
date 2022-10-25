@@ -22,6 +22,12 @@ def hypervisor():
     return hypervisor_create(HYPERVISOR, REGISTER)
 
 
+@pytest.fixture(scope='class')
+def class_hypervisor():
+    """Instantication of class VirtwhoHypervisorConfig()"""
+    return hypervisor_create(HYPERVISOR, REGISTER)
+
+
 @pytest.fixture(scope='function')
 def function_hypervisor():
     """Create virt-who hypervisor test file with all rhsm options"""
@@ -34,9 +40,28 @@ def globalconf():
     return VirtwhoGlobalConfig(HYPERVISOR)
 
 
+@pytest.fixture(scope='session')
+def session_globalconf():
+    """Instantication of class VirtwhoGlobalConfig()"""
+    return VirtwhoGlobalConfig(HYPERVISOR)
+
+
 @pytest.fixture(scope='class')
 def globalconf_clean(globalconf):
-    """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
+    """
+    Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who
+    """
+    globalconf.clean()
+    if 'RHEL-8' in RHEL_COMPOSE:
+        sysconfig = VirtwhoSysConfig(HYPERVISOR)
+        sysconfig.clean()
+
+
+@pytest.fixture(scope='class')
+def class_globalconf_clean(globalconf):
+    """
+    Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who
+    """
     globalconf.clean()
     if 'RHEL-8' in RHEL_COMPOSE:
         sysconfig = VirtwhoSysConfig(HYPERVISOR)
@@ -45,7 +70,9 @@ def globalconf_clean(globalconf):
 
 @pytest.fixture(scope='function')
 def function_globalconf_clean(globalconf):
-    """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
+    """
+    Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who
+    """
     globalconf.clean()
     if 'RHEL-8' in RHEL_COMPOSE:
         sysconfig = VirtwhoSysConfig(HYPERVISOR)
@@ -64,8 +91,19 @@ def sysconfig():
     return VirtwhoSysConfig(HYPERVISOR)
 
 
+@pytest.fixture(scope='function')
+def function_sysconfig():
+    return VirtwhoSysConfig(HYPERVISOR)
+
+
 @pytest.fixture(scope='class')
 def debug_true(globalconf):
+    """Set the debug=True in /etc/virt-who.conf"""
+    globalconf.update('global', 'debug', 'true')
+
+
+@pytest.fixture(scope='class')
+def class_debug_true(globalconf):
     """Set the debug=True in /etc/virt-who.conf"""
     globalconf.update('global', 'debug', 'true')
 
@@ -141,7 +179,25 @@ def register_host(sm_host):
 
 
 @pytest.fixture(scope='function')
+def function_register_host(sm_host):
+    """register the virt-who host"""
+    sm_host.register()
+
+
+@pytest.fixture(scope='function')
+def function_unregister_host(sm_host):
+    """unregister the virt-who host"""
+    sm_host.unregister()
+
+
+@pytest.fixture(scope='function')
 def register_guest(sm_guest):
+    """register the guest"""
+    sm_guest.register()
+
+
+@pytest.fixture(scope='function')
+def function_register_guest(sm_guest):
     """register the guest"""
     sm_guest.register()
 
@@ -267,6 +323,7 @@ def vdc_pool_physical(sm_guest, sku_data):
     raise FailException('Failed to get the vdc physical sku pool id')
 
 
+@pytest.fixture(scope='session')
 def owner_data():
     """Owner data for testing"""
     owner = dict()

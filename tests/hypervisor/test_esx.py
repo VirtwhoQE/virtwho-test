@@ -31,7 +31,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test encrypted_password option
         :id: f07205a4-8f18-4c6b-8a2c-285664b59ed3
         :caseimportance: High
-        :tags: tier2
+        :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
