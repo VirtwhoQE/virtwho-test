@@ -259,7 +259,7 @@ class TestRHEVMNegative:
             assert result['error'] == 0
 
     @pytest.mark.tier2
-    def test_server(self, virtwho, function_hypervisor, esx_assertion):
+    def test_server(self, virtwho, function_hypervisor, rhevm_assertion):
         """Test the server= option in /etc/virt-who.d/test_rhevm.conf
 
         :title: virt-who: rhevm: test server option
@@ -282,7 +282,7 @@ class TestRHEVMNegative:
             works fine
         """
         # server option is invalid value
-        assertion = esx_assertion['server']
+        assertion = rhevm_assertion['server']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('server', value)
@@ -316,7 +316,7 @@ class TestRHEVMNegative:
                 and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
-    def test_username(self, function_hypervisor, virtwho, esx_assertion):
+    def test_username(self, function_hypervisor, virtwho, rhevm_assertion):
         """Test the username= option in /etc/virt-who.d/test_rhevm.conf
 
         :title: virt-who: rhevm: test username option
@@ -339,7 +339,7 @@ class TestRHEVMNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # username option is invalid value
-        assertion = esx_assertion['username']
+        assertion = rhevm_assertion['username']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('username', value)
@@ -374,7 +374,7 @@ class TestRHEVMNegative:
                 and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
-    def test_password(self, virtwho, function_hypervisor, esx_assertion):
+    def test_password(self, virtwho, function_hypervisor, rhevm_assertion):
         """Test the password= option in /etc/virt-who.d/test_rhevm.conf
 
         :title: virt-who: rhevm: test password option
@@ -397,7 +397,7 @@ class TestRHEVMNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # password option is invalid value
-        assertion = esx_assertion['password']
+        assertion = rhevm_assertion['password']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('password', value)
@@ -596,55 +596,3 @@ class TestRHEVMNegative:
                     and result['send'] == 1
                     and result['thread'] == 1
                     and hostname not in str(result['mappings']))
-
-    @pytest.mark.tier2
-    def test_filter_exclude_mix(self, virtwho, function_hypervisor, hypervisor_data):
-        """Test the filter_hosts= and exclude_hosts= mix option in /etc/virt-who.d/hypervisor.conf
-
-        :title: virt-who: rhevm: test filter_hosts and exclude_hosts related mix function
-        :id: 0d8ed2d8-b646-40b0-accb-2780b9961d2c
-        :caseimportance: High
-        :tags: tier1
-        :customerscenario: false
-        :upstream: no
-        :steps:
-            1. Set hypervisor_id=host_uuid.
-            2. run virt-who with filter_hosts=[host_uuid] and exclude_hosts=[host_uuid]
-            3. run virt-who with filter_hosts=* and exclude_hosts=[host_uuid]
-            4. run virt-who with exclude_hosts= and filter_hosts=[host_uuid]
-
-        :expectedresults:
-            2. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
-            3. Succeeded to run the virt-who, cannot find the log message "hypervisorId": "{host_uuid}"
-            4. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
-
-        """
-        function_hypervisor.update('hypervisor_id', 'uuid')
-        hypervisor_uuid = hypervisor_data['hypervisor_uuid']
-
-        # run virt-who with filter_hosts=[host_uuid] and exclude_hosts=[host_uuid]
-        function_hypervisor.update('filter_hosts', hypervisor_uuid)
-        function_hypervisor.update('exclude_hosts', hypervisor_uuid)
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and hypervisor_uuid not in str(result['mappings']))
-
-        # run virt-who with filter_hosts=* and exclude_hosts=[host_uuid]
-        function_hypervisor.update('filter_hosts', '*')
-        function_hypervisor.update('exclude_hosts', hypervisor_uuid)
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and hypervisor_uuid not in str(result['mappings']))
-
-        # run virt-who with exclude_hosts= and filter_hosts=[host_uuid]
-        function_hypervisor.update('filter_hosts', hypervisor_uuid)
-        function_hypervisor.update('exclude_hosts', '')
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and hypervisor_uuid in str(result['mappings']))

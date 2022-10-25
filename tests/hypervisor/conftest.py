@@ -68,7 +68,7 @@ def rhevm_assertion():
     Collect all the assertion info for rhevm to this fixture
     :return:
     """
-    login_error = 'Unable to login to ESX'
+    login_error = 'Unable to connect to RHEV-M server: 401 Client Error'
     data = {
         'type': {
             'invalid': {
@@ -83,7 +83,7 @@ def rhevm_assertion():
         'server': {
             'invalid': {
                 'xxx': 'Name or service not known',
-                '红帽€467aa': 'Option server needs to be ASCII characters only',
+                '红帽€467aa': 'Unable to connect to RHEV-M server',
                 '': 'Option server needs to be set in config',
             },
             'disable': "virt-who can't be started",
