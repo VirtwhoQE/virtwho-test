@@ -197,7 +197,7 @@ class TestRHEVMPositive:
 @pytest.mark.usefixtures('globalconf_clean')
 class TestRHEVMNegative:
     @pytest.mark.tier2
-    def test_type(self, virtwho, function_hypervisor, esx_assertion):
+    def test_type(self, virtwho, function_hypervisor, rhevm_assertion):
         """Test the type= option in /etc/virt-who.d/test_rhevm.conf
 
         :title: virt-who: rhevm: test type option
@@ -219,7 +219,7 @@ class TestRHEVMNegative:
             4. The good config works fine
         """
         # type option is invalid value
-        assertion = esx_assertion['type']
+        assertion = rhevm_assertion['type']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('type', value)
