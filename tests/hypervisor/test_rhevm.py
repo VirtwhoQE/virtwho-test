@@ -432,7 +432,7 @@ class TestRHEVMNegative:
                 and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
-    def test_encrypted_password(self, virtwho, function_hypervisor, esx_assertion,
+    def test_encrypted_password(self, virtwho, function_hypervisor, rhevm_assertion,
                                 hypervisor_data, ssh_host):
         """Test the encrypted_password= option in /etc/virt-who.d/test_rhevm.conf
 
@@ -453,7 +453,7 @@ class TestRHEVMNegative:
         """
         # encrypted_password option is invalid value
         function_hypervisor.delete('password')
-        assertion = esx_assertion['encrypted_password']
+        assertion = rhevm_assertion['encrypted_password']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('encrypted_password', value)
