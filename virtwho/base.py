@@ -480,7 +480,7 @@ def get_host_domain_id(host_hwuuid, log_info):
     return domain_id
 
 
-def msg_search(output, msgs, check='and'):
+def msg_search(output, msgs, check='or'):
     """
     Check if the key messages exist or not in output.
     :param output: messages to search around
@@ -504,14 +504,14 @@ def msg_search(output, msgs, check='and'):
             if msg_number(output, msg) > 0:
                 if_find = "Yes"
         search_list.append(if_find)
-    if check == 'and':
-        if "No" in search_list:
-            return False
-        return True
-    else:
+    if check == 'or':
         if "Yes" in search_list:
             return True
         return False
+    else:
+        if "No" in search_list:
+            return False
+        return True
 
 
 def msg_number(output, msg):

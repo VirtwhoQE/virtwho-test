@@ -51,6 +51,7 @@ class Configure:
         :param option: Option to update. It will be added if not exist.
         :param value: Value to update for the option.
         """
+        # print(f'UPDATE [{section}]:{option}={value}')
         if not self.config.has_section(section):
             self.config.add_section(section)
         self.config.set(section, option, value)
@@ -62,6 +63,7 @@ class Configure:
             option provided.
         :param option: Option to remove.
         """
+        # print(f'DELETE [{section}]:{option}=')
         if option is None:
             self.config.remove_section(section)
         else:

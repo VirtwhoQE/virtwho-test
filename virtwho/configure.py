@@ -4,6 +4,7 @@ from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
+from virtwho import RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP
 
 
 class VirtwhoHypervisorConfig:
@@ -96,7 +97,7 @@ class VirtwhoGlobalConfig:
             os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, 'virt-who.conf')
         self.remote_file = '/etc/virt-who.conf'
-        self.save_file = os.path.join(TEMP_DIR, 'virt-who.conf.save')
+        self.save_file = os.path.join(TEMP_DIR, VIRTWHO_CONF_BACKUP)
         if not os.path.exists(self.save_file):
             self.remote_ssh.get_file(self.remote_file, self.save_file)
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
@@ -163,6 +164,42 @@ class VirtwhoSysConfig:
         """
         os.system(f"echo '' > {self.local_file}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
+
+
+class RHSMConf:
+    """Able to manage /etc/rhsm/rhsm.conf file when call this class"""
+
+    def __init__(self, mode=None):
+        """virt-who file is backed up to /temp directory of the
+        project root.
+        :param mode: Hypervisor mode. When mode is local, will manage
+            the local libvirt host, othervise will manage the host for
+            all other remote modes.
+        """
+        self.mode = mode
+        self.remote_ssh = virtwho_ssh_connect(mode)
+        if not os.path.exists(TEMP_DIR):
+            os.mkdir(TEMP_DIR)
+        self.local_file = os.path.join(TEMP_DIR, 'rhsm.conf')
+        self.remote_file = '/etc/rhsm/rhsm.conf'
+        self.save_file = os.path.join(TEMP_DIR, RHSM_CONF_BACKUP)
+        if not os.path.exists(self.save_file):
+            self.remote_ssh.get_file(self.remote_file, self.save_file)
+        self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+
+    def update(self, section, option, value):
+        """Add section, add option or update option
+        :param section: Section will be added if not exist.
+        :param option: Option will be added if not exist.
+        :param value: Value to update for the option.
+        """
+        self.cfg.update(section, option, value)
+
+    def recovery(self):
+        """
+        Recover the rhsm.conf to default one.
+        """
+        self.remote_ssh.put_file(self.save_file, self.remote_file)
 
 
 def virtwho_ssh_connect(mode=None):

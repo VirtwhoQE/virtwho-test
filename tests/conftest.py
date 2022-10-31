@@ -3,6 +3,7 @@ import pytest
 from virtwho.settings import config
 from virtwho.runner import VirtwhoRunner
 from virtwho.configure import VirtwhoSysConfig
+from virtwho.configure import RHSMConf
 from virtwho.configure import VirtwhoGlobalConfig
 from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
@@ -36,12 +37,6 @@ def function_hypervisor():
 
 @pytest.fixture(scope='session')
 def globalconf():
-    """Instantication of class VirtwhoGlobalConfig()"""
-    return VirtwhoGlobalConfig(HYPERVISOR)
-
-
-@pytest.fixture(scope='session')
-def session_globalconf():
     """Instantication of class VirtwhoGlobalConfig()"""
     return VirtwhoGlobalConfig(HYPERVISOR)
 
@@ -106,6 +101,18 @@ def debug_true(globalconf):
 def class_debug_true(globalconf):
     """Set the debug=True in /etc/virt-who.conf"""
     globalconf.update('global', 'debug', 'true')
+
+
+@pytest.fixture(scope='session')
+def rhsmconf():
+    """Instantication of class RHSMConf()"""
+    return RHSMConf(HYPERVISOR)
+
+
+@pytest.fixture(scope='function')
+def function_rhsmconf_recovery(rhsmconf):
+    """Recover the rhsm.conf to default one."""
+    rhsmconf.recovery()
 
 
 @pytest.fixture(scope='session')
@@ -185,7 +192,7 @@ def function_register_host(sm_host):
 
 
 @pytest.fixture(scope='function')
-def function_unregister_host(sm_host):
+def class_unregister_host(sm_host):
     """unregister the virt-who host"""
     sm_host.unregister()
 

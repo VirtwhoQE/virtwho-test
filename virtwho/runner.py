@@ -125,7 +125,8 @@ class VirtwhoRunner:
         data['print_json'] = self.print_json()
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
-        logger.info(f'Got the data after run virt-who:-----\n{data}\n------')
+        # The below line is used to local debug.
+        # logger.info(f'Got the data after run virt-who:-----\n{data}\n------')
         data['log'] = rhsm_log
         return data
 

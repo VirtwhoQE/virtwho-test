@@ -38,8 +38,10 @@ class TestRHSMPositive:
             2. Register virt-who host and run virt-who
             3. Unregister virt-who host and run virt-who
         :expectedresults:
-            1. Virt-who can report without rhsm options when virt-who host registered.
-            2. Virt-who cannot report without rhsm options when virt-who host unregistered.
+            1. Virt-who can report without rhsm options when virt-who host
+                registered.
+            2. Virt-who cannot report without rhsm options when virt-who host
+                unregistered.
         """
         function_hypervisor.create(rhsm=False)
         sm_host.register()
@@ -53,6 +55,7 @@ class TestRHSMPositive:
                 and result['error'] != 0)
 
 
+@pytest.mark.usefixtures('class_unregister_host')
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('class_debug_true')
 @pytest.mark.usefixtures('class_globalconf_clean')
@@ -69,9 +72,20 @@ class TestRHSMNegative:
         :customerscenario: false
         :upstream: no
         :steps:
-            1. Test
+            1. Unregister virt-who host
+            2. Run virt-who with owner=[invalid value]
+            3. Run virt-who with owner=null
+            4. Run virt-who without owner=
+            5. Run virt-who without owner= together with anogher good config
+            6. Run virt-who with owner=null together with anogher good config
         :expectedresults:
-            1.
+            1. Invalid: virt-who starts but fails to report with error
+            2. Null: virt-who starts but fails to report with error
+            3. Disable: virt-who fails to start with error
+            4. Disable with another good config: virt-who starts but only
+                reports the good config, and prints error for the bad one
+            5. Null with another good config: virt-who starts but only
+                reports the good config, and prints error for the bad one
         """
         owner = register_assertion['owner']
 
@@ -80,7 +94,6 @@ class TestRHSMNegative:
         for key, value in invalid.items():
             function_hypervisor.update('owner', key)
             result = virtwho.run_service()
-            logger.info(f"----{result['error_msg']}")
             assert (result['error'] is not 0
                     and result['send'] == 0
                     and result['thread'] == 1
@@ -114,7 +127,8 @@ class TestRHSMNegative:
 
     @pytest.mark.tier2
     @pytest.mark.notLocal
-    def test_rhsm_hostname(self, virtwho, function_hypervisor, register_assertion):
+    def test_rhsm_hostname(self, virtwho, function_hypervisor,
+                           register_assertion, function_rhsmconf_recovery):
         """Test the rhsm_hostname= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm: test rhsm_hostname option
@@ -124,9 +138,15 @@ class TestRHSMNegative:
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. Unregister virt-who host
+            2. Recover /etc/rhsm/rhsm.conf to default
+            3. Run virt-who with rhsm_hostname=[invalid value]
+            4. Run virt-who with rhsm_hostname=null
+            5. Run virt-who without rhsm_hostname=
         :expectedresults:
-            1.
+            1. Invalid: virt-who starts but fails to report with error
+            2. Null: virt-who starts but fails to report with error
+            3. Disable: virt-who starts but fails to report with error
         """
         rhsm_hostname = register_assertion['rhsm_hostname']
 
@@ -150,7 +170,8 @@ class TestRHSMNegative:
 
     @pytest.mark.tier2
     @pytest.mark.notLocal
-    def test_rhsm_port(self, virtwho, function_hypervisor, register_assertion):
+    def test_rhsm_port(self, virtwho, function_hypervisor,
+                       register_assertion, function_rhsmconf_recovery):
         """Test the rhsm_port= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm: test rhsm_port option
@@ -160,9 +181,17 @@ class TestRHSMNegative:
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. Unregister virt-who host
+            2. Recover /etc/rhsm/rhsm.conf to default
+            3. Run virt-who with rhsm_port=[invalid value]
+            4. Run virt-who with rhsm_port=null
+            5. Run virt-who without rhsm_port=
         :expectedresults:
-            1.
+            1. Invalid: virt-who starts but fails to report with error
+            2. Null: virt-who reports successfully
+                (use the port=443 in rhsm.conf)
+            3. Disable: virt-who reports successfully
+                (use the port=443 in rhsm.conf)
         """
         rhsm_port = register_assertion['rhsm_port']
 
@@ -186,13 +215,14 @@ class TestRHSMNegative:
         # disable
         function_hypervisor.delete('rhsm_port')
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
+        assert (result['error'] == 0
+                and result['send'] == 1
                 and result['thread'] == 1)
 
     @pytest.mark.tier2
     @pytest.mark.notLocal
-    def test_rhsm_prefix(self, virtwho, function_hypervisor, register_assertion):
+    def test_rhsm_prefix(self, virtwho, function_hypervisor,
+                         register_assertion, function_rhsmconf_recovery):
         """Test the rhsm_prefix= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm: test rhsm_prefix option
@@ -202,9 +232,17 @@ class TestRHSMNegative:
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. Unregister virt-who host
+            2. Recover /etc/rhsm/rhsm.conf to default
+            3. Run virt-who with rhsm_prefix=[invalid value]
+            4. Run virt-who with rhsm_prefix=null
+            5. Run virt-who without rhsm_prefix=
         :expectedresults:
-            1.
+            1. Invalid: virt-who starts but fails to report with error
+            2. Null: virt-who reports successfully
+                (use the prefix=/subscription in rhsm.conf)
+            3. Disable: virt-who reports successfully
+                (use the prefix=/subscription in rhsm.conf)
         """
         rhsm_prefix = register_assertion['rhsm_prefix']
 
