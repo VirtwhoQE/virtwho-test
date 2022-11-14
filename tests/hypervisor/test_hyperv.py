@@ -190,7 +190,7 @@ class TestHypervNegative:
         """Test the type= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: hyperv: test type option
-        :id: f2533fe1-5536-4bd5-830b-b2141f0896d7
+        :id: c51a3bcc-bca7-4b45-a55a-8230bb25d7f0
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -252,7 +252,7 @@ class TestHypervNegative:
         """Test the server= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: hyperv: test server option
-        :id: 70eec0cb-317b-4ee9-933c-88ff3310137e
+        :id: ea6c1a97-575d-4b8b-9100-bfd90ab5f26f
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -309,7 +309,7 @@ class TestHypervNegative:
         """Test the username= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: hyperv: test username option
-        :id: 19f8643b-0aa9-4380-b91c-afe6384dbb75
+        :id: ea6c1a97-575d-4b8b-9100-bfd90ab5f26f
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -367,7 +367,7 @@ class TestHypervNegative:
         """Test the password= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: hyperv: test password option
-        :id: 10127e23-95df-4906-a77f-943cf2a271b9
+        :id: efe153df-c9ac-4ae2-9ec1-e5c05a3cc3d0
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -426,7 +426,7 @@ class TestHypervNegative:
         """Test the encrypted_password= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: hyperv: test encrypted_password option
-        :id: 0e2197fe-c806-4f8c-b6ca-e93fb69b07a1
+        :id: 273f9701-1eab-49b1-98c3-d1b38f6f6493
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -450,7 +450,7 @@ class TestHypervNegative:
             assert (result['error'] is not 0
                     and result['send'] == 0
                     and result['thread'] == 0
-                    and assertion['invalid'][f'{value}'] in result['warning_msg'])
+                    and assertion['invalid'][f'{value}'] in result['error_msg'])
 
         # encrypted_password option is valid but another config is ok
         hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
@@ -458,14 +458,14 @@ class TestHypervNegative:
         assert (result['error'] is not 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and assertion['valid_multi_configs'] in result['warning_msg'])
+                and assertion['valid_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
     def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
         """Test the filter_hosts= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: hyperv: test filter_hosts negative option
-        :id: f8f4dae1-7c00-4224-a685-fe86762d795c
+        :id: 8531124d-cff1-4ca8-acca-56f28345dcaf
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -530,7 +530,7 @@ class TestHypervNegative:
         """Test the exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: hyperv: test exclude_hosts negative option
-        :id: d779d83c-a5a9-44c2-a331-315c00a78f0c
+        :id: b8b3d98a-0376-48de-88b6-9f7b4da849ac
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
