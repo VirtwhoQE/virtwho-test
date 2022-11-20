@@ -237,29 +237,22 @@ def ahv_assertion():
         'username': {
             'invalid': {
                 'xxx': login_error,
-                '红帽€467aa': login_error,
-                '': login_error,
+                '红帽€467aa': 'internal error: Unable to parse URI qemu+ssh',
+                '': '',
             },
-            'disable': 'Required option: "username" not set',
-            'disable_multi_configs': 'Required option: "username" not set',
-            'null_multi_configs': login_error,
         },
         'password': {
             'invalid': {
-                'xxx': login_error,
-                '红帽€467aa': login_error,
-                '': login_error,
+                'xxx': '',
+                '红帽€467aa': '',
+                '': '',
             },
-            'disable': 'Required option: "password" not set',
-            'disable_multi_configs': 'Required option: "password" not set',
-            'null_multi_configs': login_error,
         },
         'encrypted_password': {
             'invalid': {
-                'xxx': 'Required option: "password" not set',
-                '': 'Required option: "password" not set',
+                'xxx': '',
+                '': '',
             },
-            'valid_multi_configs': 'Required option: "password" not set'
         }
 
     }
@@ -273,7 +266,7 @@ def libvirt_assertion():
     Collect all the assertion info for libvirt to this fixture
     :return:
     """
-    login_error = 'Incorrect domain/username/password'
+    login_error = 'fails with error: Cannot recv data'
     data = {
         'type': {
             'invalid': {

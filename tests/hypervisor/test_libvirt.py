@@ -265,20 +265,20 @@ class TestLibvirtNegative:
 
         :expectedresults:
             1. Failed to run the virt-who service, find error messages
-            2. Find error message: virt-who can't be started
-            3. Find error message: 'Required option: "server" not set', the good config works fine
-            4. Find error message: 'Option server needs to be set in config', the good config
+            2. Find excepted error message
+            3. Find excepted error message
+            4. Find excepted error message
             works fine
         """
         # server option is invalid value
         assertion = libvirt_assertion['server']
         assertion_invalid_list = list(assertion['invalid'].keys())
-        # for value in assertion_invalid_list:
-        #     function_hypervisor.update('server', value)
-        #     result = virtwho.run_service()
-        #     assert (result['error'] is not 0
-        #             and result['send'] == 0
-        #             and assertion['invalid'][f'{value}'] in result['error_msg'])
+        for value in assertion_invalid_list:
+            function_hypervisor.update('server', value)
+            result = virtwho.run_service()
+            assert (result['error'] is not 0
+                    and result['send'] == 0
+                    and assertion['invalid'][f'{value}'] in result['error_msg'])
 
         # server option is disable
         function_hypervisor.delete('server')
@@ -319,15 +319,10 @@ class TestLibvirtNegative:
         :steps:
             1. Configure username option with invalid value.
             2. Disable the username option in the config file.
-            3. Create another valid config file
-            4. Update the username option with null value
 
         :expectedresults:
-            1. Failed to run the virt-who service, find error message: 'Unable to login to ESX'
-            2. Find error message: 'Required option: "username" not set'
-            3. Find error message: 'Required option: "username" not set', the good config
-            works fine
-            4. Find error message: 'Unable to login to ESX', the good config works fine
+            1. Succeed to run the virt-who service
+            2. Succeed to run the virt-who service
         """
         # username option is invalid value
         assertion = libvirt_assertion['username']
@@ -335,34 +330,24 @@ class TestLibvirtNegative:
         for value in assertion_invalid_list:
             function_hypervisor.update('username', value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            if value != '':
+                assert (result['error'] is not 0
+                        and result['send'] == 0
+                        and result['thread'] == 1
+                        and assertion['invalid'][f'{value}'] in result['error_msg'])
+            elif value == '':
+                #  libvirt-remote can use ssh-key to connect, username is not necessary
+                assert (result['error'] is 0
+                        and result['send'] == 1
+                        and result['thread'] == 1)
 
         # username option is disable
         function_hypervisor.delete('username')
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
-
-        # username option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
-        result = virtwho.run_service()
-        assert (result['error'] is not 0
+        # libvirt-remote can use ssh-key to connect, username is not necessary
+        assert (result['error'] is 0
                 and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
-
-        # username option is null but another config is ok
-        function_hypervisor.update('username', '')
-        result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+                and result['thread'] == 1)
 
     @pytest.mark.tier2
     def test_password(self, virtwho, function_hypervisor, libvirt_assertion):
@@ -377,15 +362,10 @@ class TestLibvirtNegative:
         :steps:
             1. Configure password option with invalid value.
             2. Disable the password option in the config file.
-            3. Create another valid config file
-            4. Update the password option with null value
 
         :expectedresults:
-            1. Failed to run the virt-who service, find error message: 'Unable to login to ESX'
-            2. Find error message: 'Required option: "password" not set'
-            3. Find error message: 'Required option: "password" not set', the good config
-            works fine
-            4. Find error message: 'Unable to login to ESX', the good config works fine
+            1. Succeed to run the virt-who service
+            2. Succeed to run the virt-who service
         """
         # password option is invalid value
         assertion = libvirt_assertion['password']
@@ -393,34 +373,18 @@ class TestLibvirtNegative:
         for value in assertion_invalid_list:
             function_hypervisor.update('password', value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            #  libvirt-remote can use ssh-key to connect, password is not necessary
+            assert (result['error'] is 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
 
         # password option is disable
+        #  libvirt-remote can use ssh-key to connect, password is not necessary
         function_hypervisor.delete('password')
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
-
-        # password option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
-        result = virtwho.run_service()
-        assert (result['error'] is not 0
+        assert (result['error'] is 0
                 and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
-
-        # password option is null but another config is ok
-        function_hypervisor.update('password', '')
-        result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+                and result['thread'] == 1)
 
     @pytest.mark.tier2
     def test_encrypted_password(self, virtwho, function_hypervisor, libvirt_assertion,
@@ -435,12 +399,9 @@ class TestLibvirtNegative:
         :upstream: no
         :steps:
             1. Configure password option with invalid value.
-            2. Create another valid config file, run the virt-who service
 
         :expectedresults:
-            1. Failed to run the virt-who service, find warning message:
-            'Option "encrypted_password" cannot be decrypted'
-            2. Find warning message: 'Option "encrypted_password" cannot be decrypted'
+            1. Succeed to run the virt-who service
         """
         # encrypted_password option is invalid value
         function_hypervisor.delete('password')
@@ -449,18 +410,9 @@ class TestLibvirtNegative:
         for value in assertion_invalid_list:
             function_hypervisor.update('encrypted_password', value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 0
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
-
-        # encrypted_password option is valid but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
-        result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['valid_multi_configs'] in result['error_msg'])
+            assert (result['error'] is 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
 
     @pytest.mark.tier2
     def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
