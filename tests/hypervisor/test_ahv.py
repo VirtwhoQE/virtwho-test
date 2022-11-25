@@ -186,7 +186,7 @@ class TestAHVPositive:
 @pytest.mark.usefixtures('globalconf_clean')
 class TestAHVNegative:
     @pytest.mark.tier2
-    def test_type(self, virtwho, function_hypervisor, hyperv_assertion):
+    def test_type(self, virtwho, function_hypervisor, ahv_assertion):
         """Test the type= option in /etc/virt-who.d/test_ahv.conf
 
         :title: virt-who: ahv: test type option
@@ -208,7 +208,7 @@ class TestAHVNegative:
             4. The good config works fine
         """
         # type option is invalid value
-        assertion = hyperv_assertion['type']
+        assertion = ahv_assertion['type']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('type', value)
@@ -248,7 +248,7 @@ class TestAHVNegative:
             assert result['error'] == 0
 
     @pytest.mark.tier2
-    def test_server(self, virtwho, function_hypervisor, hyperv_assertion):
+    def test_server(self, virtwho, function_hypervisor, ahv_assertion):
         """Test the server= option in /etc/virt-who.d/test_ahv.conf
 
         :title: virt-who: ahv: test server option
@@ -271,7 +271,7 @@ class TestAHVNegative:
             works fine
         """
         # server option is invalid value
-        assertion = hyperv_assertion['server']
+        assertion = ahv_assertion['server']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('server', value)
@@ -305,7 +305,7 @@ class TestAHVNegative:
                 and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
-    def test_username(self, function_hypervisor, virtwho, hyperv_assertion):
+    def test_username(self, function_hypervisor, virtwho, ahv_assertion):
         """Test the username= option in /etc/virt-who.d/test_ahv.conf
 
         :title: virt-who: ahv: test username option
@@ -328,7 +328,7 @@ class TestAHVNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # username option is invalid value
-        assertion = hyperv_assertion['username']
+        assertion = ahv_assertion['username']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('username', value)
@@ -363,7 +363,7 @@ class TestAHVNegative:
                 and assertion['null_multi_configs'] in result['error_msg'])
 
     @pytest.mark.tier2
-    def test_password(self, virtwho, function_hypervisor, hyperv_assertion):
+    def test_password(self, virtwho, function_hypervisor, ahv_assertion):
         """Test the password= option in /etc/virt-who.d/test_ahv.conf
 
         :title: virt-who: ahv: test password option
@@ -386,7 +386,7 @@ class TestAHVNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # password option is invalid value
-        assertion = hyperv_assertion['password']
+        assertion = ahv_assertion['password']
         assertion_invalid_list = list(assertion['invalid'].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update('password', value)
