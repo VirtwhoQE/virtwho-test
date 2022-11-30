@@ -212,7 +212,7 @@ def ahv_assertion():
     Collect all the assertion info for rhevm to this fixture
     :return:
     """
-    login_error = 'Incorrect domain/username/password'
+    login_error = 'HTTP Auth Failed get'
     data = {
         'type': {
             'invalid': {
@@ -226,8 +226,8 @@ def ahv_assertion():
         },
         'server': {
             'invalid': {
-                'xxx': 'Name or service not known',
-                '红帽€467aa': 'Unable to connect to Hyper-V server',
+                'xxx': 'Invalid server IP address provided',
+                '红帽€467aa': 'Invalid server IP address provided',
                 '': 'Option server needs to be set in config',
             },
             'disable': "virt-who can't be started",
