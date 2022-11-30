@@ -182,3 +182,25 @@ def hyperv_assertion():
     }
 
     return data
+
+
+@pytest.fixture(scope='session')
+def kubevirt_assertion():
+    """
+    Collect all the assertion info for kubevirt to this fixture
+    :return:
+    """
+    data = {
+        'type': {
+            'invalid': {
+                'xxx': "Unsupported virtual type 'xxx' is set",
+                '红帽€467aa': "Unsupported virtual type '红帽€467aa' is set",
+                '': "Unsupported virtual type '' is set",
+            },
+            'non_rhel9': "virt-who can't be started",
+            'disable': "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
+            'disable_multi_configs': "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
+        },
+    }
+
+    return data
