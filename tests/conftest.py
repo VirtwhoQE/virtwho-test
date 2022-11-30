@@ -188,7 +188,7 @@ def hypervisor_data(ssh_guest):
         data['version'] = hypervisor_handler.vdsm_version
         data['cpu'] = hypervisor_handler.vdsm_cpu
         data['cluster'] = hypervisor_handler.vdsm_cluster
-    else:
+    elif HYPERVISOR != 'local':
         data['hypervisor_uuid'] = hypervisor_handler.uuid
         data['hypervisor_hostname'] = hypervisor_handler.hostname
         data['type'] = hypervisor_handler.type
