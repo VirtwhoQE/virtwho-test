@@ -148,6 +148,22 @@ class TestAHVPositive:
                     and result['thread'] == 1
                     and hypervisor_id_data not in str(result['mappings']))
 
+    def test_prism_central(self):
+        """Test the prism_central= option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: ahv: test prism_central option
+        :id: 3ec82ad4-d1f5-4c4c-8ee4-b03c364203e0
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+        :expectedresults:
+
+        """
+        pass
+
     def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
         """Test the fake type in /etc/virt-who.d/hypervisor.conf
 
