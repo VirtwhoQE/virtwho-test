@@ -11,6 +11,7 @@ from virtwho import logger, FailException
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho import base
+from utils.parse_ci_message import umb_ci_message_parser
 from utils.beaker import install_rhel_by_beaker
 from utils.properties_update import virtwho_ini_props_update
 
@@ -24,14 +25,16 @@ def provision_virtwho_host(args):
 
     virtwho_ini_props = dict()
     if args.gating_msg:
-        msg = base.gating_msg_parser(args.gating_msg)
+        msg = umb_ci_message_parser(args)
         args.virtwho_pkg_url = msg['pkg_url']
         if not args.rhel_compose:
-            args.rhel_compose = msg['latest_rhel_compose']
+            args.rhel_compose = rhel_latest_compose(msg['rhel_release'])
         virtwho_ini_props['gating'] = {
             'package_nvr': msg['pkg_nvr'],
-            'build_id': msg['build_id'],
-            'task_id': msg['task_id']
+            'build_id': str(msg['build_id']),
+            'task_id': str(msg['task_id']),
+            'owner_name': str(msg['owner_name']),
+            'source': msg['source']
         }
 
     # Deploy a new host by beaker if no server provided
@@ -82,6 +85,19 @@ def provision_virtwho_host(args):
     logger.info(f"+++ Suceeded to deploy the virt-who host "
                 f"{args.rhel_compose}/{args.server} +++")
 
+def rhel_latest_compose(rhel_release):
+    """
+    Use the latest rhel compose for gating test if no rhel_compose provid.
+    """
+    version = '9'
+    if 'rhel-8' in rhel_release:
+        version = '8'
+    latest_compose_url = (f'{config.virtwho.repo}/rhel-{version}/nightly/'
+                          f'RHEL-{version}/latest-RHEL-{version}/COMPOSE_ID')
+    latest_compose_id = os.popen(
+        f'curl -s -k -L {latest_compose_url}'
+    ).read().strip()
+    return latest_compose_id
 
 def beaker_args_define(args):
     """
