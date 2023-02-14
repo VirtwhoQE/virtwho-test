@@ -34,7 +34,7 @@ def umb_ci_message_parser(args):
         source = re.findall(r'"source":(.*?),', ci_msg)[-1].strip()
     brew_build_url = f'{config.virtwho.brew}/brew/buildinfo?buildID={build_id}'
     output = os.popen(f'curl -k -s -i {brew_build_url}').read()
-    pkg_url = re.findall(r'<a href="http://(.*?).noarch.rpm">download</a>', output)[-1]
+    pkg_url = re.findall(r'<a href="https://(.*?).noarch.rpm">download</a>', output)[-1]
     if not pkg_url:
         raise FailException("no package url found")
     items = pkg_url.split('/')
