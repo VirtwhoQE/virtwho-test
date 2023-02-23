@@ -50,9 +50,10 @@ def provision_virtwho_host(args):
     )
 
     # Initially setup the virt-who host
-    base.rhel_compose_repo(
-        ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
-    )
+    # Comment the rhel_compose_repo because all hosts contains repos default.
+    # base.rhel_compose_repo(
+    #     ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
+    # )
     base.system_init(ssh_host, 'virtwho')
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
