@@ -55,6 +55,7 @@ def provision_virtwho_host(args):
     #     ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
     # )
     base.system_init(ssh_host, 'virtwho')
+    _, _ = ssh_host.runcmd('yum install -y expect net-tools')
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
     # Update the virtwho.ini properties
