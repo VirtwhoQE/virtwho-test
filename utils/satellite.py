@@ -159,6 +159,11 @@ def satellite_repos_cdn(rhel_ver, sat_ver):
                   f'rhel-{rhel_ver}-server-optional-rpms,'
                   f'rhel-{rhel_ver}-server-extras-rpms,'
                   f'rhel-server-rhscl-{rhel_ver}-rpms')
+    if rhel_ver == '8':
+        repos_sat = (f'satellite-{sat_ver}-for-rhel-{rhel_ver}-x86_64-rpms,'
+                     f'satellite-maintenance-{sat_ver}-for-rhel-{rhel_ver}-x86_64-rpms')
+        repos_rhel = (f'rhel-{rhel_ver}-for-x86_64-baseos-rpms,'
+                      f'rhel-{rhel_ver}-for-x86_64-appstream-rpms')
     return repos_sat + ',' + repos_rhel
 
 
