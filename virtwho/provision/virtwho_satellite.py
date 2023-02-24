@@ -83,7 +83,7 @@ def rhel_compose_for_satellite(rhel_version):
     if 'rhel7' in rhel_version:
         compose_id = 'RHEL-7.9-20200917.0'
     if 'rhel8' in rhel_version:
-        compose_id = 'RHEL-8.6.0-20220420.3'
+        compose_id = 'RHEL-8.7.0-20221013.1'
     return compose_id
 
 
