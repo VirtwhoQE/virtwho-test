@@ -128,6 +128,22 @@ class VirtwhoRunner:
         data['log'] = rhsm_log
         return data
 
+    def associate_in_mapping(self, result_data, org, hypervisor, guest):
+        """
+        Check the hypervisor is associated with guest in mapping.
+        :param result_data: rhsm log data, which is analyzed.
+        :param org: organization of register server
+        :param guest: guest name
+        :param hypervisor: hypervisor host name/uuid/hwuuid
+        """
+        mappings = result_data['mappings']
+        hypervisor_in_mappings = mappings[org][guest]['guest_hypervisor']
+        if hypervisor_in_mappings == hypervisor:
+            logger.info('Host and guest is associated correctly in mapping.')
+            return True
+        logger.error('Host and guest is not associated in mapping.')
+        return False
+
     def run_start(self, cli=None, wait=None):
         """
         Start/loop to run virt-who and analyze the result mainly by the

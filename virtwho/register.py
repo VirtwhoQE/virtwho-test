@@ -823,7 +823,7 @@ class Satellite:
             return True
         raise FailException(f'Failed to set {name}:{value} for satellite')
 
-    def associate(self, hypervisor, guest):
+    def associate_on_webui(self, hypervisor, guest):
         """
         Check the hypervisor is associated with guest on web.
         :param guest: guest name
