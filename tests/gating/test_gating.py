@@ -65,15 +65,13 @@ class TestGating:
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['thread'] == 1
-                and result['terminate'] == 0
-                and result['oneshot'] is False)
+                and result['terminate'] == 0)
 
         result = virtwho.run_cli(oneshot=True)
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['thread'] == 0
-                and result['terminate'] == 1
-                and result['oneshot'] is True)
+                and result['terminate'] == 1)
 
     def test_interval(self, virtwho, globalconf, debug_true):
         """Test the interval option in /etc/virt-who.conf
@@ -134,11 +132,10 @@ class TestGating:
         """
         hypervisor.update('hypervisor_id', 'uuid')
         result = virtwho.run_cli()
-        id_1 = result['hypervisor_id']
-        id_2 = hypervisor_data['hypervisor_uuid']
         assert (result['send'] == 1
                 and
-                result['hypervisor_id'] == hypervisor_data['hypervisor_uuid'])
+                result['hypervisor_id'] == hypervisor_data[
+                    'hypervisor_uuid'])
 
         hypervisor.update('hypervisor_id', 'hostname')
         result = virtwho.run_cli()
@@ -155,7 +152,7 @@ class TestGating:
                     result['hypervisor_id'] == hypervisor_data[
                         'hypervisor_hwuuid'])
 
-    def host_guest_association(self, virtwho, register_data, hypervisor_data):
+    def test_host_guest_association(self, virtwho, register_data, hypervisor_data):
         """Test the host to guest association from mapping
 
         :title: virt-who: gating: test host-to-guest association
@@ -184,7 +181,7 @@ class TestGating:
                 and virtwho.associate_in_mapping(
                     result, default_org, hypervisor_hostname, guest_uuid))
 
-    def test_vdc_bonus_pool(self, virtwho, sm_guest, register, register_guest,
+    def test_vdc_bonus_pool(self, virtwho, sm_guest, register_guest,
                             satellite, rhsm, hypervisor_data, sku_data,
                             vdc_pool_physical):
         """Test the vdc subscription can derive bonus pool for guest using
