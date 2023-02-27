@@ -130,27 +130,30 @@ class TestGating:
 
             hypervisor id shows uuid/hostname/hwuuid in mapping as the setting.
         """
-        hypervisor.update('hypervisor_id', 'uuid')
-        result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and
-                result['hypervisor_id'] == hypervisor_data[
-                    'hypervisor_uuid'])
-
-        hypervisor.update('hypervisor_id', 'hostname')
-        result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and
-                result['hypervisor_id'] == hypervisor_data[
-                    'hypervisor_hostname'])
-
-        if HYPERVISOR in ['esx', 'rhevm']:
-            hypervisor.update('hypervisor_id', 'hwuuid')
+        try:
+            hypervisor.update('hypervisor_id', 'uuid')
             result = virtwho.run_cli()
             assert (result['send'] == 1
                     and
                     result['hypervisor_id'] == hypervisor_data[
-                        'hypervisor_hwuuid'])
+                        'hypervisor_uuid'])
+
+            hypervisor.update('hypervisor_id', 'hostname')
+            result = virtwho.run_cli()
+            assert (result['send'] == 1
+                    and
+                    result['hypervisor_id'] == hypervisor_data[
+                        'hypervisor_hostname'])
+
+            if HYPERVISOR in ['esx', 'rhevm']:
+                hypervisor.update('hypervisor_id', 'hwuuid')
+                result = virtwho.run_cli()
+                assert (result['send'] == 1
+                        and
+                        result['hypervisor_id'] == hypervisor_data[
+                            'hypervisor_hwuuid'])
+        finally:
+            hypervisor.update('hypervisor_id', 'hostname')
 
     def test_host_guest_association(self, virtwho, register_data, hypervisor_data):
         """Test the host to guest association from mapping
