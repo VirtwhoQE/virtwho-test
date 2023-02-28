@@ -149,17 +149,21 @@ def register_guest(sm_guest):
 @pytest.fixture(scope='session')
 def satellite():
     """Instantication of class Satellite() with default org"""
-    return Satellite(
-        server=config.satellite.server,
-        org=config.satellite.default_org,
-        activation_key=config.satellite.activation_key
-    )
+    if REGISTER == 'satellite':
+        return Satellite(
+            server=config.satellite.server,
+            org=config.satellite.default_org,
+            activation_key=config.satellite.activation_key
+        )
+    return None
 
 
 @pytest.fixture(scope='session')
 def rhsm():
     """Instantication of class RHSM()"""
-    return RHSM()
+    if REGISTER == 'rhsm':
+        return RHSM()
+    return None
 
 
 @pytest.fixture(scope='session')

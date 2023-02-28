@@ -229,14 +229,15 @@ def url_file_download(ssh, local_file, url):
         raise FailException(f'Failed to download {url}')
 
 
-def rhel_compose_repo(ssh, compose_id, repo_file):
+def rhel_compose_repo(ssh, repo_file, compose_id, compose_path=''):
     """
     Set the BaseOS and AppStream compose repository of rhel.
     :param ssh: ssh access of host
     :param compose_id: rhel compose id
+    :param compose_path: rhel compose path, use default setting when set null.
     :param repo_file: repository file name
     """
-    repo_base, repo_extra = rhel_compose_url(compose_id)
+    repo_base, repo_extra = rhel_compose_url(compose_id, compose_path)
     cmd = (f'cat <<EOF > {repo_file}\n'
            f'[{compose_id}]\n'
            f'name={compose_id}\n'
@@ -254,41 +255,50 @@ def rhel_compose_repo(ssh, compose_id, repo_file):
         raise FailException('Failed to configure rhel compose repo.')
 
 
-def rhel_compose_url(compose_id):
+def rhel_compose_url(compose_id, compose_path=''):
     """
     Configure the BaseOS and AppStream compose url
     :param compose_id: rhel compose id
+    :param compose_path: rhel compose path, use default path when set null.
     """
     base_url = config.virtwho.repo
     repo_base = ''
     repo_extra = ''
-    if 'RHEL-7' in compose_id:
-        if 'updates' in compose_id:
-            repo_base = f'{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server/x86_64/os'
-            repo_extra = f'{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
-        elif '.n' in compose_id:
-            repo_base = f'{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server/x86_64/os'
-            repo_extra = f'{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
+    if compose_path:
+        if 'RHEL-7' in compose_id:
+            repo_base = f'{compose_path}/{compose_id}/compose/Server/x86_64/os'
+            repo_extra = f'{compose_path}/{compose_id}/compose/Server-optional/x86_64/os'
         else:
-            repo_base = f'{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server/x86_64/os'
-            repo_extra = f'{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
-    if 'RHEL-8' in compose_id:
-        if 'updates' in compose_id:
-            repo_base = f'{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
-            repo_extra = f'{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
-        elif '.d' in compose_id:
-            repo_base = f'{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
-            repo_extra = f'{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
-        else:
-            repo_base = f'{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
-            repo_extra = f'{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
-    elif 'RHEL-9' in compose_id:
-        if '.d' in compose_id:
-            repo_base = f'{base_url}/rhel-9/development/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os'
-            repo_extra = f"{base_url}/rhel-9/development/RHEL-9/{compose_id}/compose/AppStream/x86_64/os"
-        else:
-            repo_base = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os'
-            repo_extra = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/AppStream/x86_64/os'
+            repo_base = f'{compose_path}/{compose_id}/compose/BaseOS/x86_64/os'
+            repo_extra = f'{compose_path}/{compose_id}/compose/AppStream/x86_64/os'
+    else:
+        if 'RHEL-7' in compose_id:
+            if 'updates' in compose_id:
+                repo_base = f'{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server/x86_64/os'
+                repo_extra = f'{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
+            elif '.n' in compose_id:
+                repo_base = f'{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server/x86_64/os'
+                repo_extra = f'{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
+            else:
+                repo_base = f'{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server/x86_64/os'
+                repo_extra = f'{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
+        if 'RHEL-8' in compose_id:
+            if 'updates' in compose_id:
+                repo_base = f'{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
+                repo_extra = f'{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
+            elif '.d' in compose_id:
+                repo_base = f'{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
+                repo_extra = f'{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
+            else:
+                repo_base = f'{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
+                repo_extra = f'{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
+        elif 'RHEL-9' in compose_id:
+            if '.d' in compose_id:
+                repo_base = f'{base_url}/rhel-9/development/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os'
+                repo_extra = f"{base_url}/rhel-9/development/RHEL-9/{compose_id}/compose/AppStream/x86_64/os"
+            else:
+                repo_base = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os'
+                repo_extra = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/AppStream/x86_64/os'
     return repo_base, repo_extra
 
 
