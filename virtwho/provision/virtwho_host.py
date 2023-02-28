@@ -10,7 +10,8 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho import logger, FailException
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
-from virtwho import base
+from virtwho.base import host_ping, rhel_compose_repo, system_init, rhel_version
+from virtwho.base import url_validation, url_file_download
 from utils.parse_ci_message import umb_ci_message_parser
 from utils.beaker import install_rhel_by_beaker
 from utils.properties_update import virtwho_ini_props_update
@@ -27,8 +28,14 @@ def provision_virtwho_host(args):
     if args.gating_msg:
         msg = umb_ci_message_parser(args)
         args.virtwho_pkg_url = msg['pkg_url']
-        if not args.rhel_compose:
-            args.rhel_compose = rhel_latest_compose(msg['rhel_release'])
+        if 'el9' in msg['pkg_nvr']:
+            args.server = config.gating.host_el9
+        if 'el8' in msg['pkg_nvr']:
+            args.server = config.gating.host_el8
+        if not host_ping(args.server):
+            args.server = ''
+            if not args.rhel_compose:
+                args.rhel_compose = rhel_latest_compose(msg['rhel_release'])
         virtwho_ini_props['gating'] = {
             'package_nvr': msg['pkg_nvr'],
             'build_id': str(msg['build_id']),
@@ -50,16 +57,23 @@ def provision_virtwho_host(args):
     )
 
     # Initially setup the virt-who host
-    # Comment the rhel_compose_repo because all hosts contains repos default.
-    # base.rhel_compose_repo(
-    #     ssh_host, args.rhel_compose, '/etc/yum.repos.d/compose.repo'
-    # )
-    base.system_init(ssh_host, 'virtwho')
-    _, _ = ssh_host.runcmd('yum install -y expect net-tools')
+    ssh_host.runcmd(cmd='rm -f /etc/yum.repos.d/*.repo')
+    rhel_compose_repo(
+        ssh=ssh_host,
+        repo_file='/etc/yum.repos.d/compose.repo',
+        compose_id=args.rhel_compose,
+        compose_path=args.rhel_compose_path
+    )
+    rhsm_conf_backup(ssh_host)
+    system_init(ssh_host, 'virtwho')
+    ssh_host.runcmd('yum install -y expect net-tools')
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
     # Update the virtwho.ini properties
-    virtwho_ini_props['job'] = {'rhel_compose': args.rhel_compose}
+    virtwho_ini_props['job'] = {
+        'rhel_compose': args.rhel_compose,
+        'rhel_compose_path': args.rhel_compose_path
+    }
     virtwho_ini_props['virtwho'] = {
         'server': args.server,
         'username': args.username,
@@ -71,7 +85,6 @@ def provision_virtwho_host(args):
         'username': args.username,
         'password': args.password
     }
-    logger.info(virtwho_ini_props)
     for (args.section, data) in virtwho_ini_props.items():
         for (args.option, args.value) in data.items():
             virtwho_ini_props_update(args)
@@ -87,6 +100,7 @@ def provision_virtwho_host(args):
     logger.info(f"+++ Suceeded to deploy the virt-who host "
                 f"{args.rhel_compose}/{args.server} +++")
 
+
 def rhel_latest_compose(rhel_release):
     """
     Use the latest rhel compose for gating test if no rhel_compose provid.
@@ -100,6 +114,7 @@ def rhel_latest_compose(rhel_release):
         f'curl -s -k -L {latest_compose_url}'
     ).read().strip()
     return latest_compose_id
+
 
 def beaker_args_define(args):
     """
@@ -123,7 +138,7 @@ def virtwho_install(ssh, url=None):
     :param ssh: ssh access of virt-who host
     :param url: url link of virt-who package from brew
     """
-    rhel_ver = base.rhel_version(ssh)
+    rhel_ver = rhel_version(ssh)
     cmd = ('rm -rf /var/lib/rpm/__db*;'
            'mv /var/lib/rpm /var/lib/rpm.old;'
            'rpm --initdb;'
@@ -154,12 +169,24 @@ def virtwho_install_by_url(ssh, url):
     :param ssh: ssh access of virt-who host
     :param url: virt-who package url, whick can be local installed.
     """
-    if not base.url_validation(url):
+    if not url_validation(url):
         raise FailException(f'package {url} is not available')
     ssh.runcmd('rm -rf /var/cache/yum/;'
                'yum clean all;'
                'yum remove -y virt-who')
     ssh.runcmd(f'yum localinstall -y {url}')
+
+
+def rhsm_conf_backup(ssh):
+    """
+    Backup the rhsm.conf to /backup
+    :param ssh: ssh access of virt-who host
+    """
+    ret, output = ssh.runcmd('ls /backup/rhsm.conf')
+    if ret != 0 or 'No such file or directory' in output:
+        ssh.runcmd('rm -rf /backup/;'
+                   'mkdir -p /backup/;'
+                   'cp /etc/rhsm/rhsm.conf /backup/')
 
 
 def libvirt_access_no_password(ssh):
@@ -191,12 +218,12 @@ def kubevirt_config_file(ssh):
     Download the both config_file and config_file_no_cert.
     :param ssh: ssh access of virt-who host.
     """
-    base.url_file_download(ssh,
-                           config.kubevirt.config_file,
-                           config.kubevirt.config_url)
-    base.url_file_download(ssh,
-                           config.kubevirt.config_file_no_cert,
-                           config.kubevirt.config_url_no_cert)
+    url_file_download(ssh,
+                      config.kubevirt.config_file,
+                      config.kubevirt.config_url)
+    url_file_download(ssh,
+                      config.kubevirt.config_file_no_cert,
+                      config.kubevirt.config_url_no_cert)
 
 
 def virtwho_arguments_parser():
@@ -209,12 +236,18 @@ def virtwho_arguments_parser():
     parser.add_argument(
         '--rhel-compose',
         required=False,
-        default=None,
+        default='',
         help='Such as: RHEL-8.5.0-20211013.2, optional for gating test.')
+    parser.add_argument(
+        '--rhel-compose-path',
+        required=False,
+        default='',
+        help='Such as http://download.eng.pek2.redhat.com/rhel-9/nightly/RHEL-9. '
+             'If leave it None, will use the specified path in code.')
     parser.add_argument(
         '--server',
         required=False,
-        default=None,
+        default='',
         help='IP/fqdn of virt-who host, '
              'will install one by beaker if not provide.')
     parser.add_argument(
@@ -232,17 +265,17 @@ def virtwho_arguments_parser():
     parser.add_argument(
         '--beaker-host',
         required=False,
-        default=None,
+        default='',
         help='Define/filter system as hostrequire. '
              'Such as: %ent-02-vm%, ent-02-vm-20.lab.eng.nay.redhat.com')
     parser.add_argument(
         '--gating-msg',
-        default=None,
+        default='',
         required=False,
         help='Gating msg from UMB')
     parser.add_argument(
         '--virtwho-pkg-url',
-        default=None,
+        default='',
         required=False,
         help='Brew url of virt-who package for localinstall.')
     return parser.parse_args()
