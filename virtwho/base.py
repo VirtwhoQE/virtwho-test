@@ -135,7 +135,7 @@ def host_ping(host, port=22):
     :param host: host ip/fqdn
     :param port: host port
     """
-    ret = os.system(f'ping -w 5 {host} -p {port}')
+    ret = os.system(f'ping -c 5 {host} -p {port}')
     if ret == 0:
         return True
     return False
