@@ -25,17 +25,26 @@ def provision_virtwho_host(args):
     logger.info("+++ Start to deploy the virt-who host +++")
 
     virtwho_ini_props = dict()
+    # Parse CI_MESSAGE for gating test
     if args.gating_msg:
         msg = umb_ci_message_parser(args)
         args.virtwho_pkg_url = msg['pkg_url']
-        if 'el9' in msg['pkg_nvr']:
+        if (
+                'el9' in msg['pkg_nvr']
+                and
+                host_ping(config.gating.host_el9)
+        ):
             args.server = config.gating.host_el9
-        if 'el8' in msg['pkg_nvr']:
+        if (
+                'el8' in msg['pkg_nvr']
+                and
+                host_ping(config.gating.host_el9)
+        ):
             args.server = config.gating.host_el8
-        if not host_ping(args.server):
-            args.server = ''
-            if not args.rhel_compose:
-                args.rhel_compose = rhel_latest_compose(msg['rhel_release'])
+
+        if not args.rhel_compose:
+            args.rhel_compose = rhel_latest_compose(msg['rhel_release'])
+
         virtwho_ini_props['gating'] = {
             'package_nvr': msg['pkg_nvr'],
             'build_id': str(msg['build_id']),
