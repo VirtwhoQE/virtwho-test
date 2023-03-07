@@ -31,20 +31,20 @@ def satellite_deploy_for_virtwho(args):
     args.rhel_compose = rhel_compose_for_satellite(satellite[2])
     args.manifest = config.satellite.manifest
 
-    # Install a new system by beaker when no server provided.
+    # Install a new host by beaker to deploy satellite when no server provided.
     if not args.server:
         beaker_args_define(args)
         args.server = install_rhel_by_beaker(args)
         args.ssh_username = config.beaker.default_username
         args.ssh_password = config.beaker.default_password
+        satellite_deploy(args)
     ssh_satellite = SSHConnect(
         host=args.server,
         user=args.ssh_username,
         pwd=args.ssh_password
     )
 
-    # Start to deploy and configure the satellite server
-    satellite_deploy(args)
+    # Start to configure the satellite server
     satellite_settings(ssh_satellite, 'failed_login_attempts_limit', '0')
     satellite_settings(ssh_satellite, 'unregister_delete_host', 'true')
 
@@ -83,7 +83,7 @@ def rhel_compose_for_satellite(rhel_version):
     if 'rhel7' in rhel_version:
         compose_id = 'RHEL-7.9-20200917.0'
     if 'rhel8' in rhel_version:
-        compose_id = 'RHEL-8.7.0-20221013.1'
+        compose_id = 'RHEL-8.7.0'
     return compose_id
 
 
