@@ -33,7 +33,7 @@ def satellite_deploy(args):
                                  username=args.ssh_username,
                                  password=args.ssh_password,
                                  register_type='rhsm')
-        satellite_repo_enable_cdn(sm, rhel_ver, sat_ver)
+        satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver)
     if 'dogfood' in sat_repo:
         satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver)
     if 'repo' in sat_repo:
@@ -55,9 +55,10 @@ def satellite_deploy(args):
     logger.info(f'Succeeded to deploy satellite ({sat_ver})')
 
 
-def satellite_repo_enable_cdn(sm, rhel_ver, sat_ver):
+def satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver):
     """
     Enable satellite related repos from cnd content
+    :param ssh: ssh access to satellite host.
     :param sm: subscription-manager instance
     :param rhel_ver: rhel version, such as 6, 7
     :param sat_ver: satellite version, such as 6.9, 6.10
@@ -71,6 +72,8 @@ def satellite_repo_enable_cdn(sm, rhel_ver, sat_ver):
     sm.attach(pool=satellite_sku_pool)
     sm.repo('disable', '*')
     sm.repo('enable', satellite_repos_cdn(rhel_ver, sat_ver))
+    if rhel_ver == '8':
+        ssh.runcmd(f'dnf -y module enable satellite:el{rhel_ver}')
 
 
 def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver):
