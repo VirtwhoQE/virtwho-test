@@ -33,7 +33,7 @@ def satellite_deploy(args):
                                  username=args.ssh_username,
                                  password=args.ssh_password,
                                  register_type='rhsm')
-        satellite_repo_enable_cdn(sm, rhel_ver, sat_ver)
+        satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver)
     if 'dogfood' in sat_repo:
         satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver)
     if 'repo' in sat_repo:
