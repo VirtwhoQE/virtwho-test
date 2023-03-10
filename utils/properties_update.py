@@ -53,7 +53,7 @@ def virtwho_ini_update(section, option, value):
     Used to called by other functions
     """
     os.system(
-        f'python {curPath}/properties_update.py '
+        f'python3 {curPath}/properties_update.py '
         f'--section={section} '
         f'--option={option} '
         f'--value="{value}"'

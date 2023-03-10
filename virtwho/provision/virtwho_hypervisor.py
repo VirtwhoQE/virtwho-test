@@ -11,7 +11,7 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho import logger
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
-from virtwho.base import hostname_get, host_ping, ssh_connect
+from virtwho.base import hostname_get, host_ping, ssh_connect, rhel_host_uuid_get
 from utils.properties_update import virtwho_ini_update
 from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 from hypervisor.virt.esx.powercli import PowerCLI
@@ -82,6 +82,12 @@ def esx_monitor():
         if ret1 and ret2 and ret3:
             logger.info(f'>>>vCenter: Get the Hypervisor data.')
             esx_data = esx.guest_search(guest_name, uuid_info=True)
+            ssh_guest = SSHConnect(
+                host=esx_data['guest_ip'],
+                user=config.esx.guest_username,
+                pwd=config.esx.guest_password,
+            )
+            esx_data['guest_uuid'] = rhel_host_uuid_get(ssh_guest)
             esx_data['esx_hostname'] = hostname_get(ssh_esx)
             logger.info(
                 f'=== vCenter Data:\n{esx_data}\n===')
