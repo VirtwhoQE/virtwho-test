@@ -488,3 +488,17 @@ def get_host_domain_id(host_hwuuid, log_info):
     domain_id = re.findall(
         fr"Skipping host '{host_hwuuid}' because its parent '(.*?)'", log_info)[0]
     return domain_id
+
+
+def rhel_host_uuid_get(ssh):
+    """
+    Get the host domain_id from rhsm.log using the regular expression
+    :param ssh: ssh access of testing host
+    :return: rhel host uuid
+    """
+    ret, output = ssh.runcmd(f'dmidecode -t system |grep UUID')
+    if ret == 0 and 'UUID' in output:
+        uuid = output.split(':')[1].strip()
+        return uuid
+    return None
+
