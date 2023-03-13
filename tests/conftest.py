@@ -268,6 +268,8 @@ def register_data():
     """Register data for testing from virtwho.ini file"""
     data = dict()
     data['server'] = register_handler.server
+    data['username'] = register_handler.username
+    data['password'] = register_handler.password
     data['prefix'] = register_handler.prefix
     data['port'] = register_handler.port
     data['username'] = register_handler.username
