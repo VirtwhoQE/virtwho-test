@@ -84,3 +84,35 @@ class TestLibvrtPositive:
             assert rhsm.associate(host_name, guest_uuid)
         else:
             assert satellite.associate_on_webui(host_name, guest_hostname)
+
+    @pytest.mark.tier1
+    def test_mapping_info(
+            self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data):
+        """
+        :title: virt-who: libvirt: check mapping info
+        :id: 745cae04-c558-4ecf-8226-54c826d97eea
+            1.
+            2.
+
+        :expectedresults:
+            1.
+            2.
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+        guest_uuid = hypervisor_data['guest_uuid']
+        guest_hostname = hypervisor_data['guest_hostname']
+        host_uuid = hypervisor_data['hypervisor_uuid']
+
+        # check fetch and send function by virt-who cli
+        result = virtwho.run_cli(debug=True)
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and virtwho.associate_in_mapping(
+                    result, register_data['default_org'], host_name, guest_hostname))
+
+        # check fetch and send function by virt-who service
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and rhsm.associate(host_name, guest_uuid))
