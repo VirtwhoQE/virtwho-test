@@ -128,6 +128,7 @@ class VirtwhoGlobalConfig:
         os.system(f"echo '' > {self.local_file}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+        logger.info(f'*** Clean /etc/virt-who.d/*')
 
 
 class VirtwhoSysConfig:
@@ -189,6 +190,7 @@ class RHSMConf:
         self.save_file = os.path.join(TEMP_DIR, RHSM_CONF_BACKUP)
         if not os.path.exists(self.save_file):
             self.remote_ssh.get_file(self.remote_file, self.save_file)
+        os.system(f'\\cp -f {self.save_file} {self.local_file}')
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
     def update(self, section, option, value):
@@ -200,11 +202,21 @@ class RHSMConf:
         self.cfg.update(section, option, value)
         logger.info(f'*** Update [{section}]:{option}={value}')
 
+    def delete(self, section, option=None):
+        """Remove a section or option
+        :param section: Section will be removed when no option provided.
+        :param option: Option to remove.
+        """
+        self.cfg.delete(section, option)
+        logger.info(f'*** Delete [{section}]:{option}=')
+
     def recovery(self):
         """
         Recover the rhsm.conf to default one.
         """
-        self.remote_ssh.put_file(self.save_file, self.remote_file)
+        os.system(f'\\cp -f {self.save_file} {self.local_file}')
+        self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+        logger.info(f'*** Recover /etc/rhsm/rhsm.con')
 
 
 def virtwho_ssh_connect(mode=None):
