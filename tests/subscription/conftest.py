@@ -53,9 +53,9 @@ def register_assertion():
         },
         'rhsm_prefix': {
             'invalid': {
-                '/xxx': rhsm_prefix_error,
-                '': rhsm_prefix_error
+                '/xxx': rhsm_prefix_error
             },
+            'null': rhsm_prefix_error,
             'disable': rhsm_prefix_error
         },
         'rhsm_username': {

@@ -146,12 +146,6 @@ def function_register_host(sm_host):
     sm_host.register()
 
 
-@pytest.fixture(scope='function')
-def function_unregister_host(sm_host):
-    """unregister the virt-who host"""
-    sm_host.unregister()
-
-
 @pytest.fixture(scope='class')
 def class_unregister_host(sm_host):
     """unregister the virt-who host"""
