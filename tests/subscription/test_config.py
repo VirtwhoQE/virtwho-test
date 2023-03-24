@@ -6,8 +6,7 @@
 """
 import pytest
 from virtwho.base import msg_search
-from virtwho import REGISTER
-from virtwho import HYPERVISOR
+from virtwho import REGISTER, HYPERVISOR
 from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
 
@@ -15,6 +14,7 @@ from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
 
 
+@pytest.mark.usefixtures('class_host_unregister')
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('class_debug_true')
 @pytest.mark.usefixtures('class_globalconf_clean')
@@ -83,7 +83,7 @@ class TestSubscriptionPositive:
                 and result['thread'] == 1)
 
 
-@pytest.mark.usefixtures('class_unregister_host')
+@pytest.mark.usefixtures('class_host_unregister')
 @pytest.mark.usefixtures('class_debug_true')
 @pytest.mark.usefixtures('class_globalconf_clean')
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
@@ -213,17 +213,19 @@ class TestSubscriptionNegative:
         :steps:
             1. Unregister virt-who host
             2. Recover /etc/rhsm/rhsm.conf to default
-            3. Run virt-who with rhsm_port=[invalid value]
-            4. Run virt-who with rhsm_port=null
-            5. Run virt-who without rhsm_port=
+            4. Delete the port= option in /etc/rhsm/rhsm.conf
+            5. Run virt-who with rhsm_port=[invalid value]
+            6. Run virt-who with rhsm_port=null
+            7. Run virt-who without rhsm_port=
         :expectedresults:
             1. Invalid: virt-who starts but fails to report with error
             2. Null: virt-who reports successfully
-                (use the port=443 in rhsm.conf)
+                (use the port=443 as default)
             3. Disable: virt-who reports successfully
-                (use the port=443 in rhsm.conf)
+                (use the port=443 as default)
         """
         assertion = register_assertion['rhsm_port']
+        rhsmconf.delete('server', 'port')
 
         # invalid value
         invalid = assertion['invalid']
@@ -236,14 +238,14 @@ class TestSubscriptionNegative:
                     and result['thread'] == 1
                     and msg_search(result['error_msg'], value))
 
-        # null
+        # null, will use the default 443
         function_hypervisor.update('rhsm_port', '')
         result = virtwho.run_service()
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1)
 
-        # disable
+        # disable, will use the default 443
         function_hypervisor.delete('rhsm_port')
         result = virtwho.run_service()
         assert (result['error'] == 0
@@ -265,15 +267,20 @@ class TestSubscriptionNegative:
         :steps:
             1. Unregister virt-who host
             2. Recover /etc/rhsm/rhsm.conf to default
-            3. Run virt-who with rhsm_prefix=[invalid value]
-            4. Run virt-who with rhsm_prefix=null
-            5. Run virt-who without rhsm_prefix=
+            3. Delete/disable prefix= option in /etc/rhsm/rhsm.conf
+            4. Run virt-who with rhsm_prefix=[invalid value]
+            5. Run virt-who with rhsm_prefix=null
+            6. Run virt-who without rhsm_prefix=
         :expectedresults:
             1. Invalid: virt-who starts but fails to report with error
-            2. Null: virt-who reports successfully
-                (use the prefix=/subscription in rhsm.conf)
-            3. Disable: virt-who reports successfully
-                (use the prefix=/subscription in rhsm.conf)
+            2. Null:
+                RHSM: virt-who reports successfully
+                    (use the prefix=/subscription as default)
+                Satellite: virt-who starts but fails to report with error
+            3. Disable:
+                RHSM: virt-who reports successfully
+                    (use the prefix=/subscription as default)
+                Satellite: virt-who starts but fails to report with error
         """
         assertion = register_assertion['rhsm_prefix']
         rhsmconf.delete('server', 'prefix')
@@ -288,13 +295,36 @@ class TestSubscriptionNegative:
                     and result['thread'] == 1
                     and msg_search(result['error_msg'], value))
 
-        # disable
-        function_hypervisor.delete('rhsm_prefix')
-        result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and msg_search(result['error_msg'], assertion['disable']))
+        if REGISTER == 'satellite':
+            # null
+            function_hypervisor.update('rhsm_prefix', '')
+            result = virtwho.run_service()
+            assert (result['error'] is not 0
+                    and result['send'] == 0
+                    and result['thread'] == 1
+                    and msg_search(result['error_msg'], assertion['null']))
+
+            # disable
+            function_hypervisor.delete('rhsm_prefix')
+            result = virtwho.run_service()
+            assert (result['error'] is not 0
+                    and result['send'] == 0
+                    and result['thread'] == 1
+                    and msg_search(result['error_msg'], assertion['disable']))
+        else:
+            # null, will use the default /subscription
+            function_hypervisor.update('rhsm_prefix', '')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # disable, will use the default /subscription
+            function_hypervisor.delete('rhsm_prefix')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
 
     @pytest.mark.tier2
     @pytest.mark.notLocal
@@ -394,7 +424,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm: test rhsm_encrypted_password option (negative)
         :id: daab24a6-21a9-49dc-a129-46c742a9ef84
         :caseimportance: High
-        :tags: tier1
+        :tags: tier2
         :customerscenario: false
         :upstream: no
         :steps:

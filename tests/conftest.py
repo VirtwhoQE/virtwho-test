@@ -141,21 +141,33 @@ def sm_guest():
 
 
 @pytest.fixture(scope='function')
-def function_register_host(sm_host):
+def function_host_register(sm_host):
     """register the virt-who host"""
     sm_host.register()
 
 
 @pytest.fixture(scope='class')
-def class_unregister_host(sm_host):
+def class_host_unregister(sm_host):
     """unregister the virt-who host"""
     sm_host.unregister()
 
 
 @pytest.fixture(scope='function')
-def function_register_guest(sm_guest):
+def function_guest_register(sm_guest):
     """register the guest"""
     sm_guest.register()
+
+
+@pytest.fixture(scope='class')
+def class_guest_register(sm_guest):
+    """register the guest"""
+    sm_guest.register()
+
+
+@pytest.fixture(scope='function')
+def function_guest_unattach(sm_guest):
+    """remove all subscriptions for guest"""
+    sm_guest.unattach()
 
 
 @pytest.fixture(scope='session')
