@@ -104,15 +104,17 @@ class TestLibvrtPositive:
         host_uuid = hypervisor_data['hypervisor_uuid']
 
         # check fetch and send function by virt-who cli
-        result = virtwho.run_cli(debug=True)
+        result = virtwho.run_cli(debug=True, oneshot=False)
         assert (result['error'] == 0
                 and result['send'] == 1
+                and result['thread'] == 1
                 and virtwho.associate_in_mapping(
-                    result, register_data['default_org'], host_name, guest_hostname))
+                    result, register_data['default_org'], host_name, guest_uuid))
 
         # check fetch and send function by virt-who service
         result = virtwho.run_service()
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1
-                and rhsm.associate(host_name, guest_uuid))
+                and virtwho.associate_in_mapping(
+                    result, register_data['default_org'], host_name, guest_uuid))

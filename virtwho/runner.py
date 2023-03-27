@@ -137,7 +137,7 @@ class VirtwhoRunner:
         Check the hypervisor is associated with guest in mapping.
         :param result_data: rhsm log data, which is analyzed.
         :param org: organization of register server
-        :param guest: guest name
+        :param guest: guest uuid
         :param hypervisor: hypervisor host name/uuid/hwuuid
         """
         mappings = result_data['mappings']
