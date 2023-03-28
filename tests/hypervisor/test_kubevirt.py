@@ -18,8 +18,8 @@ from virtwho.configure import hypervisor_create
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('debug_true')
-@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('class_debug_true')
+@pytest.mark.usefixtures('class_globalconf_clean')
 class TestKubevirtPositive:
     @pytest.mark.tier1
     def test_hypervisor_id(self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite):
@@ -154,8 +154,8 @@ class TestKubevirtPositive:
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('debug_true')
-@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('class_debug_true')
+@pytest.mark.usefixtures('class_globalconf_clean')
 class TestKubevirtNegative:
     @pytest.mark.tier2
     def test_type(self, virtwho, function_hypervisor, kubevirt_assertion):

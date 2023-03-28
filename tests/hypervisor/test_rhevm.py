@@ -19,8 +19,8 @@ from virtwho.configure import hypervisor_create
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('debug_true')
-@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('class_debug_true')
+@pytest.mark.usefixtures('class_globalconf_clean')
 class TestRHEVMPositive:
     @pytest.mark.tier1
     def test_encrypted_password(self, virtwho, function_hypervisor,
@@ -193,8 +193,8 @@ class TestRHEVMPositive:
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('debug_true')
-@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('class_debug_true')
+@pytest.mark.usefixtures('class_globalconf_clean')
 class TestRHEVMNegative:
     @pytest.mark.tier2
     def test_type(self, virtwho, function_hypervisor, rhevm_assertion):

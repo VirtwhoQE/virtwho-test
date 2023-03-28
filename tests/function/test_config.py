@@ -13,8 +13,8 @@ from virtwho import REGISTER
 from virtwho.base import hostname_get
 
 
-@pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor')
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
 class TestConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
@@ -346,7 +346,7 @@ class TestConfiguration:
 
     @pytest.mark.tier1
     def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
-                                   owner_data, debug_true):
+                                   owner_data, class_debug_true):
         """Test the owner option in /etc/virtwho.conf
 
         :title: virt-who: config: test owner option
@@ -505,7 +505,7 @@ class TestConfiguration:
 @pytest.mark.rhel8
 class TestSysConfiguration:
     @pytest.mark.tier1
-    def test_debug_in_virtwho_sysconfig(self, virtwho, sysconfig):
+    def test_debug_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_DEBUG option in /etc/sysconfig/virt-who
 
         :title: virt-who: config: test VIRTWHO_DEBUG option
@@ -524,22 +524,22 @@ class TestSysConfiguration:
             1. no [DEBUG] log printed
             2. [DEBUG] logs are printed with the configuration
         """
-        sysconfig.update(**{'VIRTWHO_DEBUG': '1'})
+        function_sysconfig.update(**{'VIRTWHO_DEBUG': '1'})
         result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['debug'] is True)
 
-        sysconfig.update(**{'VIRTWHO_DEBUG': '0'})
+        function_sysconfig.update(**{'VIRTWHO_DEBUG': '0'})
         result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['debug'] is False)
 
-        sysconfig.clean()
+        function_sysconfig.clean()
 
     @pytest.mark.tier1
-    def test_oneshot_in_virtwho_sysocnfig(self, virtwho, sysconfig):
+    def test_oneshot_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_ONE_SHOT option in /etc/sysconfig/virt-who
 
         :title: virt-who: config: test VIRTWHO_ONE_SHOT option
@@ -560,7 +560,7 @@ class TestSysConfiguration:
         """
         sysconfg_options = {'VIRTWHO_DEBUG': '1',
                             'VIRTWHO_ONE_SHOT': '1'}
-        sysconfig.update(**sysconfg_options)
+        function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
@@ -568,17 +568,17 @@ class TestSysConfiguration:
                 and result['oneshot'] is True)
 
         sysconfg_options['VIRTWHO_ONE_SHOT'] = 0
-        sysconfig.update(**sysconfg_options)
+        function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['terminate'] == 0
                 and result['oneshot'] is False)
 
-        sysconfig.clean()
+        function_sysconfig.clean()
 
     @pytest.mark.tier1
-    def test_interval_in_virtwho_sysocnfig(self, virtwho, sysconfig):
+    def test_interval_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_INTERVAL option in /etc/sysconfig/virt-who
 
         :title: virt-who: config: test VIRTWHO_INTERVAL option
@@ -598,17 +598,17 @@ class TestSysConfiguration:
         """
         sysconfg_options = {'VIRTWHO_DEBUG': '1',
                             'VIRTWHO_INTERVAL': '10'}
-        sysconfig.update(**sysconfg_options)
+        function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service()
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['interval'] == 3600)
 
         sysconfg_options['VIRTWHO_INTERVAL'] = 60
-        sysconfig.update(**sysconfg_options)
+        function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service(wait=60)
         assert (result['send'] == 1
                 and result['error'] == 0
                 and result['loop'] == 60)
 
-        sysconfig.clean()
+        function_sysconfig.clean()
