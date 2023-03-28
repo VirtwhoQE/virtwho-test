@@ -89,19 +89,23 @@ class TestLibvrtPositive:
     def test_mapping_info(
             self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data):
         """
-        :title: virt-who: libvirt: check mapping info
+        :title: virt-who: default: test the mapping info
         :id: 745cae04-c558-4ecf-8226-54c826d97eea
-            1.
-            2.
+            1. Run the virt-who service by cli
+            2. Check the mapping info from the rhsm.log
+            3. Run the virt-who service by by starting service
+            4. Check the mapping info from the rhsm.log
+            5. Check the hypervisor facts from the rhsm.log
 
         :expectedresults:
-            1.
-            2.
+            2. The hypervisor is associated with guest in the result and for the
+            specified owner
+            4. The hypervisor is associated with guest in the result and for the
+            specified owner
+            5. The facts should have the info about type,version and socket
         """
         host_name = hypervisor_data['hypervisor_hostname']
         guest_uuid = hypervisor_data['guest_uuid']
-        guest_hostname = hypervisor_data['guest_hostname']
-        host_uuid = hypervisor_data['hypervisor_uuid']
 
         # check fetch and send function by virt-who cli
         result = virtwho.run_cli(debug=True, oneshot=False)
@@ -118,3 +122,10 @@ class TestLibvrtPositive:
                 and result['thread'] == 1
                 and virtwho.associate_in_mapping(
                     result, register_data['default_org'], host_name, guest_uuid))
+
+        # check hypervisor's facts
+        facts = result['mappings'][register_data['default_org']][host_name]
+        assert "hypervisors_async" in result['log']
+        assert ('type' in facts.keys()
+                and 'version' in facts.keys()
+                and 'socket' in facts.keys())
