@@ -502,3 +502,50 @@ def rhel_host_uuid_get(ssh):
         return uuid
     return None
 
+
+def msg_search(output, msgs, check='or'):
+    """
+    Check if the key messages exist or not in output.
+    :param output: messages to search around
+    :param msgs: key messages to be searched.
+        msgs could be a string or a list, list is recommanded.
+        If '|' in string, it means 'or' for the left and right.
+    :param check: and, or
+    :return: Ture or False
+    """
+    if type(msgs) is str:
+        msgs = [msgs]
+    search_list = list()
+    for msg in msgs:
+        if_find = "No"
+        if "|" in msg:
+            keys = msg.split("|")
+            for key in keys:
+                if msg_number(output, key) > 0:
+                    if_find = "Yes"
+        else:
+            if msg_number(output, msg) > 0:
+                if_find = "Yes"
+                logger.info(f'Succeeded to find message: {msg}')
+        search_list.append(if_find)
+    if check == 'or':
+        if "Yes" in search_list:
+            return True
+        return False
+    else:
+        if "No" in search_list:
+            return False
+        return True
+
+
+def msg_number(output, msg):
+    """
+    Get message numbers.
+    :param output: output string to search around
+    :param msg: message string to be searched
+    :return: the message number
+    """
+    number = len(re.findall(msg, output, re.I))
+    logger.info(f"Find '{msg}' {number} times")
+    return number
+

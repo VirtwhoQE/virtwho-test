@@ -50,6 +50,7 @@ class Logger:
     def getlog(self):
         return self.logger
 
+
 def getLogger(name=None):
     """
     This method does the setup necessary to create

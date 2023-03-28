@@ -4,9 +4,11 @@ from virtwho.settings import config
 from virtwho.runner import VirtwhoRunner
 from virtwho.configure import VirtwhoSysConfig
 from virtwho.configure import VirtwhoGlobalConfig
+from virtwho.configure import RHSMConf
 from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 from virtwho.configure import get_register_handler
 from virtwho.configure import hypervisor_create
+
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
 from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, FailException, logger
@@ -17,7 +19,7 @@ register_handler = get_register_handler(REGISTER)
 
 
 @pytest.fixture(scope='class')
-def hypervisor():
+def class_hypervisor():
     """Instantication of class VirtwhoHypervisorConfig()"""
     return hypervisor_create(HYPERVISOR, REGISTER)
 
@@ -35,8 +37,10 @@ def globalconf():
 
 
 @pytest.fixture(scope='class')
-def globalconf_clean(globalconf):
-    """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
+def class_globalconf_clean(globalconf):
+    """
+    Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who
+    """
     globalconf.clean()
     if 'RHEL-8' in RHEL_COMPOSE:
         sysconfig = VirtwhoSysConfig(HYPERVISOR)
@@ -45,7 +49,9 @@ def globalconf_clean(globalconf):
 
 @pytest.fixture(scope='function')
 def function_globalconf_clean(globalconf):
-    """Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who"""
+    """
+    Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who
+    """
     globalconf.clean()
     if 'RHEL-8' in RHEL_COMPOSE:
         sysconfig = VirtwhoSysConfig(HYPERVISOR)
@@ -59,13 +65,13 @@ def function_virtwho_d_conf_clean(ssh_host):
     ssh_host.runcmd(cmd)
 
 
-@pytest.fixture()
-def sysconfig():
+@pytest.fixture(scope='function')
+def function_sysconfig():
     return VirtwhoSysConfig(HYPERVISOR)
 
 
 @pytest.fixture(scope='class')
-def debug_true(globalconf):
+def class_debug_true(globalconf):
     """Set the debug=True in /etc/virt-who.conf"""
     globalconf.update('global', 'debug', 'true')
 
@@ -135,15 +141,33 @@ def sm_guest():
 
 
 @pytest.fixture(scope='function')
-def register_host(sm_host):
+def function_host_register(sm_host):
     """register the virt-who host"""
     sm_host.register()
 
 
+@pytest.fixture(scope='class')
+def class_host_unregister(sm_host):
+    """unregister the virt-who host"""
+    sm_host.unregister()
+
+
 @pytest.fixture(scope='function')
-def register_guest(sm_guest):
+def function_guest_register(sm_guest):
     """register the guest"""
     sm_guest.register()
+
+
+@pytest.fixture(scope='class')
+def class_guest_register(sm_guest):
+    """register the guest"""
+    sm_guest.register()
+
+
+@pytest.fixture(scope='function')
+def function_guest_unattach(sm_guest):
+    """remove all subscriptions for guest"""
+    sm_guest.unattach()
 
 
 @pytest.fixture(scope='session')
@@ -164,6 +188,18 @@ def rhsm():
     if REGISTER == 'rhsm':
         return RHSM()
     return None
+
+
+@pytest.fixture(scope='session')
+def rhsmconf():
+    """Instantication of class RHSMConf()"""
+    return RHSMConf(HYPERVISOR)
+
+
+@pytest.fixture(scope='function')
+def function_rhsmconf_recovery(rhsmconf):
+    """Recover the rhsm.conf to default one."""
+    rhsmconf.recovery()
 
 
 @pytest.fixture(scope='session')
@@ -212,6 +248,8 @@ def register_data():
     data['server'] = register_handler.server
     data['prefix'] = register_handler.prefix
     data['port'] = register_handler.port
+    data['username'] = register_handler.username
+    data['password'] = register_handler.password
     data['default_org'] = register_handler.default_org
     data['activation_key'] = register_handler.activation_key
     data['secondary_org'] = ''
