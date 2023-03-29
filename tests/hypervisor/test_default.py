@@ -7,6 +7,7 @@
 import pytest
 
 from virtwho import REGISTER
+from virtwho import HYPERVISOR
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
@@ -129,3 +130,40 @@ class TestLibvrtPositive:
         assert ('type' in facts.keys()
                 and 'version' in facts.keys()
                 and 'socket' in facts.keys())
+
+    @pytest.mark.tier1
+    def test_guest_facts(
+            self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data, ssh_guest):
+        """
+        :title: virt-who: default: test the mapping info
+        :id: 09e1754d-5f3a-49c5-aebc-91d4f4a8471e
+        """
+        guest_uuid = hypervisor_data['guest_uuid']
+        virt_type = {
+            'local': 'kvm',
+            'libvirt': 'kvm',
+            'rhevm': 'kvm',
+            'esx': 'vmware',
+            'hyperv': 'hyperv',
+            'xen': 'xen',
+            'kubevirt': 'kvm',
+            'ahv': 'nutanix_ahv'
+        }
+        # check virt.uuid fact by subscription-manager in guest")
+        cmd = "subscription-manager facts --list | grep virt.uuid"
+        _, output = ssh_guest.runcmd(cmd)
+        virt_uuid = output.split(':')[1].strip()
+        assert virt_uuid.lower() == guest_uuid.lower()
+
+        # check virt.host_type fact by subscription-manager in guest
+        _, virtwhat_output = ssh_guest.runcmd("virt-what")
+        _, facts_output = ssh_guest.runcmd(
+            "subscription-manager facts --list | grep virt.host_type")
+        assert (virt_type[HYPERVISOR] in virtwhat_output
+                and virt_type[HYPERVISOR] in facts_output)
+
+        # check virt.is_guest fact by subscription-manager in guest
+        cmd = "subscription-manager facts --list | grep virt.is_guest"
+        _, output = ssh_guest.runcmd(cmd)
+        virt_is_guest = output.split(':')[1].strip()
+        assert virt_is_guest == "True"
