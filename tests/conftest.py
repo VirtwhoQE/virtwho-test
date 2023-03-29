@@ -307,15 +307,18 @@ def sku_data():
 @pytest.fixture(scope='session')
 def vdc_pool_physical(sm_guest, sku_data):
     """Get the vdc physical sku pool id"""
-    sku = sku_data['vdc_physical']
-    sm_guest.register()
-    sku_data = sm_guest.available(sku, 'Physical')
-    if sku_data is not None:
-        sku_pool = sku_data['pool_id']
-        logger.info(f'Succeeded to get the vdc physical sku pool id: '
-                    f'{sku_pool}')
-        return sku_pool
-    raise FailException('Failed to get the vdc physical sku pool id')
+    vdc_sku_id = sku_data['vdc_physical']
+    vdc_pool_id = sm_guest.pool_id_get(vdc_sku_id, 'Physical')
+    return vdc_pool_id
+
+    # sm_guest.register()
+    # sku_data = sm_guest.available(sku, 'Physical')
+    # if sku_data is not None:
+    #     sku_pool = sku_data['pool_id']
+    #     logger.info(f'Succeeded to get the vdc physical sku pool id: '
+    #                 f'{sku_pool}')
+    #     return sku_pool
+    # raise FailException('Failed to get the vdc physical sku pool id')
 
 
 def owner_data():

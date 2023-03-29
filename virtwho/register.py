@@ -57,7 +57,7 @@ class SubscriptionManager:
             else:
                 cmd += f'--baseurl={self.baseurl}'
             ret, output = self.ssh.runcmd(cmd)
-            if ret == 0 and 'The system has been registered' in output:
+            if 'The system has been registered' in output:
                 logger.info(f'Succeeded to register host({self.host})')
                 return output
             else:
@@ -65,6 +65,7 @@ class SubscriptionManager:
         else:
             logger.info(f'The host({self.host}) has been registered, '
                         f'no need to register again.')
+            return None
 
     def unregister(self):
         """
@@ -216,7 +217,10 @@ class SubscriptionManager:
                             sku_attr['temporary'] = True
                         else:
                             sku_attr['temporary'] = False
-                        logger.info(f'---- {sku_attr} ----')
+                        # the below commented lines are used in local debug
+                        # logger.info(
+                        # f'---- sku_data of {sku_id}:\n{sku_attr}\n----'
+                        # )
                         return sku_attr
         logger.warning('Failed to get consumed subscriptions.')
         return None
@@ -321,6 +325,17 @@ class SubscriptionManager:
                         f'Succeeded to remove custom.facts for {self.host}')
                     return True
         raise FailException(f'Failed to remove custom.facts for {self.host}')
+
+    def pool_id_get(self, sku_id, sku_type='Physical'):
+        self.register()
+        sku_data = self.available(sku_id, sku_type)
+        if sku_data is not None:
+            sku_pool = sku_data['pool_id']
+            logger.info(f'Succeeded to get the vdc {sku_type} pool id: '
+                        f'{sku_pool}')
+            return sku_pool
+        logger.error('Failed to get the vdc physical sku pool id')
+        return None
 
 
 class RHSM:
