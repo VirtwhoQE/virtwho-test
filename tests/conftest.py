@@ -146,6 +146,13 @@ def function_host_register(sm_host):
     sm_host.register()
 
 
+@pytest.fixture(scope='function')
+def function_host_register_for_local_mode(sm_host):
+    """register the virt-who host only when run for local mode"""
+    if HYPERVISOR == 'local':
+        sm_host.register()
+
+
 @pytest.fixture(scope='class')
 def class_host_unregister(sm_host):
     """unregister the virt-who host"""
@@ -228,7 +235,9 @@ def hypervisor_data(ssh_guest):
         data['version'] = hypervisor_handler.vdsm_version
         data['cpu'] = hypervisor_handler.vdsm_cpu
         data['cluster'] = hypervisor_handler.vdsm_cluster
-    elif HYPERVISOR != 'local':
+    elif HYPERVISOR == 'local':
+        data['hypervisor_hostname'] = hypervisor_handler.hostname
+    else:
         data['hypervisor_uuid'] = hypervisor_handler.uuid
         data['hypervisor_hostname'] = hypervisor_handler.hostname
         data['type'] = hypervisor_handler.type
