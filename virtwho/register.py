@@ -631,14 +631,9 @@ class Satellite:
         :param host: host name/uuid/hwuuid
         :return: host id or None
         """
-        # ret, output = self.ssh.runcmd(f'{self.hammer} host list '
-        #                               f'--organization-id {self.org_id} '
-        #                               f'--search {host} '
-        #                               f'--fields Id')
         ret, output = self.ssh.runcmd(f'{self.hammer} host list '
                                       f'--organization-id {self.org_id} '
                                       f'--search {host}')
-        # logger.info(f'--- {output} ---')
         output = json.loads(output)
         if ret == 0 and len(output) >= 1:
             for item in output:
@@ -994,8 +989,9 @@ def request_put(url, auth, headers, json_data, verify=False):
         TLS certificate
     :return: response status code
     """
-    res = requests.put(url=url, auth=auth, headers=headers, json=json_data,
-                       verify=verify)
+    res = requests.put(
+        url=url, auth=auth, headers=headers, json=json_data, verify=verify
+    )
     return res.status_code
 
 
