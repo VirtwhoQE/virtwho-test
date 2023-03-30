@@ -20,14 +20,14 @@ vdc_virtual_sku = config.sku.vdc_virtual
 @pytest.mark.usefixtures('function_host_register_for_local_mode')
 class TestRHSM:
     @pytest.mark.tier1
-    def test_vdc_virtual_pool_attach_by_poolId(self, virtwho, sm_guest,
-                                               rhsm, hypervisor_data,
-                                               vdc_pool_physical):
+    def test_vdc_virtual_pool_attach_by_poolId(
+            self, virtwho, sm_guest, rhsm, hypervisor_data, vdc_pool_physical
+    ):
         """Test the guest can get and attach the virtual vdc pool by pool id
 
         :title: virt-who: satellite: test guest attach virtual vdc pool by
             pool id
-        :id:
+        :id: 39717357-eadb-4ac7-bf44-2b323cda3717
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -72,13 +72,13 @@ class TestRHSM:
         assert consumed_data is None
 
     @pytest.mark.tier1
-    def test_vdc_virtual_pool_attach_by_auto(self, virtwho, sm_guest, rhsm,
-                                             hypervisor_data,
-                                             vdc_pool_physical):
+    def test_vdc_virtual_pool_attach_by_auto(
+            self, virtwho, sm_guest, rhsm, hypervisor_data, vdc_pool_physical
+    ):
         """Test the guest can get and attach the virtual vdc pool by auto
 
         :title: virt-who: rhsm: test guest attach virtual vdc pool by auto
-        :id:
+        :id: d082e0c1-e925-46ea-8ab1-d65355709f55
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -122,13 +122,14 @@ class TestRHSM:
         assert consumed_data is None
 
     @pytest.mark.tier1
-    def test_vdc_temporary_pool_by_poolId(self, virtwho, sm_guest, ssh_guest,
-                                          sm_host, rhsm, hypervisor_data,
-                                          vdc_pool_physical):
+    def test_vdc_temporary_pool_by_poolId(
+            self, virtwho, sm_guest, ssh_guest, sm_host, rhsm, hypervisor_data,
+            vdc_pool_physical
+    ):
         """Test the temporary vdc pool in guest
 
         :title: virt-who: rhsm: test temporary vdc pool in guest
-        :id:
+        :id: d1c42adf-dee5-42bf-80b6-017948e77baf
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -193,14 +194,15 @@ class TestRHSM:
 
     @pytest.mark.tier1
     @pytest.mark.notRemoteMode
-    def test_vdc_physcial_pool_consumed_status_in_physical_host(self, sm_host,
-                                                                vdc_pool_physical):
+    def test_vdc_physcial_pool_consumed_status_in_physical_host(
+            self, sm_host, vdc_pool_physical
+    ):
         """Test vdc physcial pool consumed status in physical host when
             set cpu_socket(s).
 
         :title: virt-who: rhsm: test physcial vdc pool consumed status in
             physical host
-        :id:
+        :id: cbf0e07b-c51c-4e6d-9c80-07c2c8dd7692
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -247,16 +249,17 @@ class TestRHSM:
             sm_host.facts_remove()
 
     @pytest.mark.tier1
-    def test_vdc_virtual_pool_consumed_status_in_guest(self, virtwho, sm_guest,
-                                                       rhsm, hypervisor_data,
-                                                       vdc_pool_physical):
+    def test_vdc_virtual_pool_consumed_status_in_guest(
+            self, virtwho, sm_guest, rhsm, hypervisor_data,
+            vdc_pool_physical
+    ):
         """Test vdc virtual pool consumed status in guest when
             set cpu_socket(s).
 
         :title: virt-who: rhsm: test vdc virtual pool consumed status in guest
-        :id:
+        :id: 93af0dad-21e6-4732-8a06-2fb2e86a05a3
         :caseimportance: High
-        :tags: tier1
+        :tags: tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -300,15 +303,15 @@ class TestRHSM:
         finally:
             sm_guest.facts_remove()
 
-    def test_vdc_virtual_pool_attach_in_fake_mode(self, virtwho, sm_guest,
-                                                  rhsm, hypervisor_data,
-                                                  vdc_pool_physical):
+    def test_vdc_virtual_pool_attach_in_fake_mode(
+            self, virtwho, sm_guest, rhsm, hypervisor_data, vdc_pool_physical
+    ):
         """Test the guest can get and attach the virtual vdc pool in fake mode
 
         :title: virt-who: rhsm: test guest attach virtual vdc pool in fake mode
-        :id:
+        :id: f97afcd8-2b23-4754-8c40-a70605009e8f
         :caseimportance: High
-        :tags: tier1
+        :tags: tier2
         :customerscenario: false
         :upstream: no
         :steps:

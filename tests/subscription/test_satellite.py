@@ -3,6 +3,8 @@
 :testtype: functional
 :caseautomation: Automated
 """
+import time
+
 import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config
@@ -10,6 +12,7 @@ from virtwho import HYPERVISOR, FAKE_CONFIG_FILE
 from virtwho.configure import hypervisor_create
 from virtwho.configure import get_hypervisor_handler
 from virtwho.register import SubscriptionManager
+from virtwho import logger
 
 vdc_physical_sku = config.sku.vdc
 vdc_virtual_sku = config.sku.vdc_virtual
@@ -25,14 +28,15 @@ activation_key = config.satellite.activation_key
 @pytest.mark.usefixtures('function_guest_unattach')
 @pytest.mark.usefixtures('function_host_register_for_local_mode')
 class TestSatellite:
-    def test_vdc_virtual_pool_attach_by_poolId(self, virtwho, sm_guest,
-                                               satellite, hypervisor_data,
-                                               vdc_pool_physical):
+    def test_vdc_virtual_pool_attach_by_poolId(
+            self, virtwho, sm_guest, satellite, hypervisor_data,
+            vdc_pool_physical
+    ):
         """Test the guest can get and attach the virtual vdc pool by pool id
 
         :title: virt-who: satellite: test guest attach virtual vdc pool by
             pool id
-        :id:
+        :id: 38e213ef-70cc-445a-85b2-8f9639064f12
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -77,13 +81,14 @@ class TestSatellite:
         assert consumed_data is None
 
     @pytest.mark.tier1
-    def test_vdc_virtual_pool_attach_by_auto(self, virtwho, sm_guest, satellite,
-                                             hypervisor_data,
-                                             vdc_pool_physical):
+    def test_vdc_virtual_pool_attach_by_auto(
+            self, virtwho, sm_guest, satellite, hypervisor_data,
+            vdc_pool_physical
+    ):
         """Test the guest can get and attach the virtual vdc pool by auto
 
         :title: virt-who: satellite: test guest attach virtual vdc pool by auto
-        :id:
+        :id: 812aac00-5b4d-4307-bb4e-bdd774330128
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -127,13 +132,14 @@ class TestSatellite:
         assert consumed_data is None
 
     @pytest.mark.tier1
-    def test_vdc_temporary_pool_by_poolId(self, virtwho, sm_guest, ssh_guest,
-                                          sm_host, satellite, hypervisor_data,
-                                          vdc_pool_physical):
+    def test_vdc_temporary_pool_by_poolId(
+            self, virtwho, sm_guest, ssh_guest, sm_host, satellite,
+            hypervisor_data, vdc_pool_physical
+    ):
         """Test the temporary vdc pool in guest
 
         :title: virt-who: satellite: test temporary vdc pool in guest
-        :id:
+        :id: 733ce7d0-bb51-4d80-87cc-a5ee5fbdf542
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -191,14 +197,15 @@ class TestSatellite:
         assert (msg_search(output, 'Overall Status: Current')
                 and not msg_search(output, 'Invalid'))
 
-    def test_vdc_virtual_pool_attach_in_fake_mode(self, virtwho, sm_guest,
-                                                  satellite, hypervisor_data,
-                                                  vdc_pool_physical):
+    def test_vdc_virtual_pool_attach_in_fake_mode(
+            self, virtwho, sm_guest, satellite, hypervisor_data,
+            vdc_pool_physical
+    ):
         """Test the guest can get and attach the virtual vdc pool in fake mode
 
         :title: virt-who: satellite: test guest attach virtual vdc pool in
             fake mode
-        :id:
+        :id: 164f2d20-d357-4f25-a0e4-f5260012a266
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -258,9 +265,9 @@ class TestSatellite:
         """Test the guest register by activation_key
 
         :title: virt-who: satellite: test guest attach rule by activation_key
-        :id:
+        :id: 6d0e169c-74a7-41a0-a97a-81e084f0aabf
         :caseimportance: High
-        :tags: tier1
+        :tags: tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -354,17 +361,16 @@ class TestSatellite:
         assert (vdc_consumed_data and not limit_consumed_data)
 
     def test_guest_auto_attach_temporary_pool_by_activation_key(
-            self, virtwho, sm_guest_ack, satellite, hypervisor_data,
-            register_data, vdc_pool_physical
+            self, virtwho, sm_guest_ack, satellite, hypervisor_data
     ):
         """Test the guest can auto attach temporary sku when registering with
             activation key
 
         :title: virt-who: satellite: test guest auto attach temporay sku with
             activation key
-        :id:
-        :caseimportance: High
-        :tags: tier1
+        :id: ae58e185-3e78-4c3d-90fb-c5bd1ff01382
+        :caseimportance: Medium
+        :tags: tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -390,17 +396,108 @@ class TestSatellite:
         satellite.activation_key_create(activation_key)
         satellite.activation_key_update(auto_attach='yes')
 
-        #
         sm_guest_ack.unregister()
         sm_guest_ack.register()
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data['temporary'] is True
 
-        #
         _ = virtwho.run_cli()
         sm_guest_ack.refresh()
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data['temporary'] is False
+
+    def test_vdc_virtual_subscription_on_webui(
+            self, virtwho, sm_guest, satellite, hypervisor_data,
+            vdc_pool_physical
+    ):
+        """Test the virtual vdc content subscriptions on satellite webui
+
+        :title: virt-who: satellite: test vdc virtual subscriptions on webui
+        :id: 5c71d37c-b5e2-4789-87f6-24357a96819b
+        :caseimportance: Medium
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Register guest to entitlement server
+            2. Attach physical vdc pool to hypervisor
+            3. Check the virtual vdc subscription
+            4. Attach virtual vdc pool to sm
+            5. Check the virtual vdc subscription again
+
+        :expectedresults:
+
+            1. When guest doesn't attach any virtual vdc, the subscription
+                consumed number is 0
+            2. When guest attached virtual vdc, the subscription consumed number
+                will not be 0
+        """
+        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        if HYPERVISOR == 'libvirt-local':
+            hypervisor_name = [f'{hypervisor_hostname}']
+        else:
+            key = f'virt-who-{hypervisor_hostname}'
+            hypervisor_name = [key, key.lower()]
+
+        # check the subscription without virtual vdc pool attached for guest
+        satellite.host_delete(host=hypervisor_hostname)
+        _ = virtwho.run_cli()
+        satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
+        vdc_virt_data = sm_guest.available(vdc_virtual_sku, 'Virtual')
+        vdc_virt_pool = vdc_virt_data['pool_id']
+        subscription = satellite.subscription_on_webui(vdc_virt_pool)
+        assert (subscription['type'] == 'STACK_DERIVED'
+                and subscription["virt_only"] is True
+                and any(key in subscription["hypervisor"]["name"]
+                        for key in hypervisor_name))
+        assert (subscription["available"] == -1
+                and subscription["quantity"] == -1
+                and subscription["consumed"] == 0)
+
+        # check the subscription without virtual vdc pool attached for guest
+        sm_guest.refresh()
+        sm_guest.attach(pool=vdc_virt_pool)
+        for i in range(3):
+            time.sleep(30)
+            subscription = satellite.subscription_on_webui(vdc_virt_pool)
+            assert subscription["consumed"] == 1
+
+    # def test_register_by_item_on_webui(
+    #         self, virtwho, sm_guest, satellite, hypervisor_data,
+    #         vdc_pool_physical
+    # ):
+    #     """Test the register_by item on satellite webui
+    #
+    #     :title: virt-who: satellite: test vdc virtual subscriptions on webui
+    #     :id: 9f2f64d5-d5fc-425a-8f11-33a1cadc1acd
+    #     :caseimportance: Medium
+    #     :tags: tier2
+    #     :customerscenario: false
+    #     :upstream: no
+    #     :steps:
+    #
+    #         1.
+    #
+    #     :expectedresults:
+    #
+    #         1.
+    #     """
+    #     hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+    #     guest_hostname = hypervisor_data['guest_hostname']
+    #     satellite.host_delete(hypervisor_hostname)
+    #
+    #     # hypervisor
+    #     register_by_exp = 'null'
+    #     if HYPERVISOR == 'local':
+    #         register_by_exp = 'admin'
+    #     _ = virtwho.run_cli()
+    #     register_by = satellite.hosts_info_on_webui(hypervisor_hostname)
+    #     assert register_by == register_by_exp
+    #
+    #     # guest
+    #     register_by = satellite.hosts_info_on_webui(guest_hostname)
+    #     assert register_by == 'admin'
 
 
 @pytest.fixture(scope='class')
@@ -421,3 +518,13 @@ def sm_guest_ack(register_data):
                                register_type='satellite',
                                org=config.satellite.default_org,
                                activation_key=register_data['activation_key'])
+
+# used by the draft case 'test_register_by_item_on_webui'
+# def host_register_by_on_webui(satellite, host):
+#     host_info = satellite.hosts_info_on_webui(host)
+#     if host_info:
+#         register_by = host_info['subscription_facet_attributes']['user']['login']
+#         if register_by:
+#             return register_by
+#     logger.error(f'Failed to get the register_by value for {host}')
+#     return None

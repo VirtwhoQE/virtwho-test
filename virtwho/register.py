@@ -89,7 +89,6 @@ class SubscriptionManager:
             return True
         return False
 
-
     def satellite_cert_install(self):
         """
         Install certificate when registering to satellite.
@@ -139,7 +138,8 @@ class SubscriptionManager:
             logger.warning(output)
             return output.strip()
         else:
-            raise FailException(f'Failed to attach subscription for {self.host}')
+            raise FailException(
+                f'Failed to attach subscription for {self.host}')
 
     def unattach(self, pool=None):
         """
@@ -153,7 +153,8 @@ class SubscriptionManager:
         if ret == 0:
             logger.info(f'Succeeded to remove subscription for {self.host}')
         else:
-            raise FailException(f'Failed to remove subscription for {self.host}')
+            raise FailException(
+                f'Failed to remove subscription for {self.host}')
 
     def available(self, sku_id, sku_type='Virtual'):
         """
@@ -630,15 +631,22 @@ class Satellite:
         :param host: host name/uuid/hwuuid
         :return: host id or None
         """
+        # ret, output = self.ssh.runcmd(f'{self.hammer} host list '
+        #                               f'--organization-id {self.org_id} '
+        #                               f'--search {host} '
+        #                               f'--fields Id')
         ret, output = self.ssh.runcmd(f'{self.hammer} host list '
                                       f'--organization-id {self.org_id} '
-                                      f'--search {host} '
-                                      f'--fields Id')
+                                      f'--search {host}')
+        # logger.info(f'--- {output} ---')
         output = json.loads(output)
-        if ret == 0 and len(output) == 1:
-            id = output[0]['Id']
-            logger.info(f'Succeeded to get the host id, {host}:{id}')
-            return id
+        if ret == 0 and len(output) >= 1:
+            for item in output:
+                if host in item['Name']:
+                    host_id = item['Id']
+                    logger.info(
+                        f'Succeeded to get the host id, {host}:{host_id}')
+                    return host_id
         logger.warning(f'Failed to get the host id for {host}')
         return None
 
@@ -885,6 +893,57 @@ class Satellite:
                 return False
             return True
 
+    def subscription_on_webui(self, pool):
+        """
+        Check the subscription info on webui.
+        :param pool: sku pool id
+        """
+        katello_id = self.katello_id(pool)
+        _, output = request_get(
+            url=f'{self.api}/katello/api/organizations/{self.org_id}/'
+                f'subscriptions/{katello_id}',
+            auth=self.auth
+        )
+        if output and output['id']:
+            return output
+        logger.warning(
+            f'Failed to get the pool subscription info on satellite webui')
+        return None
+
+    def katello_id(self, pool):
+        """
+        Get the pool katello id.
+        :param pool: sku pool id
+        """
+        for i in range(3):
+            ret, output = request_get(
+                url=f'{self.api}/katello/api/organizations/{self.org_id}/'
+                    f'subscriptions/?per_page=1000',
+                auth=self.auth
+            )
+            if output and 'results' in output.keys():
+                for item in output['results']:
+                    if pool in item['cp_id']:
+                        katello_id = str(item['id']).strip()
+                        logger.info(f'Get the katello_id: {katello_id}')
+                        return katello_id
+            time.sleep(15)
+        logger.warning(f'Failed to get katello id on satellite webui.')
+        return None
+
+    def hosts_info_on_webui(self, host):
+        """
+        Check the host details from satellite webui
+        :param host: :param host: host name/uuid/hwuuid
+        """
+        host_id = self.host_id(host)
+        _, output = request_get(url=f'{self.api}/api/v2/hosts/{host_id}',
+                                auth=self.auth)
+        if output:
+            return output
+        logger.warning(f'Failed to get host info for {host} on satellite webui')
+        return None
+
     def sca(self, sca='disable'):
         """
         Enable/disable simple content access.
@@ -935,7 +994,8 @@ def request_put(url, auth, headers, json_data, verify=False):
         TLS certificate
     :return: response status code
     """
-    res = requests.put(url=url, auth=auth, headers=headers, json=json_data, verify=verify)
+    res = requests.put(url=url, auth=auth, headers=headers, json=json_data,
+                       verify=verify)
     return res.status_code
 
 
