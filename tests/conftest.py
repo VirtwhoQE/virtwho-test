@@ -65,6 +65,13 @@ def function_virtwho_d_conf_clean(ssh_host):
     ssh_host.runcmd(cmd)
 
 
+@pytest.fixture(scope='class')
+def class_virtwho_d_conf_clean(ssh_host):
+    """Clean all config files in /etc/virt-who.d/ folder"""
+    cmd = "rm -rf /etc/virt-who.d/*"
+    ssh_host.runcmd(cmd)
+
+
 @pytest.fixture(scope='function')
 def function_sysconfig():
     return VirtwhoSysConfig(HYPERVISOR)

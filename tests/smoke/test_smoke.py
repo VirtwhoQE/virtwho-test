@@ -8,9 +8,9 @@ import pytest
 from virtwho import logger
 
 
-@pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor')
-@pytest.mark.usefixtures('debug_true')
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures('class_debug_true')
 class TestSmoke:
     def test_host_guest_association(self, virtwho, satellite, hypervisor_data,
                                     register_data, sm_guest, ssh_guest):
@@ -47,7 +47,7 @@ class TestSmoke:
         sm_guest.register()
         assert satellite.associate(hypervisor_hostname, guest_hostname) is not False
 
-    def test_rhsm_options(self, virtwho, hypervisor, sm_host):
+    def test_rhsm_options(self, virtwho, class_hypervisor, sm_host):
         """Test the rhsm_hostname/username/password/prefix/port
 
         :title: virt-who: satellite smoke: test rhsm options
@@ -74,7 +74,7 @@ class TestSmoke:
             2. virt-who can report successfully
         """
         try:
-            hypervisor.create(rhsm=False)
+            class_hypervisor.create(rhsm=False)
             sm_host.register()
             result = virtwho.run_cli()
             assert (result['send'] == 1
@@ -85,12 +85,13 @@ class TestSmoke:
             assert (result['send'] == 0
                     and result['error'] != 0)
         finally:
-            hypervisor.create(rhsm=True)
+            class_hypervisor.create(rhsm=True)
             result = virtwho.run_cli()
             assert (result['send'] == 1
                     and result['error'] == 0)
 
-    def test_rhsm_proxy(self, virtwho, hypervisor, proxy_data, register_data):
+    def test_rhsm_proxy(self, virtwho, class_hypervisor, proxy_data,
+                        register_data):
         """Test the rhsm_proxy in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: satellite smoke: test rhsm proxy
@@ -111,8 +112,8 @@ class TestSmoke:
         # run virt-who with good rhsm proxy
         connection_log = proxy_data['connection_log']
         proxy_log = proxy_data['proxy_log']
-        hypervisor.update('rhsm_proxy_hostname', proxy_data['server'])
-        hypervisor.update('rhsm_proxy_port', proxy_data['port'])
+        class_hypervisor.update('rhsm_proxy_hostname', proxy_data['server'])
+        class_hypervisor.update('rhsm_proxy_port', proxy_data['port'])
         result = virtwho.run_cli()
         assert (result['send'] == 1
                 and result['error'] == 0
@@ -120,25 +121,25 @@ class TestSmoke:
                 and proxy_log in result['log'])
         # run virt-who with bad rhsm proxy
         errors = proxy_data['error']
-        hypervisor.update('rhsm_proxy_hostname', proxy_data['bad_server'])
-        hypervisor.update('rhsm_proxy_port', proxy_data['bad_port'])
+        class_hypervisor.update('rhsm_proxy_hostname', proxy_data['bad_server'])
+        class_hypervisor.update('rhsm_proxy_port', proxy_data['bad_port'])
         result = virtwho.run_cli()
         assert (result['send'] == 0
                 and result['error'] != 0
                 and any(error in result['log'] for error in errors))
         # run virt-who with bad rhsm proxy and no_proxy
-        hypervisor.update('rhsm_no_proxy', register_data['server'])
+        class_hypervisor.update('rhsm_no_proxy', register_data['server'])
         result = virtwho.run_cli()
         assert (result['send'] == 1
                 and result['error'] == 0
                 and connection_log not in result['log']
                 and proxy_log not in result['log'])
 
-        hypervisor.delete('rhsm_no_proxy')
-        hypervisor.delete('rhsm_proxy_port')
-        hypervisor.delete('rhsm_proxy_hostname')
+        class_hypervisor.delete('rhsm_no_proxy')
+        class_hypervisor.delete('rhsm_proxy_port')
+        class_hypervisor.delete('rhsm_proxy_hostname')
 
-    def test_hypervisor_id(self, virtwho, satellite, hypervisor,
+    def test_hypervisor_id(self, virtwho, satellite, class_hypervisor,
                            hypervisor_data):
         """Test hypervisor_id option in /etc/virt-who.d/hypervisor.conf
 
@@ -166,7 +167,7 @@ class TestSmoke:
             for key, value in sorted(hypervisor_ids.items(), key=lambda item:item[0]):
                 if value:
                     logger.info(f'>> start to run with hypervisor_id={key}')
-                    hypervisor.update('hypervisor_id', key)
+                    class_hypervisor.update('hypervisor_id', key)
                     result = virtwho.run_cli()
                     assert (result['send'] == 1
                             and result['error'] == 0
@@ -183,10 +184,10 @@ class TestSmoke:
                         assert not satellite.host_id(hypervisor_ids['uuid'])
                         assert not satellite.host_id(hypervisor_ids['hostname'])
         finally:
-            hypervisor.update('hypervisor_id', 'hostname')
+            class_hypervisor.update('hypervisor_id', 'hostname')
 
-    def test_vdc_sku(self, virtwho, sm_guest, register_guest, satellite,
-                     hypervisor_data, sku_data, vdc_pool_physical):
+    def test_vdc_sku(self, virtwho, sm_guest, function_guest_register,
+                     satellite, hypervisor_data, sku_data, vdc_pool_physical):
         """Test the guest can get the vdc virtual bonus pool from hypervisor.
 
         :title: virt-who: satellite smoke: test vdc sku attach/unattach
@@ -231,8 +232,9 @@ class TestSmoke:
         consumed_data = sm_guest.consumed(sku_id=sku_virt)
         assert consumed_data is None
 
-    def test_temporary_sku(self, virtwho, satellite, sm_guest, register_guest,
-                           sku_data, hypervisor_data, vdc_pool_physical):
+    def test_temporary_sku(self, virtwho, satellite, sm_guest, sku_data,
+                           function_guest_register, vdc_pool_physical,
+                           hypervisor_data):
         """Test the guest can get the vdc temporay bonus pool.
 
         :title: virt-who: rhsm: test vdc temporary sku

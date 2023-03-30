@@ -32,14 +32,13 @@ def sca_disable():
     register.sca(sca='disable')
 
 
-@pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor')
-@pytest.mark.usefixtures('debug_true')
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures('class_debug_true')
 @pytest.mark.usefixtures('sca_enable')
 @pytest.mark.usefixtures('sca_disable')
 class TestSCA:
-    def test_hypervisor_facts(self, virtwho, hypervisor, hypervisor_data,
-                              register_data):
+    def test_hypervisor_facts(self, virtwho, hypervisor_data, register_data):
         """Test the hypervisor facts in mapping
 
         :title: virt-who: sca: test hypervisor facts
@@ -72,7 +71,7 @@ class TestSCA:
 
     def test_host_to_guest_association(self, virtwho, sm_guest, ssh_guest,
                                        register_data, hypervisor_data,
-                                       register_guest):
+                                       function_guest_register):
         """Test the host-to-guest association in mapping log and register server
         Web UI.
 
@@ -108,7 +107,7 @@ class TestSCA:
         else:
             assert register.associate(hypervisor_hostname, guest_uuid)
 
-    def test_guest_entitlement_status(self, ssh_guest, register_guest,
+    def test_guest_entitlement_status(self, ssh_guest, function_guest_register,
                                       hypervisor_data):
         """Test the guest entitlement status.
 

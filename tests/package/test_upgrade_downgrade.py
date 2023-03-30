@@ -11,8 +11,8 @@ from virtwho.base import wget_download, rhel_compose_repo, random_string
 from virtwho.testing import virtwho_pacakge_url
 
 
-@pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor')
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
 class TestUpgradeDowngrade:
     @pytest.mark.tier1
     def test_upgrade_downgrade_by_yum(self, ssh_host, virtwho, globalconf):

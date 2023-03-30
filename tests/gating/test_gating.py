@@ -8,8 +8,8 @@ import pytest
 from virtwho import HYPERVISOR, REGISTER
 
 
-@pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor')
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
 class TestGating:
     def test_debug(self, virtwho):
         """Test the '-d' option in virt-who command line
@@ -73,7 +73,7 @@ class TestGating:
                 and result['thread'] == 0
                 and result['terminate'] == 1)
 
-    def test_interval(self, virtwho, globalconf, debug_true):
+    def test_interval(self, virtwho, globalconf, class_debug_true):
         """Test the interval option in /etc/virt-who.conf
 
         :title: virt-who: gating: test interval function
@@ -110,7 +110,7 @@ class TestGating:
                 and result['interval'] == 60
                 and result['loop'] == 60)
 
-    def test_hypervisor_id(self, virtwho, hypervisor, hypervisor_data):
+    def test_hypervisor_id(self, virtwho, class_hypervisor, hypervisor_data):
         """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: gating: test hypervisor_id function
@@ -131,14 +131,14 @@ class TestGating:
             hypervisor id shows uuid/hostname/hwuuid in mapping as the setting.
         """
         try:
-            hypervisor.update('hypervisor_id', 'uuid')
+            class_hypervisor.update('hypervisor_id', 'uuid')
             result = virtwho.run_cli()
             assert (result['send'] == 1
                     and
                     result['hypervisor_id'] == hypervisor_data[
                         'hypervisor_uuid'])
 
-            hypervisor.update('hypervisor_id', 'hostname')
+            class_hypervisor.update('hypervisor_id', 'hostname')
             result = virtwho.run_cli()
             assert (result['send'] == 1
                     and
@@ -146,14 +146,14 @@ class TestGating:
                         'hypervisor_hostname'])
 
             if HYPERVISOR in ['esx', 'rhevm']:
-                hypervisor.update('hypervisor_id', 'hwuuid')
+                class_hypervisor.update('hypervisor_id', 'hwuuid')
                 result = virtwho.run_cli()
                 assert (result['send'] == 1
                         and
                         result['hypervisor_id'] == hypervisor_data[
                             'hypervisor_hwuuid'])
         finally:
-            hypervisor.update('hypervisor_id', 'hostname')
+            class_hypervisor.update('hypervisor_id', 'hostname')
 
     def test_host_guest_association(self, virtwho, register_data, hypervisor_data):
         """Test the host to guest association from mapping
@@ -184,7 +184,7 @@ class TestGating:
                 and virtwho.associate_in_mapping(
                     result, default_org, hypervisor_hostname, guest_uuid))
 
-    def test_vdc_bonus_pool(self, virtwho, sm_guest, register_guest,
+    def test_vdc_bonus_pool(self, virtwho, sm_guest, function_guest_register,
                             satellite, rhsm, hypervisor_data, sku_data,
                             vdc_pool_physical):
         """Test the vdc subscription can derive bonus pool for guest using

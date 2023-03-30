@@ -7,7 +7,7 @@
 import pytest
 
 
-@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('class_globalconf_clean')
 class TestVirtwhoService:
     @pytest.mark.tier1
     def test_start_and_stop(self, virtwho):

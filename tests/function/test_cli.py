@@ -8,8 +8,8 @@ import pytest
 from virtwho import HYPERVISOR_FILE
 
 
-@pytest.mark.usefixtures('globalconf_clean')
-@pytest.mark.usefixtures('hypervisor')
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
 class TestCli:
     @pytest.mark.tier1
     def test_debug(self, virtwho):
