@@ -175,7 +175,7 @@ class TestLibvrtPositive:
             self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data,
             ssh_host, sm_host):
         """
-        :title: virt-who: default: test the mapping info
+        :title: virt-who: default: test the mapping info after deleting the host and hypervisor
         :id: 19b84057-69a3-43bc-9b24-f39bc31ed3a8
         :caseimportance: High
         :tags: tier2
