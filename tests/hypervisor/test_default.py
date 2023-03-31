@@ -9,6 +9,8 @@ import pytest
 from virtwho import REGISTER
 from virtwho import HYPERVISOR
 
+from virtwho.base import hostname_get
+
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('debug_true')
@@ -167,3 +169,66 @@ class TestLibvrtPositive:
         _, output = ssh_guest.runcmd(cmd)
         virt_is_guest = output.split(':')[1].strip()
         assert virt_is_guest == "True"
+
+    @pytest.mark.tier2
+    def test_delete_host_hypervisor(
+            self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data,
+            ssh_host, sm_host):
+        """
+        :title: virt-who: default: test the mapping info
+        :id: 19b84057-69a3-43bc-9b24-f39bc31ed3a8
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run the virt-who service to send the mapping info
+            2. Delete the virt-who host from webui
+            3. Run the virt-who service again to check the rhsm.log
+            3. Re-register the virt-who host and re-run the virt-who service
+            4. Delete the hypervisor from web UI,re-run the virt-who service
+        :expectedresults:
+
+            1. Virt-who works fine, no error messages in the rhsm.log
+            3. Virt-who works fine, can send the the mappping info
+            4. Virt-who Works fine, no error messages in the rhsm.log
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+        virtwho_hostname = hostname_get(ssh_host)
+
+        # run virt-who to send mappings
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        # delete virt-who host from webui
+        if REGISTER == 'rhsm':
+            rhsm.delete(virtwho_hostname)
+        else:
+            satellite.host_delete(virtwho_hostname)
+
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        # re-register host and run virt-who
+        sm_host.unregister()
+        sm_host.register()
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        # delete hypervisor from webui
+        if HYPERVISOR is not 'local':
+            if REGISTER == 'rhsm':
+                rhsm.delete(host_name)
+            else:
+                satellite.host_delete(host_name)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
