@@ -614,3 +614,98 @@ class TestSysConfiguration:
                 and result['loop'] == 60)
 
         function_sysconfig.clean()
+
+
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
+class TestConfigurationNegative:
+    @pytest.mark.tier2
+    def test_debug_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the debug option in /etc/virtwho.conf
+
+        :title: virt-who: config: test debug negative option
+        :id: d06ee580-767f-43f6-9dab-51947ed9d4db
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with "debug=null" in [global] section in /etc/virt-who.conf file
+        :expectedresults:
+
+            1. no [DEBUG] log printed
+        """
+        globalconf.update('global', 'debug', '')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['thread'] == 1
+                and result['error'] == 0
+                and result['debug'] is False)
+
+    @pytest.mark.tier2
+    def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the oneshot option in /etc/virtwho.conf
+
+        :title: virt-who: config: test oneshot negative option
+        :id: 843f67cb-c98e-4074-9527-ae216fb036df
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with "oneshot=True" in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Can see 'Thread X stopped after running once' log in rhsm.log
+            2. Cannot see 'Thread X stopped after running once' log in rhsm.log
+        """
+        globalconf.update('global', 'debug', 'True')
+        globalconf.update('global', 'oneshot', '')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['thread'] == 1
+                and result['error'] == 0
+                and result['terminate'] == 0
+                and result['oneshot'] is False)
+
+    @pytest.mark.tier2
+    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
+                                           register_data, rhsm, satellite):
+        """Test the hypervisor_id negative option in /etc/virtwho.conf
+
+        :title: virt-who: config: test hypervisor_id option
+        :id: fc2dcc791-0182-4309-a3d8-fc899d3938fa
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Config the hypervisor_id=uuid in /etc/virt-who.conf
+            2. Config the hypervisor_id=hostname in /etc/virt-who.d/virt-who.conf
+            3. Run virt-who service and check the mapping info
+            4. Delete the host from the register platform
+
+        :expectedresults:
+
+            3. hypervisor_id in /etc/virt-who.d/virt-who.conf has high priority, can find the
+            hypervisor_id is the hostname in the mapping info.
+        """
+        globalconf.update('global', 'debug', 'True')
+
+        globalconf.update('defaults', 'hypervisor_id', 'uuid')
+        function_hypervisor.update('hypervisor_id', 'hostname')
+
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and result['hypervisor_id'] == hypervisor_data['hypervisor_hostname'])
+        if REGISTER == 'rhsm':
+            rhsm.delete(hypervisor_data['hypervisor_hostname'])
+        else:
+            satellite.host_delete(hypervisor_data['hypervisor_hostname'])
