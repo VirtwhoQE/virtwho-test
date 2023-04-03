@@ -434,7 +434,7 @@ class TestSatellite:
                 will not be 0
         """
         hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        if HYPERVISOR == 'libvirt-local':
+        if HYPERVISOR == 'local':
             hypervisor_name = [f'{hypervisor_hostname}']
         else:
             key = f'virt-who-{hypervisor_hostname}'
