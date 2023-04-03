@@ -5,6 +5,7 @@ from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
 from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP
+from virtwho import PRINT_JSON_FILE, HYPERVISOR
 
 
 class VirtwhoHypervisorConfig:
@@ -16,7 +17,7 @@ class VirtwhoHypervisorConfig:
         data come from virtwho.ini. All local files are backed up
         to /temp directory of the project root.
         :param mode: The hypervisor mode.
-            (esx, xen, hyperv, rhevm, libvirt, kubevirt, ahv, local)
+            (esx, xen, hyperv, rhevm, libvirt, kubevirt, ahv, local, fake)
         :param register_type: The subscription server. (rhsm, satellite)
         """
         self.mode = mode
@@ -35,25 +36,34 @@ class VirtwhoHypervisorConfig:
         :param rhsm: True is to add all rhsm related options, False will not.
         """
         self.destroy()
-        if self.mode == 'local':
-            self.update('type', 'libvirt')
+        if self.mode == 'fake':
+            self.update('type', 'fake')
+            self.update('file', PRINT_JSON_FILE)
+            is_hypervisor = 'True'
+            if HYPERVISOR == 'local':
+                is_hypervisor = 'False'
+            self.update('is_hypervisor', is_hypervisor)
+            self.update('owner', self.register.default_org)
         else:
-            self.update('type', self.mode)
-            self.update('hypervisor_id', 'hostname')
-        if self.mode == 'kubevirt':
-            self.update('kubeconfig', self.hypervisor.config_file)
-        if self.mode in ('esx', 'xen', 'hyperv', 'rhevm', 'libvirt', 'ahv'):
-            hypervisor_server = self.hypervisor.server
-            if self.mode == 'rhevm':
-                ssh_rhevm = SSHConnect(host=self.hypervisor.server,
-                                       user=self.hypervisor.ssh_username,
-                                       pwd=self.hypervisor.ssh_password)
-                hypervisor_server = f'https://{hostname_get(ssh_rhevm)}:' \
-                                    f'443/ovirt-engine'
-            self.update('server', hypervisor_server)
-            self.update('username', self.hypervisor.username)
-            self.update('password', self.hypervisor.password)
-        self.update('owner', self.register.default_org)
+            if self.mode == 'local':
+                self.update('type', 'libvirt')
+            else:
+                self.update('type', self.mode)
+                self.update('hypervisor_id', 'hostname')
+            if self.mode == 'kubevirt':
+                self.update('kubeconfig', self.hypervisor.config_file)
+            if self.mode in ('esx', 'xen', 'hyperv', 'rhevm', 'libvirt', 'ahv'):
+                hypervisor_server = self.hypervisor.server
+                if self.mode == 'rhevm':
+                    ssh_rhevm = SSHConnect(host=self.hypervisor.server,
+                                           user=self.hypervisor.ssh_username,
+                                           pwd=self.hypervisor.ssh_password)
+                    hypervisor_server = f'https://{hostname_get(ssh_rhevm)}:' \
+                                        f'443/ovirt-engine'
+                self.update('server', hypervisor_server)
+                self.update('username', self.hypervisor.username)
+                self.update('password', self.hypervisor.password)
+            self.update('owner', self.register.default_org)
         if rhsm is True:
             self.update('rhsm_hostname', self.register.server)
             self.update('rhsm_username', self.register.username)

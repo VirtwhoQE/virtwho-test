@@ -3,7 +3,7 @@ import queue
 import re
 import threading
 import time
-from virtwho import logger, FailException, PRINT_JSON_FILE
+from virtwho import logger, FailException, PRINT_JSON_FILE, HYPERVISOR
 from virtwho.base import msg_search
 from virtwho.configure import virtwho_ssh_connect, get_hypervisor_handler
 
@@ -121,10 +121,11 @@ class VirtwhoRunner:
         data['interval'] = self.interval_time(rhsm_log)
         data['loop'], data['loop_num'] = self.loop_info()
         data['mappings'] = self.mappings(rhsm_log)
-        data['hypervisor_id'] = self.hypervisor_id(data['mappings'])
         data['print_json'] = self.print_json()
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
+        if HYPERVISOR != 'local':
+            data['hypervisor_id'] = self.hypervisor_id(data['mappings'])
         # The below line is used to local debug.
         # logger.info(f'Got the data after run virt-who:-----\n{data}\n------')
         data['log'] = rhsm_log
@@ -424,21 +425,22 @@ class VirtwhoRunner:
         """
         data = dict()
         key = "Domain info:"
-        rex = re.compile(r'(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)', re.S)
-        mapping_info = rex.findall(rhsm_log)[0]
-        try:
-            mapping_info = json.loads(mapping_info.replace('\n', ''),
-                                      strict=False)
-        except:
-            logger.warning(f"json.loads failed: {mapping_info}")
-            return data
-        for item in mapping_info:
-            guestId = item['guestId']
-            attr = dict()
-            attr['state'] = item['state']
-            attr['active'] = item['attributes']['active']
-            attr['type'] = item['attributes']['virtWhoType']
-            data[guestId] = attr
+        if key in rhsm_log:
+            rex = re.compile(r'(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)', re.S)
+            mapping_info = rex.findall(rhsm_log)[0]
+            try:
+                mapping_info = json.loads(mapping_info.replace('\n', ''),
+                                          strict=False)
+            except:
+                logger.warning(f"json.loads failed: {mapping_info}")
+                return data
+            for item in mapping_info:
+                guestId = item['guestId']
+                attr = dict()
+                attr['state'] = item['state']
+                attr['active'] = item['attributes']['active']
+                attr['type'] = item['attributes']['virtWhoType']
+                data[guestId] = attr
         return data
 
     def mappings_remote(self, rhsm_log):

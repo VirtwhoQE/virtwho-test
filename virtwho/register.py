@@ -42,25 +42,30 @@ class SubscriptionManager:
         """
         Register host by subscription-manager command
         """
-        self.unregister()
-        cmd = f'subscription-manager register ' \
-              f'--serverurl={self.server}:{self.port}{self.prefix} ' \
-              f'--org={self.org} '
-        if self.activation_key:
-            cmd += f'--activationkey={self.activation_key} '
+        if not self.is_register():
+            self.unregister()
+            cmd = f'subscription-manager register ' \
+                  f'--serverurl={self.server}:{self.port}{self.prefix} ' \
+                  f'--org={self.org} '
+            if self.activation_key:
+                cmd += f'--activationkey={self.activation_key} '
+            else:
+                cmd += f'--username={self.username} ' \
+                       f'--password={self.password} '
+            if self.register_type == 'satellite':
+                self.satellite_cert_install()
+            else:
+                cmd += f'--baseurl={self.baseurl}'
+            ret, output = self.ssh.runcmd(cmd)
+            if 'The system has been registered' in output:
+                logger.info(f'Succeeded to register host({self.host})')
+                return output
+            else:
+                raise FailException(f'Failed to register host({self.host})')
         else:
-            cmd += f'--username={self.username} ' \
-                   f'--password={self.password} '
-        if self.register_type == 'satellite':
-            self.satellite_cert_install()
-        else:
-            cmd += f'--baseurl={self.baseurl}'
-        ret, output = self.ssh.runcmd(cmd)
-        if ret == 0 and 'The system has been registered' in output:
-            logger.info(f'Succeeded to register host')
-            return output
-        else:
-            raise FailException(f'Failed to register {self.host}')
+            logger.info(f'The host({self.host}) has been registered, '
+                        f'no need to register again.')
+            return None
 
     def unregister(self):
         """
@@ -74,6 +79,15 @@ class SubscriptionManager:
             logger.info(f'Succeeded to unregister host')
         else:
             raise FailException(f'Failed to unregister {self.host}.')
+
+    def is_register(self):
+        """
+        Check if the host has been registered to the correct destination.
+        """
+        ret, output = self.ssh.runcmd('subscription-manager identity')
+        if ret == 0 and self.org in output:
+            return True
+        return False
 
     def satellite_cert_install(self):
         """
@@ -124,7 +138,8 @@ class SubscriptionManager:
             logger.warning(output)
             return output.strip()
         else:
-            raise FailException(f'Failed to attach subscription for {self.host}')
+            raise FailException(
+                f'Failed to attach subscription for {self.host}')
 
     def unattach(self, pool=None):
         """
@@ -138,7 +153,8 @@ class SubscriptionManager:
         if ret == 0:
             logger.info(f'Succeeded to remove subscription for {self.host}')
         else:
-            raise FailException(f'Failed to remove subscription for {self.host}')
+            raise FailException(
+                f'Failed to remove subscription for {self.host}')
 
     def available(self, sku_id, sku_type='Virtual'):
         """
@@ -202,6 +218,10 @@ class SubscriptionManager:
                             sku_attr['temporary'] = True
                         else:
                             sku_attr['temporary'] = False
+                        # the below commented lines are used in local debug
+                        # logger.info(
+                        # f'---- sku_data of {sku_id}:\n{sku_attr}\n----'
+                        # )
                         return sku_attr
         logger.warning('Failed to get consumed subscriptions.')
         return None
@@ -271,41 +291,52 @@ class SubscriptionManager:
             attr_data[key] = value
         return attr_data
 
-    def facts_create(self, key, value):
+    def facts_create(self, key, value, wait=10):
         """
         Create subscription facts to /etc/rhsm/facts/custom.facts.
         :param key: fact key
         :param value: fact value
+        :param wait: wait time after update facts, need 60s for satellite to
+            resolve the tasks conflict issue.
         """
         option = f'{{"{key}":"{value}"}}'
-        ret, output = self.ssh.runcmd(
-            f"echo '{option}' > /etc/rhsm/facts/custom.facts ;"
-            f"subscription-manager facts --update")
-        if ret == 0 and 'Successfully updated' in output:
-            time.sleep(60)
-            ret, output = self.ssh.runcmd(
-                f"subscription-manager facts --list |grep '{key}:'")
-            if ret == 0 and key in output:
-                actual_value = output.split(": ")[1].strip()
-                if actual_value == value:
-                    logger.info(
-                        f'Succeeded to create custom facts with for {self.host}')
-        else:
-            raise FailException(
-                f'Failed to create custom facts for {self.host}')
+        ret, _ = self.ssh.runcmd(
+            f"echo '{option}' > /etc/rhsm/facts/custom.facts")
+        if ret == 0:
+            ret, output = self.ssh.runcmd('subscription-manager facts --update')
+            time.sleep(wait)
+            if ret == 0 and 'Successfully updated' in output:
+                logger.info(f'Succeeded to create custom.facts for {self.host}')
+                return True
+        raise FailException(f'Failed to create custom facts for {self.host}')
 
-    def facts_remove(self):
+    def facts_remove(self, wait=10):
         """
         Remove subscription facts.
+        :param wait: wait time after update facts, need 60s for satellite to
+            resolve the tasks conflict issue.
         """
-        ret, output = self.ssh.runcmd('rm -f /etc/rhsm/facts/custom.facts;'
-                                      'subscription-manager facts --update')
-        time.sleep(60)
-        if ret == 0 and 'Successfully updated' in output:
-            logger.info(f'Succeeded to remove custom.facts for {self.host}')
-        else:
-            raise FailException(
-                f'Failed to remove custom.facts for {self.host}')
+        ret, _ = self.ssh.runcmd('rm -f /etc/rhsm/facts/custom.facts')
+        if ret == 0:
+            ret, output = self.ssh.runcmd('subscription-manager facts --update')
+            for i in range(3):
+                time.sleep(wait)
+                if ret == 0 and 'Successfully updated' in output:
+                    logger.info(
+                        f'Succeeded to remove custom.facts for {self.host}')
+                    return True
+        raise FailException(f'Failed to remove custom.facts for {self.host}')
+
+    def pool_id_get(self, sku_id, sku_type='Physical'):
+        self.register()
+        sku_data = self.available(sku_id, sku_type)
+        if sku_data is not None:
+            sku_pool = sku_data['pool_id']
+            logger.info(f'Succeeded to get the vdc {sku_type} pool id: '
+                        f'{sku_pool}')
+            return sku_pool
+        logger.error('Failed to get the vdc physical sku pool id')
+        return None
 
 
 class RHSM:
@@ -368,7 +399,7 @@ class RHSM:
             return info
         raise FailException(f'Failed to get consumer info for {host_name}')
 
-    def delete(self, host_name=None):
+    def host_delete(self, host_name=None):
         """
         Delete only one consumer or clean all consumers.
         :param host_name: host name, will clean all consumers if host_name=None.
@@ -602,13 +633,15 @@ class Satellite:
         """
         ret, output = self.ssh.runcmd(f'{self.hammer} host list '
                                       f'--organization-id {self.org_id} '
-                                      f'--search {host} '
-                                      f'--fields Id')
+                                      f'--search {host}')
         output = json.loads(output)
-        if ret == 0 and len(output) == 1:
-            id = output[0]['Id']
-            logger.info(f'Succeeded to get the host id, {host}:{id}')
-            return id
+        if ret == 0 and len(output) >= 1:
+            for item in output:
+                if host in item['Name']:
+                    host_id = item['Id']
+                    logger.info(
+                        f'Succeeded to get the host id, {host}:{host_id}')
+                    return host_id
         logger.warning(f'Failed to get the host id for {host}')
         return None
 
@@ -855,6 +888,57 @@ class Satellite:
                 return False
             return True
 
+    def subscription_on_webui(self, pool):
+        """
+        Check the subscription info on webui.
+        :param pool: sku pool id
+        """
+        katello_id = self.katello_id(pool)
+        _, output = request_get(
+            url=f'{self.api}/katello/api/organizations/{self.org_id}/'
+                f'subscriptions/{katello_id}',
+            auth=self.auth
+        )
+        if output and output['id']:
+            return output
+        logger.warning(
+            f'Failed to get the pool subscription info on satellite webui')
+        return None
+
+    def katello_id(self, pool):
+        """
+        Get the pool katello id.
+        :param pool: sku pool id
+        """
+        for i in range(3):
+            ret, output = request_get(
+                url=f'{self.api}/katello/api/organizations/{self.org_id}/'
+                    f'subscriptions/?per_page=1000',
+                auth=self.auth
+            )
+            if output and 'results' in output.keys():
+                for item in output['results']:
+                    if pool in item['cp_id']:
+                        katello_id = str(item['id']).strip()
+                        logger.info(f'Get the katello_id: {katello_id}')
+                        return katello_id
+            time.sleep(15)
+        logger.warning(f'Failed to get katello id on satellite webui.')
+        return None
+
+    def hosts_info_on_webui(self, host):
+        """
+        Check the host details from satellite webui
+        :param host: :param host: host name/uuid/hwuuid
+        """
+        host_id = self.host_id(host)
+        _, output = request_get(url=f'{self.api}/api/v2/hosts/{host_id}',
+                                auth=self.auth)
+        if output:
+            return output
+        logger.warning(f'Failed to get host info for {host} on satellite webui')
+        return None
+
     def sca(self, sca='disable'):
         """
         Enable/disable simple content access.
@@ -905,7 +989,9 @@ def request_put(url, auth, headers, json_data, verify=False):
         TLS certificate
     :return: response status code
     """
-    res = requests.put(url=url, auth=auth, headers=headers, json=json_data, verify=verify)
+    res = requests.put(
+        url=url, auth=auth, headers=headers, json=json_data, verify=verify
+    )
     return res.status_code
 
 

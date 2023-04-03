@@ -11,6 +11,10 @@ HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}.conf'
 
 PRINT_JSON_FILE = '/root/print.json'
 
+FAKE_CONFIG_NAME = 'fake.conf'
+
+FAKE_CONFIG_FILE = f'/etc/virt-who.d/{FAKE_CONFIG_NAME}'
+
 SECOND_HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}-second.conf'
 
 SECOND_HYPERVISOR_SECTION = f'virtwho-{HYPERVISOR}-second'

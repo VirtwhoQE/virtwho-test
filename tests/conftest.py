@@ -153,6 +153,13 @@ def function_host_register(sm_host):
     sm_host.register()
 
 
+@pytest.fixture(scope='function')
+def function_host_register_for_local_mode(sm_host):
+    """register the virt-who host only when run for local mode"""
+    if HYPERVISOR == 'local':
+        sm_host.register()
+
+
 @pytest.fixture(scope='class')
 def class_host_unregister(sm_host):
     """unregister the virt-who host"""
@@ -235,7 +242,9 @@ def hypervisor_data(ssh_guest):
         data['version'] = hypervisor_handler.vdsm_version
         data['cpu'] = hypervisor_handler.vdsm_cpu
         data['cluster'] = hypervisor_handler.vdsm_cluster
-    elif HYPERVISOR != 'local':
+    elif HYPERVISOR == 'local':
+        data['hypervisor_hostname'] = hypervisor_handler.hostname
+    else:
         data['hypervisor_uuid'] = hypervisor_handler.uuid
         data['hypervisor_hostname'] = hypervisor_handler.hostname
         data['type'] = hypervisor_handler.type
@@ -305,15 +314,9 @@ def sku_data():
 @pytest.fixture(scope='session')
 def vdc_pool_physical(sm_guest, sku_data):
     """Get the vdc physical sku pool id"""
-    sku = sku_data['vdc_physical']
-    sm_guest.register()
-    sku_data = sm_guest.available(sku, 'Physical')
-    if sku_data is not None:
-        sku_pool = sku_data['pool_id']
-        logger.info(f'Succeeded to get the vdc physical sku pool id: '
-                    f'{sku_pool}')
-        return sku_pool
-    raise FailException('Failed to get the vdc physical sku pool id')
+    vdc_sku_id = sku_data['vdc_physical']
+    vdc_pool_id = sm_guest.pool_id_get(vdc_sku_id, 'Physical')
+    return vdc_pool_id
 
 
 def owner_data():
