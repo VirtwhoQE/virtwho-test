@@ -672,7 +672,41 @@ class TestConfigurationNegative:
                 and result['terminate'] == 0
                 and result['oneshot'] is False)
 
+
+    @pytest.mark.notLocal
     @pytest.mark.tier2
+    def test_owner_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
+                                   owner_data, class_debug_true):
+        """Test the owner option in /etc/virtwho.conf
+
+        :title: virt-who: config: test owner negative option
+        :id: 2b6f68bb-ea7e-4c01-abe5-7c27da3b3d3f
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Disable owner option in /etc/virt-who.d/,
+            2. Run virt-who with null owner setting in [defaults] section
+            in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Virt-who runs failed with the incorrect owner setting
+        """
+        globalconf.update('global', 'debug', 'True')
+
+        function_hypervisor.delete('owner')
+        globalconf.update('defaults', 'owner', '')
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 1
+                and any(error in result['error_msg'] for error in owner_data['null_error']))
+
+    @pytest.mark.tier2
+    @pytest.mark.notLocal
     def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
                                            register_data, rhsm, satellite):
         """Test the hypervisor_id negative option in /etc/virtwho.conf
@@ -685,8 +719,8 @@ class TestConfigurationNegative:
         :upstream: no
         :steps:
 
-            1. Config the hypervisor_id=uuid in /etc/virt-who.conf
-            2. Config the hypervisor_id=hostname in /etc/virt-who.d/virt-who.conf
+            1. Config the hypervisor_id=hostname in /etc/virt-who.d/virt-who.conf(default)
+            2. Config the hypervisor_id=uuid in /etc/virt-who.conf
             3. Run virt-who service and check the mapping info
             4. Delete the host from the register platform
 
@@ -696,9 +730,7 @@ class TestConfigurationNegative:
             hypervisor_id is the hostname in the mapping info.
         """
         globalconf.update('global', 'debug', 'True')
-
         globalconf.update('defaults', 'hypervisor_id', 'uuid')
-        function_hypervisor.update('hypervisor_id', 'hostname')
 
         result = virtwho.run_service()
         assert (result['error'] == 0
@@ -706,6 +738,6 @@ class TestConfigurationNegative:
                 and result['thread'] == 1
                 and result['hypervisor_id'] == hypervisor_data['hypervisor_hostname'])
         if REGISTER == 'rhsm':
-            rhsm.delete(hypervisor_data['hypervisor_hostname'])
+            rhsm.host_delete(hypervisor_data['hypervisor_hostname'])
         else:
             satellite.host_delete(hypervisor_data['hypervisor_hostname'])
