@@ -230,7 +230,7 @@ class TestVirtwhoService:
         username_new = 'tester'
         password = config.virtwho.password
         _, _ = ssh_host.runcmd(f'useradd {username_new}')
-        cmd = r'echo -e "{0}:{1}" | chpasswd'.format(username_new, password)
+        cmd = fr'echo -e "{username_new}:{password}" | chpasswd'
         _, _ = ssh_host.runcmd(cmd)
 
         ssh_new = SSHConnect(host=host,
