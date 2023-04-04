@@ -88,11 +88,12 @@ class VirtwhoRunner:
         result_data = self.run_start(wait=wait)
         return result_data
 
-    def analyzer(self, rhsm_log):
+    def analyzer(self, rhsm_log, cli=None):
         """
         Return a dict including all necessary informations for case
         asserting.
         :param rhsm_log: the output of rhsm.log
+        :param cli: virt-who command line
         :return: a dict including below keys.
             debug: check if find [DEBUG] log
             oneshot: check if find the oneshot keywords
@@ -121,7 +122,8 @@ class VirtwhoRunner:
         data['interval'] = self.interval_time(rhsm_log)
         data['loop'], data['loop_num'] = self.loop_info()
         data['mappings'] = self.mappings(rhsm_log)
-        data['print_json'] = self.print_json()
+        if cli and '-p ' in cli:
+            data['print_json'] = self.print_json()
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
         if HYPERVISOR != 'local':
@@ -173,11 +175,11 @@ class VirtwhoRunner:
                     "virt-who again after 60s")
                 time.sleep(60)
             else:
-                result_data = self.analyzer(rhsm_output)
+                result_data = self.analyzer(rhsm_output, cli)
                 return result_data
         raise FailException("Failed to run virt-who service.")
 
-    def thread_start(self, cli, wait):
+    def thread_start(self, cli, wait=0):
         """
         Start virt-who in a sub-thread (t1), analyze and get rhsm log in
         the main-thread, the sub-thread will be auto stopped when the
@@ -251,7 +253,7 @@ class VirtwhoRunner:
         logger.info(status_data)
         return status_data
 
-    def rhsm_log_get(self, wait):
+    def rhsm_log_get(self, wait=0):
         """
         Get and return rhsm log when the expected message found in log.
         :param wait: wait time before starting analyzing log
@@ -534,15 +536,21 @@ class VirtwhoRunner:
             thread_num = int(output.strip())
         return thread_num
 
-    def operate_service(self, name='virt-who', action='restart'):
+    def operate_service(self, name='virt-who', action='restart', wait=10):
         """
         :param name: service name, default is virt-who
         :param action: start, stop, restart, status...
+        :param wait: wait time
         :return: return code and output
         """
         cmd = f"systemctl {action} {name}"
         ret, output = self.ssh.runcmd(cmd)
-        time.sleep(10)
+        time.sleep(wait)
+        if action == 'status':
+            if 'Active: active (running)' in output:
+                output = 'running'
+            if 'Active: inactive (dead)' in output:
+                output = 'dead'
         return ret, output
 
     def kill_pid(self, process_name):
