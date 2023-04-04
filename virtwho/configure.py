@@ -138,7 +138,7 @@ class VirtwhoGlobalConfig:
         os.system(f"echo '' > {self.local_file}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
-        logger.info(f'*** Clean /etc/virt-who.d/*')
+        logger.info(f'*** Clean /etc/virt-who.conf')
 
 
 class VirtwhoSysConfig:
@@ -270,7 +270,7 @@ def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, sectio
     """ Create the hypervisor config file
     :param mode: The hypervisor mode.
     :param register_type: The subscription server. (rhsm, satellite)
-    :param config_name: the file name for the virt-who config
+    :param config_name: the file path/name for the virt-who config
     :param section: the name for the virt-who config section
     :param rhsm: True is to add all rhsm related options, False will not
     :return:
