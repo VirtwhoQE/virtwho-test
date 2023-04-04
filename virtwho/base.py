@@ -457,25 +457,37 @@ def random_string(num=8):
     return random_str
 
 
-def encrypt_password(ssh, password):
+def encrypt_password(ssh, password, option=None):
     """
     Encrypt password by virt-who-password command
     :param ssh: ssh access of testing host
     :param password: the password would like to Encrypt
+    :param option: -p, --password
     :return: the encrypted password
     """
-    cmd = f'virt-who-password -p {password} > /tmp/vw.log'
-    ret, output = ssh.runcmd(cmd)
-    if ret == 0:
-        ret, output = ssh.runcmd("cat /tmp/vw.log")
-        if output is not None and output != '':
-            encrypted_value = output.strip()
-            logger.info(f'Succeeded to get encrypted_password : {encrypted_value}')
+    log_file = '/tmp/virtwho_encry_password'
+    if not option:
+        attrs = [f'Password:|{password}']
+        ret, output = expect_run(ssh, 'virt-who-password', attrs)
+        if ret == 0 and output:
+            encrypted_value = output.split('\r\n')[-2].strip()
+            logger.info(
+                f'Succeeded to get encrypted_password without option: '
+                f'{encrypted_value}')
             return encrypted_value
-        else:
-            raise FailException("Failed to run virt-who-password")
+        raise FailException('Failed to get encrypted password without option')
     else:
-        raise FailException("Failed to run virt-who-password")
+        cmd = f'virt-who-password -p {password} > {log_file}'
+        ret, output = ssh.runcmd(cmd)
+        if ret == 0:
+            ret, output = ssh.runcmd(f'cat {log_file}')
+            if output:
+                encrypted_value = output.strip()
+                logger.info(
+                    f'Succeeded to get encrypted_password with option '
+                    f'"{option}": {encrypted_value}')
+                return encrypted_value
+        raise FailException(f'Failed to get encrypted password with "{option}"')
 
 
 def get_host_domain_id(host_hwuuid, log_info):
@@ -486,7 +498,8 @@ def get_host_domain_id(host_hwuuid, log_info):
     :return: the domain_id from the host
     """
     domain_id = re.findall(
-        fr"Skipping host '{host_hwuuid}' because its parent '(.*?)'", log_info)[0]
+        fr"Skipping host '{host_hwuuid}' because its parent '(.*?)'", log_info
+    )[0]
     return domain_id
 
 
@@ -549,3 +562,55 @@ def msg_number(output, msg):
     logger.info(f"Find '{msg}' {number} times")
     return number
 
+
+def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
+    """
+    Configure virt-who host accessing remote host by ssh
+    without password.
+    :param ssh_local: local server access
+    :param ssh_remote: destination server access
+    :param remote_host: remote host ip/hostname
+    :param remote_port: remote host port
+    """
+    # create ssh key for local host
+    _, _ = ssh_local.runcmd('echo -e "\n" | ssh-keygen -N "" &> /dev/null')
+    ret, output = ssh_local.runcmd('cat ~/.ssh/id_rsa.pub')
+    if ret != 0 or output is None:
+        raise FailException('Failed to create ssh key ')
+
+    # copy id_rsa.pup to remote host
+    _, _ = ssh_remote.runcmd(f"mkdir ~/.ssh/;"
+                             f"echo '{output}' >> ~/.ssh/authorized_keys")
+
+    # creat ~/.ssh/known_hosts for local host
+    _, _ = ssh_local.runcmd(
+        f'ssh-keyscan -p {remote_port} {remote_host} >> ~/.ssh/known_hosts')
+
+
+def expect_run(ssh, cmd, attrs):
+    """
+    Run command in terminal with interactive mode
+    without password.
+    :param ssh: ssh access of testing host
+    :param cmd: the command
+    :param attrs: such as ['Password:|password']
+    """
+    options = list()
+    filename = '/tmp/virtwho.sh'
+    for attr in attrs:
+        expect_value = attr.split('|')[0]
+        send_value = attr.split('|')[1]
+        expect = fr'expect "{expect_value}"'
+        send = fr'send "{send_value}\r"'
+        options.append(expect + '\n' + send)
+    options = '\n'.join(options)
+    cmd = (f'cat <<EOF > {filename}\n'
+           f'#!/usr/bin/expect\n'
+           f'spawn {cmd}\n'
+           f'{options}\n'
+           f'expect eof\n'
+           f'exit\n'
+           f'EOF')
+    _, _ = ssh.runcmd(cmd)
+    ret, output = ssh.runcmd(f'chmod +x {filename}; {filename}')
+    return ret, output
