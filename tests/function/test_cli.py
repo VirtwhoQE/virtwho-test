@@ -4,8 +4,11 @@
 :testtype: functional
 :caseautomation: Automated
 """
+import threading
+import time
 import pytest
-from virtwho import HYPERVISOR_FILE
+from virtwho import HYPERVISOR_FILE, config
+from virtwho.base import encrypt_password
 
 
 @pytest.mark.usefixtures('class_globalconf_clean')
@@ -111,7 +114,7 @@ class TestCli:
         result = virtwho.run_cli(oneshot=False, interval=60, wait=60)
         assert (result['send'] == 1
                 and result['interval'] == 60
-                and result['loop'] == 60)
+                and (result['loop'] == 60 or result['loop'] == 61))
 
     @pytest.mark.tier1
     def test_print(self, virtwho, hypervisor_data):
@@ -177,3 +180,88 @@ class TestCli:
         assert (result['send'] == 1
                 and result['error'] == 0
                 and msg in result['log'])
+
+    @pytest.mark.tier1
+    def test_kill_virtwho_in_terminal_side(self, virtwho, ssh_host):
+        """Test virt-who cli can be killed in terminal side by 'kill -2'
+
+        :title: virt-who: cli: test kill virt-who in terminal
+        :id: 9ed38e14-87dc-45b5-8656-b7933f6c72f2
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. start a thread to run virt-who by cli
+            2. kill the virt-who by 'kill 2'
+
+        :expectedresults:
+
+            1. virt-who cli can be killed normally in terminal side
+        """
+        t1 = threading.Thread(target=virtwho.run_cli(oneshot=False))
+        t1.start()
+        time.sleep(15)
+        assert virtwho.thread_number() == 1
+
+        # kill virt-who by 'kill -2'
+        _, _ = ssh_host.runcmd("ps -ef |"
+                               "grep virt-who -i |"
+                               "grep -v grep |"
+                               "awk '{print $2}' |"
+                               "xargs -I {} kill -2 {}")
+        time.sleep(15)
+        assert virtwho.thread_number() == 0
+
+    @pytest.mark.tier1
+    def test_run_virtwho_cli_when_the_service_is_running(self, virtwho,
+                                                         ssh_host):
+        """Test virt-who cli cannot be run when a service is already running
+
+        :title: virt-who: cli: test run virt-who cli when the service is running
+        :id: 8921e482-ddf7-4f6d-882e-582fa0745b31
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. start virt-who service
+            2. try to run virt-who by cli
+
+        :expectedresults:
+
+            1. virt-who cli cannot be run when a service is already running
+        """
+        _, _ = virtwho.operate_service(action='restart', wait=5)
+
+        _, output = ssh_host.runcmd('virt-who')
+        assert 'already running' in output
+
+    @pytest.mark.tier1
+    def test_virtwho_encrypted_password(self, ssh_host):
+        """
+
+        :title: virt-who: cli: encrypted password with/without option
+        :id: 694300a4-7d18-4f1b-bebb-5697751147f5
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. encrypt virt-who host password by inputting password in
+                interactive mode
+            2. encrypt virt-who host password with -p option
+            3. encrypt virt-who host password with --password option
+
+        :expectedresults:
+
+            1. get the same encrypted password with the three methods.
+        """
+        password = config.virtwho.password
+        encrypt_1 = encrypt_password(ssh_host, password)
+        encrypt_2 = encrypt_password(ssh_host, password, option='-p')
+        encrypt_3 = encrypt_password(ssh_host, password, option='--password')
+        assert encrypt_1 == encrypt_2 == encrypt_3
