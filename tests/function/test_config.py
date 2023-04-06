@@ -346,7 +346,7 @@ class TestConfiguration:
                 and msg in result['log'])
 
     @pytest.mark.tier1
-    def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
+    def test_owner_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
                                    owner_data, class_debug_true):
         """Test the owner option in /etc/virtwho.conf
 
@@ -370,7 +370,7 @@ class TestConfiguration:
         """
         guest_uuid = hypervisor_data['guest_uuid']
         globalconf.update('global', 'debug', 'True')
-        hypervisor.delete('owner')
+        function_hypervisor.delete('owner')
 
         globalconf.update('defaults', 'owner', owner_data['bad_owner'])
         result = virtwho.run_service()
@@ -387,8 +387,8 @@ class TestConfiguration:
                 and guest_uuid in result['log'])
 
     @pytest.mark.tier1
-    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
-                                           register_data, rhsm, satellite):
+    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor,
+                                           hypervisor_data, register_data, rhsm, satellite):
         """Test the hypervisor_id option in /etc/virtwho.conf
 
         :title: virt-who: config: test hypervisor_id option
@@ -411,7 +411,7 @@ class TestConfiguration:
         """
         globalconf.update('global', 'debug', 'True')
         # we default have the hypervisor_id section in the config file in /etc/virt-who.d/
-        hypervisor.delete('hypervisor_id')
+        function_hypervisor.delete('hypervisor_id')
 
         hypervisor_ids = ['hostname', 'uuid']
         # only esx and rhevm modes support hwuuid

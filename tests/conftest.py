@@ -327,7 +327,7 @@ def owner_data():
     owner['owner'] = register_handler.default_org
     owner['bad_owner'] = bad_owner
     owner['error'] = [f'Organization with id {bad_owner} could not be found',
-                      f"Couldn't find Organization '{bad_owner}'"],
+                      f"Couldn't find Organization '{bad_owner}'"]
     owner['null_error'] = ['Communication with subscription manager failed', ]
     return owner
 
