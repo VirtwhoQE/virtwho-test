@@ -673,6 +673,56 @@ class TestConfigurationNegative:
                 and result['oneshot'] is False)
 
     @pytest.mark.tier2
+    def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the reporter_id negative option in /etc/virtwho.conf
+
+        :title: virt-who: config: test reporter_id negative option
+        :id: 5b7ea6e2-2ed9-4d56-8833-7ab627aa75d0
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. run virt-who to with default configured to get the default repoter id form rhsm.log
+            2. set the reporter_id with null value, run the virt-who service
+            3. set the reporter_id with non_ascii value, run the virt-who service
+
+        :expectedresults:
+
+            2. virt-who works fine, the reporter id from the rhsm.log is still the default reporter
+            id
+            2. virt-who works fine, the reporter id from the rhsm.log has beed updated to the
+            non_ascii value configured.
+        """
+        globalconf.update('global', 'debug', 'True')
+
+        # get default reporter_id
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+        default_reporter_id = result['reporter_id']
+
+        # reporter_id is null value
+        globalconf.update('global', 'reporter_id', "")
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and result['reporter_id'] == default_reporter_id)
+
+        # reporter_id is wroing value
+        if REGISTER == 'rhsm':
+            non_ascii = "红帽©¥®ðπ∉"
+            globalconf.update('global', 'reporter_id', non_ascii)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and result['reporter_id'] == non_ascii)
+
+    @pytest.mark.tier2
     @pytest.mark.notLocal
     def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host,
                                      configs_data):
