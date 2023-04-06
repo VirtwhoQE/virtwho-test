@@ -672,11 +672,65 @@ class TestConfigurationNegative:
                 and result['terminate'] == 0
                 and result['oneshot'] is False)
 
-
-    @pytest.mark.notLocal
     @pytest.mark.tier2
+    @pytest.mark.notLocal
+    def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host,
+                                     configs_data):
+        """Test the configs option in /etc/virtwho.conf
+
+        :title: virt-who: config: test configs option
+        :id: 1fa15308-d344-4ab8-9a7e-c08e1698f25f
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who configs setting in /etc/virt-who.conf
+            2. Configure the configs option with null value
+            3. COnfigure the configs option with wrong value
+
+        :expectedresults:
+
+            1. Succeeded to run the virt-who and ignore the configurations files in
+            /etc/virt-who.d/ dir
+            2. Succeeded to run the virt-who with the config file in /etc/virt-who.d/ dir
+            3. Failed to run the virt-who with the error info
+        """
+        config_file = '/tmp/test_config_configs.conf'
+        guest_uuid = hypervisor_data['guest_uuid']
+        globalconf.update('global', 'debug', 'True')
+        ssh_host.runcmd(f'\\cp -f {HYPERVISOR_FILE} {config_file}')
+
+        globalconf.update('global', 'configs', config_file)
+        result = virtwho.run_service()
+        msg = "ignoring configuration files in '/etc/virt-who.d/'"
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and guest_uuid in result['log']
+                and msg in result['log'])
+
+        # 'configs' is null value, run the config for /etc/virt-who.d/
+        globalconf.update('global', 'configs', '')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and guest_uuid in result['log'])
+
+        # 'configs' is wrong value
+        globalconf.update('global', 'configs', configs_data['wrong_configs'])
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and (error in result['log'] for error in configs_data['error']))
+
+    @pytest.mark.tier2
+    @pytest.mark.notLocal
     def test_owner_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
-                                   owner_data, class_debug_true):
+                                   owner_data):
         """Test the owner option in /etc/virtwho.conf
 
         :title: virt-who: config: test owner negative option
