@@ -216,6 +216,13 @@ def function_rhsmconf_recovery(rhsmconf):
     rhsmconf.recovery()
 
 
+@pytest.fixture(scope='class')
+def class_yield_rhsmconf_recovery(rhsmconf):
+    """Recover the rhsm.conf to default one."""
+    yield
+    rhsmconf.recovery()
+
+
 @pytest.fixture(scope='session')
 def hypervisor_data(ssh_guest):
     """Hypervisor data for testing, mainly got from virtwho.ini file"""

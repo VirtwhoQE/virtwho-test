@@ -14,6 +14,7 @@ from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
 
 
+@pytest.mark.usefixtures('class_yield_rhsmconf_recovery')
 @pytest.mark.usefixtures('class_host_unregister')
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('class_debug_true')
@@ -25,7 +26,7 @@ class TestSubscriptionPositive:
                              register_assertion):
         """Test the /etc/virt-who.d/x.conf without any rhsm option
 
-        :title: virt-who: rhsm: test no rhsm options in config file (positive)
+        :title: virt-who: rhsm_option: test no rhsm options in config file (positive)
         :id: 09167890-bbd0-470a-a342-66bbe29f91f9
         :caseimportance: High
         :tags: tier1
@@ -59,7 +60,7 @@ class TestSubscriptionPositive:
                                      ssh_host, register_data):
         """Test the rhsm_encrypted_password= option in /etc/virt-who.d/x.conf
 
-        :title: virt-who: rhsm: test rhsm_encrypted_password option (positive)
+        :title: virt-who: rhsm_option: test rhsm_encrypted_password option (positive)
         :id: a748e63c-0c80-444d-8bc4-0f6cad783be6
         :caseimportance: High
         :tags: tier1
@@ -82,7 +83,75 @@ class TestSubscriptionPositive:
                 and result['send'] == 1
                 and result['thread'] == 1)
 
+    @pytest.mark.tier1
+    def test_rhsm_proxy_in_rhsmconf(self, virtwho, rhsmconf, proxy_data):
+        """
 
+        :title: virt-who: rhsm_option: test rhsm_proxy option
+        :id:
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1.
+
+        :expectedresults:
+
+            1.
+        """
+        for scheme in ['http', 'https']:
+            # run virt-who with good proxy in /etc/rhsm/rhsm.conf
+            rhsmconf.update('server', 'proxy_hostname', proxy_data['server'])
+            rhsmconf.update('server', 'proxy_port', proxy_data['port'])
+            rhsmconf.update('server', 'proxy_scheme', scheme)
+            connection_msg = proxy_data['connection_log']
+            proxy_msg = proxy_data['proxy_log']
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and connection_msg in result['log']
+                    and proxy_msg in result['log'])
+
+    @pytest.mark.tier1
+    def test_rhsm_proxy_in_virtwho_d(self, virtwho, function_hypervisor,
+                        proxy_data, register_data):
+        """
+
+        :title: virt-who: rhsm_option: test rhsm_proxy option
+        :id:
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1.
+
+        :expectedresults:
+
+            1.
+        """
+        for scheme in ['http', 'https']:
+            # run virt-who with good proxy in /etc/rhsm/rhsm.conf
+            function_hypervisor.update(
+                'rhsm_proxy_hostname', proxy_data['server'])
+            function_hypervisor.update('rhsm_proxy_port', proxy_data['port'])
+            function_hypervisor.update('rhsm_proxy_scheme', scheme)
+            register_server = register_data['server']
+            connection_msg = proxy_data['connection_log']
+            proxy_msg = proxy_data['proxy_log']
+            error_msg = proxy_data['error']
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and connection_msg in result['log']
+                    and proxy_msg in result['log'])
+
+@pytest.mark.usefixtures('class_yield_rhsmconf_recovery')
 @pytest.mark.usefixtures('class_host_unregister')
 @pytest.mark.usefixtures('class_debug_true')
 @pytest.mark.usefixtures('class_globalconf_clean')
@@ -94,7 +163,7 @@ class TestSubscriptionNegative:
     def test_owner(self, virtwho, function_hypervisor, register_assertion):
         """Test the owner= option in /etc/virt-who.d/xx.conf
 
-        :title: virt-who: rhsm: test owner option (negative)
+        :title: virt-who: rhsm_option: test owner option (negative)
         :id: ae0abf52-ab25-4544-a0f7-5ba13bcfaf3e
         :caseimportance: High
         :tags: tier2
@@ -161,7 +230,7 @@ class TestSubscriptionNegative:
                            register_assertion):
         """Test the rhsm_hostname= option in /etc/virt-who.d/xx.conf
 
-        :title: virt-who: rhsm: test rhsm_hostname option (negative)
+        :title: virt-who: rhsm_option: test rhsm_hostname option (negative)
         :id: 055f5ea2-e4f2-4342-9fb8-aa0e4b765394
         :caseimportance: High
         :tags: tier2
@@ -204,7 +273,7 @@ class TestSubscriptionNegative:
                        register_assertion):
         """Test the rhsm_port= option in /etc/virt-who.d/xx.conf
 
-        :title: virt-who: rhsm: test rhsm_port option (negative)
+        :title: virt-who: rhsm_option: test rhsm_port option (negative)
         :id: a1149344-b6c0-485c-96fc-9da4705e6b15
         :caseimportance: High
         :tags: tier2
@@ -258,7 +327,7 @@ class TestSubscriptionNegative:
                          register_assertion, rhsmconf):
         """Test the rhsm_prefix= option in /etc/virt-who.d/xx.conf
 
-        :title: virt-who: rhsm: test rhsm_prefix option (negative)
+        :title: virt-who: rhsm_option: test rhsm_prefix option (negative)
         :id: 5c91dca3-835a-4d5a-936e-e93d3a13d1f6
         :caseimportance: High
         :tags: tier2
@@ -332,7 +401,7 @@ class TestSubscriptionNegative:
                            register_assertion):
         """Test the rhsm_username= option in /etc/virt-who.d/xx.conf
 
-        :title: virt-who: rhsm: test rhsm_username option (negative)
+        :title: virt-who: rhsm_option: test rhsm_username option (negative)
         :id: c6db8133-678f-41e0-8ce9-649afe6a6615
         :caseimportance: High
         :tags: tier2
@@ -377,7 +446,7 @@ class TestSubscriptionNegative:
                            register_assertion):
         """Test the rhsm_password= option in /etc/virt-who.d/xx.conf
 
-        :title: virt-who: rhsm: test rhsm_password option (negative)
+        :title: virt-who: rhsm_option: test rhsm_password option (negative)
         :id: 0a9496e2-8634-4725-983f-d56a2133e3d4
         :caseimportance: High
         :tags: tier2
@@ -421,7 +490,7 @@ class TestSubscriptionNegative:
                                      ssh_host, register_assertion):
         """Test the rhsm_encrypted_password= option in /etc/virt-who.d/x.conf
 
-        :title: virt-who: rhsm: test rhsm_encrypted_password option (negative)
+        :title: virt-who: rhsm_option: test rhsm_encrypted_password option (negative)
         :id: daab24a6-21a9-49dc-a129-46c742a9ef84
         :caseimportance: High
         :tags: tier2
@@ -450,3 +519,235 @@ class TestSubscriptionNegative:
                     and result['send'] == 0
                     and result['thread'] == 1
                     and msg_search(result['log'], value))
+
+    @pytest.mark.tier2
+    def test_rhsm_proxy_in_rhsmconf(self, virtwho, function_hypervisor, globalconf,
+                        rhsmconf, proxy_data, register_data):
+        """
+
+        :title: virt-who: rhsm_option: test rhsm_proxy option
+        :id:
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1.
+
+        :expectedresults:
+
+            1.
+        """
+        for scheme in ['http', 'https']:
+            # run virt-who with good proxy in /etc/rhsm/rhsm.conf
+            rhsmconf.update('server', 'proxy_hostname', proxy_data['server'])
+            rhsmconf.update('server', 'proxy_port', proxy_data['port'])
+            rhsmconf.update('server', 'proxy_scheme', scheme)
+            register_server = register_data['server']
+            connection_msg = proxy_data['connection_log']
+            proxy_msg = proxy_data['proxy_log']
+            error_msg = proxy_data['error']
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and connection_msg in result['log']
+                    and proxy_msg in result['log'])
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            rhsmconf.update(
+                'server', 'proxy_hostname', proxy_data['bad_proxy_server'])
+            result = virtwho.run_service()
+            assert (result['error'] == 1 or 2)
+            assert msg_search(result, error_msg)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=* in /etc/rhsm/rhsm.conf
+            rhsmconf.update('server', 'no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=[rhsm_server] in /etc/rhsm/rhsm.conf
+            rhsmconf.update('server', 'no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+            rhsmconf.update('server', 'no_proxy', '')
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=* in /etc/virt-who.conf
+            globalconf.update('system_environment', 'no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=[rhsm_server] in /etc/virt-who.conf
+            globalconf.update('system_environment', 'no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+            globalconf.delete('system_environment')
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=* in /etc/virt-who.conf
+            globalconf.update('defaults', 'rhsm_no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=[rhsm_server] in /etc/virt-who.conf
+            globalconf.update('defaults', 'rhsm_no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+            globalconf.delete('defaults', 'rhsm_no_proxy')
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=* in /etc/virt-who.d/
+            function_hypervisor.update('rhsm_no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=[rhsm_server] in /etc/virt-who.d/
+            function_hypervisor.update('rhsm_no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+            function_hypervisor.delete('rhsm_no_proxy')
+
+    def test_rhsm_proxy_in_hypervisor(self, virtwho, function_hypervisor,
+                                    globalconf,
+                                    rhsmconf, proxy_data,
+                                    register_data):
+        """
+
+        :title: virt-who: rhsm_option: test rhsm_proxy option
+        :id:
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1.
+
+        :expectedresults:
+
+            1.
+        """
+        for scheme in ['http', 'https']:
+            # run virt-who with good proxy in /etc/virtwho.d/
+            rhsmconf.update('server', 'proxy_hostname',
+                            proxy_data['server'])
+            rhsmconf.update('server', 'proxy_port', proxy_data['port'])
+            rhsmconf.update('server', 'proxy_scheme', scheme)
+            register_server = register_data['server']
+            connection_msg = proxy_data['connection_log']
+            proxy_msg = proxy_data['proxy_log']
+            error_msg = proxy_data['error']
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and connection_msg in result['log']
+                    and proxy_msg in result['log'])
+            # ================================================================
+            # run virt-who with good proxy in /etc/virt-who.d/
+            rhsmconf.update('server', 'proxy_hostname', proxy_data['server'])
+            rhsmconf.update('server', 'proxy_port', proxy_data['port'])
+            rhsmconf.update('server', 'proxy_scheme', scheme)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and connection_msg in result['log']
+                    and proxy_msg in result['log'])
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            rhsmconf.update(
+                'server', 'proxy_hostname', proxy_data['bad_proxy_server'])
+            result = virtwho.run_service()
+            assert (result['error'] == 1 or 2)
+            assert msg_search(result, error_msg)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=* in /etc/rhsm/rhsm.conf
+            rhsmconf.update('server', 'no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=[rhsm_server] in /etc/rhsm/rhsm.conf
+            rhsmconf.update('server', 'no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+            rhsmconf.update('server', 'no_proxy', '')
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=* in /etc/virt-who.conf
+            globalconf.update('system_environment', 'no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and no_proxy=[rhsm_server] in /etc/virt-who.conf
+            globalconf.update('system_environment', 'no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+            globalconf.delete('system_environment')
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=* in /etc/virt-who.conf
+            globalconf.update('defaults', 'rhsm_no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=[rhsm_server] in /etc/virt-who.conf
+            globalconf.update('defaults', 'rhsm_no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+            globalconf.delete('defaults', 'rhsm_no_proxy')
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=* in /etc/virt-who.d/
+            function_hypervisor.update('rhsm_no_proxy', '*')
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            # run virt-who with unreachable proxy in /etc/rhsm/rhsm.conf
+            # and rhsm_no_proxy=[rhsm_server] in /etc/virt-who.d/
+            function_hypervisor.update('rhsm_no_proxy', register_server)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
