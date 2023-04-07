@@ -9,6 +9,7 @@ import pytest
 from virtwho import HYPERVISOR
 from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
+from virtwho import SYSCONFIG_FILE
 
 from virtwho.base import hostname_get
 
@@ -615,6 +616,44 @@ class TestSysConfiguration:
 
         function_sysconfig.clean()
 
+    @pytest.mark.tier1
+    def test_pid_files_permission(self, virtwho, ssh_host):
+        """Test the sysconfig and pid files permission
+
+        :title: virt-who: config: test the sysconfig and pid files permission
+        :id: 21bf00ef-8b58-48b8-a36c-d65bc7b18dc0
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Stop virt-who to check virt-who sysconfig permission
+            2. Start virt-who to check virt-who.pid file permission
+
+        :expectedresults:
+
+            1. the permission of /etc/sysoncifg/virt-who file should be -rw-------
+            2. the permission of /var/run/virt-who.pid file should be  -rw-------
+        """
+        # check virt-who sysconfig file permission
+        virtwho.stop()
+        cmd = f"ls -l '{SYSCONFIG_FILE}'"
+        ret, output = ssh_host.runcmd(cmd)
+        assert (ret == 0
+                and output is not None
+                and output != ""
+                and "-rw-------" in output)
+
+        # check virt-who.pid file permission
+        pid_file = "/var/run/virt-who.pid"
+        virtwho.start()
+        cmd = f"ls -l '{pid_file}'"
+        ret, output = ssh_host.runcmd(cmd)
+        assert (ret == 0
+                and output is not None
+                and output != ""
+                and "-rw-------" in output)
 
 @pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')

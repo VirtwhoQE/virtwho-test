@@ -4,7 +4,7 @@ from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
-from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP
+from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP, SYSCONFIG_FILE
 from virtwho import PRINT_JSON_FILE, HYPERVISOR
 
 
@@ -156,7 +156,7 @@ class VirtwhoSysConfig:
         if not os.path.exists(TEMP_DIR):
             os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, 'virt-who')
-        self.remote_file = '/etc/sysconfig/virt-who'
+        self.remote_file = SYSCONFIG_FILE
         self.save_file = os.path.join(TEMP_DIR, 'virt-who.save')
         if not os.path.exists(self.save_file):
             self.remote_ssh.get_file(self.remote_file, self.save_file)
