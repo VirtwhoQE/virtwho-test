@@ -13,7 +13,7 @@ from virtwho import REGISTER
 from virtwho.base import hostname_get
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 @pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 class TestConfiguration:
@@ -501,7 +501,7 @@ class TestConfiguration:
             globalconf.delete('system_environment')
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 @pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 @pytest.mark.rhel8
@@ -616,7 +616,7 @@ class TestSysConfiguration:
         function_sysconfig.clean()
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 @pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 class TestConfigurationNegative:
