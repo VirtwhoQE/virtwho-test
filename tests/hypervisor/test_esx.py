@@ -265,11 +265,17 @@ class TestEsxPositive:
                 and result['send'] == 1
                 and result['thread'] == 1)
 
+    @pytest.mark.tier1
     def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
         """Test the fake type in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: esx: test fake type
         :id: 14d3af84-92c3-4335-8bff-8a96cf211c1d
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Generate the json file by virt-who -p -d command
             2. Create the virt-who config for the fake mode testing
             3. Check the rhsm.log
@@ -295,6 +301,36 @@ class TestEsxPositive:
                 and guest_uuid in result['log'])
         # Todo: Need to add the test cases for host-guest association in mapping, web and the test
         #  cases for the vdc pool's subscription.
+
+    @pytest.mark.tier1
+    def test_read_only_account(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+        """
+        :title: virt-who: esx: check mapping info by the read only account
+        :id: c13c05c0-fadb-4187-80f1-a2f52f0610db
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. set the username to the read only account for esxi
+            2. run the virt-who service
+        :expectedresults:
+
+            2. Succeed to run the virt-who service, can find the host-to-guest association
+            in rhsm.log
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+        guest_uuid = hypervisor_data['guest_uuid']
+
+        read_only_username = "tester@vsphere.local"
+        function_hypervisor.update('username', read_only_username)
+
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and virtwho.associate_in_mapping(
+                    result, register_data['default_org'], host_name, guest_uuid))
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
@@ -853,3 +889,67 @@ class TestEsxNegative:
                             and hypervisor_id_data not in str(result['mappings']))
 
             function_hypervisor.delete('hypervisor_id')
+
+    @pytest.mark.tier2
+    def test_unsupported_option(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+        """
+        :title: virt-who: esx: test unsupported options in /etc/virt-who.d/ dir
+        :id: ffd1fe9f-8c85-43ab-b2ae-16e824b5e880
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Set up an unsupported option like 'xxxxx' option in the config file
+            2. Run the virt-who service
+
+        :expectedresults:
+
+            2. Succeed to run the vir-tho, can find the ignore message in rhsm.log
+        """
+        unsupported_option = 'xxxxx'
+        function_hypervisor.update(unsupported_option, 'aaaa')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and f'Ignoring unknown configuration option "{unsupported_option}"' in result['log'])
+
+    @pytest.mark.tier2
+    def test_extension_file_name(self, virtwho, function_hypervisor, hypervisor_data,
+                                 register_data, ssh_host, esx_assertion):
+        """
+        :title: virt-who: esx: test extension file name in /etc/virt-who.d/ dir
+        :id: 3e5ca411-147b-4ac6-87b0-fe2720ff2e17
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Run virt-who with the expected config file name
+            2. Rename the config file with the invalid extension file name like esx.conf.txt
+            3. Run the virt-who service
+
+        :expectedresults:
+            1. Succeed to run the virt-who
+            3. Failed to run the virt-who, can fin the expected error and warning messages
+            in rhsm.log
+        """
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        invalid_file_name = esx_assertion['extension_file_name']['file_name']
+        cmd = f"mv {function_hypervisor.remote_file} {invalid_file_name}"
+        ssh_host.runcmd(cmd)
+
+        warning_msg = esx_assertion['extension_file_name']['warining_msg']
+        error_msg = esx_assertion['extension_file_name']['error_msg']
+
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 1
+                and error_msg in result['error_msg']
+                and warning_msg in result['warning_msg'])
