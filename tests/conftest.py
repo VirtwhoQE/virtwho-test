@@ -31,17 +31,6 @@ def function_hypervisor():
     return hypervisor_create(HYPERVISOR, REGISTER)
 
 
-@pytest.fixture(scope='function')
-def function_hypervisor_second():
-    """Create virt-who hypervisor test file with all rhsm options"""
-    return hypervisor_create(
-        mode=HYPERVISOR,
-        register_type=REGISTER,
-        config_name=SECOND_HYPERVISOR_FILE,
-        section=SECOND_HYPERVISOR_SECTION,
-        rhsm=True)
-
-
 @pytest.fixture(scope='session')
 def globalconf():
     """Instantication of class VirtwhoGlobalConfig()"""

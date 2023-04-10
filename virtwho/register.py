@@ -560,6 +560,8 @@ class Satellite:
         self.server = server or register.server
         self.org = org or register.default_org
         self.activation_key = activation_key or register.activation_key
+        self.username = register.username
+        self.password = register.password
         self.ssh = SSHConnect(host=self.server,
                               user=register.ssh_username,
                               pwd=register.ssh_password)

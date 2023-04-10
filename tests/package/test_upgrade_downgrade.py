@@ -6,13 +6,13 @@
 """
 import pytest
 from virtwho import VIRTWHO_PKG, RHEL_COMPOSE
+from virtwho.configure import config
 from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string
-from virtwho.base import system_reboot
-from virtwho.testing import virtwho_pacakge_url
+from virtwho.base import system_reboot, rhel_compose_url
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 class TestUpgradeDowngrade:
     @pytest.mark.tier1
@@ -53,29 +53,29 @@ class TestUpgradeDowngrade:
             package_downgrade(ssh_host, 'virt-who')
             result = virtwho.run_service()
             assert (
-                package_check(ssh_host, 'virt-who') is not False and
-                package_check(ssh_host, 'virt-who') != VIRTWHO_PKG and
-                result['send'] == 1 and
-                result['error'] == 0 and
-                result['debug'] is True
+                    package_check(ssh_host, 'virt-who') is not False and
+                    package_check(ssh_host, 'virt-who') != VIRTWHO_PKG and
+                    result['send'] == 1 and
+                    result['error'] == 0 and
+                    result['debug'] is True
             )
             # upgrade virt-who to check the configurations not change.
             package_upgrade(ssh_host, 'virt-who')
             result = virtwho.run_service()
             assert (
-                package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
-                result['send'] == 1 and
-                result['error'] == 0 and
-                result['debug'] is True
+                    package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
+                    result['send'] == 1 and
+                    result['error'] == 0 and
+                    result['debug'] is True
             )
             # reboot host to check the configuration no change
             system_reboot(ssh_host)
             result = virtwho.run_service()
             assert (
-                package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
-                result['send'] == 1 and
-                result['error'] == 0 and
-                result['debug'] is True
+                    package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
+                    result['send'] == 1 and
+                    result['error'] == 0 and
+                    result['debug'] is True
             )
 
         finally:
@@ -110,8 +110,9 @@ class TestUpgradeDowngrade:
             old_virtwho_pkg = 'virt-who-1.31.21-1.el9.noarch'
             if 'RHEL-8' in RHEL_COMPOSE:
                 old_virtwho_pkg = 'virt-who-1.30.10-1.el8.noarch'
-            pkg_url = virtwho_pacakge_url(VIRTWHO_PKG)
-            old_pkg_url = virtwho_pacakge_url(old_virtwho_pkg)
+            _, repo_extra = rhel_compose_url(RHEL_COMPOSE)
+            pkg_url = f'{repo_extra}/Packages/{VIRTWHO_PKG}.rpm'
+            old_pkg_url = f'{repo_extra}/Packages/{old_virtwho_pkg}.rpm'
             file_path = '/root/' + random_string()
             wget_download(ssh_host, pkg_url, file_path)
             wget_download(ssh_host, old_pkg_url, file_path)
@@ -120,22 +121,85 @@ class TestUpgradeDowngrade:
                               rpm=f'{file_path}/{old_virtwho_pkg}.rpm')
             result = virtwho.run_service()
             assert (
-                package_check(ssh_host, 'virt-who') is not False and
-                package_check(ssh_host, 'virt-who') != VIRTWHO_PKG and
-                result['send'] == 1 and
-                result['error'] == 0 and
-                result['debug'] is True
+                    package_check(ssh_host, 'virt-who') is not False and
+                    package_check(ssh_host, 'virt-who') != VIRTWHO_PKG and
+                    result['send'] == 1 and
+                    result['error'] == 0 and
+                    result['debug'] is True
             )
             # upgrade virt-who to check the configurations not change.
             package_upgrade(ssh_host, 'virt-who',
                             rpm=f'{file_path}/{VIRTWHO_PKG}.rpm')
             result = virtwho.run_service()
             assert (
-                package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
-                result['send'] == 1 and
-                result['error'] == 0 and
-                result['debug'] is True
+                    package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
+                    result['send'] == 1 and
+                    result['error'] == 0 and
+                    result['debug'] is True
             )
         finally:
             if package_check(ssh_host, 'virt-who') != VIRTWHO_PKG:
                 package_upgrade(ssh_host, 'virt-who')
+
+    @pytest.mark.tier1
+    @pytest.mark.notRHEL8
+    def test_global_options_migration_after_upgrade(self, ssh_host, virtwho):
+        """Test the global configurations in /etc/sysconfig/virt-who can be
+            migrated to /etc/virt-who.conf after upgrade
+
+        :title: virt-who: package: global options migration after upgrade
+        :id: b363a4f4-c4cb-46b0-a378-fdaf956dd345
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. configure virt-who configurations
+            2. downgrade virt-who by rpm
+            3. check all configurations still available
+            4. upgrade virt-who by rpm
+            5. check all configurations still available
+        :expectedresults:
+            1. virt-who can be downgrade and upgrade successfully.
+            2. all configurations will not be changed after downgrade and upgrade.
+        """
+        sysconfig_file = '/etc/sysconfig/virt-who'
+        virtwho_conf_file = '/etc/virt-who.conf'
+
+        # create /etc/sysconfig/virt-who file and define options
+        ssh_host.runcmd(f'cat <<EOF > {sysconfig_file}\n'
+                        f'VIRTWHO_DEBUG = 1\n'
+                        f'VIRTWHO_ONE_SHOT = 0\n'
+                        f'VIRTWHO_INTERVAL = 120\n'
+                        f'http_proxy = proxy_server:proxy_port\n'
+                        f'no_proxy = *\n'
+                        f'EOF')
+
+        # run migrateconfiguration.py script
+        ssh_host.runcmd('/usr/bin/python3 '
+                        '/usr/lib/python3.9/site-packages/virtwho/migrate/'
+                        'migrateconfiguration.py')
+
+        # check the configurations in /etc/sysconfig/virt-who are migrated to
+        # /etc/virt-who.conf
+        _, output = ssh_host.runcmd(f'cat {virtwho_conf_file}')
+        msg1 = '[global]\n' \
+               '#migrated\n' \
+               'interval=120\n' \
+               '#migrated\n' \
+               'debug=True\n' \
+               '#migrated\n' \
+               'oneshot=False'
+        msg2 = '[system_environment]\n' \
+               '#migrated\n' \
+               'http_proxy=proxy_server:proxy_port\n' \
+               '#migrated\n' \
+               'no_proxy=*'
+        assert (msg1 in output and msg2 in output)
+
+        # run virt-who to test the migrated options working well
+        result = virtwho.run_service()
+        assert (result['send'] == 1 and
+                result['error'] == 0 and
+                result['interval'] == 120 and
+                result['debug'] is True)

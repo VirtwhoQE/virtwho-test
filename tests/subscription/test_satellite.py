@@ -9,11 +9,9 @@ import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config
 from virtwho import HYPERVISOR, FAKE_CONFIG_FILE
-from virtwho import SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
 from virtwho.configure import hypervisor_create
 from virtwho.configure import get_hypervisor_handler
-from virtwho.register import SubscriptionManager
-from virtwho import logger
+from virtwho.register import SubscriptionManager, Satellite
 
 vdc_physical_sku = config.sku.vdc
 vdc_virtual_sku = config.sku.vdc_virtual
@@ -27,10 +25,11 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 
 
 @pytest.mark.tier1
-@pytest.mark.usefixtures('class_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
-@pytest.mark.usefixtures('class_guest_register')
+@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
+@pytest.mark.usefixtures('class_globalconf_clean')
 @pytest.mark.usefixtures('function_guest_unattach')
+@pytest.mark.usefixtures('class_guest_register')
 @pytest.mark.usefixtures('function_host_register_for_local_mode')
 class TestSatellite:
     def test_vdc_virtual_pool_attach_by_poolId(
@@ -411,15 +410,13 @@ class TestSatellite:
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data['temporary'] is False
 
-    def test_send_mapping_to_multi_org(
-            self, virtwho, satellite, hypervisor_data, function_hypervisor,
-            function_hypervisor_second,
-            sm_guest, sm_guest_second_org,
-            register_data, vdc_pool_physical
+    def test_not_default_org_with_rhsm_options(
+            self, virtwho, satellite, satellite_second_org, hypervisor_data,
+            sm_guest_second_org, class_hypervisor, sku_data,
     ):
-        """Test
+        """
 
-        :title: virt-who: satellite:
+        :title: virt-who: satellite: test the non-default org with rhsm options
         :id:
         :caseimportance: High
         :tags: tier2
@@ -427,116 +424,117 @@ class TestSatellite:
         :upstream: no
         :steps:
 
-            1. Create a clean activation key
-            2. (Scenario 1) Register guest by activation key with
-                activation key auto-attach disabled and
-                both the virtual limit and vdc sku out of the key
-            3. (Scenario 2) Register guest by activation key with
-                activation key auto-attach disabled and
-                both the virtual limit and vdc sku in the key
-            4. (Scenario 3) Register guest by activation key with
-                activation key auto-attach enabled and
-                virtual limit sku in the key, virtual vdc sku out of the key
-            5. (Scenario 4) Register guest by activation key with
-                activation key auto-attach enabled and
-                both the vdc and limit virt sku out of the key
+            1. define virt-who configure file with all rhsm options
+            2. define the owner= to the non-default org
+            3. run virt-who to report mappings to the non-default org
+            4. register guest to the non-default org
+            5. attach physical vdc to the hypervisor
+            6. attach the bonus virtual vdc to the guest
 
         :expectedresults:
 
-            1. (Scenario 1) guest will not auto attach any sku
-            2. (Scenario 2) guest will auto attach all the matched sku
-            3. (Scenario 3) guest will only auto attach the virtual sku that
-                in the key
-            4. (Scenario 4) guest will auto attach the matched sku from out of
-                the key
+            1. virt-who can report mappings to the non-default org
+            2. in non-default org, hypervisor can deprecate bonus virtual vdc
+                for guest
+        """
+        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        try:
+            guest_id = hypervisor_data['guest_uuid']
+            satellite.host_delete(host=hypervisor_hostname)
+
+            class_hypervisor.update('owner', second_org)
+            result = virtwho.run_cli()
+            mappings = result['mappings']
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and guest_id in mappings[second_org])
+
+            sm_guest_second_org.register()
+            vdc_sku_id = sku_data['vdc_physical']
+            vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id,
+                                                          'Physical')
+            # attach physcial vdc for hypervisor
+            satellite_second_org.attach(host=hypervisor_hostname,
+                                        pool=vdc_pool_id)
+
+            # attach virtual vdc pool for guest by pool id
+            sm_guest_second_org.refresh()
+            sku_data_virt = sm_guest_second_org.available(
+                vdc_virtual_sku, 'Virtual')
+            sm_guest_second_org.attach(pool=sku_data_virt['pool_id'])
+            consumed_data = sm_guest_second_org.consumed(sku_id=vdc_virtual_sku)
+            assert (consumed_data['sku'] == vdc_virtual_sku
+                    and consumed_data['sku_type'] == 'Virtual'
+                    and consumed_data['temporary'] is False)
+
+        finally:
+            class_hypervisor.update('owner', default_org)
+            satellite_second_org.host_delete(host=hypervisor_hostname)
+
+    def test_not_default_org_without_rhsm_options(
+            self, virtwho, satellite, satellite_second_org, function_hypervisor,
+            hypervisor_data, sm_host, sm_guest_second_org, sku_data
+    ):
+        """
+
+        :title: virt-who: satellite: test the non-default org without
+            rhsm options
+        :id:
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. define virt-who configure file without rhsm option
+            2. register virt-who host to the non-default org
+            3. define the owner= to the non-default org
+            4. run virt-who to report mappings to the non-default org
+            5. register guest to the non-default org
+            6. attach physical vdc to the hypervisor
+            7. attach the bonus virtual vdc to the guest
+
+        :expectedresults:
+
+            1. virt-who can report mappings to the non-default org
+            2. in non-default org, hypervisor can deprecate bonus virtual vdc
+                for guest
         """
         hypervisor_hostname = hypervisor_data['hypervisor_hostname']
         guest_id = hypervisor_data['guest_uuid']
-        limit_pool_physical = sm_guest_ack.pool_id_get(limit_sku, 'Physical')
+        try:
+            function_hypervisor.create(rhsm=False)
+            sm_host.register()
+            satellite.host_delete(host=hypervisor_hostname)
 
+            function_hypervisor.update('owner', second_org)
+            result = virtwho.run_cli()
+            mappings = result['mappings']
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and guest_id in mappings[second_org])
 
-        # create a clean org
-        satellite.org_delete(second_org)
-        satellite.org_create(name=second_org, label=second_org)
-        satellite.host_delete(host=hypervisor_hostname)
+            sm_guest_second_org.register()
+            vdc_sku_id = sku_data['vdc_physical']
+            vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id,
+                                                          'Physical')
+            # attach physcial vdc for hypervisor
+            satellite_second_org.attach(host=hypervisor_hostname,
+                                        pool=vdc_pool_id)
 
-        function_hypervisor_second.update('owner', second_org)
-        result = virtwho.run_service()
-        mappings = result['mappings']
-        assert (result['error'] == 0
-                and result['send'] == 2
-                and guest_id in mappings[second_org]
-                and guest_id in mappings[default_org])
+            # attach virtual vdc pool for guest by pool id
+            sm_guest_second_org.refresh()
+            sku_data_virt = sm_guest_second_org.available(
+                vdc_virtual_sku, 'Virtual')
+            sm_guest_second_org.attach(pool=sku_data_virt['pool_id'])
+            consumed_data = sm_guest_second_org.consumed(sku_id=vdc_virtual_sku)
+            assert (consumed_data['sku'] == vdc_virtual_sku
+                    and consumed_data['sku_type'] == 'Virtual'
+                    and consumed_data['temporary'] is False)
 
-        sm_guest.register()
-        # attach physcial vdc for hypervisor
-        satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
-
-        # attach virtual vdc pool for guest by pool id
-        sm_guest.refresh()
-        sku_data_virt = sm_guest.available(vdc_virtual_sku, 'Virtual')
-        sm_guest.attach(pool=sku_data_virt['pool_id'])
-        consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
-        assert (consumed_data['sku'] == vdc_virtual_sku
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
-
-
-
-        # register guest by activation key with
-        # activation key auto-attach disabled and
-        # both the virtual limit and vdc sku out of the key
-        _ = virtwho.run_cli()
-        satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
-        satellite.attach(host=hypervisor_hostname, pool=limit_pool_physical)
-        sm_guest_ack.unregister()
-        sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (not vdc_consumed_data and not limit_consumed_data)
-
-        # get the vdc and limit sku virtual pool id
-        vdc_available_data = sm_guest_ack.available(vdc_virtual_sku, 'Virtual')
-        vdc_virt_pool = vdc_available_data['pool_id']
-        limit_available_data = sm_guest_ack.available(limit_sku, 'Virtual')
-        limit_virt_pool = limit_available_data['pool_id']
-
-        # register guest by activation key with
-        # activation key auto-attach disabled and
-        # both the virtual limit and vdc sku in the key
-        satellite.activation_key_attach(pool=vdc_virt_pool, key=activation_key)
-        satellite.activation_key_attach(pool=limit_virt_pool,
-                                        key=activation_key)
-        sm_guest_ack.unregister()
-        sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (vdc_consumed_data and limit_consumed_data)
-
-        # enable the auto-attach for activation key
-        satellite.activation_key_update(auto_attach='yes')
-
-        # register guest by activation key with
-        # activation key auto-attach enabled and
-        # virtual limit sku in the key, virtual vdc sku out of the key
-        satellite.activation_key_unattach(pool=vdc_virt_pool,
-                                          key=activation_key)
-        sm_guest_ack.unregister()
-        sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (limit_consumed_data and not vdc_consumed_data)
-
-        # register guest by activation key with
-        # activation key auto-attach enabled and
-        # the both vdc and limit virt sku out of the key
-        satellite.activation_key_unattach(pool=limit_virt_pool,
-                                          key=activation_key)
-        sm_guest_ack.unregister()
-        sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (vdc_consumed_data and not limit_consumed_data)
+        finally:
+            function_hypervisor.create(rhsm=True)
+            satellite_second_org.host_delete(host=hypervisor_hostname)
 
     def test_vdc_virtual_subscription_on_webui(
             self, virtwho, sm_guest, satellite, hypervisor_data,
@@ -665,6 +663,16 @@ def sm_guest_second_org(register_data):
                                port=port,
                                register_type='satellite',
                                org=second_org)
+
+
+@pytest.fixture(scope='session')
+def satellite_second_org():
+    """Instantication of class Satellite() with the second org"""
+    return Satellite(
+        server=config.satellite.server,
+        org=config.satellite.secondary_org,
+        activation_key=config.satellite.activation_key
+    )
 
 # used by the draft case 'test_register_by_item_on_webui'
 # def host_register_by_on_webui(satellite, host):
