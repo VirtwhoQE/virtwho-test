@@ -4,8 +4,10 @@
 :testtype: nonfunctional
 :caseautomation: Automated
 """
+import re
+
 import pytest
-from virtwho import VIRTWHO_PKG
+from virtwho import VIRTWHO_PKG, RHEL_COMPOSE
 from virtwho.base import package_check, package_install, package_uninstall
 from virtwho.base import wget_download, random_string
 from virtwho.testing import virtwho_pacakge_url
@@ -32,6 +34,34 @@ class TestInstallUninstall:
         assert package_check(ssh_host, 'virt-who') is False
         package_install(ssh_host, 'virt-who')
         assert package_check(ssh_host, 'virt-who') == VIRTWHO_PKG
+
+        # check the template.conf
+        options = [
+                '#[config name]',
+                '#type=',
+                '#server=',
+                '#username=',
+                '#password=',
+                '#encrypted_password=',
+                '#owner=',
+                '#hypervisor_id=',
+                '#rhsm_hostname=',
+                '#rhsm_port=',
+                '#rhsm_username=',
+                '#rhsm_password=',
+                '#rhsm_encrypted_password=',
+                '#rhsm_prefix=/rhsm',
+                '#kubeconfig=',
+                '#kubeversion=',
+                '#insecure=']
+        _, output = ssh_host.runcmd('cat /etc/virt-who.d/template.conf')
+        for option in options:
+            assert len(re.findall(option, output)) > 0
+        lines = output.strip().split('\n')
+        if 'RHEL-8' in RHEL_COMPOSE:
+            assert len(lines) == 43
+        if 'RHEL-9' in RHEL_COMPOSE:
+            assert len(lines) == 44
 
     @pytest.mark.tier1
     def test_install_uninstall_by_rpm(self, ssh_host):

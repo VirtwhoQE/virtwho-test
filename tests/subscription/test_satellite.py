@@ -9,6 +9,7 @@ import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config
 from virtwho import HYPERVISOR, FAKE_CONFIG_FILE
+from virtwho import SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
 from virtwho.configure import hypervisor_create
 from virtwho.configure import get_hypervisor_handler
 from virtwho.register import SubscriptionManager
@@ -19,6 +20,10 @@ vdc_virtual_sku = config.sku.vdc_virtual
 limit_sku = config.sku.limit
 
 activation_key = config.satellite.activation_key
+default_org = config.satellite.default_org
+second_org = config.satellite.secondary_org
+
+hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 
 
 @pytest.mark.tier1
@@ -406,6 +411,133 @@ class TestSatellite:
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data['temporary'] is False
 
+    def test_send_mapping_to_multi_org(
+            self, virtwho, satellite, hypervisor_data, function_hypervisor,
+            function_hypervisor_second,
+            sm_guest, sm_guest_second_org,
+            register_data, vdc_pool_physical
+    ):
+        """Test
+
+        :title: virt-who: satellite:
+        :id:
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Create a clean activation key
+            2. (Scenario 1) Register guest by activation key with
+                activation key auto-attach disabled and
+                both the virtual limit and vdc sku out of the key
+            3. (Scenario 2) Register guest by activation key with
+                activation key auto-attach disabled and
+                both the virtual limit and vdc sku in the key
+            4. (Scenario 3) Register guest by activation key with
+                activation key auto-attach enabled and
+                virtual limit sku in the key, virtual vdc sku out of the key
+            5. (Scenario 4) Register guest by activation key with
+                activation key auto-attach enabled and
+                both the vdc and limit virt sku out of the key
+
+        :expectedresults:
+
+            1. (Scenario 1) guest will not auto attach any sku
+            2. (Scenario 2) guest will auto attach all the matched sku
+            3. (Scenario 3) guest will only auto attach the virtual sku that
+                in the key
+            4. (Scenario 4) guest will auto attach the matched sku from out of
+                the key
+        """
+        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        guest_id = hypervisor_data['guest_uuid']
+        limit_pool_physical = sm_guest_ack.pool_id_get(limit_sku, 'Physical')
+
+
+        # create a clean org
+        satellite.org_delete(second_org)
+        satellite.org_create(name=second_org, label=second_org)
+        satellite.host_delete(host=hypervisor_hostname)
+
+        function_hypervisor_second.update('owner', second_org)
+        result = virtwho.run_service()
+        mappings = result['mappings']
+        assert (result['error'] == 0
+                and result['send'] == 2
+                and guest_id in mappings[second_org]
+                and guest_id in mappings[default_org])
+
+        sm_guest.register()
+        # attach physcial vdc for hypervisor
+        satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
+
+        # attach virtual vdc pool for guest by pool id
+        sm_guest.refresh()
+        sku_data_virt = sm_guest.available(vdc_virtual_sku, 'Virtual')
+        sm_guest.attach(pool=sku_data_virt['pool_id'])
+        consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
+        assert (consumed_data['sku'] == vdc_virtual_sku
+                and consumed_data['sku_type'] == 'Virtual'
+                and consumed_data['temporary'] is False)
+
+
+
+        # register guest by activation key with
+        # activation key auto-attach disabled and
+        # both the virtual limit and vdc sku out of the key
+        _ = virtwho.run_cli()
+        satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
+        satellite.attach(host=hypervisor_hostname, pool=limit_pool_physical)
+        sm_guest_ack.unregister()
+        sm_guest_ack.register()
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
+        assert (not vdc_consumed_data and not limit_consumed_data)
+
+        # get the vdc and limit sku virtual pool id
+        vdc_available_data = sm_guest_ack.available(vdc_virtual_sku, 'Virtual')
+        vdc_virt_pool = vdc_available_data['pool_id']
+        limit_available_data = sm_guest_ack.available(limit_sku, 'Virtual')
+        limit_virt_pool = limit_available_data['pool_id']
+
+        # register guest by activation key with
+        # activation key auto-attach disabled and
+        # both the virtual limit and vdc sku in the key
+        satellite.activation_key_attach(pool=vdc_virt_pool, key=activation_key)
+        satellite.activation_key_attach(pool=limit_virt_pool,
+                                        key=activation_key)
+        sm_guest_ack.unregister()
+        sm_guest_ack.register()
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
+        assert (vdc_consumed_data and limit_consumed_data)
+
+        # enable the auto-attach for activation key
+        satellite.activation_key_update(auto_attach='yes')
+
+        # register guest by activation key with
+        # activation key auto-attach enabled and
+        # virtual limit sku in the key, virtual vdc sku out of the key
+        satellite.activation_key_unattach(pool=vdc_virt_pool,
+                                          key=activation_key)
+        sm_guest_ack.unregister()
+        sm_guest_ack.register()
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
+        assert (limit_consumed_data and not vdc_consumed_data)
+
+        # register guest by activation key with
+        # activation key auto-attach enabled and
+        # the both vdc and limit virt sku out of the key
+        satellite.activation_key_unattach(pool=limit_virt_pool,
+                                          key=activation_key)
+        sm_guest_ack.unregister()
+        sm_guest_ack.register()
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
+        assert (vdc_consumed_data and not limit_consumed_data)
+
     def test_vdc_virtual_subscription_on_webui(
             self, virtwho, sm_guest, satellite, hypervisor_data,
             vdc_pool_physical
@@ -506,8 +638,6 @@ def sm_guest_ack(register_data):
     Instantication of class SubscriptionManager() for hypervisor guest
     with default org and activation key
     """
-    hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
-
     port = 22
     if HYPERVISOR == 'kubevirt':
         port = hypervisor_handler.guest_port
@@ -518,6 +648,23 @@ def sm_guest_ack(register_data):
                                register_type='satellite',
                                org=config.satellite.default_org,
                                activation_key=register_data['activation_key'])
+
+
+@pytest.fixture(scope='class')
+def sm_guest_second_org(register_data):
+    """
+    Instantication of class SubscriptionManager() for hypervisor guest
+    with the second org
+    """
+    port = 22
+    if HYPERVISOR == 'kubevirt':
+        port = hypervisor_handler.guest_port
+    return SubscriptionManager(host=hypervisor_handler.guest_ip,
+                               username=hypervisor_handler.guest_username,
+                               password=hypervisor_handler.guest_password,
+                               port=port,
+                               register_type='satellite',
+                               org=second_org)
 
 # used by the draft case 'test_register_by_item_on_webui'
 # def host_register_by_on_webui(satellite, host):

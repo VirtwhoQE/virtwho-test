@@ -5,8 +5,12 @@
 :caseautomation: Automated
 """
 import pytest
+from virtwho.configure import hypervisor_create
+from virtwho.base import msg_search
 
 
+@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('class_globalconf_clean')
 class TestVirtwhoService:
     @pytest.mark.tier1
@@ -91,3 +95,49 @@ class TestVirtwhoService:
         _, _ = virtwho.operate_service(action='force-reload')
         _, output = virtwho.operate_service(action='status')
         assert 'Active: active (running)' in output
+
+    @pytest.mark.tier1
+    def test_virtwho_service_after_host_reregister(self, virtwho, sm_host):
+        """
+
+        :title: virt-who: service: test virt-who service after host reregister
+        :id:
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. start virt-who service with virt-who host registered.
+            2. unregister virt-who host to check rhsm log
+            3. register the virt-who host again and restart virt-who service to
+                check log.
+        :expectedresults:
+            1. after unregister virt-who host when virt-who service is running,
+                virt-who will fail to report with error, but virt-who thread is
+                not killed.
+            2. after register virt-who host again, virt-who can report
+                successfully.
+        """
+        try:
+            hypervisor_create(rhsm=False)
+
+            sm_host.register()
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            sm_host.unregister()
+            rhsm_log = virtwho.rhsm_log_get(wait=15)
+            thread_num = virtwho.thread_number()
+            assert (msg_search(rhsm_log, 'system is not registered')
+                    and thread_num == 1)
+
+            sm_host.register()
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+        finally:
+            hypervisor_create(rhsm=True)

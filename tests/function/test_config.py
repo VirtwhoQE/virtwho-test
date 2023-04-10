@@ -6,14 +6,13 @@
 """
 import pytest
 
-from virtwho import HYPERVISOR
+from virtwho import HYPERVISOR, REGISTER
 from virtwho import HYPERVISOR_FILE
-from virtwho import REGISTER
 
 from virtwho.base import hostname_get
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 @pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 class TestConfiguration:
@@ -444,7 +443,8 @@ class TestConfiguration:
                     assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
 
     @pytest.mark.tier1
-    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
+    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data,
+                                        register_data, hypervisor_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
         :title: virt-who: config: test http_proxy, https_proxy and no_proxy options
@@ -490,15 +490,30 @@ class TestConfiguration:
             result = virtwho.run_service()
             assert (result['error'] == 1 or 2)
             assert (any(error_msg in result['error_msg'] for error_msg in proxy_data['error']))
+            assert not result['mappings']
 
-            # run virt-who with unreachable http_proxy/https and no_proxy setting
+            # run virt-who with unreachable http_proxy/https and no_proxy=*
             globalconf.update('system_environment', 'no_proxy', '*')
             result = virtwho.run_service()
             assert (result['error'] == 0
                     and result['send'] == 1
                     and result['thread'] == 1)
 
-            globalconf.delete('system_environment')
+            globalconf.update(
+                'system_environment', 'no_proxy', hypervisor_data['hypervisor_server'])
+            result = virtwho.run_service()
+            assert (result['error'] == 1 or 2)
+            assert (any(error_msg in result['error_msg'] for error_msg in proxy_data['error']))
+            assert result['mappings']
+
+            globalconf.update('defaults', 'rhsm_no_proxy', register_data['server'])
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1)
+
+            globalconf.delete('system_environment', 'no_proxy')
+            globalconf.delete('defaults', 'rhsm_no_proxy')
 
 
 @pytest.mark.usefixtures('class_globalconf_clean')

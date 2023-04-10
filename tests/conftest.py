@@ -13,6 +13,7 @@ from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
 from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, FailException, logger
 from virtwho.base import hostname_get
+from virtwho import SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
@@ -28,6 +29,17 @@ def class_hypervisor():
 def function_hypervisor():
     """Create virt-who hypervisor test file with all rhsm options"""
     return hypervisor_create(HYPERVISOR, REGISTER)
+
+
+@pytest.fixture(scope='function')
+def function_hypervisor_second():
+    """Create virt-who hypervisor test file with all rhsm options"""
+    return hypervisor_create(
+        mode=HYPERVISOR,
+        register_type=REGISTER,
+        config_name=SECOND_HYPERVISOR_FILE,
+        section=SECOND_HYPERVISOR_SECTION,
+        rhsm=True)
 
 
 @pytest.fixture(scope='session')
@@ -216,13 +228,6 @@ def function_rhsmconf_recovery(rhsmconf):
     rhsmconf.recovery()
 
 
-@pytest.fixture(scope='class')
-def class_yield_rhsmconf_recovery(rhsmconf):
-    """Recover the rhsm.conf to default one."""
-    yield
-    rhsmconf.recovery()
-
-
 @pytest.fixture(scope='session')
 def hypervisor_data(ssh_guest):
     """Hypervisor data for testing, mainly got from virtwho.ini file"""
@@ -261,6 +266,7 @@ def hypervisor_data(ssh_guest):
         data['cluster'] = hypervisor_handler.cluster
     if HYPERVISOR != 'kubevirt':
         data['hypervisor_password'] = hypervisor_handler.password
+        data['hypervisor_server'] = hypervisor_handler.server
     return data
 
 

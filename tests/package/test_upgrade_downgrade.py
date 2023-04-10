@@ -8,6 +8,7 @@ import pytest
 from virtwho import VIRTWHO_PKG, RHEL_COMPOSE
 from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string
+from virtwho.base import system_reboot
 from virtwho.testing import virtwho_pacakge_url
 
 
@@ -30,9 +31,12 @@ class TestUpgradeDowngrade:
             3. check all configurations still available
             4. upgrade virt-who by yum
             5. check all configurations still available
+            6. reboot virt-who host
+            7. check all configurations still available
         :expectedresults:
             1. virt-who can be downgrade and upgrade successfully.
-            2. all configurations will not be changed after downgrade and upgrade.
+            2. all configurations will not be changed after virt-who downgrade,
+                upgrade and host reboot.
         """
         try:
             globalconf.update('global', 'debug', 'True')
@@ -64,6 +68,16 @@ class TestUpgradeDowngrade:
                 result['error'] == 0 and
                 result['debug'] is True
             )
+            # reboot host to check the configuration no change
+            system_reboot(ssh_host)
+            result = virtwho.run_service()
+            assert (
+                package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
+                result['send'] == 1 and
+                result['error'] == 0 and
+                result['debug'] is True
+            )
+
         finally:
             if package_check(ssh_host, 'virt-who') != VIRTWHO_PKG:
                 package_upgrade(ssh_host, 'virt-who')

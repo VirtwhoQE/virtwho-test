@@ -12,6 +12,9 @@ from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG
 from virtwho.settings import DOCS_DIR, TEMP_DIR
 
 
+@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 class TestVirtwhoPackageInfo:
     def test_shipped_in_supported_arch(self):
         """Test the virt-who package is shipped in all supported arch
@@ -58,8 +61,8 @@ class TestVirtwhoPackageInfo:
         _, output = ssh_host.runcmd('virt-who --version')
         output = output.split(' ')
         assert (
-            output[0].strip() == 'virt-who' and
-            output[1].strip() == version
+                output[0].strip() == 'virt-who' and
+                output[1].strip() == version
         )
 
     @pytest.mark.tier1
@@ -140,24 +143,57 @@ class TestVirtwhoPackageInfo:
         if 'RHEL-8' in RHEL_COMPOSE:
             virtwho_license = 'GPLv2+'
         assert (
-            pkg_info['Name'] == 'virt-who'
-            and pkg_info['Version'] in VIRTWHO_PKG
-            and pkg_info['Release'] in VIRTWHO_PKG
-            and pkg_info['Architecture'] == 'noarch'
-            and pkg_info['Install Date']
-            and pkg_info['Group'] == 'System Environment/Base'
-            and pkg_info['Size']
-            and pkg_info['License'] == virtwho_license
-            and 'RSA/SHA256' in pkg_info['Signature']
-            and 'Key ID' in pkg_info['Signature']
-            and pkg_info['Source RPM'] == VIRTWHO_PKG.split('noarch')[0]
+                pkg_info['Name'] == 'virt-who'
+                and pkg_info['Version'] in VIRTWHO_PKG
+                and pkg_info['Release'] in VIRTWHO_PKG
+                and pkg_info['Architecture'] == 'noarch'
+                and pkg_info['Install Date']
+                and pkg_info['Group'] == 'System Environment/Base'
+                and pkg_info['Size']
+                and pkg_info['License'] == virtwho_license
+                and 'RSA/SHA256' in pkg_info['Signature']
+                and 'Key ID' in pkg_info['Signature']
+                and pkg_info['Source RPM'] == VIRTWHO_PKG.split('noarch')[0]
                 + 'src.rpm'
-            and pkg_info['Build Date']
-            and pkg_info['Build Host']
-            and pkg_info['Packager'] == 'Red Hat, Inc. <http://bugzilla.redhat.'
-                                        'com/bugzilla>'
-            and pkg_info['Vendor'] == 'Red Hat, Inc.'
-            and pkg_info['URL'] == 'https://github.com/candlepin/virt-who'
-            and pkg_info['Summary'] == 'Agent for reporting virtual guest IDs '
-                                       'to subscription-manager'
+                and pkg_info['Build Date']
+                and pkg_info['Build Host']
+                and pkg_info[
+                    'Packager'] == 'Red Hat, Inc. <http://bugzilla.redhat.'
+                                   'com/bugzilla>'
+                and pkg_info['Vendor'] == 'Red Hat, Inc.'
+                and pkg_info['URL'] == 'https://github.com/candlepin/virt-who'
+                and pkg_info[
+                    'Summary'] == 'Agent for reporting virtual guest IDs '
+                                  'to subscription-manager'
         )
+
+    @pytest.mark.tier1
+    def test_package_info_with_User_Agent_header(self, ssh_host, virtwho):
+        """
+
+        :title: virt-who: cli: test virt-who package information
+        :id: 51beaf61-f01d-4edd-870e-8682c18d07bb
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. run "#rpm -qi virt-who"
+            2. check each value
+
+        :expectedresults:
+            1. all values match the expectation
+        """
+        virtwho.stop()
+        _, output = ssh_host.runcmd(
+            'export SUBMAN_DEBUG_PRINT_REQUEST=1;'
+            'export SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1;'
+            'virt-who -o',
+            stdout=True
+        )
+        # cmd = 'export SUBMAN_DEBUG_PRINT_REQUEST=1;' \
+        #       'export SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1;' \
+        #       'virt-who -d -o'
+        # result = virtwho.run_start(cli=cmd)
+        pkg = base.package_check(ssh_host, 'virt-who')[9:18]
+        assert f'virt-who/{pkg}' in output
