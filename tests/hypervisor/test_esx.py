@@ -953,3 +953,80 @@ class TestEsxNegative:
                 and result['thread'] == 1
                 and error_msg in result['error_msg']
                 and warning_msg in result['warning_msg'])
+
+    @pytest.mark.tier2
+    def test_quoted_options(self, virtwho, function_hypervisor, ssh_host):
+        """
+        :title: virt-who: esx: test the quoted options in /etc/virt-who.d/ dir
+        :id: 75dc69a9-e025-401c-bf84-8dea86263e77
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create the expected config file in /etc/virt-who.d dir
+            2. Run virt-who when all the options enabled with single quotes such as type='esx'
+            3. Rn virt-who when all the options enabled with double quotes such as type="esx"
+
+        :expectedresults:
+            2. Succeed to run the virt-who without any error messages
+            3. Succeed to run the virt-who without any error messages
+        """
+        # run virt-who when all the options enabled with single quotes
+        cmd = fr'''sed -i "s|=\(.*\)|='\1'|g" {function_hypervisor.remote_file}'''
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        # run virt-who when all the options enabled with double quotes
+        cmd = fr'''sed -i "s|'|\"|g" {function_hypervisor.remote_file}'''
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+    @pytest.mark.tier2
+    def test_redundant_options(self, virtwho, function_hypervisor, ssh_host):
+        """
+        :title: virt-who: esx: test the redundant options in /etc/virt-who.d/ dir
+        :id: cba7b507-f490-405b-85b7-ca448da901f2
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create the expected config file in /etc/virt-who.d dir, defautl to add the
+            hypervisor_id=hostname
+            2. Add another hypervisor_id=uuid, run the virt-who service
+            3. Add another hypervisor_id=xxx, run the virt-who service
+
+        :expectedresults:
+            2. Succeed to run the virt-who without any error messages, can find the related
+            warning message in rhsm.log
+            3. Failed to run the virt-who, can find the related warning message in rhsm.log
+        """
+        option = 'hypervisor_id'
+        warning_msg = f"option '{option}' in section '{function_hypervisor.section}' already exists"
+
+        # run virt-who with hypervisor_id=uuid and hypervisor_id=hostname together
+        cmd = f'echo -e "{option}=uuid" >> {function_hypervisor.remote_file}'
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+        if "RHEL-8" in RHEL_COMPOSE:
+            assert warning_msg in result['warning_msg']
+
+        # add another hypervisor_id=xxx
+        cmd = f'echo -e "{option}=xxx" >> {function_hypervisor.remote_file}'
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 0)
+        if "RHEL-8" in RHEL_COMPOSE:
+            assert warning_msg in result['warning_msg']
