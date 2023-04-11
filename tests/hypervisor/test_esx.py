@@ -1030,3 +1030,41 @@ class TestEsxNegative:
                 and result['thread'] == 0)
         if "RHEL-8" in RHEL_COMPOSE:
             assert warning_msg in result['warning_msg']
+
+    @pytest.mark.tier2
+    def test_commented_line_with_tab_space(self, virtwho, function_hypervisor, ssh_host):
+        """
+        :title: virt-who: esx: test the redundant options in /etc/virt-who.d/ dir
+        :id: d2444fd4-0a2c-4a08-a873-cb9d39e6b98b
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create the expected config file in /etc/virt-who.d dir
+            2. Add another invalid line with tab space, run the virt-who service
+            3. Comment the line to ignore it in the config file, run the virt-who service
+
+        :expectedresults:
+            2. Failed to run the virt-who, can find the related Error message in rhsm.log
+            3. Succeed to run the virt-who without any error messages.
+        """
+        # add useless line with tab spaces after type=
+        error_msg = "virt-who can't be started: no valid configuration found"
+
+        cmd = f"sed -i '/^type=/a \\\txxx=xxx' {function_hypervisor.remote_file}"
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and error_msg in result['error_msg'])
+
+        # comment out the useless line
+        cmd = f'sed -i "s/xxx/#xxx/" {function_hypervisor.remote_file}'
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
