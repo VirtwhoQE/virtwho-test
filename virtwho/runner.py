@@ -121,7 +121,7 @@ class VirtwhoRunner:
         data['interval'] = self.interval_time(rhsm_log)
         data['loop'], data['loop_num'] = self.loop_info()
         data['mappings'] = self.mappings(rhsm_log)
-        # data['print_json'] = self.print_json()
+        data['print_json'] = self.print_json()
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
         if HYPERVISOR != 'local':

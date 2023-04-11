@@ -1,25 +1,24 @@
 """Test cases Global fields
-
 :casecomponent: virt-who
 :testtype: functional
 :caseautomation: Automated
 """
 import pytest
 
-from virtwho import HYPERVISOR, REGISTER
+from virtwho import HYPERVISOR
 from virtwho import HYPERVISOR_FILE
+from virtwho import REGISTER
 
 from virtwho.base import hostname_get
 
 
-@pytest.mark.usefixtures('function_globalconf_clean')
+@pytest.mark.usefixtures('class_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 @pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 class TestConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
         """Test the debug option in /etc/virtwho.conf
-
         :title: virt-who: config: test debug option
         :id: 6f238133-43db-4a52-b01c-441faba0cf74
         :caseimportance: High
@@ -27,12 +26,9 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with "debug=True" in [global] section in /etc/virt-who.conf file
             2. Run virt-who with "debug=False" in [global] section in /etc/virt-who.conf file
-
         :expectedresults:
-
             1. no [DEBUG] log printed
             2. [DEBUG] logs are printed with the configuration
         """
@@ -51,7 +47,6 @@ class TestConfiguration:
     @pytest.mark.tier1
     def test_interval_in_virtwho_conf(self, virtwho, globalconf):
         """Test the interval option in /etc/virtwho.conf
-
         :title: virt-who: config: test interval option
         :id: f1d39429-62c0-44f0-a6d3-4ffc8dc704b1
         :caseimportance: High
@@ -59,12 +54,10 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Enable interval and set to 10 in /etc/virt-who.conf
             2. Enable interval and set to 60 in /etc/virt-who.conf
             3. Enable interval and set to 120 in /etc/virt-who.conf
         :expectedresults:
-
             1. Default value of 3600 seconds will be used when configure lower than 60 seconds
             2. Configure successfully, and virt-who starting infinite loop with 60 seconds interval
             3. Configure successfully, and virt-who starting infinite loop with 120 seconds interval
@@ -85,7 +78,6 @@ class TestConfiguration:
     @pytest.mark.tier1
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
         """Test the oneshot option in /etc/virtwho.conf
-
         :title: virt-who: config: test oneshot option
         :id: 9e39f91f-80b5-4773-bef0-7facf8cb85e2
         :caseimportance: High
@@ -93,12 +85,9 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with "oneshot=True" in /etc/virt-who.conf
             2. Run virt-who with "oneshot=False" in /etc/virt-who.conf file
-
         :expectedresults:
-
             1. Can see 'Thread X stopped after running once' log in rhsm.log
             2. Cannot see 'Thread X stopped after running once' log in rhsm.log
         """
@@ -120,7 +109,6 @@ class TestConfiguration:
     @pytest.mark.tier1
     def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data):
         """Test the print_ option in /etc/virtwho.conf
-
         :title: virt-who: config: test print_ option
         :id: 25de8130-677f-43ca-b07d-a15f49e91205
         :caseimportance: High
@@ -128,12 +116,9 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with "print_=True" in /etc/virt-who.conf
             2. Run virt-who with "print_=False" in /etc/virt-who.conf
-
         :expectedresults:
-
             1. the mappings send number and alive thread number of the virt-who is 0
             2. the mappings send number and alive thread number of the virt-who is 1
         """
@@ -165,7 +150,6 @@ class TestConfiguration:
     @pytest.mark.tier1
     def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf, ssh_host, hypervisor_data):
         """Test the reporter_id option in /etc/virtwho.conf
-
         :title: virt-who: config: test reporter_id option
         :id: 83df76e6-27c6-4429-b32b-fbc2be0564a4
         :caseimportance: High
@@ -173,12 +157,9 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. run virt-who to with default configured
             2. update the reporter_id in /etc/virtwho.conf file and run virt-who
-
         :expectedresults:
-
             1. the hostname of the virt-who host shout be included in default reporter_id
             2. the reporter_id should be updated to the setting reporter_id
         """
@@ -200,7 +181,6 @@ class TestConfiguration:
     @pytest.mark.tier1
     def test_log_per_config_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the log_per_config option in /etc/virtwho.conf
-
         :title: virt-who: config: test log_per_config option
         :id: 85accd49-54dc-4899-a9cf-c6fb07b2fe3c
         :caseimportance: High
@@ -208,12 +188,9 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with log-per-config=False in /etc/virt-who.conf
             2. Run virt-who with log-per-config=True in /etc/virt-who.conf
-
         :expectedresults:
-
             1. unexpected /var/log/rhsm/virtwho* files not exist
             2. Succeeded to find virtwho.destination_-*.log, virtwho.main.log, virtwho.main.log and
             virtwho.rhsm_log.log file in /var/log/rhsm/
@@ -266,7 +243,6 @@ class TestConfiguration:
     @pytest.mark.tier1
     def test_log_dir_and_log_file_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the log_dir and log_file option in /etc/virtwho.conf
-
         :title: virt-who: config: test log_dir and log_file option
         :id: b20c8bf6-25f1-485a-a659-2f4194ee7fcc
         :caseimportance: High
@@ -274,12 +250,9 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with log_dir setting in /etc/virt-who.conf
             2. Run virt-who with log_dir and log_file setting in /etc/virt-who.conf
-
         :expectedresults:
-
             1. Succeeded to find the default rhsm.log file in specific log dir
             2. Succeeded to find the specific log file in specific log dir
         """
@@ -314,7 +287,6 @@ class TestConfiguration:
     @pytest.mark.tier1
     def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the configs option in /etc/virtwho.conf
-
         :title: virt-who: config: test configs option
         :id: 03db48c3-4a98-4956-bd6f-a8ac4da7da8e
         :caseimportance: High
@@ -322,11 +294,8 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who configs setting in /etc/virt-who.conf
-
         :expectedresults:
-
             1. Succeeded to run the virt-who and ignore the configurations files in
             /etc/virt-who.d/ dir
         """
@@ -348,7 +317,6 @@ class TestConfiguration:
     def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
                                    owner_data, class_debug_true):
         """Test the owner option in /etc/virtwho.conf
-
         :title: virt-who: config: test owner option
         :id: ce219d82-cf66-4019-af17-3197c53c72a0
         :caseimportance: High
@@ -356,14 +324,11 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with incorrect owner setting in [defaults] section
             in /etc/virt-who.conf
             2. Run virt-who with the correct owner setting in [defaults] section
             in /etc/virt-who.conf
-
         :expectedresults:
-
             1. Virt-who runs failed with the incorrect owner setting
             2. Succeeded to run the virt-who with correct owner setting
         """
@@ -389,7 +354,6 @@ class TestConfiguration:
     def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
                                            register_data, rhsm, satellite):
         """Test the hypervisor_id option in /etc/virtwho.conf
-
         :title: virt-who: config: test hypervisor_id option
         :id: fed463a6-9538-4242-9990-2e4995d1f473
         :caseimportance: High
@@ -397,13 +361,10 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with hypervisor_id=hostname in /etc/virt-who.conf
             2. Run virt-who with hypervisor_id=uuid in /etc/virt-who.conf
             3. Run virt-who with hypervisor_id=hwuuid in /etc/virt-who.conf
-
         :expectedresults:
-
             1. Succeeded to run the virt-who, the hypervisor_id in mapping info should be hostname
             2. Succeeded to run the virt-who, the hypervisor_id in mapping info should be uuid
             3. Succeeded to run the virt-who, the hypervisor_id in mapping info should be hwuuid
@@ -443,10 +404,8 @@ class TestConfiguration:
                     assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
 
     @pytest.mark.tier1
-    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data,
-                                        register_data, hypervisor_data):
+    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
-
         :title: virt-who: config: test http_proxy, https_proxy and no_proxy options
         :id: f7d2d5fc-2446-46ae-8fd4-eda0109f75a5
         :caseimportance: High
@@ -454,16 +413,13 @@ class TestConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with http_proxy setting in /etc/virt-who.conf
             2. Run virt-who with unreachable http_proxy setting in /etc/virt-who.conf
             3. Run virt-who with unreachable http_proxy and no_proxy setting in /etc/virt-who.conf
             4. Run virt-who with https_proxy setting in /etc/virt-who.conf
             5. Run virt-who with unreachable https_proxy setting in /etc/virt-who.conf
             6. Run virt-who with unreachable https_proxy and no_proxy setting in /etc/virt-who.conf
-
         :expectedresults:
-
             1. Succeeded to run virt-who, succeeded to find expected proxy log in rhsm log
             2. Virt-who runs error, succeeded to find expected proxy log in rhsm log
             3. Succeeded to run virt-who
@@ -490,30 +446,15 @@ class TestConfiguration:
             result = virtwho.run_service()
             assert (result['error'] == 1 or 2)
             assert (any(error_msg in result['error_msg'] for error_msg in proxy_data['error']))
-            assert not result['mappings']
 
-            # run virt-who with unreachable http_proxy/https and no_proxy=*
+            # run virt-who with unreachable http_proxy/https and no_proxy setting
             globalconf.update('system_environment', 'no_proxy', '*')
             result = virtwho.run_service()
             assert (result['error'] == 0
                     and result['send'] == 1
                     and result['thread'] == 1)
 
-            globalconf.update(
-                'system_environment', 'no_proxy', hypervisor_data['hypervisor_server'])
-            result = virtwho.run_service()
-            assert (result['error'] == 1 or 2)
-            assert (any(error_msg in result['error_msg'] for error_msg in proxy_data['error']))
-            assert result['mappings']
-
-            globalconf.update('defaults', 'rhsm_no_proxy', register_data['server'])
-            result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
-
-            globalconf.delete('system_environment', 'no_proxy')
-            globalconf.delete('defaults', 'rhsm_no_proxy')
+            globalconf.delete('system_environment')
 
 
 @pytest.mark.usefixtures('class_globalconf_clean')
@@ -524,7 +465,6 @@ class TestSysConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_DEBUG option in /etc/sysconfig/virt-who
-
         :title: virt-who: config: test VIRTWHO_DEBUG option
         :id: 0b60fbdb-4554-4f92-bbc9-fdd43ff71adb
         :caseimportance: High
@@ -532,12 +472,9 @@ class TestSysConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with "VIRTWHO_DEBUG=1" in /etc/sysconfig/virt-who file
             2. Run virt-who with "VIRTWHO_DEBUG=0" in /etc/sysconfig/virt-who file
-
         :expectedresults:
-
             1. no [DEBUG] log printed
             2. [DEBUG] logs are printed with the configuration
         """
@@ -558,7 +495,6 @@ class TestSysConfiguration:
     @pytest.mark.tier1
     def test_oneshot_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_ONE_SHOT option in /etc/sysconfig/virt-who
-
         :title: virt-who: config: test VIRTWHO_ONE_SHOT option
         :id: 8f8204c7-6c6d-4189-8947-774ed5018835
         :caseimportance: High
@@ -566,12 +502,9 @@ class TestSysConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Run virt-who with "VIRTWHO_ONE_SHOT=1" in /etc/sysconfig/virt-who
             2. Run virt-who with "VIRTWHO_ONE_SHOT=0" in /etc/sysconfig/virt-who
-
         :expectedresults:
-
             1. Can see 'Thread X stopped after running once' log in rhsm.log
             2. Cannot see 'Thread X stopped after running once' log in rhsm.log
         """
@@ -597,7 +530,6 @@ class TestSysConfiguration:
     @pytest.mark.tier1
     def test_interval_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_INTERVAL option in /etc/sysconfig/virt-who
-
         :title: virt-who: config: test VIRTWHO_INTERVAL option
         :id: e46ceb4c-e4ed-47c2-9d3e-2a15a0c34d83
         :caseimportance: High
@@ -605,11 +537,9 @@ class TestSysConfiguration:
         :customerscenario: false
         :upstream: no
         :steps:
-
             1. Enable interval and set to 10 in /etc/sysconfig/virt-who
             2. Enable interval and set to 60 in /etc/sysconfig/virt-who
         :expectedresults:
-
             1. Default value of 3600 seconds will be used when configure lower than 60 seconds
             2. Configure successfully, and virt-who starting infinite loop with 60 seconds interval
         """

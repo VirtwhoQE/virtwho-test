@@ -172,17 +172,18 @@ class TestVirtwhoPackageInfo:
         """
 
         :title: virt-who: cli: test virt-who package information
-        :id: 51beaf61-f01d-4edd-870e-8682c18d07bb
+        :id: 9ec0e56e-e643-4c7d-b622-2d34915e407b
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
         :upstream: no
         :steps:
-            1. run "#rpm -qi virt-who"
-            2. check each value
+            1. export the SUBMAN_DEBUG_PRINT_REQUEST=1 and
+                SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1
+            2. run virt-who service to check rhsm log
 
         :expectedresults:
-            1. all values match the expectation
+            1. the virt-who package info is printed to log.
         """
         virtwho.stop()
         _, output = ssh_host.runcmd(
@@ -191,9 +192,5 @@ class TestVirtwhoPackageInfo:
             'virt-who -o',
             stdout=True
         )
-        # cmd = 'export SUBMAN_DEBUG_PRINT_REQUEST=1;' \
-        #       'export SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1;' \
-        #       'virt-who -d -o'
-        # result = virtwho.run_start(cli=cmd)
         pkg = base.package_check(ssh_host, 'virt-who')[9:18]
         assert f'virt-who/{pkg}' in output

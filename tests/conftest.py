@@ -13,7 +13,6 @@ from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
 from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, FailException, logger
 from virtwho.base import hostname_get
-from virtwho import SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)

@@ -101,7 +101,7 @@ class TestVirtwhoService:
         """
 
         :title: virt-who: service: test virt-who service after host reregister
-        :id:
+        :id: 7e7bba4c-cb32-4385-a9b7-1416cd026837
         :caseimportance: High
         :tags: tier1
         :customerscenario: false

@@ -410,14 +410,14 @@ class TestSatellite:
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data['temporary'] is False
 
-    def test_not_default_org_with_rhsm_options(
+    def test_non_default_org_with_rhsm_options(
             self, virtwho, satellite, satellite_second_org, hypervisor_data,
             sm_guest_second_org, class_hypervisor, sku_data,
     ):
         """
 
-        :title: virt-who: satellite: test the non-default org with rhsm options
-        :id:
+        :title: virt-who: satellite: test non-default org with rhsm options
+        :id: c372adf9-645e-4b79-9bcd-af462e5be03a
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -471,7 +471,7 @@ class TestSatellite:
             class_hypervisor.update('owner', default_org)
             satellite_second_org.host_delete(host=hypervisor_hostname)
 
-    def test_not_default_org_without_rhsm_options(
+    def test_non_default_org_without_rhsm_options(
             self, virtwho, satellite, satellite_second_org, function_hypervisor,
             hypervisor_data, sm_host, sm_guest_second_org, sku_data
     ):
@@ -479,7 +479,7 @@ class TestSatellite:
 
         :title: virt-who: satellite: test the non-default org without
             rhsm options
-        :id:
+        :id: e6702ccb-d0ad-4215-9503-cf973c14b31c
         :caseimportance: High
         :tags: tier2
         :customerscenario: false

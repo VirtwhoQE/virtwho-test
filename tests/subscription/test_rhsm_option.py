@@ -85,11 +85,12 @@ class TestSubscriptionPositive:
                 and result['thread'] == 1)
 
     @pytest.mark.tier1
-    def test_rhsm_proxy(self, virtwho, function_hypervisor, rhsmconf, proxy_data):
+    def test_rhsm_proxy(self, virtwho, function_hypervisor, rhsmconf,
+                        proxy_data):
         """
 
         :title: virt-who: rhsm_option: test rhsm_proxy=
-        :id:
+        :id: a1b22c6c-74f7-4c14-8276-f55f589ba746
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
@@ -482,7 +483,8 @@ class TestSubscriptionNegative:
                                      ssh_host, register_assertion):
         """Test the rhsm_encrypted_password= option in /etc/virt-who.d/x.conf
 
-        :title: virt-who: rhsm_option: test rhsm_encrypted_password option (negative)
+        :title: virt-who: rhsm_option: test rhsm_encrypted_password option
+            (negative)
         :id: daab24a6-21a9-49dc-a129-46c742a9ef84
         :caseimportance: High
         :tags: tier2
@@ -518,8 +520,9 @@ class TestSubscriptionNegative:
                                     register_data):
         """
 
-        :title: virt-who: rhsm_option: test rhsm_proxy option
-        :id:
+        :title: virt-who: rhsm_option: test rhsm_proxy= in /etc/rhsm/rhsm.conf
+            (negative)
+        :id: a1e0f565-bdd2-43af-914a-d21f6d247227
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -599,8 +602,8 @@ class TestSubscriptionNegative:
                                      register_data):
         """
 
-        :title: virt-who: rhsm_option: test rhsm_proxy
-        :id:
+        :title: virt-who: rhsm_option: test rhsm_proxy= in /etc/virt-who.d/
+        :id: 3cc1562b-3843-42fe-80a9-4d5b6801b703
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -675,6 +678,6 @@ class TestSubscriptionNegative:
 
 @pytest.fixture(scope='class')
 def class_yield_rhsmconf_recovery(rhsmconf):
-    """Recover the rhsm.conf to default one."""
+    """Recover the /etc/rhsm/rhsm.conf to default one."""
     yield
     rhsmconf.recovery()
