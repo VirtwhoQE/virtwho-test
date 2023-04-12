@@ -255,13 +255,23 @@ class TestCli:
                 interactive mode
             2. encrypt virt-who host password with -p option
             3. encrypt virt-who host password with --password option
+            4. encrypt a special password: ad\"min
 
         :expectedresults:
 
             1. get the same encrypted password with the three methods.
+            2. get the same encrypted password for ad\"min and '"ad\"min"'
         """
         password = config.virtwho.password
         encrypt_1 = encrypt_password(ssh_host, password)
         encrypt_2 = encrypt_password(ssh_host, password, option='-p')
         encrypt_3 = encrypt_password(ssh_host, password, option='--password')
         assert encrypt_1 == encrypt_2 == encrypt_3
+
+        encrypt_1 = encrypt_password(ssh_host, r'ad\"min')
+        encrypt_2 = encrypt_password(ssh_host, r'ad\"min', option='-p')
+        encrypt_3 = encrypt_password(ssh_host, r'"ad\"min"', option='-p')
+        encrypt_4 = encrypt_password(ssh_host, r'ad\"min', option='--password')
+        encrypt_5 = encrypt_password(ssh_host, r'"ad\"min"',
+                                     option='--password')
+        assert encrypt_1 == encrypt_2 == encrypt_3 == encrypt_4 == encrypt_5
