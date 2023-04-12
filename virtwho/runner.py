@@ -122,8 +122,7 @@ class VirtwhoRunner:
         data['interval'] = self.interval_time(rhsm_log)
         data['loop'], data['loop_num'] = self.loop_info()
         data['mappings'] = self.mappings(rhsm_log)
-        if cli and '-p ' in cli:
-            data['print_json'] = self.print_json()
+        data['print_json'] = self.print_json(cli)
         data['error'], data['error_msg'] = self.error_warning('error')
         data['warning'], data['warning_msg'] = self.error_warning('warning')
         if HYPERVISOR != 'local':
@@ -513,16 +512,17 @@ class VirtwhoRunner:
                     return mapping[org][guest_uuid]['guest_hypervisor']
         return ''
 
-    def print_json(self):
+    def print_json(self, cli):
         """
         Get and return the json created by print function.
         :return: json output
         """
-        ret, output = self.ssh.runcmd(f"cat {PRINT_JSON_FILE}")
-        if ret == 0 and output != "":
-            return output
-        else:
-            return None
+        _, output = self.ssh.runcmd('cat /etc/virt-who.conf')
+        if (cli and '-p ' in cli) or ('print_=' in output):
+            ret, output = self.ssh.runcmd(f"cat {PRINT_JSON_FILE}")
+            if ret == 0 and output != "":
+                return output
+        return None
 
     def thread_number(self):
         """
