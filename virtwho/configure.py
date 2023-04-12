@@ -5,7 +5,7 @@ from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
 from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP
-from virtwho import PRINT_JSON_FILE, HYPERVISOR
+from virtwho import PRINT_JSON_FILE, HYPERVISOR, REGISTER
 
 
 class VirtwhoHypervisorConfig:
@@ -266,7 +266,8 @@ def get_hypervisor_handler(mode):
     return hypervisor
 
 
-def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, section=None, rhsm=True):
+def hypervisor_create(mode=HYPERVISOR, register_type=REGISTER, config_name=None,
+                      section=None, rhsm=True):
     """ Create the hypervisor config file
     :param mode: The hypervisor mode.
     :param register_type: The subscription server. (rhsm, satellite)
@@ -275,6 +276,7 @@ def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, sectio
     :param rhsm: True is to add all rhsm related options, False will not
     :return:
     """
-    hypervisor = VirtwhoHypervisorConfig(mode, register_type, config_name, section)
+    hypervisor = VirtwhoHypervisorConfig(mode, register_type, config_name,
+                                         section)
     hypervisor.create(rhsm=rhsm)
     return hypervisor

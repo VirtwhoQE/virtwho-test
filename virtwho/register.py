@@ -74,8 +74,8 @@ class SubscriptionManager:
         ret, _ = self.ssh.runcmd('subscription-manager unregister;'
                                  'subscription-manager clean')
         if ret == 0:
-            if self.register_type == 'satellite':
-                self.satellite_cert_uninstall()
+            # if self.register_type == 'satellite':
+            #     self.satellite_cert_uninstall()
             logger.info(f'Succeeded to unregister host')
         else:
             raise FailException(f'Failed to unregister {self.host}.')
@@ -93,6 +93,7 @@ class SubscriptionManager:
         """
         Install certificate when registering to satellite.
         """
+        self.satellite_cert_uninstall()
         cmd = f'rpm -ihv http://{self.server}' \
               f'/pub/katello-ca-consumer-latest.noarch.rpm'
         ret, output = self.ssh.runcmd(cmd)
