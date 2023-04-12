@@ -557,7 +557,7 @@ def system_reboot(ssh):
     :param ssh: ssh access of testing host
     :return: True or raise fail.
     """
-    _, _ = ssh.runcmd('sync;sync;sync;sync;reboot -f && exit')
+    _, _ = ssh.runcmd('sync;sync;sync;sync;reboot')
     time.sleep(120)
     if ssh_connect(ssh):
         return True

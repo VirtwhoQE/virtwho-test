@@ -10,6 +10,16 @@ from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string
 from virtwho.base import system_reboot, rhel_compose_url
 
+old_pkg = 'virt-who-1.31.22-1.el9_0.noarch.rpm '
+old_compose = 'latest-RHEL-9.0'
+old_compose_path = 'http://download.eng.pek2.redhat.com/' \
+                   'rhel-9/rel-eng/RHEL-9'
+if 'RHEL-8' in RHEL_COMPOSE:
+    old_pkg = 'virt-who-1.30.8-1.el8.noarch.rpm'
+    old_compose = 'latest-RHEL-8.5'
+    old_compose_path = 'http://download.eng.pek2.redhat.com/' \
+                       'rhel-8/rel-eng/RHEL-8'
+
 
 @pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
@@ -37,20 +47,16 @@ class TestUpgradeDowngrade:
             2. all configurations will not be changed after virt-who downgrade,
                 upgrade and host reboot.
         """
+        old_repo_file = '/etc/yum.repos.d/oldCompose.repo'
         try:
             globalconf.update('global', 'debug', 'True')
             globalconf.update('system_environment', 'http_proxy', 'xxx')
             globalconf.update('system_environment', 'no_proxy', '*')
             # create old compose repo
-            old_compose = 'latest-RHEL-9.0'
-            old_compose_path = 'http://download.eng.pek2.redhat.com/' \
-                               'rhel-9/rel-eng/RHEL-9'
-            if 'RHEL-8' in RHEL_COMPOSE:
-                old_compose = 'latest-RHEL-8.5'
-                old_compose_path = 'http://download.eng.pek2.redhat.com/' \
-                                   'rhel-8/rel-eng/RHEL-8'
             rhel_compose_repo(
-                ssh_host, old_compose, '/etc/yum.repos.d/oldCompose.repo',
+                ssh=ssh_host,
+                repo_file=old_repo_file,
+                compose_id=old_compose,
                 compose_path=old_compose_path
             )
             # downgrade virt-who to check the configurations not change.
@@ -85,6 +91,7 @@ class TestUpgradeDowngrade:
         finally:
             if package_check(ssh_host, 'virt-who') != VIRTWHO_PKG:
                 package_upgrade(ssh_host, 'virt-who')
+            ssh_host.runcmd(f'rm -f {old_repo_file}')
 
     @pytest.mark.tier1
     def test_upgrade_downgrade_by_rpm(self, ssh_host, virtwho, globalconf):
@@ -104,36 +111,25 @@ class TestUpgradeDowngrade:
             5. check all configurations still available
         :expectedresults:
             1. virt-who can be downgrade and upgrade successfully.
-            2. all configurations will not be changed after downgrade and upgrade.
+            2. all configurations will not be changed after downgrade and
+                upgrade.
         """
         try:
             globalconf.update('global', 'debug', 'True')
             globalconf.update('system_environment', 'http_proxy', 'xxx')
             globalconf.update('system_environment', 'no_proxy', '*')
-
             # download the current virt-who package
-            file_path = '/root/' + random_string()
+            file_path = '/tmp/virt-who-rpm-' + random_string()
             _, repo_extra = rhel_compose_url(RHEL_COMPOSE, RHEL_COMPOSE_PATH)
             pkg_url = f'{repo_extra}/Packages/{VIRTWHO_PKG}.rpm'
-
             # download the old virt-who package
-            old_pkg = 'virt-who-1.31.21-1.el9.noarch'
-            old_compose = 'latest-RHEL-9.0'
-            old_compose_path = 'http://download.eng.pek2.redhat.com/' \
-                               'rhel-9/rel-eng/RHEL-9'
-            if 'RHEL-8' in RHEL_COMPOSE:
-                old_pkg = 'virt-who-1.30.10-1.el8.noarch'
-                old_compose = 'latest-RHEL-8.5'
-                old_compose_path = 'http://download.eng.pek2.redhat.com/' \
-                                   'rhel-8/rel-eng/RHEL-8'
             _, old_repo_extra = rhel_compose_url(old_compose, old_compose_path)
-            old_pkg_url = f'{old_repo_extra}/Packages/{old_pkg}.rpm'
+            old_pkg_url = f'{old_repo_extra}/Packages/{old_pkg}'
             wget_download(ssh_host, pkg_url, file_path)
             wget_download(ssh_host, old_pkg_url, file_path)
-
             # downgrade virt-who to check the configurations not change.
             package_downgrade(ssh_host, 'virt-who',
-                              rpm=f'{file_path}/{old_pkg}.rpm')
+                              rpm=f'{file_path}/{old_pkg}')
             result = virtwho.run_service()
             assert (
                     package_check(ssh_host, 'virt-who') is not False and
@@ -142,7 +138,6 @@ class TestUpgradeDowngrade:
                     result['error'] == 0 and
                     result['debug'] is True
             )
-
             # upgrade virt-who to check the configurations not change.
             package_upgrade(ssh_host, 'virt-who',
                             rpm=f'{file_path}/{VIRTWHO_PKG}.rpm')
@@ -153,7 +148,6 @@ class TestUpgradeDowngrade:
                     result['error'] == 0 and
                     result['debug'] is True
             )
-
         finally:
             if package_check(ssh_host, 'virt-who') != VIRTWHO_PKG:
                 package_upgrade(ssh_host, 'virt-who')
@@ -178,7 +172,8 @@ class TestUpgradeDowngrade:
             5. check all configurations still available
         :expectedresults:
             1. virt-who can be downgrade and upgrade successfully.
-            2. all configurations will not be changed after downgrade and upgrade.
+            2. all configurations will not be changed after downgrade and
+                upgrade.
         """
         sysconfig_file = '/etc/sysconfig/virt-who'
         virtwho_conf_file = '/etc/virt-who.conf'
@@ -191,12 +186,10 @@ class TestUpgradeDowngrade:
                         f'http_proxy = proxy_server:proxy_port\n'
                         f'no_proxy = *\n'
                         f'EOF')
-
         # run migrateconfiguration.py script
         ssh_host.runcmd('/usr/bin/python3 '
                         '/usr/lib/python3.9/site-packages/virtwho/migrate/'
                         'migrateconfiguration.py')
-
         # check the configurations in /etc/sysconfig/virt-who are migrated to
         # /etc/virt-who.conf
         _, output = ssh_host.runcmd(f'cat {virtwho_conf_file}')
@@ -213,7 +206,6 @@ class TestUpgradeDowngrade:
                '#migrated\n' \
                'no_proxy=*'
         assert (msg1 in output and msg2 in output)
-
         # run virt-who to test the migrated options working well
         result = virtwho.run_service()
         assert (result['send'] == 1 and
