@@ -5,10 +5,12 @@
 :caseautomation: Automated
 """
 import pytest
+import random
 
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
 from virtwho import HYPERVISOR
+from virtwho import FAKE_CONFIG_FILE
 from virtwho import PRINT_JSON_FILE
 from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
@@ -1068,3 +1070,56 @@ class TestEsxNegative:
         assert (result['error'] == 0
                 and result['send'] == 1
                 and result['thread'] == 1)
+
+    @pytest.mark.tier2
+    @pytest.mark.notStage
+    def test_hypervisors_fqdn(self, virtwho, function_hypervisor, hypervisor_data, satellite, ssh_host):
+        """
+        :title: virt-who: esx: test the hypervisors fqdn
+        :id: ef3ecbc5-2433-44ae-9517-39dbe9590726
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create fake json file by the default configuration
+            2. Run virt-who with the fake config
+            3. Use hammer command to check hypervisor's fqdn
+            4. Run virt-who with the new hypervisor's fqdn
+            5. Use hammer command to check the new hypervisor's fqdn
+
+        :expectedresults:
+            1. Created the fake json file in /root/print.json
+            2. Succeed to run the virt-who service
+            3. Can find the hypervisor's fqdn by the hammer command
+            5. Can find the new hypervisor's fqdn by the hammer command, cannot find the previous
+            hypervisor' fqdn
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+
+        # create fake json file
+        virtwho.run_cli(prt=True)
+
+        # run virt-who with fake con
+        hypervisor_create(mode='fake', register_type='satellite', config_name=FAKE_CONFIG_FILE)
+        result = virtwho.run_cli(config=FAKE_CONFIG_FILE)
+        assert (result['error'] == 0
+                and result['send'] == 1)
+
+        # use hammer command to check hypervisor's FQDN
+        hypervisor_fqdn = "virt-who-" + host_name
+        assert satellite.host_id(hypervisor_fqdn)
+
+        # run virt-who with the new hypervisor's FQDN
+        new_host_name = "new" + str(random.randint(1, 10000)) + ".rhts.eng.pek2.redhat.com"
+
+        cmd = f'sed -i "s|{host_name}|{new_host_name}|g" {PRINT_JSON_FILE}'
+        ssh_host.runcmd(cmd)
+
+        result = virtwho.run_cli(config=FAKE_CONFIG_FILE)
+        assert (result['error'] == 0
+                and result['send'] == 1)
+
+        new_hypervisor_fqdn = "virt-who-" + new_host_name
+        assert satellite.host_id(new_hypervisor_fqdn)
+        assert not satellite.host_id(new_hypervisor_fqdn)
