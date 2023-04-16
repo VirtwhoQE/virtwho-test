@@ -1123,3 +1123,53 @@ class TestEsxNegative:
         new_hypervisor_fqdn = "virt-who-" + new_host_name
         assert satellite.host_id(new_hypervisor_fqdn)
         assert not satellite.host_id(new_hypervisor_fqdn)
+
+    @pytest.mark.tier2
+    def test_trigger_event_with_different_interval(
+            self, virtwho, function_hypervisor, hypervisor_data, register_data, function_sysconfig):
+        """
+        :title: virt-who: esx: trigger event with different interval
+        :id: a1972ea5-3c4b-455e-8690-c9f69fa88972
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Configure the VIRTWHO_INTERVAL with 60
+            2. Suspend the guest and run the virt-who service
+            3. Configure the VIRTWHO_INTERVAL with 120
+            4. Resume the guest and run the virt-who service
+
+        :expectedresults:
+            2. Succeed to run the virt-who, and  virt-who starting infinite loop with
+            60 seconds interval
+            4. Succeed to run the virt-who, and  virt-who starting infinite loop with
+            120 seconds interval
+        """
+        from hypervisor.virt.esx.powercli import PowerCLI
+        esx = PowerCLI(
+            server=hypervisor_data['hypervisor_server'],
+            admin_user=hypervisor_data['hypervisor_username'],
+            admin_passwd=hypervisor_data['hypervisor_password'],
+            client_server=hypervisor_data['ssh_ip'],
+            client_user=hypervisor_data['ssh_username'],
+            client_passwd=hypervisor_data['ssh_password']
+        )
+
+        # run virt-who with event(guest_suspend) for interval 60
+        function_sysconfig.update({'VIRTWHO_INTERVAL': '60'})
+        esx.guest_suspend(hypervisor_data['guest_name'])
+        result = virtwho.run_service(wait=60)
+        assert (result['error'] == 0
+                and result['send'] == 2
+                and result['thread'] == 1
+                and result['interval'] == 60)
+
+        # run virt-who with event(guest_resume) for interval 120
+        function_sysconfig.update({'VIRTWHO_INTERVAL': '120'})
+        esx.guest_resume(hypervisor_data['guest_name'])
+        result = virtwho.run_service(wait=120)
+        assert (result['error'] == 0
+                and result['send'] == 2
+                and result['thread'] == 1
+                and result['interval'] == 120)

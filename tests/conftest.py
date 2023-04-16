@@ -234,6 +234,9 @@ def hypervisor_data(ssh_guest):
         data['version'] = hypervisor_handler.esx_version
         data['cpu'] = hypervisor_handler.esx_cpu
         data['cluster'] = hypervisor_handler.esx_cluster
+        data['ssh_ip'] = hypervisor_handler.ssh_ip
+        data['ssh_username'] = hypervisor_handler.ssh_username
+        data['ssh_password'] = hypervisor_handler.ssh_password
     elif HYPERVISOR == 'rhevm':
         data['hypervisor_uuid'] = hypervisor_handler.vdsm_uuid
         data['hypervisor_hostname'] = hypervisor_handler.vdsm_hostname
@@ -255,6 +258,7 @@ def hypervisor_data(ssh_guest):
     if HYPERVISOR != 'kubevirt':
         data['hypervisor_password'] = hypervisor_handler.password
         data['hypervisor_server'] = hypervisor_handler.server
+        data['hypervisor_username'] = hypervisor_handler.username
     return data
 
 
