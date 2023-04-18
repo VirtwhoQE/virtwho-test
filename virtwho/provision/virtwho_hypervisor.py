@@ -11,8 +11,8 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho import logger
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
-from virtwho.base import hostname_get, host_ping, ssh_connect, \
-    rhel_host_uuid_get
+from virtwho.base import hostname_get, host_ping, ssh_connect
+from virtwho.base import rhel_host_uuid_get
 from utils.properties_update import virtwho_ini_update
 from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 from hypervisor.virt.esx.powercli import PowerCLI
