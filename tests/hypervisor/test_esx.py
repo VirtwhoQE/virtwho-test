@@ -6,6 +6,7 @@
 """
 import pytest
 import random
+import string
 
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
@@ -19,6 +20,8 @@ from virtwho import SECOND_HYPERVISOR_SECTION
 from virtwho.base import encrypt_password
 from virtwho.base import get_host_domain_id
 from virtwho.configure import hypervisor_create
+
+from hypervisor.virt.esx.powercli import PowerCLI
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
@@ -1146,7 +1149,6 @@ class TestEsxNegative:
             4. Succeed to run the virt-who, and  virt-who starting infinite loop with
             120 seconds interval
         """
-        from hypervisor.virt.esx.powercli import PowerCLI
         esx = PowerCLI(
             server=hypervisor_data['hypervisor_server'],
             admin_user=hypervisor_data['hypervisor_username'],
@@ -1173,3 +1175,105 @@ class TestEsxNegative:
                 and result['send'] == 2
                 and result['thread'] == 1
                 and result['interval'] == 120)
+
+    @pytest.mark.tier2
+    def test_hostname_without_domain(self, virtwho, function_hypervisor, hypervisor_data,
+                                     satellite, rhsm):
+        """
+        :title: virt-who: esx: Run virt-who for hostname without domain name
+        :id: 5a100319-b68e-44db-a3ac-172f9ae90bec
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Change the hostname to the name without domain
+            2. Run virt-who with the new hostname
+            3. Change back the hostname
+
+        :expectedresults:
+            2. Virt-who works fine without any error messages
+
+        """
+        hostname = hypervisor_data['hypervisor_hostname']
+        hostname_non_domain = hostname.split(".")[0]
+
+        esx = PowerCLI(
+            server=hypervisor_data['hypervisor_server'],
+            admin_user=hypervisor_data['hypervisor_username'],
+            admin_passwd=hypervisor_data['hypervisor_password'],
+            client_server=hypervisor_data['ssh_ip'],
+            client_user=hypervisor_data['ssh_username'],
+            client_passwd=hypervisor_data['ssh_password']
+        )
+
+        # change the hostname to non domain hostname
+        esx.host_name_set(hypervisor_data['host_ip'], hostname_non_domain)
+
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and hostname_non_domain in result['mappings']
+                and hostname not in result['mappings'])
+
+        if REGISTER == 'satellite':
+            satellite.host_delete(hostname_non_domain)
+        else:
+            rhsm.host_delete(hostname_non_domain)
+
+        # change back the hostname
+        esx.host_name_set(hypervisor_data['host_ip'], hostname)
+
+    @pytest.mark.tier2
+    def test_cluster_name_with_special_char(self, virtwho, function_hypervisor, hypervisor_data,
+                                            satellite, rhsm):
+        """
+        :title: virt-who: esx: Run virt-who for cluster name with special char
+        :id: 4de43160-1db8-4516-a2e2-1955f6f4f612
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Change the vcenter cluster name to: virtwho/test
+            2. Run virt-who service with the new cluster name
+            3. Change back the cluster name
+
+        :expectedresults:
+            2. Virt-who works fine without any error messages
+
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+
+        cluster_name = hypervisor_data['cluster']
+        new_cluster_name = "virtwho/test-" + "".join(random.sample(string.digits, 6))
+
+        esx = PowerCLI(
+            server=hypervisor_data['hypervisor_server'],
+            admin_user=hypervisor_data['hypervisor_username'],
+            admin_passwd=hypervisor_data['hypervisor_password'],
+            client_server=hypervisor_data['ssh_ip'],
+            client_user=hypervisor_data['ssh_username'],
+            client_passwd=hypervisor_data['ssh_password']
+        )
+
+        # change the vcenter cluster name to: virtwho/test
+        esx.host_cluster_set(cluster_name, new_cluster_name)
+
+        # run virt-who service with the new cluster name
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and f'"hypervisor.cluster": "{new_cluster_name}"' in result['mapping'])
+
+        # check the hyperivsor facts
+        if REGISTER == 'satellite':
+            output = satellite.hosts_info_on_webui(host_name)
+        else:
+            output = rhsm.info()
+        assert new_cluster_name in output
+
+        # change back the vcenter cluster name
+        esx.host_cluster_set(new_cluster_name, cluster_name)

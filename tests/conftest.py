@@ -234,6 +234,7 @@ def hypervisor_data(ssh_guest):
         data['version'] = hypervisor_handler.esx_version
         data['cpu'] = hypervisor_handler.esx_cpu
         data['cluster'] = hypervisor_handler.esx_cluster
+        data['host_ip'] = hypervisor_handler.esx_ip
         data['ssh_ip'] = hypervisor_handler.ssh_ip
         data['ssh_username'] = hypervisor_handler.ssh_username
         data['ssh_password'] = hypervisor_handler.ssh_password
