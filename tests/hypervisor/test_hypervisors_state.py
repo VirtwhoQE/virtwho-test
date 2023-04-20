@@ -14,7 +14,7 @@ from virtwho.provision.virtwho_hypervisor import rhevm_monitor
 from virtwho.provision.virtwho_hypervisor import xen_monitor
 
 
-class TestHypervisorsMonitor:
+class TestHypervisorsState:
     def test_state_esx(self):
         """Test the esx state"""
         assert esx_monitor() == 'GOOD'
