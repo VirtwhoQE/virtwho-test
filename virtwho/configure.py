@@ -252,6 +252,8 @@ def get_register_handler(register_type):
     register = config.rhsm
     if register_type == 'satellite':
         register = config.satellite
+    if register_type == 'rhsm_sw':
+        register = config.rhsm_sw
     return register
 
 
