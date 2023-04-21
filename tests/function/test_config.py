@@ -22,7 +22,7 @@ class TestConfiguration:
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
         """Test the debug option in /etc/virtwho.conf
 
-        :title: virt-who: config: test debug option
+        :title: virt-who: config: test debug option (positive)
         :id: 6f238133-43db-4a52-b01c-441faba0cf74
         :caseimportance: High
         :tags: tier1
@@ -54,7 +54,7 @@ class TestConfiguration:
     def test_interval_in_virtwho_conf(self, virtwho, globalconf):
         """Test the interval option in /etc/virtwho.conf
 
-        :title: virt-who: config: test interval option
+        :title: virt-who: config: test interval option (positive)
         :id: f1d39429-62c0-44f0-a6d3-4ffc8dc704b1
         :caseimportance: High
         :tags: tier1
@@ -88,7 +88,7 @@ class TestConfiguration:
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
         """Test the oneshot option in /etc/virtwho.conf
 
-        :title: virt-who: config: test oneshot option
+        :title: virt-who: config: test oneshot option (positive)
         :id: 9e39f91f-80b5-4773-bef0-7facf8cb85e2
         :caseimportance: High
         :tags: tier1
@@ -123,7 +123,7 @@ class TestConfiguration:
     def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data):
         """Test the print_ option in /etc/virtwho.conf
 
-        :title: virt-who: config: test print_ option
+        :title: virt-who: config: test print_ option (positive)
         :id: 25de8130-677f-43ca-b07d-a15f49e91205
         :caseimportance: High
         :tags: tier1
@@ -168,7 +168,7 @@ class TestConfiguration:
     def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf, ssh_host, hypervisor_data):
         """Test the reporter_id option in /etc/virtwho.conf
 
-        :title: virt-who: config: test reporter_id option
+        :title: virt-who: config: test reporter_id option (positive)
         :id: 83df76e6-27c6-4429-b32b-fbc2be0564a4
         :caseimportance: High
         :tags: tier1
@@ -317,7 +317,7 @@ class TestConfiguration:
     def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the configs option in /etc/virtwho.conf
 
-        :title: virt-who: config: test configs option
+        :title: virt-who: config: test configs option (positive)
         :id: 03db48c3-4a98-4956-bd6f-a8ac4da7da8e
         :caseimportance: High
         :tags: tier1
@@ -351,7 +351,7 @@ class TestConfiguration:
                                    owner_data, class_debug_true):
         """Test the owner option in /etc/virtwho.conf
 
-        :title: virt-who: config: test owner option
+        :title: virt-who: config: test owner option (positive)
         :id: ce219d82-cf66-4019-af17-3197c53c72a0
         :caseimportance: High
         :tags: tier1
@@ -392,7 +392,7 @@ class TestConfiguration:
                                            hypervisor_data, register_data, rhsm, satellite):
         """Test the hypervisor_id option in /etc/virtwho.conf
 
-        :title: virt-who: config: test hypervisor_id option
+        :title: virt-who: config: test hypervisor_id option (positive)
         :id: fed463a6-9538-4242-9990-2e4995d1f473
         :caseimportance: High
         :tags: tier1
@@ -448,7 +448,7 @@ class TestConfiguration:
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
-        :title: virt-who: config: test http_proxy, https_proxy and no_proxy options
+        :title: virt-who: config: test http_proxy, https_proxy and no_proxy options (positive)
         :id: f7d2d5fc-2446-46ae-8fd4-eda0109f75a5
         :caseimportance: High
         :tags: tier1
@@ -663,7 +663,7 @@ class TestConfigurationNegative:
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
         """Test the debug option in /etc/virtwho.conf
 
-        :title: virt-who: config: test debug negative option
+        :title: virt-who: config: test debug option (negative)
         :id: d06ee580-767f-43f6-9dab-51947ed9d4db
         :caseimportance: High
         :tags: tier2
@@ -687,7 +687,7 @@ class TestConfigurationNegative:
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
         """Test the oneshot option in /etc/virtwho.conf
 
-        :title: virt-who: config: test oneshot negative option
+        :title: virt-who: config: test oneshot option (negative)
         :id: 843f67cb-c98e-4074-9527-ae216fb036df
         :caseimportance: High
         :tags: tier2
@@ -695,12 +695,11 @@ class TestConfigurationNegative:
         :upstream: no
         :steps:
 
-            1. Run virt-who with "oneshot=True" in /etc/virt-who.conf
+            1. Run virt-who with "oneshot=[null value]" in /etc/virt-who.conf
 
         :expectedresults:
 
-            1. Can see 'Thread X stopped after running once' log in rhsm.log
-            2. Cannot see 'Thread X stopped after running once' log in rhsm.log
+            1. Cannot see 'Thread X stopped after running once' log in rhsm.log
         """
         globalconf.update('global', 'debug', 'True')
         globalconf.update('global', 'oneshot', '')
@@ -715,7 +714,7 @@ class TestConfigurationNegative:
     def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf):
         """Test the reporter_id negative option in /etc/virtwho.conf
 
-        :title: virt-who: config: test reporter_id negative option
+        :title: virt-who: config: test reporter_id option (negative)
         :id: 5b7ea6e2-2ed9-4d56-8833-7ab627aa75d0
         :caseimportance: High
         :tags: tier2
@@ -767,7 +766,7 @@ class TestConfigurationNegative:
                                      configs_data):
         """Test the configs option in /etc/virtwho.conf
 
-        :title: virt-who: config: test configs option
+        :title: virt-who: config: test debug option (negative)
         :id: 1fa15308-d344-4ab8-9a7e-c08e1698f25f
         :caseimportance: High
         :tags: tier2
@@ -822,7 +821,7 @@ class TestConfigurationNegative:
                                    owner_data):
         """Test the owner option in /etc/virtwho.conf
 
-        :title: virt-who: config: test owner negative option
+        :title: virt-who: config: test owner option (negative)
         :id: 2b6f68bb-ea7e-4c01-abe5-7c27da3b3d3f
         :caseimportance: High
         :tags: tier2
@@ -854,7 +853,7 @@ class TestConfigurationNegative:
                                            register_data, rhsm, satellite):
         """Test the hypervisor_id negative option in /etc/virtwho.conf
 
-        :title: virt-who: config: test hypervisor_id option
+        :title: virt-who: config: test hypervisor_id option (negative)
         :id: fc2dcc791-0182-4309-a3d8-fc899d3938fa
         :caseimportance: High
         :tags: tier2
@@ -880,7 +879,3 @@ class TestConfigurationNegative:
                 and result['send'] == 1
                 and result['thread'] == 1
                 and result['hypervisor_id'] == hypervisor_data['hypervisor_hostname'])
-        if REGISTER == 'rhsm':
-            rhsm.host_delete(hypervisor_data['hypervisor_hostname'])
-        else:
-            satellite.host_delete(hypervisor_data['hypervisor_hostname'])
