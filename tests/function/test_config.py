@@ -9,11 +9,12 @@ import pytest
 from virtwho import HYPERVISOR
 from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
+from virtwho import SYSCONFIG_FILE
 
 from virtwho.base import hostname_get
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 @pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 class TestConfiguration:
@@ -21,7 +22,7 @@ class TestConfiguration:
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
         """Test the debug option in /etc/virtwho.conf
 
-        :title: virt-who: config: test debug option
+        :title: virt-who: config: test debug option (positive)
         :id: 6f238133-43db-4a52-b01c-441faba0cf74
         :caseimportance: High
         :tags: tier1
@@ -53,7 +54,7 @@ class TestConfiguration:
     def test_interval_in_virtwho_conf(self, virtwho, globalconf):
         """Test the interval option in /etc/virtwho.conf
 
-        :title: virt-who: config: test interval option
+        :title: virt-who: config: test interval option (positive)
         :id: f1d39429-62c0-44f0-a6d3-4ffc8dc704b1
         :caseimportance: High
         :tags: tier1
@@ -87,7 +88,7 @@ class TestConfiguration:
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
         """Test the oneshot option in /etc/virtwho.conf
 
-        :title: virt-who: config: test oneshot option
+        :title: virt-who: config: test oneshot option (positive)
         :id: 9e39f91f-80b5-4773-bef0-7facf8cb85e2
         :caseimportance: High
         :tags: tier1
@@ -122,7 +123,7 @@ class TestConfiguration:
     def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data):
         """Test the print_ option in /etc/virtwho.conf
 
-        :title: virt-who: config: test print_ option
+        :title: virt-who: config: test print_ option (positive)
         :id: 25de8130-677f-43ca-b07d-a15f49e91205
         :caseimportance: High
         :tags: tier1
@@ -167,7 +168,7 @@ class TestConfiguration:
     def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf, ssh_host, hypervisor_data):
         """Test the reporter_id option in /etc/virtwho.conf
 
-        :title: virt-who: config: test reporter_id option
+        :title: virt-who: config: test reporter_id option (positive)
         :id: 83df76e6-27c6-4429-b32b-fbc2be0564a4
         :caseimportance: High
         :tags: tier1
@@ -316,7 +317,7 @@ class TestConfiguration:
     def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
         """Test the configs option in /etc/virtwho.conf
 
-        :title: virt-who: config: test configs option
+        :title: virt-who: config: test configs option (positive)
         :id: 03db48c3-4a98-4956-bd6f-a8ac4da7da8e
         :caseimportance: High
         :tags: tier1
@@ -346,11 +347,11 @@ class TestConfiguration:
                 and msg in result['log'])
 
     @pytest.mark.tier1
-    def test_owner_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
+    def test_owner_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
                                    owner_data, class_debug_true):
         """Test the owner option in /etc/virtwho.conf
 
-        :title: virt-who: config: test owner option
+        :title: virt-who: config: test owner option (positive)
         :id: ce219d82-cf66-4019-af17-3197c53c72a0
         :caseimportance: High
         :tags: tier1
@@ -370,7 +371,7 @@ class TestConfiguration:
         """
         guest_uuid = hypervisor_data['guest_uuid']
         globalconf.update('global', 'debug', 'True')
-        hypervisor.delete('owner')
+        function_hypervisor.delete('owner')
 
         globalconf.update('defaults', 'owner', owner_data['bad_owner'])
         result = virtwho.run_service()
@@ -387,11 +388,11 @@ class TestConfiguration:
                 and guest_uuid in result['log'])
 
     @pytest.mark.tier1
-    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, hypervisor, hypervisor_data,
-                                           register_data, rhsm, satellite):
+    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor,
+                                           hypervisor_data, register_data, rhsm, satellite):
         """Test the hypervisor_id option in /etc/virtwho.conf
 
-        :title: virt-who: config: test hypervisor_id option
+        :title: virt-who: config: test hypervisor_id option (positive)
         :id: fed463a6-9538-4242-9990-2e4995d1f473
         :caseimportance: High
         :tags: tier1
@@ -411,7 +412,7 @@ class TestConfiguration:
         """
         globalconf.update('global', 'debug', 'True')
         # we default have the hypervisor_id section in the config file in /etc/virt-who.d/
-        hypervisor.delete('hypervisor_id')
+        function_hypervisor.delete('hypervisor_id')
 
         hypervisor_ids = ['hostname', 'uuid']
         # only esx and rhevm modes support hwuuid
@@ -447,7 +448,7 @@ class TestConfiguration:
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
-        :title: virt-who: config: test http_proxy, https_proxy and no_proxy options
+        :title: virt-who: config: test http_proxy, https_proxy and no_proxy options (positive)
         :id: f7d2d5fc-2446-46ae-8fd4-eda0109f75a5
         :caseimportance: High
         :tags: tier1
@@ -501,7 +502,7 @@ class TestConfiguration:
             globalconf.delete('system_environment')
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
 @pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 @pytest.mark.rhel8
@@ -614,3 +615,267 @@ class TestSysConfiguration:
                 and result['loop'] == 60)
 
         function_sysconfig.clean()
+
+    @pytest.mark.tier1
+    def test_pid_files_permission(self, virtwho, ssh_host):
+        """Test the sysconfig and pid files permission
+
+        :title: virt-who: config: test the sysconfig and pid files permission
+        :id: 21bf00ef-8b58-48b8-a36c-d65bc7b18dc0
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Stop virt-who to check virt-who sysconfig permission
+            2. Start virt-who to check virt-who.pid file permission
+
+        :expectedresults:
+
+            1. the permission of /etc/sysoncifg/virt-who file should be -rw-------
+            2. the permission of /var/run/virt-who.pid file should be  -rw-------
+        """
+        # check virt-who sysconfig file permission
+        virtwho.stop()
+        cmd = f"ls -l '{SYSCONFIG_FILE}'"
+        ret, output = ssh_host.runcmd(cmd)
+        assert (ret == 0
+                and output is not None
+                and output != ""
+                and "-rw-------" in output)
+
+        # check virt-who.pid file permission
+        pid_file = "/var/run/virt-who.pid"
+        virtwho.start()
+        cmd = f"ls -l '{pid_file}'"
+        ret, output = ssh_host.runcmd(cmd)
+        assert (ret == 0
+                and output is not None
+                and output != ""
+                and "-rw-------" in output)
+
+@pytest.mark.usefixtures('function_globalconf_clean')
+@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
+class TestConfigurationNegative:
+    @pytest.mark.tier2
+    def test_debug_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the debug option in /etc/virtwho.conf
+
+        :title: virt-who: config: test debug option (negative)
+        :id: d06ee580-767f-43f6-9dab-51947ed9d4db
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with "debug=null" in [global] section in /etc/virt-who.conf file
+        :expectedresults:
+
+            1. no [DEBUG] log printed
+        """
+        globalconf.update('global', 'debug', '')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['thread'] == 1
+                and result['error'] == 0
+                and result['debug'] is False)
+
+    @pytest.mark.tier2
+    def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the oneshot option in /etc/virtwho.conf
+
+        :title: virt-who: config: test oneshot option (negative)
+        :id: 843f67cb-c98e-4074-9527-ae216fb036df
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who with "oneshot=[null value]" in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Cannot see 'Thread X stopped after running once' log in rhsm.log
+        """
+        globalconf.update('global', 'debug', 'True')
+        globalconf.update('global', 'oneshot', '')
+        result = virtwho.run_service()
+        assert (result['send'] == 1
+                and result['thread'] == 1
+                and result['error'] == 0
+                and result['terminate'] == 0
+                and result['oneshot'] is False)
+
+    @pytest.mark.tier2
+    def test_reporter_id_in_virtwho_conf(self, virtwho, globalconf):
+        """Test the reporter_id negative option in /etc/virtwho.conf
+
+        :title: virt-who: config: test reporter_id option (negative)
+        :id: 5b7ea6e2-2ed9-4d56-8833-7ab627aa75d0
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. run virt-who to with default configured to get the default repoter id form rhsm.log
+            2. set the reporter_id with null value, run the virt-who service
+            3. set the reporter_id with non_ascii value, run the virt-who service
+
+        :expectedresults:
+
+            2. virt-who works fine, the reporter id from the rhsm.log is still the default reporter
+            id
+            2. virt-who works fine, the reporter id from the rhsm.log has beed updated to the
+            non_ascii value configured.
+        """
+        globalconf.update('global', 'debug', 'True')
+
+        # get default reporter_id
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+        default_reporter_id = result['reporter_id']
+
+        # reporter_id is null value
+        globalconf.update('global', 'reporter_id', "")
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and result['reporter_id'] == default_reporter_id)
+
+        # reporter_id is wroing value
+        if REGISTER == 'rhsm':
+            non_ascii = "红帽©¥®ðπ∉"
+            globalconf.update('global', 'reporter_id', non_ascii)
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and result['reporter_id'] == non_ascii)
+
+    @pytest.mark.tier2
+    @pytest.mark.notLocal
+    def test_configs_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host,
+                                     configs_data):
+        """Test the configs option in /etc/virtwho.conf
+
+        :title: virt-who: config: test debug option (negative)
+        :id: 1fa15308-d344-4ab8-9a7e-c08e1698f25f
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Run virt-who configs setting in /etc/virt-who.conf
+            2. Configure the configs option with null value
+            3. COnfigure the configs option with wrong value
+
+        :expectedresults:
+
+            1. Succeeded to run the virt-who and ignore the configurations files in
+            /etc/virt-who.d/ dir
+            2. Succeeded to run the virt-who with the config file in /etc/virt-who.d/ dir
+            3. Failed to run the virt-who with the error info
+        """
+        config_file = '/tmp/test_config_configs.conf'
+        guest_uuid = hypervisor_data['guest_uuid']
+        globalconf.update('global', 'debug', 'True')
+        ssh_host.runcmd(f'\\cp -f {HYPERVISOR_FILE} {config_file}')
+
+        globalconf.update('global', 'configs', config_file)
+        result = virtwho.run_service()
+        msg = "ignoring configuration files in '/etc/virt-who.d/'"
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and guest_uuid in result['log']
+                and msg in result['log'])
+
+        # 'configs' is null value, run the config for /etc/virt-who.d/
+        globalconf.update('global', 'configs', '')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and guest_uuid in result['log'])
+
+        # 'configs' is wrong value
+        globalconf.update('global', 'configs', configs_data['wrong_configs'])
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and (error in result['log'] for error in configs_data['error']))
+
+    @pytest.mark.tier2
+    @pytest.mark.notLocal
+    def test_owner_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
+                                   owner_data):
+        """Test the owner option in /etc/virtwho.conf
+
+        :title: virt-who: config: test owner option (negative)
+        :id: 2b6f68bb-ea7e-4c01-abe5-7c27da3b3d3f
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Disable owner option in /etc/virt-who.d/,
+            2. Run virt-who with null owner setting in [defaults] section
+            in /etc/virt-who.conf
+
+        :expectedresults:
+
+            1. Virt-who runs failed with the incorrect owner setting
+        """
+        globalconf.update('global', 'debug', 'True')
+
+        function_hypervisor.delete('owner')
+        globalconf.update('defaults', 'owner', '')
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 1
+                and any(error in result['error_msg'] for error in owner_data['null_error']))
+
+    @pytest.mark.tier2
+    @pytest.mark.notLocal
+    def test_hypervisor_id_in_virtwho_conf(self, virtwho, globalconf, function_hypervisor, hypervisor_data,
+                                           register_data, rhsm, satellite):
+        """Test the hypervisor_id negative option in /etc/virtwho.conf
+
+        :title: virt-who: config: test hypervisor_id option (negative)
+        :id: fc2dcc791-0182-4309-a3d8-fc899d3938fa
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. Config the hypervisor_id=hostname in /etc/virt-who.d/virt-who.conf(default)
+            2. Config the hypervisor_id=uuid in /etc/virt-who.conf
+            3. Run virt-who service and check the mapping info
+            4. Delete the host from the register platform
+
+        :expectedresults:
+
+            3. hypervisor_id in /etc/virt-who.d/virt-who.conf has high priority, can find the
+            hypervisor_id is the hostname in the mapping info.
+        """
+        globalconf.update('global', 'debug', 'True')
+        globalconf.update('defaults', 'hypervisor_id', 'uuid')
+
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and result['hypervisor_id'] == hypervisor_data['hypervisor_hostname'])

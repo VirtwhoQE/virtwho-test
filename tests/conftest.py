@@ -319,6 +319,7 @@ def vdc_pool_physical(sm_guest, sku_data):
     return vdc_pool_id
 
 
+@pytest.fixture(scope='session')
 def owner_data():
     """Owner data for testing"""
     owner = dict()
@@ -327,4 +328,15 @@ def owner_data():
     owner['bad_owner'] = bad_owner
     owner['error'] = [f'Organization with id {bad_owner} could not be found',
                       f"Couldn't find Organization '{bad_owner}'"]
+    owner['null_error'] = ['Communication with subscription manager failed', ]
     return owner
+
+
+@pytest.fixture(scope='session')
+def configs_data():
+    """Configs data for testing"""
+    configs = dict()
+    configs['wrong_configs'] = 'xxxx'
+    configs['error'] = ['Unable to read configuration file',
+                        'No valid configuration file provided using -c/--config']
+    return configs
