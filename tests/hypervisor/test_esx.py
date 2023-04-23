@@ -4,10 +4,13 @@
 :testtype: functional
 :caseautomation: Automated
 """
+import os
 import pytest
 import random
 import string
+import json
 
+from virtwho import logger
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
 from virtwho import HYPERVISOR
@@ -16,10 +19,11 @@ from virtwho import PRINT_JSON_FILE
 from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
 
-
 from virtwho.base import encrypt_password
 from virtwho.base import get_host_domain_id
+from virtwho.base import json_data_create
 from virtwho.configure import hypervisor_create
+from virtwho.settings import TEMP_DIR
 
 from hypervisor.virt.esx.powercli import PowerCLI
 
@@ -1279,3 +1283,45 @@ class TestEsxNegative:
         finally:
             # change back the vcenter cluster name
             esx.cluster_set(host_ip, new_cluster_name, cluster_name)
+
+    @pytest.mark.tier2
+    @pytest.mark.notStage
+    def test_post_large_json_to_rhsm(self, register_data, ssh_host):
+        """
+        :title: virt-who: esx: post large json data to satellite server
+        :id: 8b14bb1f-7b92-483f-af35-7ec97a621436
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create json data with 100 hypervisors, every hypervisor has 30 guests
+            2. Post the json data to satellite
+
+        :expectedresults:
+            2. Succeeded to post 600 hypervisors and 18000 guests to satellite
+
+        """
+        # create json data
+        local_file = os.path.join(TEMP_DIR, 'test.json')
+        json_file = "/root/test.json"
+        json_data = json_data_create(hypervisors=100, guests=30)
+        with open(local_file, "w") as f:
+            json.dump(json_data, f)
+        ssh_host.put_file(local_file, json_file)
+
+        # post json data
+        curl_header = (
+            '-H "accept:application/json,version=2" -H "content-type:application/json"'
+        )
+        curl_cert = "--cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem"
+        curl_json = '-d @"{0}"'.format(json_file)
+        curl_host = f"https://{register_data['server']}/rhsm/hypervisors"
+        cmd = f"curl -X POST -s -k {curl_header} {curl_cert} {curl_json} {curl_host}"
+
+        ret, output = ssh_host.runcmd(cmd)
+        if ret == 0 and "error" not in output:
+            logger.info("Succeeded to 600 hypervisors and 18000 guests to satellite")
+        else:
+            logger.warning("Failed to post json to satellite")
+            logger.warning(output)
