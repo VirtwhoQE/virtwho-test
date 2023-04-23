@@ -4,6 +4,7 @@ from virtwho.register import SubscriptionManager, RHSM
 from virtwho.runner import VirtwhoRunner
 from virtwho.base import hostname_get
 from virtwho.ssh import SSHConnect
+from utils.properties_update import virtwho_ini_update
 
 
 @pytest.mark.usefixtures('class_globalconf_clean')
@@ -27,6 +28,7 @@ class TestHypervisorsSW:
             rhsm.host_delete()
             # register virt-who host to the stage
             sm_host.register()
+
             # start to report mapping and register guest
             if 'ahv' in hypervisors:
                 hypervisor_create(mode='ahv',
@@ -44,8 +46,10 @@ class TestHypervisorsSW:
                                        user=config.ahv.guest_username_sw,
                                        pwd=config.ahv.guest_password_sw)
                 guest_hostname = hostname_get(ssh_guest)
+                virtwho_ini_update('ahv', 'guest_hostname_sw', guest_hostname)
                 hosts.append(config.ahv.hostname)
                 hosts.append(guest_hostname)
+
             if 'kubevirt' in hypervisors:
                 hypervisor_create(mode='kubevirt',
                                   register_type='rhsm_sw',
@@ -64,6 +68,8 @@ class TestHypervisorsSW:
                                        pwd=config.kubevirt.guest_password_sw,
                                        port=config.kubevirt.guest_port_sw)
                 guest_hostname = hostname_get(ssh_guest)
+                virtwho_ini_update(
+                    'kubevirt', 'guest_hostname_sw', guest_hostname)
                 hosts.append(config.kubevirt.hostname)
                 hosts.append(guest_hostname)
 
