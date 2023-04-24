@@ -1165,8 +1165,10 @@ class TestEsxNegative:
         try:
             # run virt-who with event(guest_suspend) for interval 60
             function_sysconfig.update(**{'VIRTWHO_INTERVAL': '60'})
+            virtwho.run_service()
             esx.guest_suspend(hypervisor_data['guest_name'])
-            result = virtwho.run_service(wait=60)
+            rhsm_log = virtwho.rhsm_log_get(80)
+            result = virtwho.analyzer(rhsm_log)
             assert (result['error'] == 0
                     and result['send'] == 2
                     and result['thread'] == 1
@@ -1175,8 +1177,10 @@ class TestEsxNegative:
         finally:
             # run virt-who with event(guest_resume) for interval 120
             function_sysconfig.update(**{'VIRTWHO_INTERVAL': '120'})
+            virtwho.run_service()
             esx.guest_resume(hypervisor_data['guest_name'])
-            result = virtwho.run_service(wait=120)
+            rhsm_log = virtwho.rhsm_log_get(150)
+            result = virtwho.analyzer(rhsm_log)
             assert (result['error'] == 0
                     and result['send'] == 2
                     and result['thread'] == 1
