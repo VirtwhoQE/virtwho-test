@@ -1262,7 +1262,7 @@ class TestEsxNegative:
 
         try:
             # change the vcenter cluster name to: virtwho/test
-            esx.cluster_set(host_ip, cluster_name, new_cluster_name)
+            esx.cluster_name_set(host_ip, cluster_name, new_cluster_name)
 
             # run virt-who service with the new cluster name
             result = virtwho.run_service()
@@ -1282,7 +1282,7 @@ class TestEsxNegative:
 
         finally:
             # change back the vcenter cluster name
-            esx.cluster_set(host_ip, new_cluster_name, cluster_name)
+            esx.cluster_name_set(host_ip, new_cluster_name, cluster_name)
 
     @pytest.mark.tier2
     @pytest.mark.notStage
