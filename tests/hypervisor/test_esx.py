@@ -1315,7 +1315,7 @@ class TestEsxNegative:
             '-H "accept:application/json,version=2" -H "content-type:application/json"'
         )
         curl_cert = "--cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem"
-        curl_json = '-d @"{0}"'.format(json_file)
+        curl_json = f'-d @"{json_file}"'
         curl_host = f"https://{register_data['server']}/rhsm/hypervisors"
         cmd = f"curl -X POST -s -k {curl_header} {curl_cert} {curl_json} {curl_host}"
 
