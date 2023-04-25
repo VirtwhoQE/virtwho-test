@@ -9,6 +9,8 @@ RHEL_COMPOSE_PATH = config.job.rhel_compose_path
 
 HYPERVISOR = config.job.hypervisor
 
+SYSCONFIG_FILE = '/etc/sysconfig/virt-who'
+
 HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}.conf'
 
 PRINT_JSON_FILE = '/root/print.json'

@@ -196,7 +196,7 @@ class VirtwhoRunner:
         rhsm_ouput = self.rhsm_log_get(wait)
         return rhsm_ouput
 
-    def start(self, q, cli):
+    def start(self, q=None, cli=None):
         """
         Start virt-who by command line or service.
         :param q: queue
@@ -503,7 +503,7 @@ class VirtwhoRunner:
         Get the hypervisor id by mapping
         :param mapping: the host-to-guest mapping
         """
-        if mapping:
+        if mapping and self.mode:
             guest_uuid = get_hypervisor_handler(self.mode).guest_uuid
             for org in mapping['orgs']:
                 org_dict = mapping[org]

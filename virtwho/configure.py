@@ -156,7 +156,7 @@ class VirtwhoSysConfig:
         if not os.path.exists(TEMP_DIR):
             os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, 'virt-who')
-        self.remote_file = '/etc/sysconfig/virt-who'
+        self.remote_file = SYSCONFIG_FILE
         self.save_file = os.path.join(TEMP_DIR, 'virt-who.save')
         if not os.path.exists(self.save_file):
             self.remote_ssh.get_file(self.remote_file, self.save_file)
@@ -252,6 +252,8 @@ def get_register_handler(register_type):
     register = config.rhsm
     if register_type == 'satellite':
         register = config.satellite
+    if register_type == 'rhsm_sw':
+        register = config.rhsm_sw
     return register
 
 
