@@ -5,6 +5,8 @@ logger = getLogger(__name__)
 
 RHEL_COMPOSE = config.job.rhel_compose
 
+RHEL_COMPOSE_PATH = config.job.rhel_compose_path
+
 HYPERVISOR = config.job.hypervisor
 
 SYSCONFIG_FILE = '/etc/sysconfig/virt-who'

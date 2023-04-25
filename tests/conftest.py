@@ -254,6 +254,7 @@ def hypervisor_data(ssh_guest):
         data['cluster'] = hypervisor_handler.cluster
     if HYPERVISOR != 'kubevirt':
         data['hypervisor_password'] = hypervisor_handler.password
+        data['hypervisor_server'] = hypervisor_handler.server
     return data
 
 
