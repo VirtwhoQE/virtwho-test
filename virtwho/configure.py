@@ -4,7 +4,7 @@ from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
-from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP
+from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP, SYSCONFIG_FILE
 from virtwho import PRINT_JSON_FILE, HYPERVISOR, REGISTER
 
 
