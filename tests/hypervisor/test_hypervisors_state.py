@@ -15,6 +15,7 @@ from virtwho.provision.virtwho_hypervisor import xen_monitor
 
 
 class TestHypervisorsState:
+    """The test cases for hypervisor-monitor"""
     def test_state_esx(self):
         """Test the esx state"""
         assert esx_monitor() == 'GOOD'

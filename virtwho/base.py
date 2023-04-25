@@ -5,6 +5,7 @@ import random
 import re
 import string
 import operator
+import time
 
 from virtwho import logger, FailException
 from virtwho.settings import config
@@ -337,7 +338,7 @@ def url_validation(url):
 
 def package_info_analyzer(ssh, pkg):
     """
-    Analyze the package information after '#rpm -qa {pkg}'.
+    Analyze the package information after '#rpm -qi {pkg}'.
     :param ssh: ssh access of testing host
     :param pkg: package to test
     :reture: a dict
@@ -614,3 +615,16 @@ def expect_run(ssh, cmd, attrs):
     _, _ = ssh.runcmd(cmd)
     ret, output = ssh.runcmd(f'chmod +x {filename}; {filename}')
     return ret, output
+  
+  
+def system_reboot(ssh):
+    """
+    Reboot a RHEL system.
+    :param ssh: ssh access of testing host
+    :return: True or raise fail.
+    """
+    _, _ = ssh.runcmd('sync;sync;sync;sync;reboot')
+    time.sleep(120)
+    if ssh_connect(ssh):
+        return True
+    raise FailException('Failed to reboot system')

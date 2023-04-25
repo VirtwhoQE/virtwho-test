@@ -74,8 +74,8 @@ class SubscriptionManager:
         ret, _ = self.ssh.runcmd('subscription-manager unregister;'
                                  'subscription-manager clean')
         if ret == 0:
-            if self.register_type == 'satellite':
-                self.satellite_cert_uninstall()
+            # if self.register_type == 'satellite':
+            #     self.satellite_cert_uninstall()
             logger.info(f'Succeeded to unregister host')
         else:
             raise FailException(f'Failed to unregister {self.host}.')
@@ -93,6 +93,7 @@ class SubscriptionManager:
         """
         Install certificate when registering to satellite.
         """
+        self.satellite_cert_uninstall()
         cmd = f'rpm -ihv http://{self.server}' \
               f'/pub/katello-ca-consumer-latest.noarch.rpm'
         ret, output = self.ssh.runcmd(cmd)
@@ -341,14 +342,16 @@ class SubscriptionManager:
 
 class RHSM:
 
-    def __init__(self):
+    def __init__(self, rhsm='rhsm'):
         """
         Using rhsm api to check/get/delete consumers,  attach/remove
         subscription, and check the host-to-guest associations.
+        :param rhsm: rhsm org rhsm_sw.
         """
-        self.org = config.rhsm.default_org
-        self.api = f'https://{config.rhsm.server}/subscription'
-        self.auth = (config.rhsm.username, config.rhsm.password)
+        register = get_register_handler(rhsm)
+        self.org = register.default_org
+        self.api = f'https://{register.server}/subscription'
+        self.auth = (register.username, register.password)
 
     def consumers(self, host_name=None):
         """

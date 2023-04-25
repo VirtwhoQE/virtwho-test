@@ -13,7 +13,7 @@ from virtwho.register import Satellite
 from virtwho.ssh import SSHConnect
 from virtwho.settings import config
 from utils.beaker import install_rhel_by_beaker
-from utils.satellite import satellite_deploy
+from utils.satellite import satellite_deploy, satellite_manifest_upload
 from utils.properties_update import virtwho_ini_props_update
 
 
@@ -65,6 +65,10 @@ def satellite_deploy_for_virtwho(args):
     second_org = config.satellite.secondary_org
     if second_org:
         satellite.org_create(name=second_org, label=second_org)
+        satellite_manifest_upload(ssh=ssh_satellite,
+                                  url=config.satellite.manifest_second,
+                                  admin_username=args.admin_username,
+                                  admin_password=args.admin_password)
     activation_key = config.satellite.activation_key
     if activation_key:
         satellite.activation_key_create(key=activation_key)

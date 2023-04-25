@@ -4,8 +4,8 @@ from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
 from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
-from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP
-from virtwho import PRINT_JSON_FILE, HYPERVISOR
+from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP, SYSCONFIG_FILE
+from virtwho import PRINT_JSON_FILE, HYPERVISOR, REGISTER
 
 
 class VirtwhoHypervisorConfig:
@@ -156,7 +156,7 @@ class VirtwhoSysConfig:
         if not os.path.exists(TEMP_DIR):
             os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, 'virt-who')
-        self.remote_file = '/etc/sysconfig/virt-who'
+        self.remote_file = SYSCONFIG_FILE
         self.save_file = os.path.join(TEMP_DIR, 'virt-who.save')
         if not os.path.exists(self.save_file):
             self.remote_ssh.get_file(self.remote_file, self.save_file)
@@ -252,6 +252,8 @@ def get_register_handler(register_type):
     register = config.rhsm
     if register_type == 'satellite':
         register = config.satellite
+    if register_type == 'rhsm_sw':
+        register = config.rhsm_sw
     return register
 
 
@@ -266,7 +268,8 @@ def get_hypervisor_handler(mode):
     return hypervisor
 
 
-def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, section=None, rhsm=True):
+def hypervisor_create(mode=HYPERVISOR, register_type=REGISTER, config_name=None,
+                      section=None, rhsm=True):
     """ Create the hypervisor config file
     :param mode: The hypervisor mode.
     :param register_type: The subscription server. (rhsm, satellite)
@@ -275,6 +278,7 @@ def hypervisor_create(mode='esx', register_type='rhsm', config_name=None, sectio
     :param rhsm: True is to add all rhsm related options, False will not
     :return:
     """
-    hypervisor = VirtwhoHypervisorConfig(mode, register_type, config_name, section)
+    hypervisor = VirtwhoHypervisorConfig(mode, register_type, config_name,
+                                         section)
     hypervisor.create(rhsm=rhsm)
     return hypervisor
