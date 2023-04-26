@@ -61,8 +61,10 @@ def esx_assertion():
             'warining_msg': "Configuration directory '/etc/virt-who.d/' "
                             "does not have any '*.conf' files but is not empty",
             'error_msg': "Error in libvirt backend"
+        },
+        'redundant_options': {
+            'error_msg': "virt-who can't be started: no valid configuration found"
         }
-
     }
 
     return data

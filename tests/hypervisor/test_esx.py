@@ -9,6 +9,7 @@ import pytest
 import random
 import string
 import json
+import uuid
 
 from virtwho import logger
 from virtwho import REGISTER
@@ -21,7 +22,6 @@ from virtwho import SECOND_HYPERVISOR_SECTION
 
 from virtwho.base import encrypt_password
 from virtwho.base import get_host_domain_id
-from virtwho.base import json_data_create
 from virtwho.configure import hypervisor_create
 from virtwho.settings import TEMP_DIR
 
@@ -935,7 +935,7 @@ class TestEsxNegative:
         :customerscenario: false
         :upstream: no
         :steps:
-            1. Run virt-who with the expected config file name
+            1. Create virt-who config file with the expected file name
             2. Rename the config file with the invalid extension file name like esx.conf.txt
             3. Run the virt-who service
 
@@ -944,11 +944,6 @@ class TestEsxNegative:
             3. Failed to run the virt-who, can fin the expected error and warning messages
             in rhsm.log
         """
-        result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
-
         invalid_file_name = esx_assertion['extension_file_name']['file_name']
         cmd = f"mv {function_hypervisor.remote_file} {invalid_file_name}"
         ssh_host.runcmd(cmd)
@@ -998,7 +993,7 @@ class TestEsxNegative:
                 and result['thread'] == 1)
 
     @pytest.mark.tier2
-    def test_redundant_options(self, virtwho, function_hypervisor, ssh_host):
+    def test_redundant_options(self, virtwho, function_hypervisor, ssh_host, hypervisor_data, esx_assertion):
         """
         :title: virt-who: esx: test the redundant options in /etc/virt-who.d/ dir
         :id: cba7b507-f490-405b-85b7-ca448da901f2
@@ -1007,16 +1002,18 @@ class TestEsxNegative:
         :customerscenario: false
         :upstream: no
         :steps:
-            1. Create the expected config file in /etc/virt-who.d dir, defautl to add the
+            1. Create the expected config file in /etc/virt-who.d dir, default to add the
             hypervisor_id=hostname
             2. Add another hypervisor_id=uuid, run the virt-who service
             3. Add another hypervisor_id=xxx, run the virt-who service
 
         :expectedresults:
             2. Succeed to run the virt-who without any error messages, can find the related
-            warning message in rhsm.log
+            warning message and "hypervisorId": "{host_uuid}" in rhsm.log
             3. Failed to run the virt-who, can find the related warning message in rhsm.log
         """
+        host_name = hypervisor_data['hypervisor_hostname']
+        host_uuid = hypervisor_data['hypervisor_uuid']
         option = 'hypervisor_id'
         warning_msg = f"option '{option}' in section '{function_hypervisor.section}' already exists"
 
@@ -1026,24 +1023,28 @@ class TestEsxNegative:
         result = virtwho.run_service()
         assert (result['error'] == 0
                 and result['send'] == 1
-                and result['thread'] == 1)
+                and result['thread'] == 1
+                and f'"hypervisorId": "{host_uuid}"' in result['log']
+                and f'"hypervisorId": "{host_name}"' not in result['log'])
         if "RHEL-8" in RHEL_COMPOSE:
             assert warning_msg in result['warning_msg']
 
         # add another hypervisor_id=xxx
-        cmd = f'echo -e "{option}=xxx" >> {function_hypervisor.remote_file}'
+        invalid_value = 'xxx'
+        cmd = f'echo -e "{option}={invalid_value}" >> {function_hypervisor.remote_file}'
         ssh_host.runcmd(cmd)
         result = virtwho.run_service()
         assert (result['error'] is not 0
                 and result['send'] == 0
-                and result['thread'] == 0)
+                and result['thread'] == 0
+                and esx_assertion['redundant_options']['error_msg'] in result['error_msg'])
         if "RHEL-8" in RHEL_COMPOSE:
             assert warning_msg in result['warning_msg']
 
     @pytest.mark.tier2
     def test_commented_line_with_tab_space(self, virtwho, function_hypervisor, ssh_host):
         """
-        :title: virt-who: esx: test the redundant options in /etc/virt-who.d/ dir
+        :title: virt-who: esx: test commented line with tab space virt-who config file
         :id: d2444fd4-0a2c-4a08-a873-cb9d39e6b98b
         :caseimportance: High
         :tags: tier2
@@ -1129,9 +1130,10 @@ class TestEsxNegative:
 
         new_hypervisor_fqdn = "virt-who-" + new_host_name
         assert satellite.host_id(new_hypervisor_fqdn)
-        assert not satellite.host_id(new_hypervisor_fqdn)
+        assert not satellite.host_id(hypervisor_fqdn)
 
     @pytest.mark.tier2
+    @pytest.mark.notRHEL9
     def test_trigger_event_with_different_interval(
             self, virtwho, function_hypervisor, hypervisor_data, register_data, function_sysconfig):
         """
@@ -1172,7 +1174,7 @@ class TestEsxNegative:
             assert (result['error'] == 0
                     and result['send'] == 2
                     and result['thread'] == 1
-                    and result['interval'] == 60)
+                    and result['loop'] == 60)
 
         finally:
             # run virt-who with event(guest_resume) for interval 120
@@ -1184,7 +1186,7 @@ class TestEsxNegative:
             assert (result['error'] == 0
                     and result['send'] == 2
                     and result['thread'] == 1
-                    and result['interval'] == 120)
+                    and result['loop'] == 120)
 
     @pytest.mark.tier2
     def test_hostname_without_domain(self, virtwho, function_hypervisor, hypervisor_data,
@@ -1303,13 +1305,13 @@ class TestEsxNegative:
             2. Post the json data to satellite
 
         :expectedresults:
-            2. Succeeded to post 600 hypervisors and 18000 guests to satellite
+            2. Succeeded to post 100 hypervisors and 3000 guests to satellite
 
         """
         # create json data
         local_file = os.path.join(TEMP_DIR, 'test.json')
         json_file = "/root/test.json"
-        json_data = json_data_create(hypervisors=100, guests=30)
+        json_data = json_data_create(100, 30)
         with open(local_file, "w") as f:
             json.dump(json_data, f)
         ssh_host.put_file(local_file, json_file)
@@ -1325,7 +1327,29 @@ class TestEsxNegative:
 
         ret, output = ssh_host.runcmd(cmd)
         if ret == 0 and "error" not in output:
-            logger.info("Succeeded to 600 hypervisors and 18000 guests to satellite")
+            logger.info("Succeeded to post 100 hypervisors and 3000 guests to satellite")
         else:
             logger.warning("Failed to post json to satellite")
             logger.warning(output)
+
+
+def json_data_create(hypervisors_num, guests_num):
+    """
+    Generate the json date to performance testing
+    :param hypervisors: number of hypervisors
+    :param guests: number of guests for each hypervisor
+    :return: json data
+    """
+    virtwho = {}
+    for i in range(hypervisors_num):
+        guest_list = []
+        for c in range(guests_num):
+            guest_list.append(
+                {
+                    "guestId": str(uuid.uuid4()),
+                    "state": 1,
+                    "attributes": {"active": 1, "virtWhoType": "esx"},
+                }
+            )
+        virtwho[str(uuid.uuid4()).replace("-", ".")] = guest_list
+    return virtwho

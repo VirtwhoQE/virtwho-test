@@ -6,7 +6,6 @@ import re
 import string
 import operator
 import time
-import uuid
 
 from virtwho import logger, FailException
 from virtwho.settings import config
@@ -629,25 +628,3 @@ def system_reboot(ssh):
     if ssh_connect(ssh):
         return True
     raise FailException('Failed to reboot system')
-
-
-def json_data_create(hypervisors, guests):
-    """
-    Generate the json date to performance testing
-    :param hypervisors: number of hypervisors
-    :param guests: number of guests
-    :return: json data
-    """
-    virtwho = {}
-    for i in range(hypervisors):
-        guest_list = []
-        for c in range(guests):
-            guest_list.append(
-                {
-                    "guestId": str(uuid.uuid4()),
-                    "state": 1,
-                    "attributes": {"active": 1, "virtWhoType": "esx"},
-                }
-            )
-        virtwho[str(uuid.uuid4()).replace("-", ".")] = guest_list
-    return virtwho
