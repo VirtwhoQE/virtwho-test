@@ -13,14 +13,14 @@ from virtwho.base import hostname_get
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('debug_true')
-@pytest.mark.usefixtures('globalconf_clean')
+@pytest.mark.usefixtures('class_debug_true')
+@pytest.mark.usefixtures('class_globalconf_clean')
 class TestLibvrtPositive:
     @pytest.mark.tier1
-    def test_guest_attr_by_curl(self, virtwho, function_hypervisor, hypervisor_data,
-                                      register_data, rhsm, satellite, register_guest, ssh_host):
+    def test_guest_attr_by_curl(self, virtwho, function_hypervisor, hypervisor_data, register_data,
+                                rhsm, satellite, ssh_host, function_guest_register):
         """
-        :title: virt-who: all_hypervisors : check the guest attress by curl
+        :title: virt-who: all_hypervisors : check the guest address by curl
         :id: d9dd2559-4650-4ae0-8ebb-f8e296d3920a
             1. Config the virt-who config file, run virt-who service
             2. check guest attributes by curl
