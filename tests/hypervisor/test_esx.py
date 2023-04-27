@@ -4,19 +4,28 @@
 :testtype: functional
 :caseautomation: Automated
 """
+import os
 import pytest
+import random
+import string
+import json
+import uuid
 
+from virtwho import logger
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
 from virtwho import HYPERVISOR
+from virtwho import FAKE_CONFIG_FILE
 from virtwho import PRINT_JSON_FILE
 from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
 
-
 from virtwho.base import encrypt_password
 from virtwho.base import get_host_domain_id
 from virtwho.configure import hypervisor_create
+from virtwho.settings import TEMP_DIR
+
+from hypervisor.virt.esx.powercli import PowerCLI
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
@@ -265,11 +274,17 @@ class TestEsxPositive:
                 and result['send'] == 1
                 and result['thread'] == 1)
 
+    @pytest.mark.tier1
     def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
         """Test the fake type in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: esx: test fake type
         :id: 14d3af84-92c3-4335-8bff-8a96cf211c1d
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Generate the json file by virt-who -p -d command
             2. Create the virt-who config for the fake mode testing
             3. Check the rhsm.log
@@ -295,6 +310,36 @@ class TestEsxPositive:
                 and guest_uuid in result['log'])
         # Todo: Need to add the test cases for host-guest association in mapping, web and the test
         #  cases for the vdc pool's subscription.
+
+    @pytest.mark.tier1
+    def test_read_only_account(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+        """
+        :title: virt-who: esx: check mapping info by the read only account
+        :id: c13c05c0-fadb-4187-80f1-a2f52f0610db
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. set the username to the read only account for esxi
+            2. run the virt-who service
+        :expectedresults:
+
+            2. Succeed to run the virt-who service, can find the host-to-guest association
+            in rhsm.log
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+        guest_uuid = hypervisor_data['guest_uuid']
+
+        read_only_username = "tester@vsphere.local"
+        function_hypervisor.update('username', read_only_username)
+
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and virtwho.associate_in_mapping(
+                    result, register_data['default_org'], host_name, guest_uuid))
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
@@ -853,3 +898,457 @@ class TestEsxNegative:
                             and hypervisor_id_data not in str(result['mappings']))
 
             function_hypervisor.delete('hypervisor_id')
+
+    @pytest.mark.tier2
+    def test_unsupported_option(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+        """
+        :title: virt-who: esx: test unsupported options in /etc/virt-who.d/ dir
+        :id: ffd1fe9f-8c85-43ab-b2ae-16e824b5e880
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Set up an unsupported option like 'xxxxx' option in the config file
+            2. Run the virt-who service
+
+        :expectedresults:
+
+            2. Succeed to run the vir-tho, can find the ignore message in rhsm.log
+        """
+        unsupported_option = 'xxxxx'
+        function_hypervisor.update(unsupported_option, 'aaaa')
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and f'Ignoring unknown configuration option "{unsupported_option}"' in result['log'])
+
+    @pytest.mark.tier2
+    def test_extension_file_name(self, virtwho, function_hypervisor, hypervisor_data,
+                                 register_data, ssh_host, esx_assertion):
+        """
+        :title: virt-who: esx: test extension file name in /etc/virt-who.d/ dir
+        :id: 3e5ca411-147b-4ac6-87b0-fe2720ff2e17
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create virt-who config file with the expected file name
+            2. Rename the config file with the invalid extension file name like esx.conf.txt
+            3. Run the virt-who service
+
+        :expectedresults:
+            1. Succeed to run the virt-who
+            3. Failed to run the virt-who, can fin the expected error and warning messages
+            in rhsm.log
+        """
+        invalid_file_name = esx_assertion['extension_file_name']['file_name']
+        cmd = f"mv {function_hypervisor.remote_file} {invalid_file_name}"
+        ssh_host.runcmd(cmd)
+
+        warning_msg = esx_assertion['extension_file_name']['warining_msg']
+        error_msg = esx_assertion['extension_file_name']['error_msg']
+
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 1
+                and error_msg in result['error_msg']
+                and warning_msg in result['warning_msg'])
+
+    @pytest.mark.tier2
+    def test_quoted_options(self, virtwho, function_hypervisor, ssh_host):
+        """
+        :title: virt-who: esx: test the quoted options in /etc/virt-who.d/ dir
+        :id: 75dc69a9-e025-401c-bf84-8dea86263e77
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create the expected config file in /etc/virt-who.d dir
+            2. Run virt-who when all the options enabled with single quotes such as type='esx'
+            3. Rn virt-who when all the options enabled with double quotes such as type="esx"
+
+        :expectedresults:
+            2. Succeed to run the virt-who without any error messages
+            3. Succeed to run the virt-who without any error messages
+        """
+        # run virt-who when all the options enabled with single quotes
+        cmd = fr'''sed -i "s|=\(.*\)|='\1'|g" {function_hypervisor.remote_file}'''
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        # run virt-who when all the options enabled with double quotes
+        cmd = fr'''sed -i "s|'|\"|g" {function_hypervisor.remote_file}'''
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+    @pytest.mark.tier2
+    def test_redundant_options(self, virtwho, function_hypervisor, ssh_host, hypervisor_data, esx_assertion):
+        """
+        :title: virt-who: esx: test the redundant options in /etc/virt-who.d/ dir
+        :id: cba7b507-f490-405b-85b7-ca448da901f2
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create the expected config file in /etc/virt-who.d dir, default to add the
+            hypervisor_id=hostname
+            2. Add another hypervisor_id=uuid, run the virt-who service
+            3. Add another hypervisor_id=xxx, run the virt-who service
+
+        :expectedresults:
+            2. Succeed to run the virt-who without any error messages, can find the related
+            warning message and "hypervisorId": "{host_uuid}" in rhsm.log
+            3. Failed to run the virt-who, can find the related warning message in rhsm.log
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+        host_uuid = hypervisor_data['hypervisor_uuid']
+        option = 'hypervisor_id'
+        warning_msg = f"option '{option}' in section '{function_hypervisor.section}' already exists"
+
+        # run virt-who with hypervisor_id=uuid and hypervisor_id=hostname together
+        cmd = f'echo -e "{option}=uuid" >> {function_hypervisor.remote_file}'
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1
+                and f'"hypervisorId": "{host_uuid}"' in result['log']
+                and f'"hypervisorId": "{host_name}"' not in result['log'])
+        if "RHEL-8" in RHEL_COMPOSE:
+            assert warning_msg in result['warning_msg']
+
+        # add another hypervisor_id=xxx
+        invalid_value = 'xxx'
+        cmd = f'echo -e "{option}={invalid_value}" >> {function_hypervisor.remote_file}'
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and esx_assertion['redundant_options']['error_msg'] in result['error_msg'])
+        if "RHEL-8" in RHEL_COMPOSE:
+            assert warning_msg in result['warning_msg']
+
+    @pytest.mark.tier2
+    def test_commented_line_with_tab_space(self, virtwho, function_hypervisor, ssh_host):
+        """
+        :title: virt-who: esx: test commented line with tab space virt-who config file
+        :id: d2444fd4-0a2c-4a08-a873-cb9d39e6b98b
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create the expected config file in /etc/virt-who.d dir
+            2. Add another invalid line with tab space, run the virt-who service
+            3. Comment the line to ignore it in the config file, run the virt-who service
+
+        :expectedresults:
+            2. Failed to run the virt-who, can find the related Error message in rhsm.log
+            3. Succeed to run the virt-who without any error messages.
+        """
+        # add useless line with tab spaces after type=
+        error_msg = "virt-who can't be started: no valid configuration found"
+
+        cmd = f"sed -i '/^type=/a \\\txxx=xxx' {function_hypervisor.remote_file}"
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 0
+                and error_msg in result['error_msg'])
+
+        # comment out the useless line
+        cmd = f'sed -i "s/xxx/#xxx/" {function_hypervisor.remote_file}'
+        ssh_host.runcmd(cmd)
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+    @pytest.mark.tier2
+    @pytest.mark.notStage
+    def test_hypervisors_fqdn(self, virtwho, function_hypervisor, hypervisor_data, satellite, ssh_host):
+        """
+        :title: virt-who: esx: test the hypervisors fqdn
+        :id: ef3ecbc5-2433-44ae-9517-39dbe9590726
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create fake json file by the default configuration
+            2. Run virt-who with the fake config
+            3. Use hammer command to check hypervisor's fqdn
+            4. Run virt-who with the new hypervisor's fqdn
+            5. Use hammer command to check the new hypervisor's fqdn
+
+        :expectedresults:
+            1. Created the fake json file in /root/print.json
+            2. Succeed to run the virt-who service
+            3. Can find the hypervisor's fqdn by the hammer command
+            5. Can find the new hypervisor's fqdn by the hammer command, cannot find the previous
+            hypervisor' fqdn
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+
+        # create fake json file
+        virtwho.run_cli(prt=True)
+
+        # run virt-who with fake con
+        hypervisor_create(mode='fake', register_type='satellite', config_name=FAKE_CONFIG_FILE)
+        result = virtwho.run_cli(config=FAKE_CONFIG_FILE)
+        assert (result['error'] == 0
+                and result['send'] == 1)
+
+        # use hammer command to check hypervisor's FQDN
+        hypervisor_fqdn = "virt-who-" + host_name
+        assert satellite.host_id(hypervisor_fqdn)
+
+        # run virt-who with the new hypervisor's FQDN
+        new_host_name = "new" + str(random.randint(1, 10000)) + ".rhts.eng.pek2.redhat.com"
+
+        cmd = f'sed -i "s|{host_name}|{new_host_name}|g" {PRINT_JSON_FILE}'
+        ssh_host.runcmd(cmd)
+
+        result = virtwho.run_cli(config=FAKE_CONFIG_FILE)
+        assert (result['error'] == 0
+                and result['send'] == 1)
+
+        new_hypervisor_fqdn = "virt-who-" + new_host_name
+        assert satellite.host_id(new_hypervisor_fqdn)
+        assert not satellite.host_id(hypervisor_fqdn)
+
+    @pytest.mark.tier2
+    def test_trigger_event_with_different_interval(
+            self, virtwho, function_hypervisor, hypervisor_data, register_data, globalconf):
+        """
+        :title: virt-who: esx: trigger event with different interval
+        :id: a1972ea5-3c4b-455e-8690-c9f69fa88972
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Configure the interval with 60 in /etc/virtwho.conf
+            2. Suspend the guest and run the virt-who service
+            3. Configure the interval with 120 in /etc/virtwho.conf
+            4. Resume the guest and run the virt-who service
+
+        :expectedresults:
+            2. Succeed to run the virt-who, and  virt-who starting infinite loop with
+            60 seconds interval
+            4. Succeed to run the virt-who, and  virt-who starting infinite loop with
+            120 seconds interval
+        """
+        esx = PowerCLI(
+            server=hypervisor_data['hypervisor_server'],
+            admin_user=hypervisor_data['hypervisor_username'],
+            admin_passwd=hypervisor_data['hypervisor_password'],
+            client_server=hypervisor_data['ssh_ip'],
+            client_user=hypervisor_data['ssh_username'],
+            client_passwd=hypervisor_data['ssh_password']
+        )
+
+        try:
+            # run virt-who with event(guest_suspend) for interval 60
+            globalconf.update('global', 'interval', '60')
+            virtwho.run_service()
+            esx.guest_suspend(hypervisor_data['guest_name'])
+            rhsm_log = virtwho.rhsm_log_get(80)
+            result = virtwho.analyzer(rhsm_log)
+            assert (result['error'] == 0
+                    and result['send'] == 2
+                    and result['thread'] == 1
+                    and result['loop'] == 60)
+
+        finally:
+            # run virt-who with event(guest_resume) for interval 120
+            globalconf.update('global', 'interval', '120')
+            virtwho.run_service()
+            esx.guest_resume(hypervisor_data['guest_name'])
+            rhsm_log = virtwho.rhsm_log_get(150)
+            result = virtwho.analyzer(rhsm_log)
+            assert (result['error'] == 0
+                    and result['send'] == 2
+                    and result['thread'] == 1
+                    and result['loop'] == 120)
+
+    @pytest.mark.tier2
+    def test_hostname_without_domain(self, virtwho, function_hypervisor, hypervisor_data,
+                                     satellite, rhsm):
+        """
+        :title: virt-who: esx: Run virt-who for hostname without domain name
+        :id: 5a100319-b68e-44db-a3ac-172f9ae90bec
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Change the hostname to the name without domain
+            2. Run virt-who with the new hostname
+            3. Change back the hostname
+
+        :expectedresults:
+            2. Virt-who works fine without any error messages
+
+        """
+        hostname = hypervisor_data['hypervisor_hostname']
+        hostname_non_domain = hostname.split(".")[0]
+
+        esx = PowerCLI(
+            server=hypervisor_data['hypervisor_server'],
+            admin_user=hypervisor_data['hypervisor_username'],
+            admin_passwd=hypervisor_data['hypervisor_password'],
+            client_server=hypervisor_data['ssh_ip'],
+            client_user=hypervisor_data['ssh_username'],
+            client_passwd=hypervisor_data['ssh_password']
+        )
+        try:
+            # change the hostname to non domain hostname
+            esx.host_name_set(hypervisor_data['host_ip'], hostname_non_domain)
+
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and hostname_non_domain in result['log']
+                    and hostname not in result['log'])
+        finally:
+            # change back the hostname
+            esx.host_name_set(hypervisor_data['host_ip'], hostname)
+
+    @pytest.mark.tier2
+    def test_cluster_name_with_special_char(self, virtwho, function_hypervisor, hypervisor_data,
+                                            satellite, rhsm):
+        """
+        :title: virt-who: esx: Run virt-who for cluster name with special char
+        :id: 4de43160-1db8-4516-a2e2-1955f6f4f612
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Change the vcenter cluster name to: virtwho/test
+            2. Run virt-who service with the new cluster name
+            3. Change back the cluster name
+
+        :expectedresults:
+            2. Virt-who works fine without any error messages
+
+        """
+        host_name = hypervisor_data['hypervisor_hostname']
+        host_ip = hypervisor_data['host_ip']
+
+        cluster_name = hypervisor_data['cluster']
+        new_cluster_name = "virtwho/test-" + "".join(random.sample(string.digits, 6))
+
+        esx = PowerCLI(
+            server=hypervisor_data['hypervisor_server'],
+            admin_user=hypervisor_data['hypervisor_username'],
+            admin_passwd=hypervisor_data['hypervisor_password'],
+            client_server=hypervisor_data['ssh_ip'],
+            client_user=hypervisor_data['ssh_username'],
+            client_passwd=hypervisor_data['ssh_password']
+        )
+
+        try:
+            # change the vcenter cluster name to: virtwho/test
+            esx.cluster_name_set(host_ip, cluster_name, new_cluster_name)
+
+            # run virt-who service with the new cluster name
+            result = virtwho.run_service()
+            assert (result['error'] == 0
+                    and result['send'] == 1
+                    and result['thread'] == 1
+                    and f'"hypervisor.cluster": "{new_cluster_name}"' in result['log'])
+
+            # check the hyperivsor facts
+            if REGISTER == 'satellite':
+                host_id = satellite.host_id(host_name)
+                hypervisor_facts = satellite.facts_get(host_id)
+            else:
+                output = rhsm.info(host_name)
+                hypervisor_facts = output["facts"]["hypervisor.cluster"]
+            assert new_cluster_name in hypervisor_facts
+
+        finally:
+            # change back the vcenter cluster name
+            esx.cluster_name_set(host_ip, new_cluster_name, cluster_name)
+
+    @pytest.mark.tier2
+    @pytest.mark.notStage
+    def test_post_large_json_to_rhsm(self, register_data, ssh_host):
+        """
+        :title: virt-who: esx: post large json data to satellite server
+        :id: 8b14bb1f-7b92-483f-af35-7ec97a621436
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Create json data with 100 hypervisors, every hypervisor has 30 guests
+            2. Post the json data to satellite
+
+        :expectedresults:
+            2. Succeeded to post 100 hypervisors and 3000 guests to satellite
+
+        """
+        # create json data
+        local_file = os.path.join(TEMP_DIR, 'test.json')
+        json_file = "/root/test.json"
+        json_data = json_data_create(100, 30)
+        with open(local_file, "w") as f:
+            json.dump(json_data, f)
+        ssh_host.put_file(local_file, json_file)
+
+        # post json data
+        curl_header = (
+            '-H "accept:application/json,version=2" -H "content-type:application/json"'
+        )
+        curl_cert = "--cert /etc/pki/consumer/cert.pem --key /etc/pki/consumer/key.pem"
+        curl_json = f'-d @"{json_file}"'
+        curl_host = f"https://{register_data['server']}/rhsm/hypervisors"
+        cmd = f"curl -X POST -s -k {curl_header} {curl_cert} {curl_json} {curl_host}"
+
+        ret, output = ssh_host.runcmd(cmd)
+        if ret == 0 and "error" not in output:
+            logger.info("Succeeded to post 100 hypervisors and 3000 guests to satellite")
+        else:
+            logger.warning("Failed to post json to satellite")
+            logger.warning(output)
+
+
+def json_data_create(hypervisors_num, guests_num):
+    """
+    Generate the json date to performance testing
+    :param hypervisors: number of hypervisors
+    :param guests: number of guests for each hypervisor
+    :return: json data
+    """
+    virtwho = {}
+    for i in range(hypervisors_num):
+        guest_list = []
+        for c in range(guests_num):
+            guest_list.append(
+                {
+                    "guestId": str(uuid.uuid4()),
+                    "state": 1,
+                    "attributes": {"active": 1, "virtWhoType": "esx"},
+                }
+            )
+        virtwho[str(uuid.uuid4()).replace("-", ".")] = guest_list
+    return virtwho

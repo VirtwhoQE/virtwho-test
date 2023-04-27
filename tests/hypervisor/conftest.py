@@ -55,8 +55,16 @@ def esx_assertion():
                 '': 'Option "encrypted_password" cannot be decrypted',
             },
             'valid_multi_configs': 'Option "encrypted_password" cannot be decrypted'
+        },
+        'extension_file_name': {
+            'file_name': "/etc/virt-who.d/esx.conf.txt",
+            'warining_msg': "Configuration directory '/etc/virt-who.d/' "
+                            "does not have any '*.conf' files but is not empty",
+            'error_msg': "Error in libvirt backend"
+        },
+        'redundant_options': {
+            'error_msg': "virt-who can't be started: no valid configuration found"
         }
-
     }
 
     return data

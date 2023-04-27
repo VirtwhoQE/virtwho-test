@@ -615,8 +615,8 @@ def expect_run(ssh, cmd, attrs):
     _, _ = ssh.runcmd(cmd)
     ret, output = ssh.runcmd(f'chmod +x {filename}; {filename}')
     return ret, output
-  
-  
+
+
 def system_reboot(ssh):
     """
     Reboot a RHEL system.

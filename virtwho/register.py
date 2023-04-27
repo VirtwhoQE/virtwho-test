@@ -955,6 +955,17 @@ class Satellite:
             return True
         raise FailException(f'Failed to {sca} SCA for satellite')
 
+    def facts_get(self, host_id):
+        """
+        Get the host facts information by hammer command
+        :param host_id:
+        :return: host facts information
+        """
+        ret, output = self.ssh.runcmd(f"{self.hammer} host facts --id {host_id}")
+        if ret:
+            return False
+        else:
+            return output
 
 def request_get(url, auth, verify=False):
     """Sends a GET request.
