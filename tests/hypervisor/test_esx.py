@@ -1133,9 +1133,8 @@ class TestEsxNegative:
         assert not satellite.host_id(hypervisor_fqdn)
 
     @pytest.mark.tier2
-    @pytest.mark.notRHEL9
     def test_trigger_event_with_different_interval(
-            self, virtwho, function_hypervisor, hypervisor_data, register_data, function_sysconfig):
+            self, virtwho, function_hypervisor, hypervisor_data, register_data, globalconf):
         """
         :title: virt-who: esx: trigger event with different interval
         :id: a1972ea5-3c4b-455e-8690-c9f69fa88972
@@ -1144,9 +1143,9 @@ class TestEsxNegative:
         :customerscenario: false
         :upstream: no
         :steps:
-            1. Configure the VIRTWHO_INTERVAL with 60
+            1. Configure the interval with 60 in /etc/virtwho.conf
             2. Suspend the guest and run the virt-who service
-            3. Configure the VIRTWHO_INTERVAL with 120
+            3. Configure the interval with 120 in /etc/virtwho.conf
             4. Resume the guest and run the virt-who service
 
         :expectedresults:
@@ -1166,7 +1165,7 @@ class TestEsxNegative:
 
         try:
             # run virt-who with event(guest_suspend) for interval 60
-            function_sysconfig.update(**{'VIRTWHO_INTERVAL': '60'})
+            globalconf.update('global', 'interval', '60')
             virtwho.run_service()
             esx.guest_suspend(hypervisor_data['guest_name'])
             rhsm_log = virtwho.rhsm_log_get(80)
@@ -1178,7 +1177,7 @@ class TestEsxNegative:
 
         finally:
             # run virt-who with event(guest_resume) for interval 120
-            function_sysconfig.update(**{'VIRTWHO_INTERVAL': '120'})
+            globalconf.update('global', 'interval', '120')
             virtwho.run_service()
             esx.guest_resume(hypervisor_data['guest_name'])
             rhsm_log = virtwho.rhsm_log_get(150)
