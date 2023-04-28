@@ -10,17 +10,18 @@ from virtwho import REGISTER
 from virtwho import HYPERVISOR
 
 from virtwho.base import hostname_get
+from virtwho.configure import hypervisor_create
 
 
 @pytest.mark.usefixtures('function_virtwho_d_conf_clean')
 @pytest.mark.usefixtures('class_debug_true')
 @pytest.mark.usefixtures('class_globalconf_clean')
-class TestLibvrtPositive:
+class TestHypervisorPositive:
     @pytest.mark.tier1
     def test_guest_attr_by_curl(self, virtwho, function_hypervisor, hypervisor_data, register_data,
                                 rhsm, satellite, ssh_host, function_guest_register):
         """
-        :title: virt-who: all_hypervisors : check the guest address by curl
+        :title: virt-who: hypervisor : check the guest address by curl
         :id: d9dd2559-4650-4ae0-8ebb-f8e296d3920a
             1. Config the virt-who config file, run virt-who service
             2. check guest attributes by curl
@@ -61,7 +62,7 @@ class TestLibvrtPositive:
     def test_associated_info_by_rhsmlog_and_webui(
             self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite):
         """
-        :title: virt-who: libvirt: check associated info by rhsm.log and webui
+        :title: virt-who: hypervisor: check associated info by rhsm.log and webui
         :id: cc0fd665-7154-4efa-ad71-b509b4224e22
             1. Config the virt-who config file, run virt-who service
             2. check host-to-guest association in rhsm.log/Web UI
@@ -92,7 +93,7 @@ class TestLibvrtPositive:
     def test_mapping_info(
             self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data):
         """
-        :title: virt-who: default: test the mapping info
+        :title: virt-who: hypervisor: test the mapping info
         :id: 745cae04-c558-4ecf-8226-54c826d97eea
             1. Run the virt-who service by cli
             2. Check the mapping info from the rhsm.log
@@ -172,8 +173,8 @@ class TestLibvrtPositive:
 
     @pytest.mark.tier2
     def test_delete_host_hypervisor(
-            self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data,
-            ssh_host, sm_host):
+            self, virtwho, hypervisor_data, rhsm, satellite, register_data,
+            ssh_host, sm_host, function_host_register):
         """
         :title: virt-who: default: test the mapping info after deleting the host and hypervisor
         :id: 19b84057-69a3-43bc-9b24-f39bc31ed3a8
@@ -198,6 +199,7 @@ class TestLibvrtPositive:
         virtwho_hostname = hostname_get(ssh_host)
 
         # run virt-who to send mappings
+        hypervisor_create(rhsm=False)
         result = virtwho.run_service()
         assert (result['error'] == 0
                 and result['send'] == 1
@@ -205,14 +207,16 @@ class TestLibvrtPositive:
 
         # delete virt-who host from webui
         if REGISTER == 'rhsm':
-            rhsm.delete(virtwho_hostname)
+            rhsm.host_delete(virtwho_hostname)
         else:
             satellite.host_delete(virtwho_hostname)
 
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        error_msg = "Communication with subscription manager failed: consumer no longer exists"
+        assert (result['error'] is not 0
+                and result['send'] == 0
+                and result['thread'] == 1
+                and error_msg in result['error_msg'])
 
         # re-register host and run virt-who
         sm_host.unregister()
@@ -225,7 +229,7 @@ class TestLibvrtPositive:
         # delete hypervisor from webui
         if HYPERVISOR is not 'local':
             if REGISTER == 'rhsm':
-                rhsm.delete(host_name)
+                rhsm.host_delete(host_name)
             else:
                 satellite.host_delete(host_name)
             result = virtwho.run_service()
