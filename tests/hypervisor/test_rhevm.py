@@ -664,3 +664,36 @@ class TestRHEVMNegative:
                 and result["thread"] == 1
                 and hostname not in str(result["mappings"])
             )
+
+    @pytest.mark.tier2
+    def test_url_without_ovirt_engine(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test the rhevm url without ovirt engine
+
+        :title: virt-who: rhevm: test server url (negative)
+        :id: 530d86f7-d8f9-44f6-b860-579611758cd8
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. run virt-who for rhevm with ovirt-engine/
+            2. run virt-who for rhevm without /ovirt-engine
+        :expectedresults:
+            1. Succeed to run the virt-who service
+            2. Succeed to run the virt-who service
+
+        """
+        # run virt-who for rhevm with ovirt-engine/
+        function_hypervisor.update("server", function_hypervisor.rhevm_hypervisor_url + "/")
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
+
+        # run virt-who for rhevm without /ovirt-engine
+        function_hypervisor.update("server",
+                                   function_hypervisor.rhevm_hypervisor_url.rstrip("/ovirt-engine/"))
+        result = virtwho.run_service()
+        assert (result['error'] == 0
+                and result['send'] == 1
+                and result['thread'] == 1)
