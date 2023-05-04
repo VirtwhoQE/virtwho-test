@@ -607,7 +607,7 @@ class Satellite:
                 'Name has already been taken' in output
                 and
                 'Label has already been taken' in output
-        ):
+        ) or 'resource have no errors' in output:
             logger.info(f'The organization:{name} already existed')
             return True
         raise FailException(f'Failed to create organization:{name}')

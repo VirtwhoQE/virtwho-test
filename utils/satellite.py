@@ -7,7 +7,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import logger, FailException
+from virtwho import FailException
 from virtwho.base import system_init
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager
@@ -45,14 +45,7 @@ def satellite_deploy(args):
 
     # Install satellite
     satellite_pkg_install(ssh)
-    satellite_installer(ssh, args.admin_password)
-
-    # Upload manifest as requirement
-    if args.manifest:
-        satellite_manifest_upload(
-            ssh, args.manifest, args.admin_username, args.admin_password
-        )
-    logger.info(f'Succeeded to deploy satellite ({sat_ver})')
+    satellite_installer(ssh, args.admin_password, sat_ver)
 
 
 def satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver):
@@ -60,9 +53,10 @@ def satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver):
     Enable satellite related repos from cnd content
     :param ssh: ssh access to satellite host.
     :param sm: subscription-manager instance
-    :param rhel_ver: rhel version, such as 6, 7
-    :param sat_ver: satellite version, such as 6.9, 6.10
+    :param rhel_ver: rhel version, such as 6, 7, 8
+    :param sat_ver: satellite version, such as 6.13, 6.12
     """
+    sm.unregister()
     sm.register()
     employee_sku_pool = sm.available(
         config.sku.employee, 'Physical')['pool_id']
@@ -82,7 +76,7 @@ def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver):
     in development.
     :param sm: subscription-manager instance
     :param ssh: ssh access to satellite host.
-    :param sat_ver: satellite version, such as 6.8, 6.9.
+    :param sat_ver: satellite version, such as 6.13, 6.12.
     :param rhel_ver: rhel version, such as 6, 7, 8.
     :return: True or raise Fail.
     """
@@ -121,7 +115,7 @@ def satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver,
     Enable the required repos for installing satellite that is still
     in development.
     :param ssh: ssh access to satellite host.
-    :param sat_ver: satellite version, such as 6.8, 6.9.
+    :param sat_ver: satellite version, such as 6.13, 6.12.
     :param rhel_ver: rhel version, such as 6, 7, 8.
     :param repo_type: satellite, capsule or satellite-tools.
     :return: True or raise Fail.
@@ -152,7 +146,7 @@ def satellite_repos_cdn(rhel_ver, sat_ver):
     """
     Gather all required repos for installing released satellite from cdn.
     :param rhel_ver: rhel version, such as 6, 7, 8.
-    :param sat_ver: satellite version, such as 6.8, 6.9
+    :param sat_ver: satellite version, such as 6.13, 6.12
     :return: A string with comma to separate repos.
     """
     repos_sat = (f'rhel-{rhel_ver}-server-satellite-maintenance-6-rpms,'
@@ -187,48 +181,27 @@ def satellite_pkg_install(ssh):
         raise FailException('Failed to install satellite package')
 
 
-def satellite_installer(ssh, admin_password):
+def satellite_installer(ssh, admin_password, sat_ver):
     """
     Run command to deploy satellite by satellite-installer.
     :param ssh: ssh access to satellite host.
     :param admin_password: password for admin account.
+    :param sat_ver: satellite version, such as 6.13, 6.12.
     """
-    ret, output = ssh.runcmd(
+    cmd = (
         f'satellite-installer --scenario satellite '
         f'--disable-system-checks '
         f'--foreman-initial-admin-password={admin_password}'
     )
+    if sat_ver >= '6.13':
+        cmd = (
+            f'satellite-installer --scenario satellite '
+            f'--tuning development '
+            f'--foreman-initial-admin-password={admin_password}'
+        )
+    ret, output = ssh.runcmd(cmd)
     if ret != 0:
         raise FailException('Failed to run satellite-installer')
-
-
-def satellite_manifest_upload(ssh, url, admin_username, admin_password):
-    """
-    Upload manifest to satellite by hammer command.
-    :param ssh: ssh access to satellite host.
-    :param url: manifest url
-    :param admin_username: username of admin account.
-    :param admin_password: password of admin account.
-    """
-    path = "/tmp/manifest"
-    ssh.runcmd(f'rm -rf {path}; mkdir -p {path}')
-    ssh.runcmd(f'wget {url} -P {path}')
-    ret, output = ssh.runcmd(f'ls {path}')
-    if output:
-        filename = f'{path}/{output.strip()}'
-    else:
-        raise FailException('No manifest file found')
-    ret, _ = ssh.runcmd(f'hammer -u {admin_username} -p {admin_password} '
-                        f'subscription upload '
-                        f'--organization-label Default_Organization '
-                        f'--file {filename}')
-    if ret != 0:
-        raise FailException('Failed to upload manifest for satellite')
-    ret, _ = ssh.runcmd(f'hammer -u {admin_username} -p {admin_password} '
-                        f'subscription refresh-manifest '
-                        f'--organization="Default Organization"')
-    if ret != 0:
-        raise FailException('Failed to refresh satellite manifest')
 
 
 def satellite_arguments_parser():
@@ -241,11 +214,11 @@ def satellite_arguments_parser():
     parser.add_argument(
         '--version',
         required=True,
-        help="Satellite version, such as '6.9', '6.10'")
+        help="Satellite version, such as '6.13', '6.12'")
     parser.add_argument(
         '--repo',
         required=True,
-        help="One of ['cdn', 'dogfood']")
+        help="One of ['cdn', 'dogfood', 'repo']")
     parser.add_argument(
         '--rhel-compose',
         required=True,
@@ -278,12 +251,6 @@ def satellite_arguments_parser():
         required=False,
         help='Account password for the satellite administrator, '
              'default to the [satellite]:password in virtwho.ini')
-    parser.add_argument(
-        '--manifest',
-        default=config.satellite.manifest,
-        required=False,
-        help='Manifest url to upload after complete deploying satellite, '
-             'default to the [satellite]:manifest in virtwho.ini')
     return parser.parse_args()
 
 
