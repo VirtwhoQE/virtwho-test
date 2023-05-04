@@ -13,7 +13,7 @@ from virtwho.register import Satellite
 from virtwho.ssh import SSHConnect
 from virtwho.settings import config
 from utils.beaker import install_rhel_by_beaker
-from utils.satellite import satellite_deploy, satellite_manifest_upload
+from utils.satellite import satellite_deploy
 from utils.properties_update import virtwho_ini_props_update
 
 
@@ -48,6 +48,33 @@ def satellite_deploy_for_virtwho(args):
     satellite_settings(ssh_satellite, 'failed_login_attempts_limit', '0')
     satellite_settings(ssh_satellite, 'unregister_delete_host', 'true')
 
+    # Upload manifest to the default org
+    satellite_manifest_upload(
+        org='Default_Organization',
+        ssh=ssh_satellite,
+        url=config.satellite.manifest,
+        admin_username=args.admin_username,
+        admin_password=args.admin_password
+    )
+
+    # Create the second org and upload manifest as requirement.
+    satellite = Satellite(server=args.server)
+    second_org = config.satellite.secondary_org
+    if second_org:
+        satellite.org_create(name=second_org, label=second_org)
+        satellite_manifest_upload(
+            org=second_org,
+            ssh=ssh_satellite,
+            url=config.satellite.manifest_second,
+            admin_username=args.admin_username,
+            admin_password=args.admin_password
+        )
+
+    # Create the activation key as requirement
+    activation_key = config.satellite.activation_key
+    if activation_key:
+        satellite.activation_key_create(key=activation_key)
+
     # Update the virtwho.ini:[satellite]
     args.section = 'satellite'
     virtwho_ini_props = {
@@ -59,19 +86,6 @@ def satellite_deploy_for_virtwho(args):
     }
     for (args.option, args.value) in virtwho_ini_props.items():
         virtwho_ini_props_update(args)
-
-    # Create the organization and activation key as requirement.
-    satellite = Satellite(server=args.server)
-    second_org = config.satellite.secondary_org
-    if second_org:
-        satellite.org_create(name=second_org, label=second_org)
-        satellite_manifest_upload(ssh=ssh_satellite,
-                                  url=config.satellite.manifest_second,
-                                  admin_username=args.admin_username,
-                                  admin_password=args.admin_password)
-    activation_key = config.satellite.activation_key
-    if activation_key:
-        satellite.activation_key_create(key=activation_key)
 
     logger.info(f"+++ Succeeded to deploy the Satellite "
                 f"{args.satellite}/{args.server} +++")
@@ -122,6 +136,32 @@ def satellite_settings(ssh, name, value):
     raise FailException(f'Failed to set {name}:{value} for satellite')
 
 
+def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
+    """
+    Upload manifest to satellite by hammer command.
+    :param org: organization.
+    :param ssh: ssh access to satellite host.
+    :param url: manifest url
+    :param admin_username: username of admin account.
+    :param admin_password: password of admin account.
+    """
+    path = "/tmp/manifest"
+    ssh.runcmd(f'rm -rf {path}; mkdir -p {path}')
+    ssh.runcmd(f'wget {url} -P {path}')
+    ret, output = ssh.runcmd(f'ls {path}')
+    if output:
+        filename = f'{path}/{output.strip()}'
+    else:
+        raise FailException('No manifest file found')
+    _, _ = ssh.runcmd(f'hammer subscription delete-manifest '
+                      f'--organization-label {org}')
+    ret, _ = ssh.runcmd(f'hammer subscription upload '
+                        f'--organization-label {org} '
+                        f'--file {filename}')
+    if ret != 0:
+        raise FailException('Failed to upload manifest for satellite')
+
+
 def virtwho_satellite_arguments_parser():
     """
     Parse and convert the arguments from command line to parameters
@@ -132,7 +172,7 @@ def virtwho_satellite_arguments_parser():
     parser.add_argument(
         '--satellite',
         required=True,
-        help='Such as: 6.10-cdn-rhel7, 6.9-dogfood-rhel7')
+        help='Such as: 6.13-cdn-rhel8, 6.14-repo-rhel8')
     parser.add_argument(
         '--server',
         default=config.satellite.server,
