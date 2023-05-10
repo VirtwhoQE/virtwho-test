@@ -24,17 +24,19 @@ class Logger:
         self.logger.setLevel(logging.DEBUG)
         self.logger.handlers = []
         self.log_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-            'logs')
+            os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs"
+        )
         if not os.path.exists(self.log_path):
             os.mkdir(self.log_path)
-        self.log_name = os.path.join(self.log_path, '%s.log' % time.strftime('%Y_%m_%d'))
+        self.log_name = os.path.join(
+            self.log_path, "%s.log" % time.strftime("%Y_%m_%d")
+        )
         self.formatter = logging.Formatter(
-            '[%(asctime)s] - [%(filename)s] - %(levelname)s: %(message)s',
-            '%Y-%m-%d %H:%M:%S'
+            "[%(asctime)s] - [%(filename)s] - %(levelname)s: %(message)s",
+            "%Y-%m-%d %H:%M:%S",
         )
 
-        fh = logging.FileHandler(self.log_name, 'a', encoding='utf-8')
+        fh = logging.FileHandler(self.log_name, "a", encoding="utf-8")
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(self.formatter)
         self.logger.addHandler(fh)

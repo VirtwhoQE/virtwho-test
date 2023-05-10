@@ -14,17 +14,18 @@ from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
 
 
-@pytest.mark.usefixtures('class_yield_rhsmconf_recovery')
-@pytest.mark.usefixtures('class_host_unregister')
-@pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('class_debug_true')
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('function_rhsmconf_recovery')
+@pytest.mark.usefixtures("class_yield_rhsmconf_recovery")
+@pytest.mark.usefixtures("class_host_unregister")
+@pytest.mark.usefixtures("function_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("function_rhsmconf_recovery")
 @pytest.mark.notLocal
 class TestSubscriptionPositive:
     @pytest.mark.tier1
-    def test_no_rhsm_options(self, virtwho, function_hypervisor, sm_host,
-                             register_assertion):
+    def test_no_rhsm_options(
+        self, virtwho, function_hypervisor, sm_host, register_assertion
+    ):
         """Test the /etc/virt-who.d/x.conf without any rhsm option
 
         :title: virt-who: rhsm_option: test no rhsm options in config file (positive)
@@ -46,19 +47,20 @@ class TestSubscriptionPositive:
         function_hypervisor.create(rhsm=False)
         sm_host.register()
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0)
+        assert result["send"] == 1 and result["error"] == 0
 
         sm_host.unregister()
         result = virtwho.run_cli()
-        assert (result['send'] == 0
-                and result['error'] != 0
-                and msg_search(result['error_msg'],
-                               register_assertion['unregister_host']))
+        assert (
+            result["send"] == 0
+            and result["error"] != 0
+            and msg_search(result["error_msg"], register_assertion["unregister_host"])
+        )
 
     @pytest.mark.tier1
-    def test_rhsm_encrypted_password(self, virtwho, function_hypervisor,
-                                     ssh_host, register_data):
+    def test_rhsm_encrypted_password(
+        self, virtwho, function_hypervisor, ssh_host, register_data
+    ):
         """Test the rhsm_encrypted_password= option in /etc/virt-who.d/x.conf
 
         :title: virt-who: rhsm_option: test rhsm_encrypted_password option (positive)
@@ -76,17 +78,14 @@ class TestSubscriptionPositive:
             1. Succeeded to run the virt-who with rhsm_encrypted_password
         """
         # rhsm_encrypted_password option is valid value
-        function_hypervisor.delete('rhsm_password')
-        encrypted_pwd = encrypt_password(ssh_host, register_data['password'])
-        function_hypervisor.update('rhsm_encrypted_password', encrypted_pwd)
+        function_hypervisor.delete("rhsm_password")
+        encrypted_pwd = encrypt_password(ssh_host, register_data["password"])
+        function_hypervisor.update("rhsm_encrypted_password", encrypted_pwd)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier1
-    def test_rhsm_proxy(self, virtwho, function_hypervisor, rhsmconf,
-                        proxy_data):
+    def test_rhsm_proxy(self, virtwho, function_hypervisor, rhsmconf, proxy_data):
         """
 
         :title: virt-who: rhsm_option: test rhsm_proxy=
@@ -109,51 +108,55 @@ class TestSubscriptionPositive:
                 the /etc/rhsm/rhsm.conf.
         """
         # run virt-who with good proxy in /etc/rhsm/rhsm.conf
-        for scheme in ['http', 'https']:
-            rhsmconf.update('server', 'proxy_hostname', proxy_data['server'])
-            rhsmconf.update('server', 'proxy_port', proxy_data['port'])
-            rhsmconf.update('server', 'proxy_scheme', scheme)
-            connection_msg = proxy_data['connection_log']
-            proxy_msg = proxy_data['proxy_log']
+        for scheme in ["http", "https"]:
+            rhsmconf.update("server", "proxy_hostname", proxy_data["server"])
+            rhsmconf.update("server", "proxy_port", proxy_data["port"])
+            rhsmconf.update("server", "proxy_scheme", scheme)
+            connection_msg = proxy_data["connection_log"]
+            proxy_msg = proxy_data["proxy_log"]
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and connection_msg in result['log']
-                    and proxy_msg in result['log'])
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and connection_msg in result["log"]
+                and proxy_msg in result["log"]
+            )
         rhsmconf.recovery()
 
         # run virt-who with good proxy in /etc/virt-who.d/
-        function_hypervisor.update(
-            'rhsm_proxy_hostname', proxy_data['server'])
-        function_hypervisor.update('rhsm_proxy_port', proxy_data['port'])
-        connection_msg = proxy_data['connection_log']
-        proxy_msg = proxy_data['proxy_log']
+        function_hypervisor.update("rhsm_proxy_hostname", proxy_data["server"])
+        function_hypervisor.update("rhsm_proxy_port", proxy_data["port"])
+        connection_msg = proxy_data["connection_log"]
+        proxy_msg = proxy_data["proxy_log"]
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and connection_msg in result['log']
-                and proxy_msg in result['log'])
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and connection_msg in result["log"]
+            and proxy_msg in result["log"]
+        )
 
         # test the rhsm_proxy in /etc/virt-who.d/ has high priority
-        rhsmconf.update('server', 'proxy_hostname', proxy_data['server'])
-        rhsmconf.update('server', 'proxy_port', proxy_data['port'])
-        function_hypervisor.update(
-            'rhsm_proxy_hostname', proxy_data['bad_server'])
-        function_hypervisor.update(
-            'rhsm_proxy_port', proxy_data['bad_port'])
+        rhsmconf.update("server", "proxy_hostname", proxy_data["server"])
+        rhsmconf.update("server", "proxy_port", proxy_data["port"])
+        function_hypervisor.update("rhsm_proxy_hostname", proxy_data["bad_server"])
+        function_hypervisor.update("rhsm_proxy_port", proxy_data["bad_port"])
         result = virtwho.run_service()
-        assert (result['error'] == 1 or 2
-                and msg_search(result['error_msg'], proxy_data['error']))
+        assert (
+            result["error"] == 1
+            or 2
+            and msg_search(result["error_msg"], proxy_data["error"])
+        )
 
 
-@pytest.mark.usefixtures('class_yield_rhsmconf_recovery')
-@pytest.mark.usefixtures('class_host_unregister')
-@pytest.mark.usefixtures('class_debug_true')
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('function_rhsmconf_recovery')
+@pytest.mark.usefixtures("class_yield_rhsmconf_recovery")
+@pytest.mark.usefixtures("class_host_unregister")
+@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("function_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("function_rhsmconf_recovery")
 @pytest.mark.notLocal
 class TestSubscriptionNegative:
     @pytest.mark.tier2
@@ -182,48 +185,54 @@ class TestSubscriptionNegative:
             5. Null with another good config: virt-who starts but only
                 reports the good config, and prints error for the bad one
         """
-        assertion = register_assertion['owner']
+        assertion = register_assertion["owner"]
 
         # invalid
-        invalid = assertion['invalid']
+        invalid = assertion["invalid"]
         for key, value in invalid.items():
-            function_hypervisor.update('owner', key)
+            function_hypervisor.update("owner", key)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], value))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], value)
+            )
 
         # disable
-        function_hypervisor.delete('owner')
+        function_hypervisor.delete("owner")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and msg_search(result['error_msg'], assertion['disable']))
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and msg_search(result["error_msg"], assertion["disable"])
+        )
 
         # disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE,
-                          SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and msg_search(result['error_msg'],
-                               assertion['disable_with_another_good']))
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and msg_search(result["error_msg"], assertion["disable_with_another_good"])
+        )
 
         # null but another config is ok
-        function_hypervisor.update('owner', '')
+        function_hypervisor.update("owner", "")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and msg_search(result['error_msg'],
-                               assertion['null_with_another_good']))
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and msg_search(result["error_msg"], assertion["null_with_another_good"])
+        )
 
     @pytest.mark.tier2
-    def test_rhsm_hostname(self, virtwho, function_hypervisor,
-                           register_assertion):
+    def test_rhsm_hostname(self, virtwho, function_hypervisor, register_assertion):
         """Test the rhsm_hostname= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm_option: test rhsm_hostname option (negative)
@@ -243,30 +252,35 @@ class TestSubscriptionNegative:
             2. Null: virt-who starts but fails to report with error
             3. Disable: virt-who starts but fails to report with error
         """
-        assertion = register_assertion['rhsm_hostname']
+        assertion = register_assertion["rhsm_hostname"]
 
         # invalid value
-        invalid = assertion['invalid']
+        invalid = assertion["invalid"]
         for key, value in invalid.items():
-            function_hypervisor.update('rhsm_hostname', key)
+            function_hypervisor.update("rhsm_hostname", key)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], value))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], value)
+            )
 
         # disable
-        function_hypervisor.delete('rhsm_hostname')
+        function_hypervisor.delete("rhsm_hostname")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and msg_search(result['error_msg'], assertion['disable']))
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 1
+            and msg_search(result["error_msg"], assertion["disable"])
+        )
 
     @pytest.mark.tier2
     @pytest.mark.notLocal
-    def test_rhsm_port(self, virtwho, function_hypervisor, rhsmconf,
-                       register_assertion):
+    def test_rhsm_port(
+        self, virtwho, function_hypervisor, rhsmconf, register_assertion
+    ):
         """Test the rhsm_port= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm_option: test rhsm_port option (negative)
@@ -289,37 +303,36 @@ class TestSubscriptionNegative:
             3. Disable: virt-who reports successfully
                 (use the port=443 as default)
         """
-        assertion = register_assertion['rhsm_port']
-        rhsmconf.delete('server', 'port')
+        assertion = register_assertion["rhsm_port"]
+        rhsmconf.delete("server", "port")
 
         # invalid value
-        invalid = assertion['invalid']
+        invalid = assertion["invalid"]
         for key, value in invalid.items():
-            function_hypervisor.update('rhsm_port', key)
+            function_hypervisor.update("rhsm_port", key)
 
             result = virtwho.run_service(wait=120)
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], value))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], value)
+            )
 
         # null, will use the default 443
-        function_hypervisor.update('rhsm_port', '')
+        function_hypervisor.update("rhsm_port", "")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # disable, will use the default 443
-        function_hypervisor.delete('rhsm_port')
+        function_hypervisor.delete("rhsm_port")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier2
-    def test_rhsm_prefix(self, virtwho, function_hypervisor,
-                         register_assertion, rhsmconf):
+    def test_rhsm_prefix(
+        self, virtwho, function_hypervisor, register_assertion, rhsmconf
+    ):
         """Test the rhsm_prefix= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm_option: test rhsm_prefix option (negative)
@@ -346,53 +359,58 @@ class TestSubscriptionNegative:
                     (use the prefix=/subscription as default)
                 Satellite: virt-who starts but fails to report with error
         """
-        assertion = register_assertion['rhsm_prefix']
-        rhsmconf.delete('server', 'prefix')
+        assertion = register_assertion["rhsm_prefix"]
+        rhsmconf.delete("server", "prefix")
 
         # invalid value
-        invalid = assertion['invalid']
+        invalid = assertion["invalid"]
         for key, value in invalid.items():
-            function_hypervisor.update('rhsm_prefix', key)
+            function_hypervisor.update("rhsm_prefix", key)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], value))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], value)
+            )
 
-        if REGISTER == 'satellite':
+        if REGISTER == "satellite":
             # null
-            function_hypervisor.update('rhsm_prefix', '')
+            function_hypervisor.update("rhsm_prefix", "")
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], assertion['null']))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], assertion["null"])
+            )
 
             # disable
-            function_hypervisor.delete('rhsm_prefix')
+            function_hypervisor.delete("rhsm_prefix")
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], assertion['disable']))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], assertion["disable"])
+            )
         else:
             # null, will use the default /subscription
-            function_hypervisor.update('rhsm_prefix', '')
+            function_hypervisor.update("rhsm_prefix", "")
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
 
             # disable, will use the default /subscription
-            function_hypervisor.delete('rhsm_prefix')
+            function_hypervisor.delete("rhsm_prefix")
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
 
     @pytest.mark.tier2
-    def test_rhsm_username(self, virtwho, function_hypervisor,
-                           register_assertion):
+    def test_rhsm_username(self, virtwho, function_hypervisor, register_assertion):
         """Test the rhsm_username= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm_option: test rhsm_username option (negative)
@@ -414,29 +432,32 @@ class TestSubscriptionNegative:
             3. Non-ASCII: virt-who starts but fails to report with decode error
             4. Disable: virt-who starts but fails to report with decode error
         """
-        assertion = register_assertion['rhsm_username']
+        assertion = register_assertion["rhsm_username"]
 
         # invalid value
-        invalid = assertion['invalid']
+        invalid = assertion["invalid"]
         for key, value in invalid.items():
-            function_hypervisor.update('rhsm_username', key)
+            function_hypervisor.update("rhsm_username", key)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], value))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], value)
+            )
 
         # disable
-        function_hypervisor.delete('rhsm_username')
+        function_hypervisor.delete("rhsm_username")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and msg_search(result['error_msg'], assertion['disable']))
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 1
+            and msg_search(result["error_msg"], assertion["disable"])
+        )
 
     @pytest.mark.tier2
-    def test_rhsm_password(self, virtwho, function_hypervisor,
-                           register_assertion):
+    def test_rhsm_password(self, virtwho, function_hypervisor, register_assertion):
         """Test the rhsm_password= option in /etc/virt-who.d/xx.conf
 
         :title: virt-who: rhsm_option: test rhsm_password option (negative)
@@ -458,29 +479,34 @@ class TestSubscriptionNegative:
             3. Non-ASCII: virt-who starts but fails to report with decode error
             4. Disable: virt-who starts but fails to report with decode error
         """
-        assertion = register_assertion['rhsm_password']
+        assertion = register_assertion["rhsm_password"]
 
         # invalid value
-        invalid = assertion['invalid']
+        invalid = assertion["invalid"]
         for key, value in invalid.items():
-            function_hypervisor.update('rhsm_password', key)
+            function_hypervisor.update("rhsm_password", key)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['error_msg'], value))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["error_msg"], value)
+            )
 
         # disable
-        function_hypervisor.delete('rhsm_password')
+        function_hypervisor.delete("rhsm_password")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and msg_search(result['error_msg'], assertion['disable']))
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 1
+            and msg_search(result["error_msg"], assertion["disable"])
+        )
 
     @pytest.mark.tier2
-    def test_rhsm_encrypted_password(self, virtwho, function_hypervisor,
-                                     ssh_host, register_assertion):
+    def test_rhsm_encrypted_password(
+        self, virtwho, function_hypervisor, ssh_host, register_assertion
+    ):
         """Test the rhsm_encrypted_password= option in /etc/virt-who.d/x.conf
 
         :title: virt-who: rhsm_option: test rhsm_encrypted_password option
@@ -501,23 +527,31 @@ class TestSubscriptionNegative:
             2. Null: virt-who starts but fails to report with error
         """
         # rhsm_encrypted_password option is bad value
-        assertion = register_assertion['rhsm_encrypted_password']
-        function_hypervisor.delete('rhsm_password')
+        assertion = register_assertion["rhsm_encrypted_password"]
+        function_hypervisor.delete("rhsm_password")
 
         # invalid value
-        invalid = assertion['invalid']
+        invalid = assertion["invalid"]
         for key, value in invalid.items():
-            function_hypervisor.update('rhsm_encrypted_password', key)
+            function_hypervisor.update("rhsm_encrypted_password", key)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and msg_search(result['log'], value))
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and msg_search(result["log"], value)
+            )
 
     @pytest.mark.tier2
-    def test_rhsm_proxy_in_rhsmconf(self, virtwho, function_hypervisor,
-                                    globalconf, rhsmconf, proxy_data,
-                                    register_data):
+    def test_rhsm_proxy_in_rhsmconf(
+        self,
+        virtwho,
+        function_hypervisor,
+        globalconf,
+        rhsmconf,
+        proxy_data,
+        register_data,
+    ):
         """
 
         :title: virt-who: rhsm_option: test rhsm_proxy= in /etc/rhsm/rhsm.conf
@@ -543,63 +577,71 @@ class TestSubscriptionNegative:
                 /etc/virt-who.conf or /etc/virt-who.d/ can help virt-who
                 ignoring the bad proxy
         """
-        register_server = register_data['server']
-        error_msg = proxy_data['error']
+        register_server = register_data["server"]
+        error_msg = proxy_data["error"]
 
-        for scheme in ['http', 'https']:
+        for scheme in ["http", "https"]:
             # run virt-who with bad proxy in /etc/rhsm/rhsm.conf
-            rhsmconf.update(
-                'server', 'proxy_hostname', proxy_data['bad_server'])
-            rhsmconf.update('server', 'proxy_port', proxy_data['bad_port'])
-            rhsmconf.update('server', 'proxy_scheme', scheme)
+            rhsmconf.update("server", "proxy_hostname", proxy_data["bad_server"])
+            rhsmconf.update("server", "proxy_port", proxy_data["bad_port"])
+            rhsmconf.update("server", "proxy_scheme", scheme)
             result = virtwho.run_service()
-            assert (result['error'] == 1 or 2
-                    and result['mappings']
-                    and msg_search(result['error_msg'], error_msg))
+            assert (
+                result["error"] == 1
+                or 2
+                and result["mappings"]
+                and msg_search(result["error_msg"], error_msg)
+            )
 
             # set no_proxy=* in /etc/rhsm/rhsm.conf
-            rhsmconf.update('server', 'no_proxy', '*')
+            rhsmconf.update("server", "no_proxy", "*")
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
 
             # set no_proxy=[rhsm_server] in /etc/rhsm/rhsm.conf
-            rhsmconf.update('server', 'no_proxy', register_server)
+            rhsmconf.update("server", "no_proxy", register_server)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
-            rhsmconf.update('server', 'no_proxy', '')
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
+            rhsmconf.update("server", "no_proxy", "")
 
             # set no_proxy=[rhsm_server] in /etc/virt-who.conf
-            globalconf.update('system_environment', 'no_proxy', register_server)
+            globalconf.update("system_environment", "no_proxy", register_server)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
-            globalconf.delete('system_environment')
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
+            globalconf.delete("system_environment")
 
             # set rhsm_no_proxy=[rhsm_server] in /etc/virt-who.conf
-            globalconf.update('defaults', 'rhsm_no_proxy', register_server)
+            globalconf.update("defaults", "rhsm_no_proxy", register_server)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
-            globalconf.delete('defaults', 'rhsm_no_proxy')
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
+            globalconf.delete("defaults", "rhsm_no_proxy")
 
             # set rhsm_no_proxy=[rhsm_server] in /etc/virt-who.d/
-            function_hypervisor.update('rhsm_no_proxy', register_server)
+            function_hypervisor.update("rhsm_no_proxy", register_server)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
-            function_hypervisor.delete('rhsm_no_proxy')
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
+            function_hypervisor.delete("rhsm_no_proxy")
 
     @pytest.mark.tier2
-    def test_rhsm_proxy_in_virtwho_d(self, virtwho, function_hypervisor,
-                                     globalconf, rhsmconf, proxy_data,
-                                     register_data):
+    def test_rhsm_proxy_in_virtwho_d(
+        self,
+        virtwho,
+        function_hypervisor,
+        globalconf,
+        rhsmconf,
+        proxy_data,
+        register_data,
+    ):
         """
 
         :title: virt-who: rhsm_option: test rhsm_proxy= in /etc/virt-who.d/
@@ -624,59 +666,50 @@ class TestSubscriptionNegative:
                 /etc/virt-who.conf or /etc/virt-who.d/ can help virt-who
                 ignoring the bad proxy
         """
-        register_server = register_data['server']
-        error_msg = proxy_data['error']
+        register_server = register_data["server"]
+        error_msg = proxy_data["error"]
 
         # run virt-who with bad proxy in /etc/virt-who.d/
-        function_hypervisor.update(
-            'rhsm_proxy_hostname', proxy_data['bad_server'])
-        function_hypervisor.update(
-            'rhsm_proxy_port', proxy_data['bad_port'])
+        function_hypervisor.update("rhsm_proxy_hostname", proxy_data["bad_server"])
+        function_hypervisor.update("rhsm_proxy_port", proxy_data["bad_port"])
         result = virtwho.run_service()
-        assert (result['error'] == 1 or 2
-                and result['mappings']
-                and msg_search(result['error_msg'], error_msg))
+        assert (
+            result["error"] == 1
+            or 2
+            and result["mappings"]
+            and msg_search(result["error_msg"], error_msg)
+        )
 
         # set rhsm_no_proxy=* in /etc/virt-who.d/
-        function_hypervisor.update('rhsm_no_proxy', '*')
+        function_hypervisor.update("rhsm_no_proxy", "*")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # set rhsm_no_proxy=[rhsm_server] in /etc/virt-who.d/
-        function_hypervisor.update('rhsm_no_proxy', register_server)
+        function_hypervisor.update("rhsm_no_proxy", register_server)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # set no_proxy=[rhsm_server] in /etc/rhsm/rhsm.conf
-        rhsmconf.update('server', 'no_proxy', register_server)
+        rhsmconf.update("server", "no_proxy", register_server)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
-        rhsmconf.update('server', 'no_proxy', '')
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+        rhsmconf.update("server", "no_proxy", "")
 
         # set no_proxy=[rhsm_server] in /etc/virt-who.conf
-        globalconf.update('system_environment', 'no_proxy', register_server)
+        globalconf.update("system_environment", "no_proxy", register_server)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
-        globalconf.delete('system_environment')
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+        globalconf.delete("system_environment")
 
         # set rhsm_no_proxy=[rhsm_server] in /etc/virt-who.conf
-        globalconf.update('defaults', 'rhsm_no_proxy', register_server)
+        globalconf.update("defaults", "rhsm_no_proxy", register_server)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
-        globalconf.delete('defaults', 'rhsm_no_proxy')
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+        globalconf.delete("defaults", "rhsm_no_proxy")
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def class_yield_rhsmconf_recovery(rhsmconf):
     """Recover the /etc/rhsm/rhsm.conf to default one."""
     yield
