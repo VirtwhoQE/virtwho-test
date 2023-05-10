@@ -25,7 +25,7 @@ def satellite_deploy_for_virtwho(args):
     Please refer to the README for usage.
     """
     logger.info("+++ Start to deploy the Satellite +++")
-    satellite = args.satellite.split('-')
+    satellite = args.satellite.split("-")
     args.version = satellite[0]
     args.repo = satellite[1]
     args.rhel_compose = rhel_compose_for_satellite(satellite[2])
@@ -39,22 +39,20 @@ def satellite_deploy_for_virtwho(args):
         args.ssh_password = config.beaker.default_password
         satellite_deploy(args)
     ssh_satellite = SSHConnect(
-        host=args.server,
-        user=args.ssh_username,
-        pwd=args.ssh_password
+        host=args.server, user=args.ssh_username, pwd=args.ssh_password
     )
 
     # Start to configure the satellite server
-    satellite_settings(ssh_satellite, 'failed_login_attempts_limit', '0')
-    satellite_settings(ssh_satellite, 'unregister_delete_host', 'true')
+    satellite_settings(ssh_satellite, "failed_login_attempts_limit", "0")
+    satellite_settings(ssh_satellite, "unregister_delete_host", "true")
 
     # Upload manifest to the default org
     satellite_manifest_upload(
-        org='Default_Organization',
+        org="Default_Organization",
         ssh=ssh_satellite,
         url=config.satellite.manifest,
         admin_username=args.admin_username,
-        admin_password=args.admin_password
+        admin_password=args.admin_password,
     )
 
     # Create the second org and upload manifest as requirement.
@@ -67,7 +65,7 @@ def satellite_deploy_for_virtwho(args):
             ssh=ssh_satellite,
             url=config.satellite.manifest_second,
             admin_username=args.admin_username,
-            admin_password=args.admin_password
+            admin_password=args.admin_password,
         )
 
     # Create the activation key as requirement
@@ -76,19 +74,20 @@ def satellite_deploy_for_virtwho(args):
         satellite.activation_key_create(key=activation_key)
 
     # Update the virtwho.ini:[satellite]
-    args.section = 'satellite'
+    args.section = "satellite"
     virtwho_ini_props = {
-        'server': args.server,
-        'username': args.admin_username,
-        'password': args.admin_password,
-        'ssh_username': args.ssh_username,
-        'ssh_password': args.ssh_password
+        "server": args.server,
+        "username": args.admin_username,
+        "password": args.admin_password,
+        "ssh_username": args.ssh_username,
+        "ssh_password": args.ssh_password,
     }
-    for (args.option, args.value) in virtwho_ini_props.items():
+    for args.option, args.value in virtwho_ini_props.items():
         virtwho_ini_props_update(args)
 
-    logger.info(f"+++ Succeeded to deploy the Satellite "
-                f"{args.satellite}/{args.server} +++")
+    logger.info(
+        f"+++ Succeeded to deploy the Satellite " f"{args.satellite}/{args.server} +++"
+    )
 
 
 def rhel_compose_for_satellite(rhel_version):
@@ -97,11 +96,11 @@ def rhel_compose_for_satellite(rhel_version):
     :param rhel_version: such as rhel7, rhel8
     :return: rhel compose id
     """
-    compose_id = ''
-    if 'rhel7' in rhel_version:
-        compose_id = 'RHEL-7.9-20200917.0'
-    if 'rhel8' in rhel_version:
-        compose_id = 'RHEL-8.7.0'
+    compose_id = ""
+    if "rhel7" in rhel_version:
+        compose_id = "RHEL-7.9-20200917.0"
+    if "rhel8" in rhel_version:
+        compose_id = "RHEL-8.7.0"
     return compose_id
 
 
@@ -110,11 +109,11 @@ def beaker_args_define(args):
     Define the necessary args to call the utils/beaker.by
     :param args: arguments to define
     """
-    args.arch = 'x86_64'
-    args.variant = 'BaseOS'
-    if 'RHEL-7' in args.rhel_compose:
-        args.variant = 'Server'
-    args.job_group = 'virt-who-ci-server-group'
+    args.arch = "x86_64"
+    args.variant = "BaseOS"
+    if "RHEL-7" in args.rhel_compose:
+        args.variant = "Server"
+    args.job_group = "virt-who-ci-server-group"
     args.host = args.beaker_host
     args.host_type = None
     args.host_require = None
@@ -128,12 +127,12 @@ def satellite_settings(ssh, name, value):
     :param value: the value.
     :return: True or raise Fail.
     """
-    ret, output = ssh.runcmd(f'hammer settings set '
-                             f'--name={name} '
-                             f'--value={value}')
-    if ret == 0 and f'Setting [{name}] updated to' in output:
+    ret, output = ssh.runcmd(
+        f"hammer settings set " f"--name={name} " f"--value={value}"
+    )
+    if ret == 0 and f"Setting [{name}] updated to" in output:
         return True
-    raise FailException(f'Failed to set {name}:{value} for satellite')
+    raise FailException(f"Failed to set {name}:{value} for satellite")
 
 
 def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
@@ -146,20 +145,23 @@ def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
     :param admin_password: password of admin account.
     """
     path = "/tmp/manifest"
-    ssh.runcmd(f'rm -rf {path}; mkdir -p {path}')
-    ssh.runcmd(f'wget {url} -P {path}')
-    ret, output = ssh.runcmd(f'ls {path}')
+    ssh.runcmd(f"rm -rf {path}; mkdir -p {path}")
+    ssh.runcmd(f"wget {url} -P {path}")
+    ret, output = ssh.runcmd(f"ls {path}")
     if output:
-        filename = f'{path}/{output.strip()}'
+        filename = f"{path}/{output.strip()}"
     else:
-        raise FailException('No manifest file found')
-    _, _ = ssh.runcmd(f'hammer subscription delete-manifest '
-                      f'--organization-label {org}')
-    ret, _ = ssh.runcmd(f'hammer subscription upload '
-                        f'--organization-label {org} '
-                        f'--file {filename}')
+        raise FailException("No manifest file found")
+    _, _ = ssh.runcmd(
+        f"hammer subscription delete-manifest " f"--organization-label {org}"
+    )
+    ret, _ = ssh.runcmd(
+        f"hammer subscription upload "
+        f"--organization-label {org} "
+        f"--file {filename}"
+    )
     if ret != 0:
-        raise FailException('Failed to upload manifest for satellite')
+        raise FailException("Failed to upload manifest for satellite")
 
 
 def virtwho_satellite_arguments_parser():
@@ -170,45 +172,49 @@ def virtwho_satellite_arguments_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--satellite',
-        required=True,
-        help='Such as: 6.13-cdn-rhel8, 6.14-repo-rhel8')
+        "--satellite", required=True, help="Such as: 6.13-cdn-rhel8, 6.14-repo-rhel8"
+    )
     parser.add_argument(
-        '--server',
+        "--server",
         default=config.satellite.server,
         required=False,
-        help='ip/fqdn, default to the [satellite]:server in virtwho.ini, '
-             'will install a new system if no server provide.')
+        help="ip/fqdn, default to the [satellite]:server in virtwho.ini, "
+        "will install a new system if no server provide.",
+    )
     parser.add_argument(
-        '--ssh-username',
+        "--ssh-username",
         default=config.satellite.ssh_username,
         required=False,
-        help='Username to access the server, '
-             'default to the [satellite]:ssh_username in virtwho.ini')
+        help="Username to access the server, "
+        "default to the [satellite]:ssh_username in virtwho.ini",
+    )
     parser.add_argument(
-        '--ssh-password',
+        "--ssh-password",
         default=config.satellite.ssh_password,
         required=False,
-        help='Password to access the server, '
-             'default to the [satellite]:ssh_password in virtwho.ini')
+        help="Password to access the server, "
+        "default to the [satellite]:ssh_password in virtwho.ini",
+    )
     parser.add_argument(
-        '--admin-username',
+        "--admin-username",
         default=config.satellite.username,
         required=False,
-        help='Account name for the satellite administrator, '
-             'default to the [satellite]:username in virtwho.ini')
+        help="Account name for the satellite administrator, "
+        "default to the [satellite]:username in virtwho.ini",
+    )
     parser.add_argument(
-        '--admin-password',
+        "--admin-password",
         default=config.satellite.password,
         required=False,
-        help='Account password for the satellite administrator, '
-             'default to the [satellite]:password in virtwho.ini')
+        help="Account password for the satellite administrator, "
+        "default to the [satellite]:password in virtwho.ini",
+    )
     parser.add_argument(
-        '--beaker-host',
-        default='%dell-per740-69-vm%',
+        "--beaker-host",
+        default="%dell-per740-69-vm%",
         required=False,
-        help='Define/filter system as hostrequire. '
-             'Such as: %hp-dl360g9-08-vm%')
+        help="Define/filter system as hostrequire. " "Such as: %hp-dl360g9-08-vm%",
+    )
     return parser.parse_args()
 
 

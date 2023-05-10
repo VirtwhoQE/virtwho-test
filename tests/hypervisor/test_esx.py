@@ -28,13 +28,14 @@ from virtwho.settings import TEMP_DIR
 from hypervisor.virt.esx.powercli import PowerCLI
 
 
-@pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('class_debug_true')
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures("function_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("class_globalconf_clean")
 class TestEsxPositive:
     @pytest.mark.tier1
-    def test_encrypted_password(self, virtwho, function_hypervisor,
-                                hypervisor_data, ssh_host):
+    def test_encrypted_password(
+        self, virtwho, function_hypervisor, hypervisor_data, ssh_host
+    ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_esx.conf
 
         :title: virt-who: esx: test encrypted_password option
@@ -51,16 +52,18 @@ class TestEsxPositive:
             2. Succeeded to run the virt-who, no error messages in the log info
         """
         # encrypted_password option is valid value
-        function_hypervisor.delete('password')
-        encrypted_pwd = encrypt_password(ssh_host, hypervisor_data['hypervisor_password'])
-        function_hypervisor.update('encrypted_password', encrypted_pwd)
+        function_hypervisor.delete("password")
+        encrypted_pwd = encrypt_password(
+            ssh_host, hypervisor_data["hypervisor_password"]
+        )
+        function_hypervisor.update("encrypted_password", encrypted_pwd)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier1
-    def test_hypervisor_id(self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite):
+    def test_hypervisor_id(
+        self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite
+    ):
         """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: esx: test hypervisor_id function
@@ -80,30 +83,33 @@ class TestEsxPositive:
 
             hypervisor id shows uuid/hostname/hwuuid in mapping as the setting.
         """
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and result['hypervisor_id'] == hypervisor_data[f'hypervisor_{hypervisor_id}'])
-            if REGISTER == 'rhsm':
-                assert rhsm.consumers(hypervisor_data['hypervisor_hostname'])
-                rhsm.delete(hypervisor_data['hypervisor_hostname'])
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and result["hypervisor_id"]
+                == hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            )
+            if REGISTER == "rhsm":
+                assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
+                rhsm.delete(hypervisor_data["hypervisor_hostname"])
             else:
-                if hypervisor_id == 'hostname':
-                    assert satellite.host_id(hypervisor_data['hypervisor_hostname'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
-                elif hypervisor_id == 'uuid':
-                    assert satellite.host_id(hypervisor_data['hypervisor_uuid'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
+                if hypervisor_id == "hostname":
+                    assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_uuid"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_hwuuid"])
+                elif hypervisor_id == "uuid":
+                    assert satellite.host_id(hypervisor_data["hypervisor_uuid"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_hostname"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_hwuuid"])
                 else:
-                    assert satellite.host_id(hypervisor_data['hypervisor_hwuuid'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
+                    assert satellite.host_id(hypervisor_data["hypervisor_hwuuid"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_hostname"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_uuid"])
 
     @pytest.mark.tier1
     def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
@@ -125,17 +131,19 @@ class TestEsxPositive:
             3. Succeeded to run the virt-who, can find host_uuid in the log message
             4. Succeeded to run the virt-who, can find host_hwuuid in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
 
-            function_hypervisor.update('filter_hosts', hypervisor_id_data)
+            function_hypervisor.update("filter_hosts", hypervisor_id_data)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hypervisor_id_data in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hypervisor_id_data in str(result["mappings"])
+            )
 
     @pytest.mark.tier1
     def test_exclude_hosts(self, virtwho, function_hypervisor, hypervisor_data):
@@ -157,17 +165,19 @@ class TestEsxPositive:
             3. Succeeded to run the virt-who, cannot find host_uuid in the log message
             4. Succeeded to run the virt-who, cannot find host_hwuuid in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
 
-            function_hypervisor.update('exclude_hosts', hypervisor_id_data)
+            function_hypervisor.update("exclude_hosts", hypervisor_id_data)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hypervisor_id_data not in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hypervisor_id_data not in str(result["mappings"])
+            )
 
     @pytest.mark.tier1
     def test_filter_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
@@ -191,21 +201,23 @@ class TestEsxPositive:
             3. Succeeded to run virt-who, can find uuid from the mapping info in rhsm.log
             4. Succeeded to run virt-who, can find hwuuid from the mapping info in rhsm.log
         """
-        host_hwuuid = hypervisor_data['hypervisor_hwuuid']
-        function_hypervisor.update('filter_host_parents', '')
+        host_hwuuid = hypervisor_data["hypervisor_hwuuid"]
+        function_hypervisor.update("filter_host_parents", "")
         result = virtwho.run_service()
-        domain_id = get_host_domain_id(host_hwuuid, result['log'])
+        domain_id = get_host_domain_id(host_hwuuid, result["log"])
 
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            function_hypervisor.update('filter_host_parents', domain_id)
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            function_hypervisor.update("filter_host_parents", domain_id)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hypervisor_id_data in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hypervisor_id_data in str(result["mappings"])
+            )
 
     @pytest.mark.tier1
     def test_exclude_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
@@ -229,21 +241,23 @@ class TestEsxPositive:
             3. Succeeded to run virt-who, cannot find uuid from the mapping info in rhsm.log
             4. Succeeded to run virt-who, cannot find hwuuid from the mapping info in rhsm.log
         """
-        host_hwuuid = hypervisor_data['hypervisor_hwuuid']
-        function_hypervisor.update('exclude_host_parents', '*')
+        host_hwuuid = hypervisor_data["hypervisor_hwuuid"]
+        function_hypervisor.update("exclude_host_parents", "*")
         result = virtwho.run_service()
-        domain_id = get_host_domain_id(host_hwuuid, result['log'])
+        domain_id = get_host_domain_id(host_hwuuid, result["log"])
 
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            function_hypervisor.update('exclude_host_parents', domain_id)
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            function_hypervisor.update("exclude_host_parents", domain_id)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hypervisor_id_data not in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hypervisor_id_data not in str(result["mappings"])
+            )
 
     @pytest.mark.tier1
     def test_simplified_vim(self, virtwho, function_hypervisor, hypervisor_data):
@@ -262,17 +276,13 @@ class TestEsxPositive:
             1. Succeed to run the virt-who
             2. Succeed to run the virt-who
         """
-        function_hypervisor.update('simplified_vim', 'true')
+        function_hypervisor.update("simplified_vim", "true")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
-        function_hypervisor.update('simplified_vim', 'false')
+        function_hypervisor.update("simplified_vim", "false")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier1
     def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
@@ -294,25 +304,29 @@ class TestEsxPositive:
             2. Succeed to run the virt-who service, can find the host_uuid and guest_uuid in the
             rhsm.log file
         """
-        host_uuid = hypervisor_data['hypervisor_uuid']
-        guest_uuid = hypervisor_data['guest_uuid']
+        host_uuid = hypervisor_data["hypervisor_uuid"]
+        guest_uuid = hypervisor_data["guest_uuid"]
         virtwho.run_cli(prt=True, oneshot=False)
         function_hypervisor.destroy()
 
-        fake_config = hypervisor_create('fake', REGISTER, rhsm=False)
-        fake_config.update('file', PRINT_JSON_FILE)
-        fake_config.update('is_hypervisor', 'True')
+        fake_config = hypervisor_create("fake", REGISTER, rhsm=False)
+        fake_config.update("file", PRINT_JSON_FILE)
+        fake_config.update("is_hypervisor", "True")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and host_uuid in result['log']
-                and guest_uuid in result['log'])
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and host_uuid in result["log"]
+            and guest_uuid in result["log"]
+        )
         # Todo: Need to add the test cases for host-guest association in mapping, web and the test
         #  cases for the vdc pool's subscription.
 
     @pytest.mark.tier1
-    def test_read_only_account(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+    def test_read_only_account(
+        self, virtwho, function_hypervisor, hypervisor_data, register_data
+    ):
         """
         :title: virt-who: esx: check mapping info by the read only account
         :id: c13c05c0-fadb-4187-80f1-a2f52f0610db
@@ -328,23 +342,26 @@ class TestEsxPositive:
             2. Succeed to run the virt-who service, can find the host-to-guest association
             in rhsm.log
         """
-        host_name = hypervisor_data['hypervisor_hostname']
-        guest_uuid = hypervisor_data['guest_uuid']
+        host_name = hypervisor_data["hypervisor_hostname"]
+        guest_uuid = hypervisor_data["guest_uuid"]
 
         read_only_username = "tester@vsphere.local"
-        function_hypervisor.update('username', read_only_username)
+        function_hypervisor.update("username", read_only_username)
 
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and virtwho.associate_in_mapping(
-                    result, register_data['default_org'], host_name, guest_uuid))
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and virtwho.associate_in_mapping(
+                result, register_data["default_org"], host_name, guest_uuid
+            )
+        )
 
 
-@pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('class_debug_true')
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures("function_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("class_globalconf_clean")
 class TestEsxNegative:
     @pytest.mark.tier2
     def test_type(self, virtwho, function_hypervisor, esx_assertion):
@@ -369,44 +386,51 @@ class TestEsxNegative:
             4. The good config works fine
         """
         # type option is invalid value
-        assertion = esx_assertion['type']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = esx_assertion["type"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('type', value)
+            function_hypervisor.update("type", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 0)
-            if 'RHEL-9' in RHEL_COMPOSE:
-                assert assertion['invalid'][f'{value}'] in result['error_msg']
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 0
+            )
+            if "RHEL-9" in RHEL_COMPOSE:
+                assert assertion["invalid"][f"{value}"] in result["error_msg"]
             else:
-                assert assertion['non_rhel9'] in result['error_msg']
+                assert assertion["non_rhel9"] in result["error_msg"]
 
         # type option is disable
-        function_hypervisor.delete('type')
+        function_hypervisor.delete("type")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 1
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # type option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # type option is null but another config is ok
-        function_hypervisor.update('type', '')
+        function_hypervisor.update("type", "")
         result = virtwho.run_service()
-        assert (result['send'] == 1
-                and result['thread'] == 1)
-        if 'RHEL-9' in RHEL_COMPOSE:
-            assert result['error'] == 1
+        assert result["send"] == 1 and result["thread"] == 1
+        if "RHEL-9" in RHEL_COMPOSE:
+            assert result["error"] == 1
         else:
-            assert result['error'] == 0
+            assert result["error"] == 0
 
     @pytest.mark.tier2
     def test_server(self, virtwho, function_hypervisor, esx_assertion):
@@ -432,38 +456,48 @@ class TestEsxNegative:
             works fine
         """
         # server option is invalid value
-        assertion = esx_assertion['server']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = esx_assertion["server"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('server', value)
+            function_hypervisor.update("server", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and assertion["invalid"][f"{value}"] in result["error_msg"]
+            )
 
         # server option is disable
-        function_hypervisor.delete('server')
+        function_hypervisor.delete("server")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # server option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # server option is null but another config is ok
-        function_hypervisor.update('server', '')
+        function_hypervisor.update("server", "")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["null_multi_configs"] in result["error_msg"]
+        )
 
     @pytest.mark.tier2
     def test_username(self, function_hypervisor, virtwho, esx_assertion):
@@ -489,39 +523,49 @@ class TestEsxNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # username option is invalid value
-        assertion = esx_assertion['username']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = esx_assertion["username"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('username', value)
+            function_hypervisor.update("username", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and assertion["invalid"][f"{value}"] in result["error_msg"]
+            )
 
         # username option is disable
-        function_hypervisor.delete('username')
+        function_hypervisor.delete("username")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # username option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # username option is null but another config is ok
-        function_hypervisor.update('username', '')
+        function_hypervisor.update("username", "")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["null_multi_configs"] in result["error_msg"]
+        )
 
     @pytest.mark.tier2
     def test_password(self, virtwho, function_hypervisor, esx_assertion):
@@ -547,43 +591,54 @@ class TestEsxNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # password option is invalid value
-        assertion = esx_assertion['password']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = esx_assertion["password"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('password', value)
+            function_hypervisor.update("password", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and assertion["invalid"][f"{value}"] in result["error_msg"]
+            )
 
         # password option is disable
-        function_hypervisor.delete('password')
+        function_hypervisor.delete("password")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # password option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # password option is null but another config is ok
-        function_hypervisor.update('password', '')
+        function_hypervisor.update("password", "")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["null_multi_configs"] in result["error_msg"]
+        )
 
     @pytest.mark.tier2
-    def test_encrypted_password(self, virtwho, function_hypervisor, esx_assertion,
-                                hypervisor_data, ssh_host):
+    def test_encrypted_password(
+        self, virtwho, function_hypervisor, esx_assertion, hypervisor_data, ssh_host
+    ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_esx.conf
 
         :title: virt-who: esx: test encrypted_password option
@@ -602,24 +657,30 @@ class TestEsxNegative:
             2. Find warning message: 'Option "encrypted_password" cannot be decrypted'
         """
         # encrypted_password option is invalid value
-        function_hypervisor.delete('password')
-        assertion = esx_assertion['encrypted_password']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        function_hypervisor.delete("password")
+        assertion = esx_assertion["encrypted_password"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('encrypted_password', value)
+            function_hypervisor.update("encrypted_password", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 0
-                    and assertion['invalid'][f'{value}'] in result['warning_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 0
+                and assertion["invalid"][f"{value}"] in result["warning_msg"]
+            )
 
         # encrypted_password option is valid but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['valid_multi_configs'] in result['warning_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["valid_multi_configs"] in result["warning_msg"]
+        )
 
     @pytest.mark.tier2
     def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
@@ -649,42 +710,48 @@ class TestEsxNegative:
             7. Succeeded to run the virt-who, can find hostname in the log message
             8. Succeeded to run the virt-who, can find hostname in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            wildcard = hypervisor_id_data[:3] + '*' + hypervisor_id_data[4:]
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            wildcard = hypervisor_id_data[:3] + "*" + hypervisor_id_data[4:]
 
-            for filter_hosts in ['*', wildcard]:
-                function_hypervisor.update('filter_hosts', filter_hosts)
+            for filter_hosts in ["*", wildcard]:
+                function_hypervisor.update("filter_hosts", filter_hosts)
                 result = virtwho.run_service()
-                assert (result['error'] == 0
-                        and result['send'] == 1
-                        and result['thread'] == 1
-                        and hypervisor_id_data in str(result['mappings']))
+                assert (
+                    result["error"] == 0
+                    and result["send"] == 1
+                    and result["thread"] == 1
+                    and hypervisor_id_data in str(result["mappings"])
+                )
 
-            function_hypervisor.delete('hypervisor_id')
+            function_hypervisor.delete("hypervisor_id")
 
-        hostname = hypervisor_data['hypervisor_hostname']
-        function_hypervisor.update('hypervisor_id', 'hostname')
+        hostname = hypervisor_data["hypervisor_hostname"]
+        function_hypervisor.update("hypervisor_id", "hostname")
 
         # config filter_hosts with null option
-        for filter_hosts in ['', "''", '""']:
-            function_hypervisor.update('filter_hosts', filter_hosts)
+        for filter_hosts in ["", "''", '""']:
+            function_hypervisor.update("filter_hosts", filter_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname not in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname not in str(result["mappings"])
+            )
 
         # config filter_hosts with 'hostname' and "hostname"
         for filter_hosts in [f"'{hostname}'", f'"{hostname}"']:
-            function_hypervisor.update('filter_hosts', filter_hosts)
+            function_hypervisor.update("filter_hosts", filter_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname in str(result["mappings"])
+            )
 
     @pytest.mark.tier2
     def test_exclude_host(self, virtwho, function_hypervisor, hypervisor_data):
@@ -714,38 +781,44 @@ class TestEsxNegative:
             7. Succeeded to run the virt-who, cannot find hostname in the log message
             8. Succeeded to run the virt-who, cannot find hostname in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            wildcard = hypervisor_id_data[:3] + '*' + hypervisor_id_data[4:]
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            wildcard = hypervisor_id_data[:3] + "*" + hypervisor_id_data[4:]
 
-            for exclude_hosts in ['*', wildcard]:
-                function_hypervisor.update('exclude_hosts', exclude_hosts)
+            for exclude_hosts in ["*", wildcard]:
+                function_hypervisor.update("exclude_hosts", exclude_hosts)
                 result = virtwho.run_service()
-                assert (result['error'] == 0
-                        and result['send'] == 1
-                        and result['thread'] == 1
-                        and hypervisor_id_data not in str(result['mappings']))
+                assert (
+                    result["error"] == 0
+                    and result["send"] == 1
+                    and result["thread"] == 1
+                    and hypervisor_id_data not in str(result["mappings"])
+                )
 
-        hostname = hypervisor_data['hypervisor_hostname']
-        function_hypervisor.update('hypervisor_id', 'hostname')
+        hostname = hypervisor_data["hypervisor_hostname"]
+        function_hypervisor.update("hypervisor_id", "hostname")
 
-        for exclude_hosts in ['', "''", '""']:
-            function_hypervisor.update('exclude_hosts', exclude_hosts)
+        for exclude_hosts in ["", "''", '""']:
+            function_hypervisor.update("exclude_hosts", exclude_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname in str(result["mappings"])
+            )
 
         for exclude_hosts in [f"'{hostname}'", f'"{hostname}"']:
-            function_hypervisor.update('exclude_hosts', exclude_hosts)
+            function_hypervisor.update("exclude_hosts", exclude_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname not in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname not in str(result["mappings"])
+            )
 
     @pytest.mark.tier2
     def test_filter_exclude_mix(self, virtwho, function_hypervisor, hypervisor_data):
@@ -769,35 +842,41 @@ class TestEsxNegative:
             4. Succeeded to run the virt-who, can find the log message "hypervisorId": "{host_uuid}"
 
         """
-        function_hypervisor.update('hypervisor_id', 'uuid')
-        hypervisor_uuid = hypervisor_data['hypervisor_uuid']
+        function_hypervisor.update("hypervisor_id", "uuid")
+        hypervisor_uuid = hypervisor_data["hypervisor_uuid"]
 
         # run virt-who with filter_hosts=[host_uuid] and exclude_hosts=[host_uuid]
-        function_hypervisor.update('filter_hosts', hypervisor_uuid)
-        function_hypervisor.update('exclude_hosts', hypervisor_uuid)
+        function_hypervisor.update("filter_hosts", hypervisor_uuid)
+        function_hypervisor.update("exclude_hosts", hypervisor_uuid)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and hypervisor_uuid not in str(result['mappings']))
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and hypervisor_uuid not in str(result["mappings"])
+        )
 
         # run virt-who with filter_hosts=* and exclude_hosts=[host_uuid]
-        function_hypervisor.update('filter_hosts', '*')
-        function_hypervisor.update('exclude_hosts', hypervisor_uuid)
+        function_hypervisor.update("filter_hosts", "*")
+        function_hypervisor.update("exclude_hosts", hypervisor_uuid)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and hypervisor_uuid not in str(result['mappings']))
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and hypervisor_uuid not in str(result["mappings"])
+        )
 
         # run virt-who with exclude_hosts= and filter_hosts=[host_uuid]
-        function_hypervisor.update('filter_hosts', hypervisor_uuid)
-        function_hypervisor.update('exclude_hosts', '')
+        function_hypervisor.update("filter_hosts", hypervisor_uuid)
+        function_hypervisor.update("exclude_hosts", "")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and hypervisor_uuid in str(result['mappings']))
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and hypervisor_uuid in str(result["mappings"])
+        )
 
     @pytest.mark.tier2
     def test_filter_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
@@ -822,31 +901,37 @@ class TestEsxNegative:
             5. Succeeded to run the virt-who, can find hostname in the log message
             6. The same as above
         """
-        function_hypervisor.update('filter_host_parents', '')
+        function_hypervisor.update("filter_host_parents", "")
         result = virtwho.run_service()
-        domain_id = get_host_domain_id(hypervisor_data['hypervisor_hwuuid'], result['log'])
+        domain_id = get_host_domain_id(
+            hypervisor_data["hypervisor_hwuuid"], result["log"]
+        )
 
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            wildcard = domain_id[:3] + '*' + domain_id[4:]
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            wildcard = domain_id[:3] + "*" + domain_id[4:]
 
-            for filter_host_parents in ['', '*', wildcard]:
-                function_hypervisor.update('filter_host_parents', filter_host_parents)
+            for filter_host_parents in ["", "*", wildcard]:
+                function_hypervisor.update("filter_host_parents", filter_host_parents)
                 result = virtwho.run_service()
-                if filter_host_parents == '':
-                    assert (result['error'] == 0
-                            and result['send'] == 1
-                            and result['thread'] == 1
-                            and hypervisor_id_data not in str(result['mappings']))
+                if filter_host_parents == "":
+                    assert (
+                        result["error"] == 0
+                        and result["send"] == 1
+                        and result["thread"] == 1
+                        and hypervisor_id_data not in str(result["mappings"])
+                    )
                 else:
-                    assert (result['error'] == 0
-                            and result['send'] == 1
-                            and result['thread'] == 1
-                            and hypervisor_id_data in str(result['mappings']))
+                    assert (
+                        result["error"] == 0
+                        and result["send"] == 1
+                        and result["thread"] == 1
+                        and hypervisor_id_data in str(result["mappings"])
+                    )
 
-            function_hypervisor.delete('hypervisor_id')
+            function_hypervisor.delete("hypervisor_id")
 
     @pytest.mark.tier2
     def test_exclude_host_parents(self, virtwho, function_hypervisor, hypervisor_data):
@@ -873,34 +958,42 @@ class TestEsxNegative:
             6. The same as above
 
         """
-        function_hypervisor.update('exclude_host_parents', '*')
+        function_hypervisor.update("exclude_host_parents", "*")
         result = virtwho.run_service()
-        domain_id = get_host_domain_id(hypervisor_data['hypervisor_hwuuid'], result['log'])
+        domain_id = get_host_domain_id(
+            hypervisor_data["hypervisor_hwuuid"], result["log"]
+        )
 
-        hypervisor_ids = ['hostname', 'uuid', 'hwuuid']
+        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            wildcard = domain_id[:3] + '*' + domain_id[4:]
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            wildcard = domain_id[:3] + "*" + domain_id[4:]
 
-            for exclude_host_parents in ['', '*', wildcard]:
-                function_hypervisor.update('exclude_host_parents', exclude_host_parents)
+            for exclude_host_parents in ["", "*", wildcard]:
+                function_hypervisor.update("exclude_host_parents", exclude_host_parents)
                 result = virtwho.run_service()
-                if exclude_host_parents == '':
-                    assert (result['error'] == 0
-                            and result['send'] == 1
-                            and result['thread'] == 1
-                            and hypervisor_id_data in str(result['mappings']))
+                if exclude_host_parents == "":
+                    assert (
+                        result["error"] == 0
+                        and result["send"] == 1
+                        and result["thread"] == 1
+                        and hypervisor_id_data in str(result["mappings"])
+                    )
                 else:
-                    assert (result['error'] == 0
-                            and result['send'] == 1
-                            and result['thread'] == 1
-                            and hypervisor_id_data not in str(result['mappings']))
+                    assert (
+                        result["error"] == 0
+                        and result["send"] == 1
+                        and result["thread"] == 1
+                        and hypervisor_id_data not in str(result["mappings"])
+                    )
 
-            function_hypervisor.delete('hypervisor_id')
+            function_hypervisor.delete("hypervisor_id")
 
     @pytest.mark.tier2
-    def test_unsupported_option(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+    def test_unsupported_option(
+        self, virtwho, function_hypervisor, hypervisor_data, register_data
+    ):
         """
         :title: virt-who: esx: test unsupported options in /etc/virt-who.d/ dir
         :id: ffd1fe9f-8c85-43ab-b2ae-16e824b5e880
@@ -916,17 +1009,27 @@ class TestEsxNegative:
 
             2. Succeed to run the vir-tho, can find the ignore message in rhsm.log
         """
-        unsupported_option = 'xxxxx'
-        function_hypervisor.update(unsupported_option, 'aaaa')
+        unsupported_option = "xxxxx"
+        function_hypervisor.update(unsupported_option, "aaaa")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and f'Ignoring unknown configuration option "{unsupported_option}"' in result['log'])
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and f'Ignoring unknown configuration option "{unsupported_option}"'
+            in result["log"]
+        )
 
     @pytest.mark.tier2
-    def test_extension_file_name(self, virtwho, function_hypervisor, hypervisor_data,
-                                 register_data, ssh_host, esx_assertion):
+    def test_extension_file_name(
+        self,
+        virtwho,
+        function_hypervisor,
+        hypervisor_data,
+        register_data,
+        ssh_host,
+        esx_assertion,
+    ):
         """
         :title: virt-who: esx: test extension file name in /etc/virt-who.d/ dir
         :id: 3e5ca411-147b-4ac6-87b0-fe2720ff2e17
@@ -944,19 +1047,21 @@ class TestEsxNegative:
             3. Failed to run the virt-who, can fin the expected error and warning messages
             in rhsm.log
         """
-        invalid_file_name = esx_assertion['extension_file_name']['file_name']
+        invalid_file_name = esx_assertion["extension_file_name"]["file_name"]
         cmd = f"mv {function_hypervisor.remote_file} {invalid_file_name}"
         ssh_host.runcmd(cmd)
 
-        warning_msg = esx_assertion['extension_file_name']['warining_msg']
-        error_msg = esx_assertion['extension_file_name']['error_msg']
+        warning_msg = esx_assertion["extension_file_name"]["warining_msg"]
+        error_msg = esx_assertion["extension_file_name"]["error_msg"]
 
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and error_msg in result['error_msg']
-                and warning_msg in result['warning_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 1
+            and error_msg in result["error_msg"]
+            and warning_msg in result["warning_msg"]
+        )
 
     @pytest.mark.tier2
     def test_quoted_options(self, virtwho, function_hypervisor, ssh_host):
@@ -977,23 +1082,21 @@ class TestEsxNegative:
             3. Succeed to run the virt-who without any error messages
         """
         # run virt-who when all the options enabled with single quotes
-        cmd = fr'''sed -i "s|=\(.*\)|='\1'|g" {function_hypervisor.remote_file}'''
+        cmd = rf"""sed -i "s|=\(.*\)|='\1'|g" {function_hypervisor.remote_file}"""
         ssh_host.runcmd(cmd)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # run virt-who when all the options enabled with double quotes
-        cmd = fr'''sed -i "s|'|\"|g" {function_hypervisor.remote_file}'''
+        cmd = rf"""sed -i "s|'|\"|g" {function_hypervisor.remote_file}"""
         ssh_host.runcmd(cmd)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier2
-    def test_redundant_options(self, virtwho, function_hypervisor, ssh_host, hypervisor_data, esx_assertion):
+    def test_redundant_options(
+        self, virtwho, function_hypervisor, ssh_host, hypervisor_data, esx_assertion
+    ):
         """
         :title: virt-who: esx: test the redundant options in /etc/virt-who.d/ dir
         :id: cba7b507-f490-405b-85b7-ca448da901f2
@@ -1012,37 +1115,43 @@ class TestEsxNegative:
             warning message and "hypervisorId": "{host_uuid}" in rhsm.log
             3. Failed to run the virt-who, can find the related warning message in rhsm.log
         """
-        host_name = hypervisor_data['hypervisor_hostname']
-        host_uuid = hypervisor_data['hypervisor_uuid']
-        option = 'hypervisor_id'
+        host_name = hypervisor_data["hypervisor_hostname"]
+        host_uuid = hypervisor_data["hypervisor_uuid"]
+        option = "hypervisor_id"
         warning_msg = f"option '{option}' in section '{function_hypervisor.section}' already exists"
 
         # run virt-who with hypervisor_id=uuid and hypervisor_id=hostname together
         cmd = f'echo -e "{option}=uuid" >> {function_hypervisor.remote_file}'
         ssh_host.runcmd(cmd)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and f'"hypervisorId": "{host_uuid}"' in result['log']
-                and f'"hypervisorId": "{host_name}"' not in result['log'])
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and f'"hypervisorId": "{host_uuid}"' in result["log"]
+            and f'"hypervisorId": "{host_name}"' not in result["log"]
+        )
         if "RHEL-8" in RHEL_COMPOSE:
-            assert warning_msg in result['warning_msg']
+            assert warning_msg in result["warning_msg"]
 
         # add another hypervisor_id=xxx
-        invalid_value = 'xxx'
+        invalid_value = "xxx"
         cmd = f'echo -e "{option}={invalid_value}" >> {function_hypervisor.remote_file}'
         ssh_host.runcmd(cmd)
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and esx_assertion['redundant_options']['error_msg'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and esx_assertion["redundant_options"]["error_msg"] in result["error_msg"]
+        )
         if "RHEL-8" in RHEL_COMPOSE:
-            assert warning_msg in result['warning_msg']
+            assert warning_msg in result["warning_msg"]
 
     @pytest.mark.tier2
-    def test_commented_line_with_tab_space(self, virtwho, function_hypervisor, ssh_host):
+    def test_commented_line_with_tab_space(
+        self, virtwho, function_hypervisor, ssh_host
+    ):
         """
         :title: virt-who: esx: test commented line with tab space virt-who config file
         :id: d2444fd4-0a2c-4a08-a873-cb9d39e6b98b
@@ -1066,22 +1175,24 @@ class TestEsxNegative:
         ssh_host.runcmd(cmd)
         result = virtwho.run_service()
 
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and error_msg in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and error_msg in result["error_msg"]
+        )
 
         # comment out the useless line
         cmd = f'sed -i "s/xxx/#xxx/" {function_hypervisor.remote_file}'
         ssh_host.runcmd(cmd)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier2
     @pytest.mark.notStage
-    def test_hypervisors_fqdn(self, virtwho, function_hypervisor, hypervisor_data, satellite, ssh_host):
+    def test_hypervisors_fqdn(
+        self, virtwho, function_hypervisor, hypervisor_data, satellite, ssh_host
+    ):
         """
         :title: virt-who: esx: test the hypervisors fqdn
         :id: ef3ecbc5-2433-44ae-9517-39dbe9590726
@@ -1103,30 +1214,32 @@ class TestEsxNegative:
             5. Can find the new hypervisor's fqdn by the hammer command, cannot find the previous
             hypervisor' fqdn
         """
-        host_name = hypervisor_data['hypervisor_hostname']
+        host_name = hypervisor_data["hypervisor_hostname"]
 
         # create fake json file
         virtwho.run_cli(prt=True)
 
         # run virt-who with fake con
-        hypervisor_create(mode='fake', register_type='satellite', config_name=FAKE_CONFIG_FILE)
+        hypervisor_create(
+            mode="fake", register_type="satellite", config_name=FAKE_CONFIG_FILE
+        )
         result = virtwho.run_cli(config=FAKE_CONFIG_FILE)
-        assert (result['error'] == 0
-                and result['send'] == 1)
+        assert result["error"] == 0 and result["send"] == 1
 
         # use hammer command to check hypervisor's FQDN
         hypervisor_fqdn = "virt-who-" + host_name
         assert satellite.host_id(hypervisor_fqdn)
 
         # run virt-who with the new hypervisor's FQDN
-        new_host_name = "new" + str(random.randint(1, 10000)) + ".rhts.eng.pek2.redhat.com"
+        new_host_name = (
+            "new" + str(random.randint(1, 10000)) + ".rhts.eng.pek2.redhat.com"
+        )
 
         cmd = f'sed -i "s|{host_name}|{new_host_name}|g" {PRINT_JSON_FILE}'
         ssh_host.runcmd(cmd)
 
         result = virtwho.run_cli(config=FAKE_CONFIG_FILE)
-        assert (result['error'] == 0
-                and result['send'] == 1)
+        assert result["error"] == 0 and result["send"] == 1
 
         new_hypervisor_fqdn = "virt-who-" + new_host_name
         assert satellite.host_id(new_hypervisor_fqdn)
@@ -1134,7 +1247,8 @@ class TestEsxNegative:
 
     @pytest.mark.tier2
     def test_trigger_event_with_different_interval(
-            self, virtwho, function_hypervisor, hypervisor_data, register_data, globalconf):
+        self, virtwho, function_hypervisor, hypervisor_data, register_data, globalconf
+    ):
         """
         :title: virt-who: esx: trigger event with different interval
         :id: a1972ea5-3c4b-455e-8690-c9f69fa88972
@@ -1155,41 +1269,46 @@ class TestEsxNegative:
             120 seconds interval
         """
         esx = PowerCLI(
-            server=hypervisor_data['hypervisor_server'],
-            admin_user=hypervisor_data['hypervisor_username'],
-            admin_passwd=hypervisor_data['hypervisor_password'],
-            client_server=hypervisor_data['ssh_ip'],
-            client_user=hypervisor_data['ssh_username'],
-            client_passwd=hypervisor_data['ssh_password']
+            server=hypervisor_data["hypervisor_server"],
+            admin_user=hypervisor_data["hypervisor_username"],
+            admin_passwd=hypervisor_data["hypervisor_password"],
+            client_server=hypervisor_data["ssh_ip"],
+            client_user=hypervisor_data["ssh_username"],
+            client_passwd=hypervisor_data["ssh_password"],
         )
 
         try:
             # run virt-who with event(guest_suspend) for interval 60
-            globalconf.update('global', 'interval', '60')
+            globalconf.update("global", "interval", "60")
             virtwho.run_service()
-            esx.guest_suspend(hypervisor_data['guest_name'])
+            esx.guest_suspend(hypervisor_data["guest_name"])
             rhsm_log = virtwho.rhsm_log_get(80)
             result = virtwho.analyzer(rhsm_log)
-            assert (result['error'] == 0
-                    and result['send'] == 2
-                    and result['thread'] == 1
-                    and result['loop'] == 60)
+            assert (
+                result["error"] == 0
+                and result["send"] == 2
+                and result["thread"] == 1
+                and result["loop"] == 60
+            )
 
         finally:
             # run virt-who with event(guest_resume) for interval 120
-            globalconf.update('global', 'interval', '120')
+            globalconf.update("global", "interval", "120")
             virtwho.run_service()
-            esx.guest_resume(hypervisor_data['guest_name'])
+            esx.guest_resume(hypervisor_data["guest_name"])
             rhsm_log = virtwho.rhsm_log_get(150)
             result = virtwho.analyzer(rhsm_log)
-            assert (result['error'] == 0
-                    and result['send'] == 2
-                    and result['thread'] == 1
-                    and result['loop'] == 120)
+            assert (
+                result["error"] == 0
+                and result["send"] == 2
+                and result["thread"] == 1
+                and result["loop"] == 120
+            )
 
     @pytest.mark.tier2
-    def test_hostname_without_domain(self, virtwho, function_hypervisor, hypervisor_data,
-                                     satellite, rhsm):
+    def test_hostname_without_domain(
+        self, virtwho, function_hypervisor, hypervisor_data, satellite, rhsm
+    ):
         """
         :title: virt-who: esx: Run virt-who for hostname without domain name
         :id: 5a100319-b68e-44db-a3ac-172f9ae90bec
@@ -1206,34 +1325,37 @@ class TestEsxNegative:
             2. Virt-who works fine without any error messages
 
         """
-        hostname = hypervisor_data['hypervisor_hostname']
+        hostname = hypervisor_data["hypervisor_hostname"]
         hostname_non_domain = hostname.split(".")[0]
 
         esx = PowerCLI(
-            server=hypervisor_data['hypervisor_server'],
-            admin_user=hypervisor_data['hypervisor_username'],
-            admin_passwd=hypervisor_data['hypervisor_password'],
-            client_server=hypervisor_data['ssh_ip'],
-            client_user=hypervisor_data['ssh_username'],
-            client_passwd=hypervisor_data['ssh_password']
+            server=hypervisor_data["hypervisor_server"],
+            admin_user=hypervisor_data["hypervisor_username"],
+            admin_passwd=hypervisor_data["hypervisor_password"],
+            client_server=hypervisor_data["ssh_ip"],
+            client_user=hypervisor_data["ssh_username"],
+            client_passwd=hypervisor_data["ssh_password"],
         )
         try:
             # change the hostname to non domain hostname
-            esx.host_name_set(hypervisor_data['host_ip'], hostname_non_domain)
+            esx.host_name_set(hypervisor_data["host_ip"], hostname_non_domain)
 
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname_non_domain in result['log']
-                    and hostname not in result['log'])
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname_non_domain in result["log"]
+                and hostname not in result["log"]
+            )
         finally:
             # change back the hostname
-            esx.host_name_set(hypervisor_data['host_ip'], hostname)
+            esx.host_name_set(hypervisor_data["host_ip"], hostname)
 
     @pytest.mark.tier2
-    def test_cluster_name_with_special_char(self, virtwho, function_hypervisor, hypervisor_data,
-                                            satellite, rhsm):
+    def test_cluster_name_with_special_char(
+        self, virtwho, function_hypervisor, hypervisor_data, satellite, rhsm
+    ):
         """
         :title: virt-who: esx: Run virt-who for cluster name with special char
         :id: 4de43160-1db8-4516-a2e2-1955f6f4f612
@@ -1250,19 +1372,19 @@ class TestEsxNegative:
             2. Virt-who works fine without any error messages
 
         """
-        host_name = hypervisor_data['hypervisor_hostname']
-        host_ip = hypervisor_data['host_ip']
+        host_name = hypervisor_data["hypervisor_hostname"]
+        host_ip = hypervisor_data["host_ip"]
 
-        cluster_name = hypervisor_data['cluster']
+        cluster_name = hypervisor_data["cluster"]
         new_cluster_name = "virtwho/test-" + "".join(random.sample(string.digits, 6))
 
         esx = PowerCLI(
-            server=hypervisor_data['hypervisor_server'],
-            admin_user=hypervisor_data['hypervisor_username'],
-            admin_passwd=hypervisor_data['hypervisor_password'],
-            client_server=hypervisor_data['ssh_ip'],
-            client_user=hypervisor_data['ssh_username'],
-            client_passwd=hypervisor_data['ssh_password']
+            server=hypervisor_data["hypervisor_server"],
+            admin_user=hypervisor_data["hypervisor_username"],
+            admin_passwd=hypervisor_data["hypervisor_password"],
+            client_server=hypervisor_data["ssh_ip"],
+            client_user=hypervisor_data["ssh_username"],
+            client_passwd=hypervisor_data["ssh_password"],
         )
 
         try:
@@ -1271,13 +1393,15 @@ class TestEsxNegative:
 
             # run virt-who service with the new cluster name
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and f'"hypervisor.cluster": "{new_cluster_name}"' in result['log'])
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and f'"hypervisor.cluster": "{new_cluster_name}"' in result["log"]
+            )
 
             # check the hyperivsor facts
-            if REGISTER == 'satellite':
+            if REGISTER == "satellite":
                 host_id = satellite.host_id(host_name)
                 hypervisor_facts = satellite.facts_get(host_id)
             else:
@@ -1308,7 +1432,7 @@ class TestEsxNegative:
 
         """
         # create json data
-        local_file = os.path.join(TEMP_DIR, 'test.json')
+        local_file = os.path.join(TEMP_DIR, "test.json")
         json_file = "/root/test.json"
         json_data = json_data_create(100, 30)
         with open(local_file, "w") as f:
@@ -1326,7 +1450,9 @@ class TestEsxNegative:
 
         ret, output = ssh_host.runcmd(cmd)
         if ret == 0 and "error" not in output:
-            logger.info("Succeeded to post 100 hypervisors and 3000 guests to satellite")
+            logger.info(
+                "Succeeded to post 100 hypervisors and 3000 guests to satellite"
+            )
         else:
             logger.warning("Failed to post json to satellite")
             logger.warning(output)

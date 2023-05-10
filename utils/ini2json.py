@@ -19,7 +19,7 @@ def ini2json(args):
     cfg.read(args.ini_file)
     for section in cfg.sections():
         d[section] = dict(cfg.items(section))
-    with open(args.json_file, 'w') as f:
+    with open(args.json_file, "w") as f:
         json.dump(d, f)
 
 
@@ -30,14 +30,8 @@ def arguments_parser():
     each arguments.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--ini-file',
-        required=True,
-        help='The initial .ini file path')
-    parser.add_argument(
-        '--json-file',
-        required=True,
-        help='The target .json file path')
+    parser.add_argument("--ini-file", required=True, help="The initial .ini file path")
+    parser.add_argument("--json-file", required=True, help="The target .json file path")
     return parser.parse_args()
 
 

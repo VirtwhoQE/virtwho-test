@@ -13,11 +13,11 @@ from virtwho import HYPERVISOR, REGISTER
 from virtwho.ssh import SSHConnect
 
 
-@pytest.mark.usefixtures('class_hypervisor')
-@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('class_hypervisor')
-@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestVirtwhoService:
     @pytest.mark.tier1
     def test_virtwho_service_start_and_stop(self, virtwho):
@@ -36,14 +36,14 @@ class TestVirtwhoService:
             1. virt-who is running after start the service
             2. virt-who is dead after stop the service
         """
-        _, _ = virtwho.operate_service(action='stop')
-        _, _ = virtwho.operate_service(action='start')
-        _, output = virtwho.operate_service(action='status')
-        assert output is 'running'
+        _, _ = virtwho.operate_service(action="stop")
+        _, _ = virtwho.operate_service(action="start")
+        _, output = virtwho.operate_service(action="status")
+        assert output is "running"
 
-        _, _ = virtwho.operate_service(action='stop')
-        _, output = virtwho.operate_service(action='status')
-        assert output is 'dead'
+        _, _ = virtwho.operate_service(action="stop")
+        _, output = virtwho.operate_service(action="status")
+        assert output is "dead"
 
     @pytest.mark.tier1
     def test_virtwho_service_restart(self, virtwho):
@@ -60,9 +60,9 @@ class TestVirtwhoService:
         :expectedresults:
             1. virt-who is running after restart the service
         """
-        _, _ = virtwho.operate_service(action='restart')
-        _, output = virtwho.operate_service(action='status')
-        assert output is 'running'
+        _, _ = virtwho.operate_service(action="restart")
+        _, output = virtwho.operate_service(action="status")
+        assert output is "running"
 
     @pytest.mark.tier1
     def test_virtwho_service_try_restart(self, virtwho):
@@ -79,9 +79,9 @@ class TestVirtwhoService:
         :expectedresults:
             1. virt-who is running after try-restart the service
         """
-        _, _ = virtwho.operate_service(action='try-restart')
-        _, output = virtwho.operate_service(action='status')
-        assert output is 'running'
+        _, _ = virtwho.operate_service(action="try-restart")
+        _, output = virtwho.operate_service(action="status")
+        assert output is "running"
 
     @pytest.mark.tier1
     def test_virtwho_service_force_reload(self, virtwho):
@@ -98,13 +98,12 @@ class TestVirtwhoService:
         :expectedresults:
             1. virt-who is running after force-reload the service
         """
-        _, _ = virtwho.operate_service(action='force-reload')
-        _, output = virtwho.operate_service(action='status')
-        assert output is 'running'
+        _, _ = virtwho.operate_service(action="force-reload")
+        _, output = virtwho.operate_service(action="status")
+        assert output is "running"
 
     @pytest.mark.tier1
-    def test_virtwho_service_control_by_ssh_connect(self, virtwho, ssh_guest,
-                                                    ssh_host):
+    def test_virtwho_service_control_by_ssh_connect(self, virtwho, ssh_guest, ssh_host):
         """
 
         :title: virt-who: service: test virt-who service control by ssh connect
@@ -130,22 +129,21 @@ class TestVirtwhoService:
         port = config.virtwho.port
         ssh_access_no_password(ssh_guest, ssh_host, server, port)
         # stop
-        _, _ = ssh_guest.runcmd(f'ssh {server} -p {port} '
-                                f'"systemctl stop virt-who"')
-        _, status = virtwho.operate_service(action='status')
-        assert status == 'dead'
+        _, _ = ssh_guest.runcmd(f"ssh {server} -p {port} " f'"systemctl stop virt-who"')
+        _, status = virtwho.operate_service(action="status")
+        assert status == "dead"
 
         # start
-        _, _ = ssh_guest.runcmd(f'ssh {server} -p {port} '
-                                f'"systemctl restart virt-who"')
-        _, status = virtwho.operate_service(action='status')
-        assert status == 'running'
+        _, _ = ssh_guest.runcmd(
+            f"ssh {server} -p {port} " f'"systemctl restart virt-who"'
+        )
+        _, status = virtwho.operate_service(action="status")
+        assert status == "running"
 
         # stop
-        _, _ = ssh_guest.runcmd(f'ssh {server} -p {port} '
-                                f'"systemctl stop virt-who"')
-        _, status = virtwho.operate_service(action='status')
-        assert status == 'dead'
+        _, _ = ssh_guest.runcmd(f"ssh {server} -p {port} " f'"systemctl stop virt-who"')
+        _, status = virtwho.operate_service(action="status")
+        assert status == "dead"
 
     @pytest.mark.tier1
     def test_virtwho_and_rhsmcertd_servce(self, virtwho, ssh_host):
@@ -164,19 +162,17 @@ class TestVirtwhoService:
         :expectedresults:
             1. restarting the rhsmcertd service will not impact virt-who service
         """
-        _, _ = virtwho.operate_service(action='restart')
-        _, output = virtwho.operate_service(action='status')
-        assert output == 'running' and virtwho.thread_number() == 1
+        _, _ = virtwho.operate_service(action="restart")
+        _, output = virtwho.operate_service(action="status")
+        assert output == "running" and virtwho.thread_number() == 1
 
-        ret, _ = ssh_host.runcmd(f'systemctl restart rhsmcertd')
+        ret, _ = ssh_host.runcmd(f"systemctl restart rhsmcertd")
         assert ret == 0
-        _, output = virtwho.operate_service(action='status')
-        assert output == 'running' and virtwho.thread_number() == 1
+        _, output = virtwho.operate_service(action="status")
+        assert output == "running" and virtwho.thread_number() == 1
 
         result = virtwho.run_service()
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['thread'] == 1)
+        assert result["send"] == 1 and result["error"] == 0 and result["thread"] == 1
 
     @pytest.mark.tier1
     def test_virtwho_ignore_swp_file(self, virtwho, ssh_host):
@@ -196,20 +192,22 @@ class TestVirtwhoService:
         :expectedresults:
             1. virt-who service ignores the /etc/virt-who.d/*.swp file
         """
-        swp_config_file = '/etc/virt-who.d/.test.conf.swp'
-        swp = hypervisor_create(mode=HYPERVISOR,
-                                register_type=REGISTER,
-                                config_name=swp_config_file,
-                                section='test-swp')
+        swp_config_file = "/etc/virt-who.d/.test.conf.swp"
+        swp = hypervisor_create(
+            mode=HYPERVISOR,
+            register_type=REGISTER,
+            config_name=swp_config_file,
+            section="test-swp",
+        )
 
         try:
-            swp.update('type', 'test')
-            ssh_host.runcmd(f'cat /etc/virt-who.d/.test.conf.swp')
+            swp.update("type", "test")
+            ssh_host.runcmd(f"cat /etc/virt-who.d/.test.conf.swp")
             result = virtwho.run_service()
-            assert (result['send'] == 1 and result['error'] == 0)
+            assert result["send"] == 1 and result["error"] == 0
 
         finally:
-            ssh_host.runcmd(f'rm -rf {swp_config_file}')
+            ssh_host.runcmd(f"rm -rf {swp_config_file}")
 
     @pytest.mark.tier2
     def test_virtwho_non_root_user(self, virtwho, ssh_host):
@@ -229,30 +227,24 @@ class TestVirtwhoService:
                 account.
         """
         host = config.virtwho.server
-        username_new = 'tester'
+        username_new = "tester"
         password = config.virtwho.password
-        _, _ = ssh_host.runcmd(f'useradd {username_new}')
-        cmd = fr'echo -e "{username_new}:{password}" | chpasswd'
+        _, _ = ssh_host.runcmd(f"useradd {username_new}")
+        cmd = rf'echo -e "{username_new}:{password}" | chpasswd'
         _, _ = ssh_host.runcmd(cmd)
 
-        ssh_new = SSHConnect(host=host,
-                             user=username_new,
-                             pwd=password)
+        ssh_new = SSHConnect(host=host, user=username_new, pwd=password)
         virtwho.stop()
         virtwho.log_clean()
-        _, _ = expect_run(ssh=ssh_new,
-                          cmd='systemctl start virt-who',
-                          attrs=[f'Password:|{password}'])
+        _, _ = expect_run(
+            ssh=ssh_new, cmd="systemctl start virt-who", attrs=[f"Password:|{password}"]
+        )
         rhsm_log = virtwho.rhsm_log_get()
         result = virtwho.analyzer(rhsm_log)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['thread'] == 1)
-
+        assert result["send"] == 1 and result["error"] == 0 and result["thread"] == 1
 
     @pytest.mark.tier1
-    def test_virtwho_service_after_host_reregister(self, virtwho, sm_host,
-                                                   ssh_host):
+    def test_virtwho_service_after_host_reregister(self, virtwho, sm_host, ssh_host):
         """
 
         :title: virt-who: service: test virt-who service after host reregister
@@ -276,38 +268,36 @@ class TestVirtwhoService:
 
             sm_host.register()
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
 
             # unregister and clean together
             sm_host.unregister()
             rhsm_log = virtwho.rhsm_log_get(wait=15)
             thread_num = virtwho.thread_number()
-            assert (msg_search(rhsm_log, 'system is not registered')
-                    and thread_num == 1)
+            assert msg_search(rhsm_log, "system is not registered") and thread_num == 1
 
             # register and then run virt-who
             sm_host.register()
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
 
             # firstly unregister and then clean
-            ret_1, _ = ssh_host.runcmd('subscription-manager unregister')
-            ret_2, _ = ssh_host.runcmd('subscription-manager clean')
+            ret_1, _ = ssh_host.runcmd("subscription-manager unregister")
+            ret_2, _ = ssh_host.runcmd("subscription-manager clean")
             rhsm_log = virtwho.rhsm_log_get(wait=15)
             thread_num = virtwho.thread_number()
-            assert (msg_search(rhsm_log, 'system is not registered')
-                    and thread_num == 1)
+            assert msg_search(rhsm_log, "system is not registered") and thread_num == 1
 
             # register and then run virt-who
             sm_host.register()
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1)
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
 
         finally:
             hypervisor_create(rhsm=True)

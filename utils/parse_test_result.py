@@ -19,27 +19,27 @@ def test_result_parser(args):
     dom = minidom.parse(args.xml_file)
     test_suite = dom.getElementsByTagName("testsuite")
     total_case = int(test_suite[0].getAttribute("tests"))
-    failed_case = (
-            int(test_suite[0].getAttribute("errors"))
-            +
-            int(test_suite[0].getAttribute("failures"))
+    failed_case = int(test_suite[0].getAttribute("errors")) + int(
+        test_suite[0].getAttribute("failures")
     )
     skipped_case = int(test_suite[0].getAttribute("skipped"))
     passed_case = total_case - failed_case - skipped_case
     # Update the virtwho.in
-    print(f'The test result is:\n'
-          f'total_case: {total_case}\n'
-          f'passed_case: {passed_case}\n'
-          f'failed_case: {failed_case}\n'
-          f'skipped_case: {skipped_case}\n')
-    args.section = 'report'
+    print(
+        f"The test result is:\n"
+        f"total_case: {total_case}\n"
+        f"passed_case: {passed_case}\n"
+        f"failed_case: {failed_case}\n"
+        f"skipped_case: {skipped_case}\n"
+    )
+    args.section = "report"
     virtwho_ini_props = {
-        'total_case': str(total_case),
-        'passed_case': str(passed_case),
-        'failed_case': str(failed_case),
-        'skipped_case': str(skipped_case)
+        "total_case": str(total_case),
+        "passed_case": str(passed_case),
+        "failed_case": str(failed_case),
+        "skipped_case": str(skipped_case),
     }
-    for (args.option, args.value) in virtwho_ini_props.items():
+    for args.option, args.value in virtwho_ini_props.items():
         virtwho_ini_props_update(args)
 
 
@@ -51,10 +51,8 @@ def arguments_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--xml-file',
-        required=True,
-        default='',
-        help='The path of xml file')
+        "--xml-file", required=True, default="", help="The path of xml file"
+    )
     return parser.parse_args()
 
 

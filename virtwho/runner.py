@@ -9,7 +9,6 @@ from virtwho.configure import virtwho_ssh_connect, get_hypervisor_handler
 
 
 class VirtwhoRunner:
-
     def __init__(self, mode, register_type):
         """
         - self.config_file is used to define virt-who configuration.
@@ -26,15 +25,17 @@ class VirtwhoRunner:
         self.rhsm_log_file = "/var/log/rhsm/rhsm.log"
         self.ssh = virtwho_ssh_connect(self.mode)
 
-    def run_cli(self,
-                debug=True,
-                oneshot=True,
-                interval=None,
-                prt=False,
-                config="default",
-                status=False,
-                jsn=False,
-                wait=None):
+    def run_cli(
+        self,
+        debug=True,
+        oneshot=True,
+        interval=None,
+        prt=False,
+        config="default",
+        status=False,
+        jsn=False,
+        wait=None,
+    ):
         """
         Run virt-who by command line and analyze the result.
 
@@ -51,25 +52,25 @@ class VirtwhoRunner:
             interval function.
         :return: a dict with analyzer result.
         """
-        cmd = 'virt-who '
+        cmd = "virt-who "
         if debug is True:
-            cmd += '-d '
+            cmd += "-d "
         if oneshot is True:
-            cmd += '-o '
+            cmd += "-o "
         if interval:
-            cmd += f'-i {interval} '
+            cmd += f"-i {interval} "
         if prt:
-            cmd += '-p '
+            cmd += "-p "
         if config:
-            if config == 'default':
-                config = f'{self.config_file}'
-            cmd += f'-c {config} '
+            if config == "default":
+                config = f"{self.config_file}"
+            cmd += f"-c {config} "
         if status:
-            cmd += '-s '
+            cmd += "-s "
         if jsn:
-            cmd += '-j '
+            cmd += "-j "
         if prt:
-            cmd = f'{cmd} > {PRINT_JSON_FILE}'
+            cmd = f"{cmd} > {PRINT_JSON_FILE}"
 
         if status:
             result_data = self.status(cmd)
@@ -111,25 +112,23 @@ class VirtwhoRunner:
             warning_msg: get all warning lines
         """
         data = dict()
-        data['debug'] = msg_search(rhsm_log, "\\[.*DEBUG\\]")
-        data['oneshot'] = msg_search(
-            rhsm_log, "Thread '.*' stopped after running once"
-        )
-        data['terminate'] = msg_search(rhsm_log, "virt-who terminated")
-        data['thread'] = self.thread_number()
-        data['send'] = self.send_number(rhsm_log)
-        data['reporter_id'] = self.reporter_id(rhsm_log)
-        data['interval'] = self.interval_time(rhsm_log)
-        data['loop'], data['loop_num'] = self.loop_info()
-        data['mappings'] = self.mappings(rhsm_log)
-        data['print_json'] = self.print_json(cli)
-        data['error'], data['error_msg'] = self.error_warning('error')
-        data['warning'], data['warning_msg'] = self.error_warning('warning')
-        if HYPERVISOR != 'local':
-            data['hypervisor_id'] = self.hypervisor_id(data['mappings'])
+        data["debug"] = msg_search(rhsm_log, "\\[.*DEBUG\\]")
+        data["oneshot"] = msg_search(rhsm_log, "Thread '.*' stopped after running once")
+        data["terminate"] = msg_search(rhsm_log, "virt-who terminated")
+        data["thread"] = self.thread_number()
+        data["send"] = self.send_number(rhsm_log)
+        data["reporter_id"] = self.reporter_id(rhsm_log)
+        data["interval"] = self.interval_time(rhsm_log)
+        data["loop"], data["loop_num"] = self.loop_info()
+        data["mappings"] = self.mappings(rhsm_log)
+        data["print_json"] = self.print_json(cli)
+        data["error"], data["error_msg"] = self.error_warning("error")
+        data["warning"], data["warning_msg"] = self.error_warning("warning")
+        if HYPERVISOR != "local":
+            data["hypervisor_id"] = self.hypervisor_id(data["mappings"])
         # The below line is used to local debug.
         # logger.info(f'Got the data after run virt-who:-----\n{data}\n------')
-        data['log'] = rhsm_log
+        data["log"] = rhsm_log
         return data
 
     def associate_in_mapping(self, result_data, org, hypervisor, guest):
@@ -140,12 +139,12 @@ class VirtwhoRunner:
         :param guest: guest uuid
         :param hypervisor: hypervisor host name/uuid/hwuuid
         """
-        mappings = result_data['mappings']
-        hypervisor_in_mappings = mappings[org][guest]['guest_hypervisor']
+        mappings = result_data["mappings"]
+        hypervisor_in_mappings = mappings[org][guest]["guest_hypervisor"]
         if hypervisor_in_mappings == hypervisor:
-            logger.info('Host and guest is associated correctly in mapping.')
+            logger.info("Host and guest is associated correctly in mapping.")
             return True
-        logger.error('Host and guest is not associated in mapping.')
+        logger.error("Host and guest is not associated in mapping.")
         return False
 
     def run_start(self, cli=None, wait=None):
@@ -163,15 +162,19 @@ class VirtwhoRunner:
                 wait_time = 60 * (i + 3)
                 logger.warning(
                     f"429 code found, re-register virt-who host and try again "
-                    f"after {wait_time} seconds...")
+                    f"after {wait_time} seconds..."
+                )
                 # self.re_register() need to be defined here later
                 time.sleep(wait_time)
-            elif msg_search(rhsm_output,
-                            "RemoteServerException: Server error "
-                            "attempting a GET.*returned status 500"):
+            elif msg_search(
+                rhsm_output,
+                "RemoteServerException: Server error "
+                "attempting a GET.*returned status 500",
+            ):
                 logger.warning(
                     "RemoteServerException return 500 code, restart "
-                    "virt-who again after 60s")
+                    "virt-who again after 60s"
+                )
                 time.sleep(60)
             else:
                 result_data = self.analyzer(rhsm_output, cli)
@@ -212,8 +215,7 @@ class VirtwhoRunner:
             _, output = self.operate_service()
 
     def stop(self):
-        """Stop virt-who service and then kill the pid
-        """
+        """Stop virt-who service and then kill the pid"""
         _, _ = self.operate_service("virt-who", "stop")
         if self.kill_pid("virt-who") is False:
             raise FailException("Failed to stop and clean virt-who process")
@@ -226,29 +228,31 @@ class VirtwhoRunner:
         """
         status_data = dict()
         _, output = self.ssh.runcmd(cmd)
-        if '-j ' not in cmd and 'Configuration Name' in output:
-            status = output.strip().split('\n')
+        if "-j " not in cmd and "Configuration Name" in output:
+            status = output.strip().split("\n")
             for item in status:
                 num = status.index(item)
-                if 'Configuration Name' in item:
-                    config_name = item.split(':')[1].strip()
+                if "Configuration Name" in item:
+                    config_name = item.split(":")[1].strip()
                     status_data[config_name] = dict()
-                    if 'Source Status:' in status[num+1]:
-                        status_data[config_name]['source_status'] = \
-                            status[num+1].split(':')[1].strip()
-                    if 'Destination Status:' in status[num+2]:
-                        status_data[config_name]['destination_status'] = \
-                            status[num+2].split(':')[1].strip()
-        if '-j ' in cmd and 'configurations' in output:
-            output = json.loads(output.replace('\n', ''), strict=False)
-            configurations = output['configurations']
+                    if "Source Status:" in status[num + 1]:
+                        status_data[config_name]["source_status"] = (
+                            status[num + 1].split(":")[1].strip()
+                        )
+                    if "Destination Status:" in status[num + 2]:
+                        status_data[config_name]["destination_status"] = (
+                            status[num + 2].split(":")[1].strip()
+                        )
+        if "-j " in cmd and "configurations" in output:
+            output = json.loads(output.replace("\n", ""), strict=False)
+            configurations = output["configurations"]
             for item in configurations:
-                name = item['name']
+                name = item["name"]
                 status_data[name] = dict()
-                if 'source' in item.keys():
-                    status_data[name]['source'] = item['source']
-                if 'destination' in item.keys():
-                    status_data[name]['destination'] = item['destination']
+                if "source" in item.keys():
+                    status_data[name]["source"] = item["source"]
+                if "destination" in item.keys():
+                    status_data[name]["destination"] = item["destination"]
         logger.info(status_data)
         return status_data
 
@@ -291,7 +295,7 @@ class VirtwhoRunner:
         # comment this line as we need the print json file for fake mode testing
         # self.ssh.runcmd(f"rm -rf {PRINT_JSON_FILE}")
 
-    def error_warning(self, msg='error'):
+    def error_warning(self, msg="error"):
         """
         Analyze the rhsm log to calculate the error/warning number and
         collect all lines to a list.
@@ -315,23 +319,23 @@ class VirtwhoRunner:
         msg = ""
         if "0 hypervisors and 0 guests found" in rhsm_log:
             msg = "0 hypervisors and 0 guests found"
-        elif ("virtwho.main DEBUG" in rhsm_log
-              or
-              "rhsm.connection DEBUG" in rhsm_log):
+        elif "virtwho.main DEBUG" in rhsm_log or "rhsm.connection DEBUG" in rhsm_log:
             if "satellite" in self.register_type:
                 if self.mode == "local":
-                    msg = r'Response: status=200, ' \
-                          r'request="PUT /rhsm/consumers'
+                    msg = r"Response: status=200, " r'request="PUT /rhsm/consumers'
                 else:
-                    msg = r'Response: status=200, ' \
-                          r'request="POST /rhsm/hypervisors'
+                    msg = r"Response: status=200, " r'request="POST /rhsm/hypervisors'
             if "rhsm" in self.register_type:
                 if self.mode == "local":
-                    msg = r'Response: status=20.*requestUuid.*request=' \
-                          r'"PUT /subscription/consumers'
+                    msg = (
+                        r"Response: status=20.*requestUuid.*request="
+                        r'"PUT /subscription/consumers'
+                    )
                 else:
-                    msg = r'Response: status=20.*requestUuid.*request=' \
-                          r'"POST /subscription/hypervisors'
+                    msg = (
+                        r"Response: status=20.*requestUuid.*request="
+                        r'"POST /subscription/hypervisors'
+                    )
         else:
             if self.mode == "local":
                 msg = r"Sending update in guests lists for config"
@@ -357,9 +361,7 @@ class VirtwhoRunner:
         :param rhsm_log: the rhsm.log
         :return: interval time
         """
-        res = re.findall(
-            r"Starting infinite loop with(.*?)seconds interval",
-            rhsm_log)
+        res = re.findall(r"Starting infinite loop with(.*?)seconds interval", rhsm_log)
         if len(res) > 0:
             interval_time = res[0].strip()
             return int(interval_time)
@@ -375,7 +377,7 @@ class VirtwhoRunner:
         if loop_num != 0:
             cmd = f"grep '{key}' {self.rhsm_log_file} | head -2"
             _, output = self.ssh.runcmd(cmd)
-            output = output.split('\n')
+            output = output.split("\n")
             if len(output) > 0:
                 d1 = re.findall(r"\d{2}:\d{2}:\d{2}", output[0])[0]
                 d2 = re.findall(r"\d{2}:\d{2}:\d{2}", output[1])[0]
@@ -393,9 +395,9 @@ class VirtwhoRunner:
         """
         key = ""
         loop_num = 0
-        cmd = f'''grep 'Report for config' {self.rhsm_log_file} |
+        cmd = f"""grep 'Report for config' {self.rhsm_log_file} |
                  grep 'placing in datastore' |
-                 head -1'''
+                 head -1"""
         _, output = self.ssh.runcmd(cmd)
         keys = re.findall(r'Report for config "(.*?)"', output)
         if output is not None and output != "" and len(keys) > 0:
@@ -427,20 +429,19 @@ class VirtwhoRunner:
         data = dict()
         key = "Domain info:"
         if key in rhsm_log:
-            rex = re.compile(r'(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)', re.S)
+            rex = re.compile(r"(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)", re.S)
             mapping_info = rex.findall(rhsm_log)[0]
             try:
-                mapping_info = json.loads(mapping_info.replace('\n', ''),
-                                          strict=False)
+                mapping_info = json.loads(mapping_info.replace("\n", ""), strict=False)
             except:
                 logger.warning(f"json.loads failed: {mapping_info}")
                 return data
             for item in mapping_info:
-                guestId = item['guestId']
+                guestId = item["guestId"]
                 attr = dict()
-                attr['state'] = item['state']
-                attr['active'] = item['attributes']['active']
-                attr['type'] = item['attributes']['virtWhoType']
+                attr["state"] = item["state"]
+                attr["active"] = item["attributes"]["active"]
+                attr["type"] = item["attributes"]["virtWhoType"]
                 data[guestId] = attr
         return data
 
@@ -451,50 +452,50 @@ class VirtwhoRunner:
         :return: dict with remote mode mapping facts
         """
         data = dict()
-        orgs = re.findall(r"Host-to-guest mapping being sent to '(.*?)'",
-                          rhsm_log)
+        orgs = re.findall(r"Host-to-guest mapping being sent to '(.*?)'", rhsm_log)
         if len(orgs) > 0:
-            data['orgs'] = orgs
+            data["orgs"] = orgs
             org_data = dict()
             for org in orgs:
                 key = f"Host-to-guest mapping being sent to '{org}'"
-                rex = re.compile(r'(?<=: ){.*?}\n+(?=202|$)', re.S)
+                rex = re.compile(r"(?<=: ){.*?}\n+(?=202|$)", re.S)
                 mapping_info = rex.findall(rhsm_log)[-1]
                 try:
-                    mapping_info = json.loads(mapping_info.replace('\n', ''),
-                                              strict=False)
+                    mapping_info = json.loads(
+                        mapping_info.replace("\n", ""), strict=False
+                    )
                 except:
                     logger.warning("Failed to run json.loads for rhsm.log")
                     return data
-                hypervisors = mapping_info['hypervisors']
+                hypervisors = mapping_info["hypervisors"]
                 org_data["hypervisor_num"] = len(hypervisors)
                 for item in hypervisors:
-                    hypervisorId = item['hypervisorId']['hypervisorId']
-                    if 'name' in item.keys():
-                        hypervisor_name = item['name']
+                    hypervisorId = item["hypervisorId"]["hypervisorId"]
+                    if "name" in item.keys():
+                        hypervisor_name = item["name"]
                     else:
                         hypervisor_name = ""
                     facts = dict()
-                    facts['name'] = hypervisor_name
-                    facts['type'] = item['facts']['hypervisor.type']
-                    facts['version'] = str(item['facts']['hypervisor.version'])
-                    facts['socket'] = item['facts']['cpu.cpu_socket(s)']
-                    facts['dmi'] = item['facts']['dmi.system.uuid']
-                    if 'hypervisor.cluster' in item['facts'].keys():
-                        facts['cluster'] = item['facts']['hypervisor.cluster']
+                    facts["name"] = hypervisor_name
+                    facts["type"] = item["facts"]["hypervisor.type"]
+                    facts["version"] = str(item["facts"]["hypervisor.version"])
+                    facts["socket"] = item["facts"]["cpu.cpu_socket(s)"]
+                    facts["dmi"] = item["facts"]["dmi.system.uuid"]
+                    if "hypervisor.cluster" in item["facts"].keys():
+                        facts["cluster"] = item["facts"]["hypervisor.cluster"]
                     else:
-                        facts['cluster'] = ''
+                        facts["cluster"] = ""
                     guests = list()
-                    for guest in item['guestIds']:
-                        guestId = guest['guestId']
+                    for guest in item["guestIds"]:
+                        guestId = guest["guestId"]
                         guests.append(guestId)
                         attr = dict()
-                        attr['guest_hypervisor'] = hypervisorId
-                        attr['state'] = guest['state']
-                        attr['active'] = guest['attributes']['active']
-                        attr['type'] = guest['attributes']['virtWhoType']
+                        attr["guest_hypervisor"] = hypervisorId
+                        attr["state"] = guest["state"]
+                        attr["active"] = guest["attributes"]["active"]
+                        attr["type"] = guest["attributes"]["virtWhoType"]
                         org_data[guestId] = attr
-                    facts['guests'] = guests
+                    facts["guests"] = guests
                     org_data[hypervisorId] = facts
                 data[org] = org_data
         return data
@@ -506,19 +507,19 @@ class VirtwhoRunner:
         """
         if mapping and self.mode:
             guest_uuid = get_hypervisor_handler(self.mode).guest_uuid
-            for org in mapping['orgs']:
+            for org in mapping["orgs"]:
                 org_dict = mapping[org]
                 if guest_uuid in org_dict.keys():
-                    return mapping[org][guest_uuid]['guest_hypervisor']
-        return ''
+                    return mapping[org][guest_uuid]["guest_hypervisor"]
+        return ""
 
     def print_json(self, cli):
         """
         Get and return the json created by print function.
         :return: json output
         """
-        _, output = self.ssh.runcmd('cat /etc/virt-who.conf')
-        if (cli and '-p ' in cli) or ('print_=' in output):
+        _, output = self.ssh.runcmd("cat /etc/virt-who.conf")
+        if (cli and "-p " in cli) or ("print_=" in output):
             ret, output = self.ssh.runcmd(f"cat {PRINT_JSON_FILE}")
             if ret == 0 and output != "":
                 return output
@@ -536,7 +537,7 @@ class VirtwhoRunner:
             thread_num = int(output.strip())
         return thread_num
 
-    def operate_service(self, name='virt-who', action='restart', wait=10):
+    def operate_service(self, name="virt-who", action="restart", wait=10):
         """
         :param name: service name, default is virt-who
         :param action: start, stop, restart, status...
@@ -546,11 +547,11 @@ class VirtwhoRunner:
         cmd = f"systemctl {action} {name}"
         ret, output = self.ssh.runcmd(cmd)
         time.sleep(wait)
-        if action == 'status':
-            if 'Active: active (running)' in output:
-                output = 'running'
-            if 'Active: inactive (dead)' in output:
-                output = 'dead'
+        if action == "status":
+            if "Active: active (running)" in output:
+                output = "running"
+            if "Active: inactive (dead)" in output:
+                output = "dead"
         return ret, output
 
     def kill_pid(self, process_name):
@@ -559,11 +560,14 @@ class VirtwhoRunner:
         :param process_name: process name
         :return: True or False
         """
-        cmd = '''ps -ef |
+        cmd = (
+            """ps -ef |
                 grep %s -i |
                 grep -v grep |
                 awk '{print $2}' |
-                xargs -I {} kill -9 {}''' % process_name
+                xargs -I {} kill -9 {}"""
+            % process_name
+        )
         _, _ = self.ssh.runcmd(cmd)
         cmd = f"rm -f /var/run/{process_name}.pid"
         _, _ = self.ssh.runcmd(cmd)

@@ -27,18 +27,9 @@ def arguments_parser():
     each arguments.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--section',
-        default=None,
-        required=False)
-    parser.add_argument(
-        '--option',
-        default=None,
-        required=False)
-    parser.add_argument(
-        '--value',
-        default=None,
-        required=False)
+    parser.add_argument("--section", default=None, required=False)
+    parser.add_argument("--option", default=None, required=False)
+    parser.add_argument("--value", default=None, required=False)
     return parser.parse_args()
 
 
@@ -53,8 +44,8 @@ def virtwho_ini_update(section, option, value):
     Used to called by other functions
     """
     os.system(
-        f'python3 {curPath}/properties_update.py '
-        f'--section={section} '
-        f'--option={option} '
+        f"python3 {curPath}/properties_update.py "
+        f"--section={section} "
+        f"--option={option} "
         f'--value="{value}"'
     )

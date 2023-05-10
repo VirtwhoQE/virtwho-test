@@ -11,8 +11,8 @@ from virtwho import HYPERVISOR_FILE, config
 from virtwho.base import encrypt_password
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("class_hypervisor")
 class TestCli:
     @pytest.mark.tier1
     def test_debug(self, virtwho):
@@ -36,14 +36,10 @@ class TestCli:
             2. [DEBUG] logs are printed with "-d" option
         """
         result = virtwho.run_cli(debug=False)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['debug'] is False)
+        assert result["send"] == 1 and result["error"] == 0 and result["debug"] is False
 
         result = virtwho.run_cli(debug=True)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['debug'] is True)
+        assert result["send"] == 1 and result["error"] == 0 and result["debug"] is True
 
     @pytest.mark.tier1
     def test_oneshot(self, virtwho):
@@ -67,18 +63,22 @@ class TestCli:
             2. virt-who thread is terminated after reporting once with "-o"
         """
         result = virtwho.run_cli(oneshot=False)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['thread'] == 1
-                and result['terminate'] == 0
-                and result['oneshot'] is False)
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and result["thread"] == 1
+            and result["terminate"] == 0
+            and result["oneshot"] is False
+        )
 
         result = virtwho.run_cli(oneshot=True)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['thread'] == 0
-                and result['terminate'] == 1
-                and result['oneshot'] is True)
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and result["thread"] == 0
+            and result["terminate"] == 1
+            and result["oneshot"] is True
+        )
 
     @pytest.mark.tier1
     def test_interval(self, virtwho):
@@ -104,17 +104,17 @@ class TestCli:
             3. the interval uses the setting value when run with "-i" >= 60
         """
         result = virtwho.run_cli(oneshot=False, interval=None)
-        assert (result['send'] == 1
-                and result['interval'] == 3600)
+        assert result["send"] == 1 and result["interval"] == 3600
 
         result = virtwho.run_cli(oneshot=False, interval=10)
-        assert (result['send'] == 1
-                and result['interval'] == 3600)
+        assert result["send"] == 1 and result["interval"] == 3600
 
         result = virtwho.run_cli(oneshot=False, interval=60, wait=60)
-        assert (result['send'] == 1
-                and result['interval'] == 60
-                and (result['loop'] == 60 or result['loop'] == 61))
+        assert (
+            result["send"] == 1
+            and result["interval"] == 60
+            and (result["loop"] == 60 or result["loop"] == 61)
+        )
 
     @pytest.mark.tier1
     def test_print(self, virtwho, hypervisor_data):
@@ -138,18 +138,22 @@ class TestCli:
             2. mappings is not reported when run with -p
             3. mappings can be printed out
         """
-        guest_id = hypervisor_data['guest_uuid']
+        guest_id = hypervisor_data["guest_uuid"]
         result = virtwho.run_cli(oneshot=False, debug=False, prt=True)
-        assert (result['thread'] == 0
-                and result['send'] == 0
-                and result['debug'] is False
-                and guest_id in result['print_json'])
+        assert (
+            result["thread"] == 0
+            and result["send"] == 0
+            and result["debug"] is False
+            and guest_id in result["print_json"]
+        )
 
         result = virtwho.run_cli(oneshot=False, debug=True, prt=True)
-        assert (result['thread'] == 0
-                and result['send'] == 0
-                and result['debug'] is True
-                and guest_id in result['print_json'])
+        assert (
+            result["thread"] == 0
+            and result["send"] == 0
+            and result["debug"] is True
+            and guest_id in result["print_json"]
+        )
 
     @pytest.mark.tier1
     @pytest.mark.notLocal
@@ -174,12 +178,10 @@ class TestCli:
             2. virt-who ignores the files in /etc/virt-who.d/
         """
         msg = "ignoring configuration files in '/etc/virt-who.d/'"
-        config_file = '/root/test_cli_config.conf'
-        ssh_host.runcmd(f'\\cp -f {HYPERVISOR_FILE} {config_file}')
+        config_file = "/root/test_cli_config.conf"
+        ssh_host.runcmd(f"\\cp -f {HYPERVISOR_FILE} {config_file}")
         result = virtwho.run_cli(config=config_file)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and msg in result['log'])
+        assert result["send"] == 1 and result["error"] == 0 and msg in result["log"]
 
     @pytest.mark.tier1
     def test_kill_virtwho_in_terminal_side(self, virtwho, ssh_host):
@@ -206,17 +208,18 @@ class TestCli:
         assert virtwho.thread_number() == 1
 
         # kill virt-who by 'kill -2'
-        _, _ = ssh_host.runcmd("ps -ef |"
-                               "grep virt-who -i |"
-                               "grep -v grep |"
-                               "awk '{print $2}' |"
-                               "xargs -I {} kill -2 {}")
+        _, _ = ssh_host.runcmd(
+            "ps -ef |"
+            "grep virt-who -i |"
+            "grep -v grep |"
+            "awk '{print $2}' |"
+            "xargs -I {} kill -2 {}"
+        )
         time.sleep(15)
         assert virtwho.thread_number() == 0
 
     @pytest.mark.tier1
-    def test_run_virtwho_cli_when_the_service_is_running(self, virtwho,
-                                                         ssh_host):
+    def test_run_virtwho_cli_when_the_service_is_running(self, virtwho, ssh_host):
         """Test virt-who cli cannot be run when a service is already running
 
         :title: virt-who: cli: test run virt-who cli when the service is running
@@ -234,10 +237,10 @@ class TestCli:
 
             1. virt-who cli cannot be run when a service is already running
         """
-        _, _ = virtwho.operate_service(action='restart', wait=5)
+        _, _ = virtwho.operate_service(action="restart", wait=5)
 
-        _, output = ssh_host.runcmd('virt-who')
-        assert 'already running' in output
+        _, output = ssh_host.runcmd("virt-who")
+        assert "already running" in output
 
     @pytest.mark.tier1
     def test_virtwho_encrypted_password(self, ssh_host):
@@ -264,14 +267,13 @@ class TestCli:
         """
         password = config.virtwho.password
         encrypt_1 = encrypt_password(ssh_host, password)
-        encrypt_2 = encrypt_password(ssh_host, password, option='-p')
-        encrypt_3 = encrypt_password(ssh_host, password, option='--password')
+        encrypt_2 = encrypt_password(ssh_host, password, option="-p")
+        encrypt_3 = encrypt_password(ssh_host, password, option="--password")
         assert encrypt_1 == encrypt_2 == encrypt_3
 
-        encrypt_1 = encrypt_password(ssh_host, r'ad\"min')
-        encrypt_2 = encrypt_password(ssh_host, r'ad\"min', option='-p')
-        encrypt_3 = encrypt_password(ssh_host, r'"ad\"min"', option='-p')
-        encrypt_4 = encrypt_password(ssh_host, r'ad\"min', option='--password')
-        encrypt_5 = encrypt_password(ssh_host, r'"ad\"min"',
-                                     option='--password')
+        encrypt_1 = encrypt_password(ssh_host, r"ad\"min")
+        encrypt_2 = encrypt_password(ssh_host, r"ad\"min", option="-p")
+        encrypt_3 = encrypt_password(ssh_host, r'"ad\"min"', option="-p")
+        encrypt_4 = encrypt_password(ssh_host, r"ad\"min", option="--password")
+        encrypt_5 = encrypt_password(ssh_host, r'"ad\"min"', option="--password")
         assert encrypt_1 == encrypt_2 == encrypt_3 == encrypt_4 == encrypt_5
