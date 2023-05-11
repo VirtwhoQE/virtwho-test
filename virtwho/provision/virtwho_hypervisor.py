@@ -389,7 +389,7 @@ def ahv_monitor():
     try:
         logger.info(f">>>Nutanix: Check if the hypervisor is running well.")
         if not host_ping(host=server):
-            ahv_state, server, guest_ip = (state_server_bad, server_broke, guest_none)
+            ahv_state, server, _ = (state_server_bad, server_broke, guest_none)
             logger.error(f"The Nutanix host has broken, please repaire it.")
 
         else:
