@@ -151,7 +151,7 @@ def virtwho_install(ssh, url=None):
         cmd = "dbus-uuidgen > /var/lib/dbus/machine-id"
     if rhel_ver == "8":
         cmd = "localectl set-locale en_US.utf8; source /etc/profile.d/lang.sh"
-    _, _ = ssh.runcmd(cmd)
+    ssh.runcmd(cmd)
     if url:
         virtwho_install_by_url(ssh, url)
     else:
@@ -198,11 +198,11 @@ def libvirt_access_no_password(ssh):
         user=config.libvirt.username,
         pwd=config.libvirt.password,
     )
-    _, _ = ssh.runcmd('echo -e "\n" | ' 'ssh-keygen -N "" &> /dev/null')
+    ssh.runcmd('echo -e "\n" | ' 'ssh-keygen -N "" &> /dev/null')
     ret, output = ssh.runcmd("cat ~/.ssh/id_rsa.pub")
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key")
-    _, _ = ssh_libvirt.runcmd(
+    ssh_libvirt.runcmd(
         f"mkdir ~/.ssh/;" f"echo '{output}' >> ~/.ssh/authorized_keys"
     )
     ret, _ = ssh.runcmd(

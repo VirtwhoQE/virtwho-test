@@ -229,7 +229,7 @@ def url_file_download(ssh, local_file, url):
     :param local_file: local file path and name
     :param url: url link of remote file
     """
-    _, _ = ssh.runcmd(f"rm -f {local_file};" f"curl -L {url} -o {local_file};" f"sync")
+    ssh.runcmd(f"rm -f {local_file};" f"curl -L {url} -o {local_file};" f"sync")
     ret, output = ssh.runcmd(f"cat {local_file}")
     if ret != 0 or "Not Found" in output:
         raise FailException(f"Failed to download {url}")
@@ -355,7 +355,7 @@ def package_install(ssh, pkg_name, rpm=None):
     cmd = f"yum install -y {pkg_name}"
     if rpm:
         cmd = f"rpm -ivh {rpm}"
-    _, _ = ssh.runcmd(cmd)
+    ssh.runcmd(cmd)
     if package_check(ssh, pkg_name) is False:
         raise FailException(f"Failed to install {pkg_name}")
 
@@ -370,7 +370,7 @@ def package_uninstall(ssh, pkg_name, rpm=False):
     cmd = f"yum remove -y {pkg_name}"
     if rpm:
         cmd = f"rpm -e {rpm} --nodeps"
-    _, _ = ssh.runcmd(cmd)
+    ssh.runcmd(cmd)
     if package_check(ssh, pkg_name) is True:
         raise FailException(f"Failed to uninstall {pkg_name}")
 
@@ -428,7 +428,7 @@ def wget_download(ssh, url, file_path, file_name=None):
     """
     _, ouput = ssh.runcmd(f"ls {file_path}")
     if "No such file or directory" in ouput:
-        _, _ = ssh.runcmd(f"mkdir -p {file_path}")
+        ssh.runcmd(f"mkdir -p {file_path}")
     cmd = f"wget {url} -P {file_path} "
     if file_name:
         cmd += f" -O {file_name}"
@@ -565,18 +565,18 @@ def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
     :param remote_port: remote host port
     """
     # create ssh key for local host
-    _, _ = ssh_local.runcmd('echo -e "\n" | ssh-keygen -N "" &> /dev/null')
+    ssh_local.runcmd('echo -e "\n" | ssh-keygen -N "" &> /dev/null')
     ret, output = ssh_local.runcmd("cat ~/.ssh/id_rsa.pub")
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key ")
 
     # copy id_rsa.pup to remote host
-    _, _ = ssh_remote.runcmd(
+    ssh_remote.runcmd(
         f"mkdir ~/.ssh/;" f"echo '{output}' >> ~/.ssh/authorized_keys"
     )
 
     # creat ~/.ssh/known_hosts for local host
-    _, _ = ssh_local.runcmd(
+    ssh_local.runcmd(
         f"ssh-keyscan -p {remote_port} {remote_host} >> ~/.ssh/known_hosts"
     )
 
@@ -607,7 +607,7 @@ def expect_run(ssh, cmd, attrs):
         f"exit\n"
         f"EOF"
     )
-    _, _ = ssh.runcmd(cmd)
+    ssh.runcmd(cmd)
     ret, output = ssh.runcmd(f"chmod +x {filename}; {filename}")
     return ret, output
 
@@ -618,7 +618,7 @@ def system_reboot(ssh):
     :param ssh: ssh access of testing host
     :return: True or raise fail.
     """
-    _, _ = ssh.runcmd("sync;sync;sync;sync;reboot")
+    ssh.runcmd("sync;sync;sync;sync;reboot")
     time.sleep(120)
     if ssh_connect(ssh):
         return True

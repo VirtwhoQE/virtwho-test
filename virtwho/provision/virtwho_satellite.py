@@ -151,7 +151,7 @@ def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
         filename = f"{path}/{output.strip()}"
     else:
         raise FailException("No manifest file found")
-    _, _ = ssh.runcmd(
+    ssh.runcmd(
         f"hammer subscription delete-manifest " f"--organization-label {org}"
     )
     ret, _ = ssh.runcmd(

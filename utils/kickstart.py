@@ -91,7 +91,7 @@ def ks_file_create(ssh, ks_path, repo_base, repo_extra):
         f"EOF"
     )
     for i in range(10):
-        _, _ = ssh.runcmd(cmd)
+        ssh.runcmd(cmd)
         ret, _ = ssh.runcmd(f"ls {ks_path}")
         if ret == 0:
             return

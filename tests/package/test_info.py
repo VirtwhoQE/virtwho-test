@@ -85,7 +85,7 @@ class TestVirtwhoPackageInfo:
         man_page_compare = os.path.join(DOCS_DIR, f"virtwho_man_page_rhel_9")
         if "RHEL-8" in RHEL_COMPOSE:
             man_page_compare = os.path.join(DOCS_DIR, f"virtwho_man_page_rhel_8")
-        _, _ = ssh_host.runcmd(f"man virt-who > {man_page_remote}")
+        ssh_host.runcmd(f"man virt-who > {man_page_remote}")
         ssh_host.get_file(man_page_remote, man_page_local)
         assert base.local_files_compare(man_page_local, man_page_compare)
 
@@ -112,7 +112,7 @@ class TestVirtwhoPackageInfo:
         help_page_compare = os.path.join(DOCS_DIR, f"virtwho_help_page_rhel_9")
         if "RHEL-8" in RHEL_COMPOSE:
             help_page_compare = os.path.join(DOCS_DIR, f"virtwho_help_page_rhel_8")
-        _, _ = ssh_host.runcmd(f"virt-who --help > {help_page_remote}")
+        ssh_host.runcmd(f"virt-who --help > {help_page_remote}")
         ssh_host.get_file(help_page_remote, help_page_local)
         assert base.local_files_compare(help_page_local, help_page_compare)
 

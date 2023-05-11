@@ -36,12 +36,12 @@ class TestVirtwhoService:
             1. virt-who is running after start the service
             2. virt-who is dead after stop the service
         """
-        _, _ = virtwho.operate_service(action="stop")
-        _, _ = virtwho.operate_service(action="start")
+        virtwho.operate_service(action="stop")
+        virtwho.operate_service(action="start")
         _, output = virtwho.operate_service(action="status")
         assert output is "running"
 
-        _, _ = virtwho.operate_service(action="stop")
+        virtwho.operate_service(action="stop")
         _, output = virtwho.operate_service(action="status")
         assert output is "dead"
 
@@ -60,7 +60,7 @@ class TestVirtwhoService:
         :expectedresults:
             1. virt-who is running after restart the service
         """
-        _, _ = virtwho.operate_service(action="restart")
+        virtwho.operate_service(action="restart")
         _, output = virtwho.operate_service(action="status")
         assert output is "running"
 
@@ -79,7 +79,7 @@ class TestVirtwhoService:
         :expectedresults:
             1. virt-who is running after try-restart the service
         """
-        _, _ = virtwho.operate_service(action="try-restart")
+        virtwho.operate_service(action="try-restart")
         _, output = virtwho.operate_service(action="status")
         assert output is "running"
 
@@ -98,7 +98,7 @@ class TestVirtwhoService:
         :expectedresults:
             1. virt-who is running after force-reload the service
         """
-        _, _ = virtwho.operate_service(action="force-reload")
+        virtwho.operate_service(action="force-reload")
         _, output = virtwho.operate_service(action="status")
         assert output is "running"
 
@@ -129,19 +129,19 @@ class TestVirtwhoService:
         port = config.virtwho.port
         ssh_access_no_password(ssh_guest, ssh_host, server, port)
         # stop
-        _, _ = ssh_guest.runcmd(f"ssh {server} -p {port} " f'"systemctl stop virt-who"')
+        ssh_guest.runcmd(f"ssh {server} -p {port} " f'"systemctl stop virt-who"')
         _, status = virtwho.operate_service(action="status")
         assert status == "dead"
 
         # start
-        _, _ = ssh_guest.runcmd(
+        ssh_guest.runcmd(
             f"ssh {server} -p {port} " f'"systemctl restart virt-who"'
         )
         _, status = virtwho.operate_service(action="status")
         assert status == "running"
 
         # stop
-        _, _ = ssh_guest.runcmd(f"ssh {server} -p {port} " f'"systemctl stop virt-who"')
+        ssh_guest.runcmd(f"ssh {server} -p {port} " f'"systemctl stop virt-who"')
         _, status = virtwho.operate_service(action="status")
         assert status == "dead"
 
@@ -162,7 +162,7 @@ class TestVirtwhoService:
         :expectedresults:
             1. restarting the rhsmcertd service will not impact virt-who service
         """
-        _, _ = virtwho.operate_service(action="restart")
+        virtwho.operate_service(action="restart")
         _, output = virtwho.operate_service(action="status")
         assert output == "running" and virtwho.thread_number() == 1
 
@@ -229,14 +229,14 @@ class TestVirtwhoService:
         host = config.virtwho.server
         username_new = "tester"
         password = config.virtwho.password
-        _, _ = ssh_host.runcmd(f"useradd {username_new}")
+        ssh_host.runcmd(f"useradd {username_new}")
         cmd = rf'echo -e "{username_new}:{password}" | chpasswd'
-        _, _ = ssh_host.runcmd(cmd)
+        ssh_host.runcmd(cmd)
 
         ssh_new = SSHConnect(host=host, user=username_new, pwd=password)
         virtwho.stop()
         virtwho.log_clean()
-        _, _ = expect_run(
+        expect_run(
             ssh=ssh_new, cmd="systemctl start virt-who", attrs=[f"Password:|{password}"]
         )
         rhsm_log = virtwho.rhsm_log_get()

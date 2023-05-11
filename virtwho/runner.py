@@ -216,7 +216,7 @@ class VirtwhoRunner:
 
     def stop(self):
         """Stop virt-who service and then kill the pid"""
-        _, _ = self.operate_service("virt-who", "stop")
+        self.operate_service("virt-who", "stop")
         if self.kill_pid("virt-who") is False:
             raise FailException("Failed to stop and clean virt-who process")
 
@@ -290,7 +290,7 @@ class VirtwhoRunner:
         Clean all log files under /var/log/rhsm/
         Clean the json file created by print function of virt-who
         """
-        _, _ = self.ssh.runcmd("rm -rf /var/log/rhsm/*")
+        self.ssh.runcmd("rm -rf /var/log/rhsm/*")
 
         # comment this line as we need the print json file for fake mode testing
         # self.ssh.runcmd(f"rm -rf {PRINT_JSON_FILE}")
@@ -568,9 +568,9 @@ class VirtwhoRunner:
                 xargs -I {} kill -9 {}"""
             % process_name
         )
-        _, _ = self.ssh.runcmd(cmd)
+        self.ssh.runcmd(cmd)
         cmd = f"rm -f /var/run/{process_name}.pid"
-        _, _ = self.ssh.runcmd(cmd)
+        self.ssh.runcmd(cmd)
         cmd = f"ps -ef | grep {process_name} -i | grep -v grep |sort"
         ret, output = self.ssh.runcmd(cmd)
         if output.strip() == "" or output.strip() is None:

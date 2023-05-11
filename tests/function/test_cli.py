@@ -208,7 +208,7 @@ class TestCli:
         assert virtwho.thread_number() == 1
 
         # kill virt-who by 'kill -2'
-        _, _ = ssh_host.runcmd(
+        ssh_host.runcmd(
             "ps -ef |"
             "grep virt-who -i |"
             "grep -v grep |"
@@ -237,7 +237,7 @@ class TestCli:
 
             1. virt-who cli cannot be run when a service is already running
         """
-        _, _ = virtwho.operate_service(action="restart", wait=5)
+        virtwho.operate_service(action="restart", wait=5)
 
         _, output = ssh_host.runcmd("virt-who")
         assert "already running" in output

@@ -1,2 +1,3 @@
 [flake8]
-; ignore = E501,W605,F632,W503,F541
+ignore = E203
+max-line-length = 88
