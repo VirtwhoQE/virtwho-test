@@ -3,7 +3,6 @@ import time
 import requests
 
 from virtwho import logger, FailException
-from virtwho.settings import config
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
 

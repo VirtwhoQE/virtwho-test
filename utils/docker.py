@@ -4,14 +4,13 @@ import random
 import argparse
 import sys
 
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
-
 from virtwho import logger, FailException
 from virtwho.base import rhel_compose_repo
 from virtwho.ssh import SSHConnect
 
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 def create_rhel_container_by_docker(args):
     """

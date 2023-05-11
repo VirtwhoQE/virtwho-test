@@ -327,24 +327,6 @@ def local_files_compare(file1, file2):
     fp2.close()
     return operator.eq(flist1, flist2)
 
-
-def url_validation(url):
-    """
-    Test if the url available or not.
-    :param url: url link to check
-    :reture: True or False
-    """
-    output = os.popen(
-        f"if ( curl -o/dev/null -sfI '{url}' );"
-        f"then echo 'true';"
-        f"else echo 'false'; fi"
-    ).read()
-    if output.strip() == "true":
-        return True
-    logger.warning(f"url({url}) not available")
-    return False
-
-
 def package_info_analyzer(ssh, pkg):
     """
     Analyze the package information after '#rpm -qi {pkg}'.

@@ -5,14 +5,13 @@ import sys
 import time
 import argparse
 
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
-
 from virtwho import logger, FailException
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 def install_rhel_by_beaker(args):
     """

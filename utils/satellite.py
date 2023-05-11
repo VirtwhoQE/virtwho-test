@@ -3,16 +3,15 @@ import argparse
 import os
 import sys
 
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
-
 from virtwho import FailException
 from virtwho.base import system_init
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager
 from virtwho.settings import config
 
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 def satellite_deploy(args):
     """

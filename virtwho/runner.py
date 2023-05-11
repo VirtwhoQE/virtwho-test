@@ -433,7 +433,7 @@ class VirtwhoRunner:
             mapping_info = rex.findall(rhsm_log)[0]
             try:
                 mapping_info = json.loads(mapping_info.replace("\n", ""), strict=False)
-            except:
+            except Exception:
                 logger.warning(f"json.loads failed: {mapping_info}")
                 return data
             for item in mapping_info:
@@ -457,14 +457,14 @@ class VirtwhoRunner:
             data["orgs"] = orgs
             org_data = dict()
             for org in orgs:
-                key = f"Host-to-guest mapping being sent to '{org}'"
+                # key = f"Host-to-guest mapping being sent to '{org}'"
                 rex = re.compile(r"(?<=: ){.*?}\n+(?=202|$)", re.S)
                 mapping_info = rex.findall(rhsm_log)[-1]
                 try:
                     mapping_info = json.loads(
                         mapping_info.replace("\n", ""), strict=False
                     )
-                except:
+                except Exception:
                     logger.warning("Failed to run json.loads for rhsm.log")
                     return data
                 hypervisors = mapping_info["hypervisors"]

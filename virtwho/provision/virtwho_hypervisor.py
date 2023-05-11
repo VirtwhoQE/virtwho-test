@@ -4,10 +4,6 @@ import re
 import sys
 import argparse
 
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(os.path.split(rootPath)[0])
-
 from virtwho import logger
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
@@ -19,6 +15,10 @@ from hypervisor.virt.esx.powercli import PowerCLI
 from hypervisor.virt.hyperv.hypervcli import HypervCLI
 from hypervisor.virt.kubevirt.kubevirtapi import KubevirtApi
 from hypervisor.virt.ahv.ahvapi import AHVApi
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(os.path.split(rootPath)[0])
 
 state_good = "GOOD"
 state_update = "UPDATED"
@@ -276,7 +276,7 @@ def kubevirt_monitor():
                     f">>>Kubevirt: Check if the guest{guest_name} " f"is running."
                 )
                 if not kubevirt_info["guest_ip"]:
-                    kubevirt_state, guest_ip = (state_guest_bad, guest_none)
+                    kubevirt_state, _= (state_guest_bad, guest_none)
                     logger.error(
                         f"Did not find the rhel guest({guest_name}), "
                         f"please install one."
@@ -287,7 +287,7 @@ def kubevirt_monitor():
                             f"The rhel guest({guest_name}) is " f"running well."
                         )
                     else:
-                        kubevirt_state, guest_ip = (state_guest_bad, guest_down)
+                        kubevirt_state, _ = (state_guest_bad, guest_down)
                         logger.warning(
                             f"The rhel guest({guest_name}) is "
                             f"unavailable, please repair it."
