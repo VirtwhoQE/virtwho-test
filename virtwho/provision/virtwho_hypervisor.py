@@ -255,7 +255,7 @@ def kubevirt_monitor():
     try:
         logger.info(f">>>Kubevirt: Check if the hypervisor is running.")
         if not host_ping(host=server):
-            kubevirt_state, endpoint, guest_ip = (
+            kubevirt_state, endpoint, _ = (
                 state_server_bad,
                 server_broke,
                 guest_none,
@@ -405,7 +405,7 @@ def ahv_monitor():
                     f" is running well."
                 )
                 if not ahv_info:
-                    ahv_state, guest_ip = (state_guest_bad, guest_none)
+                    ahv_state, _ = (state_guest_bad, guest_none)
                     logger.error(
                         f"Did not find the rhel guest({guest_name}), "
                         f"please install one."
@@ -414,7 +414,7 @@ def ahv_monitor():
                     if ssh_connect(guest_info["ssh_guest"]):
                         logger.info(f"The rhel guest{guest_name} is running " f"well.")
                     else:
-                        ahv_state, guest_ip = (state_guest_bad, guest_down)
+                        ahv_state, _ = (state_guest_bad, guest_down)
                         logger.warning(
                             f"The rhel guest({guest_name}) is down, "
                             f"please start it."
