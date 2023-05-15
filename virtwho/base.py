@@ -627,10 +627,10 @@ def system_reboot(ssh):
     time.sleep(120)
     if ssh_connect(ssh):
         return True
-    raise FailException('Failed to reboot system')
+    raise FailException("Failed to reboot system")
 
 
-def virtwho_package_url(pkg, rhel_compose_id, rhel_compose_path=''):
+def virtwho_package_url(pkg, rhel_compose_id, rhel_compose_path=""):
     """
     Get the virt-who package url from http://download.eng.pek2.redhat.com/
     for downloading.
@@ -639,8 +639,6 @@ def virtwho_package_url(pkg, rhel_compose_id, rhel_compose_path=''):
     :param rhel_compose_path: the path of rhel compose id
     :return: virt-who pkg url
     """
-    _, compose_url_extra = rhel_compose_url(
-        rhel_compose_id, rhel_compose_path
-    )
+    _, compose_url_extra = rhel_compose_url(rhel_compose_id, rhel_compose_path)
     pkg_url = compose_url_extra + "/Packages/" + pkg + ".rpm"
     return pkg_url

@@ -11,15 +11,15 @@ from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string
 from virtwho.base import system_reboot
 
-old_pkg = 'virt-who-1.31.22-1.el9_0.noarch'
-old_compose = 'latest-RHEL-9.0'
-old_compose_path = 'http://download.eng.pek2.redhat.com/' \
-                   'rhel-9/rel-eng/RHEL-9'
-if 'RHEL-8' in RHEL_COMPOSE:
-    old_pkg = 'virt-who-1.30.8-1.el8.noarch'
-    old_compose = 'latest-RHEL-8.5'
-    old_compose_path = 'http://download.eng.pek2.redhat.com/' \
-                       'rhel-8/rel-eng/RHEL-8'
+old_pkg = "virt-who-1.31.22-1.el9_0.noarch"
+old_compose = "latest-RHEL-9.0"
+old_compose_path = "http://download.eng.pek2.redhat.com/" \
+                   "rhel-9/rel-eng/RHEL-9"
+if "RHEL-8" in RHEL_COMPOSE:
+    old_pkg = "virt-who-1.30.8-1.el8.noarch"
+    old_compose = "latest-RHEL-8.5"
+    old_compose_path = "http://download.eng.pek2.redhat.com/" \
+                       "rhel-8/rel-eng/RHEL-8"
 
 
 @pytest.mark.usefixtures('function_globalconf_clean')
@@ -132,18 +132,20 @@ class TestUpgradeDowngrade:
             )
             wget_download(ssh_host, old_pkg_url, file_path)
             # downgrade virt-who to check the configurations not change.
-            package_downgrade(ssh_host, 'virt-who',
-                              rpm=f'{file_path}/{old_pkg}.rpm')
+            package_downgrade(
+                ssh_host, "virt-who", rpm=f"{file_path}/{old_pkg}.rpm"
+            )
             result = virtwho.run_service()
             assert (
-                    package_check(ssh_host, 'virt-who') == old_pkg and
-                    result['send'] == 1 and
-                    result['error'] == 0 and
-                    result['debug'] is True
+                    package_check(ssh_host, "virt-who") == old_pkg and
+                    result["send"] == 1 and
+                    result["error"] == 0 and
+                    result["debug"] is True
             )
             # upgrade virt-who to check the configurations not change.
-            package_upgrade(ssh_host, 'virt-who',
-                            rpm=f'{file_path}/{VIRTWHO_PKG}.rpm')
+            package_upgrade(
+                ssh_host, 'virt-who', rpm=f'{file_path}/{VIRTWHO_PKG}.rpm'
+            )
             result = virtwho.run_service()
             assert (
                     package_check(ssh_host, 'virt-who') == VIRTWHO_PKG and
