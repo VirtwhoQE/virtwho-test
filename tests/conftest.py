@@ -262,7 +262,9 @@ def hypervisor_data(ssh_guest):
         data["cpu"] = hypervisor_handler.cpu
     if HYPERVISOR == "ahv":
         data["cluster"] = hypervisor_handler.cluster
-    if HYPERVISOR != "kubevirt":
+    if HYPERVISOR == "kubevirt":
+        data["hypervisor_server"] = hypervisor_handler.endpoint
+    else:
         data["hypervisor_password"] = hypervisor_handler.password
         data["hypervisor_server"] = hypervisor_handler.server
         data["hypervisor_username"] = hypervisor_handler.username
