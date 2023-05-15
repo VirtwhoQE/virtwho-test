@@ -25,16 +25,15 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 
 
 @pytest.mark.tier1
-@pytest.mark.usefixtures('class_hypervisor')
-@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('function_guest_unattach')
-@pytest.mark.usefixtures('class_guest_register')
-@pytest.mark.usefixtures('function_host_register_for_local_mode')
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("function_guest_unattach")
+@pytest.mark.usefixtures("class_guest_register")
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 class TestSatellite:
     def test_vdc_virtual_pool_attach_by_poolId(
-            self, virtwho, sm_guest, satellite, hypervisor_data,
-            vdc_pool_physical
+        self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
         """Test the guest can get and attach the virtual vdc pool by pool id
 
@@ -61,22 +60,23 @@ class TestSatellite:
             3. The vdc virtual pool disappear in guest after remove the
                 physical pool from hypervisor.
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0)
+        assert result["send"] == 1 and result["error"] == 0
 
         # attach physcial vdc for hypervisor
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
 
         # attach virtual vdc pool for guest by pool id
         sm_guest.refresh()
-        sku_data_virt = sm_guest.available(vdc_virtual_sku, 'Virtual')
-        sm_guest.attach(pool=sku_data_virt['pool_id'])
+        sku_data_virt = sm_guest.available(vdc_virtual_sku, "Virtual")
+        sm_guest.attach(pool=sku_data_virt["pool_id"])
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
-        assert (consumed_data['sku'] == vdc_virtual_sku
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
+        assert (
+            consumed_data["sku"] == vdc_virtual_sku
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is False
+        )
 
         # remove the physical vdc from hypervisor
         satellite.unattach(host=hypervisor_hostname, pool=vdc_pool_physical)
@@ -86,8 +86,7 @@ class TestSatellite:
 
     @pytest.mark.tier1
     def test_vdc_virtual_pool_attach_by_auto(
-            self, virtwho, sm_guest, satellite, hypervisor_data,
-            vdc_pool_physical
+        self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
         """Test the guest can get and attach the virtual vdc pool by auto
 
@@ -113,10 +112,9 @@ class TestSatellite:
             3. The vdc virtual pool disappear in guest after unregister the
                 hypervisor.
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0)
+        assert result["send"] == 1 and result["error"] == 0
 
         # attach physcial vdc for hypervisor
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
@@ -125,9 +123,11 @@ class TestSatellite:
         sm_guest.refresh()
         sm_guest.attach(pool=None)
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
-        assert (consumed_data['sku'] == vdc_virtual_sku
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
+        assert (
+            consumed_data["sku"] == vdc_virtual_sku
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is False
+        )
 
         # unregister hypervisor
         satellite.host_delete(host=hypervisor_hostname)
@@ -137,8 +137,14 @@ class TestSatellite:
 
     @pytest.mark.tier1
     def test_vdc_temporary_pool_by_poolId(
-            self, virtwho, sm_guest, ssh_guest, sm_host, satellite,
-            hypervisor_data, vdc_pool_physical
+        self,
+        virtwho,
+        sm_guest,
+        ssh_guest,
+        sm_host,
+        satellite,
+        hypervisor_data,
+        vdc_pool_physical,
     ):
         """Test the temporary vdc pool in guest
 
@@ -170,40 +176,44 @@ class TestSatellite:
             3. The guest repo status is "no repositories available"
             4. The guest subscription status is "Overall Status: Current"
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
 
         virtwho.stop()
         satellite.host_delete(host=hypervisor_hostname)
 
         sm_guest.refresh()
-        available_data_virt = sm_guest.available(vdc_virtual_sku, 'Virtual')
-        sm_guest.attach(pool=available_data_virt['pool_id'])
+        available_data_virt = sm_guest.available(vdc_virtual_sku, "Virtual")
+        sm_guest.attach(pool=available_data_virt["pool_id"])
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
-        assert (consumed_data['sku'] == vdc_virtual_sku
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is True)
+        assert (
+            consumed_data["sku"] == vdc_virtual_sku
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is True
+        )
 
         _ = virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
 
         sm_guest.refresh()
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
-        assert (consumed_data['sku'] == vdc_virtual_sku
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
+        assert (
+            consumed_data["sku"] == vdc_virtual_sku
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is False
+        )
 
         # check repo status in guest
-        _, output = ssh_guest.runcmd('subscription-manager repos --list')
-        assert msg_search(output, 'no repositories available')
+        _, output = ssh_guest.runcmd("subscription-manager repos --list")
+        assert msg_search(output, "no repositories available")
 
         # check subscription status in guest
-        _, output = ssh_guest.runcmd('subscription-manager status')
-        assert (msg_search(output, 'Overall Status: Current')
-                and not msg_search(output, 'Invalid'))
+        _, output = ssh_guest.runcmd("subscription-manager status")
+        assert msg_search(output, "Overall Status: Current") and not msg_search(
+            output, "Invalid"
+        )
 
     def test_vdc_virtual_pool_attach_in_fake_mode(
-            self, virtwho, sm_guest, satellite, hypervisor_data,
-            vdc_pool_physical
+        self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
         """Test the guest can get and attach the virtual vdc pool in fake mode
 
@@ -231,30 +241,31 @@ class TestSatellite:
             3. The vdc virtual pool disappear in guest after unregister the
                 hypervisor.
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         virtwho.stop()
-        if HYPERVISOR != 'local':
+        if HYPERVISOR != "local":
             satellite.host_delete(host=hypervisor_hostname)
 
         _ = virtwho.run_cli(prt=True)
         _ = hypervisor_create(
-            mode='fake', register_type='satellite', config_name=FAKE_CONFIG_FILE
+            mode="fake", register_type="satellite", config_name=FAKE_CONFIG_FILE
         )
         result = virtwho.run_cli(config=FAKE_CONFIG_FILE)
-        assert (result['send'] == 1
-                and result['error'] == 0)
+        assert result["send"] == 1 and result["error"] == 0
 
         # attach vdc for hypervisor
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
 
         # guest can get the bonus virtual pool.
         sm_guest.refresh()
-        sku_data_virt = sm_guest.available(vdc_virtual_sku, 'Virtual')
-        sm_guest.attach(pool=sku_data_virt['pool_id'])
+        sku_data_virt = sm_guest.available(vdc_virtual_sku, "Virtual")
+        sm_guest.attach(pool=sku_data_virt["pool_id"])
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
-        assert (consumed_data['sku'] == vdc_virtual_sku
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
+        assert (
+            consumed_data["sku"] == vdc_virtual_sku
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is False
+        )
 
         # unregister hypervisor
         satellite.host_delete(host=hypervisor_hostname)
@@ -263,8 +274,13 @@ class TestSatellite:
         assert consumed_data is None
 
     def test_guest_auto_attach_rule_by_activation_key(
-            self, virtwho, sm_guest_ack, satellite, hypervisor_data,
-            register_data, vdc_pool_physical
+        self,
+        virtwho,
+        sm_guest_ack,
+        satellite,
+        hypervisor_data,
+        register_data,
+        vdc_pool_physical,
     ):
         """Test the guest register by activation_key
 
@@ -299,15 +315,15 @@ class TestSatellite:
             4. (Scenario 4) guest will auto attach the matched sku from out of
                 the key
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        limit_pool_physical = sm_guest_ack.pool_id_get(limit_sku, 'Physical')
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        limit_pool_physical = sm_guest_ack.pool_id_get(limit_sku, "Physical")
 
         # create a clean activation key
         satellite.activation_key_delete(activation_key)
         satellite.activation_key_create(activation_key)
 
         # disable the auto-attach for activation key
-        satellite.activation_key_update(auto_attach='no')
+        satellite.activation_key_update(auto_attach="no")
 
         # register guest by activation key with
         # activation key auto-attach disabled and
@@ -317,55 +333,52 @@ class TestSatellite:
         satellite.attach(host=hypervisor_hostname, pool=limit_pool_physical)
         sm_guest_ack.unregister()
         sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (not vdc_consumed_data and not limit_consumed_data)
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, "Virtual")
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, "Virtual")
+        assert not vdc_consumed_data and not limit_consumed_data
 
         # get the vdc and limit sku virtual pool id
-        vdc_available_data = sm_guest_ack.available(vdc_virtual_sku, 'Virtual')
-        vdc_virt_pool = vdc_available_data['pool_id']
-        limit_available_data = sm_guest_ack.available(limit_sku, 'Virtual')
-        limit_virt_pool = limit_available_data['pool_id']
+        vdc_available_data = sm_guest_ack.available(vdc_virtual_sku, "Virtual")
+        vdc_virt_pool = vdc_available_data["pool_id"]
+        limit_available_data = sm_guest_ack.available(limit_sku, "Virtual")
+        limit_virt_pool = limit_available_data["pool_id"]
 
         # register guest by activation key with
         # activation key auto-attach disabled and
         # both the virtual limit and vdc sku in the key
         satellite.activation_key_attach(pool=vdc_virt_pool, key=activation_key)
-        satellite.activation_key_attach(pool=limit_virt_pool,
-                                        key=activation_key)
+        satellite.activation_key_attach(pool=limit_virt_pool, key=activation_key)
         sm_guest_ack.unregister()
         sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (vdc_consumed_data and limit_consumed_data)
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, "Virtual")
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, "Virtual")
+        assert vdc_consumed_data and limit_consumed_data
 
         # enable the auto-attach for activation key
-        satellite.activation_key_update(auto_attach='yes')
+        satellite.activation_key_update(auto_attach="yes")
 
         # register guest by activation key with
         # activation key auto-attach enabled and
         # virtual limit sku in the key, virtual vdc sku out of the key
-        satellite.activation_key_unattach(pool=vdc_virt_pool,
-                                          key=activation_key)
+        satellite.activation_key_unattach(pool=vdc_virt_pool, key=activation_key)
         sm_guest_ack.unregister()
         sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (limit_consumed_data and not vdc_consumed_data)
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, "Virtual")
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, "Virtual")
+        assert limit_consumed_data and not vdc_consumed_data
 
         # register guest by activation key with
         # activation key auto-attach enabled and
         # the both vdc and limit virt sku out of the key
-        satellite.activation_key_unattach(pool=limit_virt_pool,
-                                          key=activation_key)
+        satellite.activation_key_unattach(pool=limit_virt_pool, key=activation_key)
         sm_guest_ack.unregister()
         sm_guest_ack.register()
-        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, 'Virtual')
-        limit_consumed_data = sm_guest_ack.consumed(limit_sku, 'Virtual')
-        assert (vdc_consumed_data and not limit_consumed_data)
+        vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, "Virtual")
+        limit_consumed_data = sm_guest_ack.consumed(limit_sku, "Virtual")
+        assert vdc_consumed_data and not limit_consumed_data
 
     def test_guest_auto_attach_temporary_pool_by_activation_key(
-            self, virtwho, sm_guest_ack, satellite, hypervisor_data
+        self, virtwho, sm_guest_ack, satellite, hypervisor_data
     ):
         """Test the guest can auto attach temporary sku when registering with
             activation key
@@ -392,27 +405,33 @@ class TestSatellite:
             2. After guest is associated to hypervisor, the temporary sku will
                 change to stable by auto.
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         satellite.host_delete(host=hypervisor_hostname)
 
         # create a clean activation key
         satellite.activation_key_delete(activation_key)
         satellite.activation_key_create(activation_key)
-        satellite.activation_key_update(auto_attach='yes')
+        satellite.activation_key_update(auto_attach="yes")
 
         sm_guest_ack.unregister()
         sm_guest_ack.register()
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
-        assert consumed_data['temporary'] is True
+        assert consumed_data["temporary"] is True
 
         _ = virtwho.run_cli()
         sm_guest_ack.refresh()
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
-        assert consumed_data['temporary'] is False
+        assert consumed_data["temporary"] is False
 
     def test_non_default_org_with_rhsm_options(
-            self, virtwho, satellite, satellite_second_org, hypervisor_data,
-            sm_guest_second_org, class_hypervisor, sku_data,
+        self,
+        virtwho,
+        satellite,
+        satellite_second_org,
+        hypervisor_data,
+        sm_guest_second_org,
+        class_hypervisor,
+        sku_data,
     ):
         """
 
@@ -437,43 +456,51 @@ class TestSatellite:
             2. in non-default org, hypervisor can deprecate bonus virtual vdc
                 for guest
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         try:
-            guest_id = hypervisor_data['guest_uuid']
+            guest_id = hypervisor_data["guest_uuid"]
             satellite.host_delete(host=hypervisor_hostname)
 
-            class_hypervisor.update('owner', second_org)
+            class_hypervisor.update("owner", second_org)
             result = virtwho.run_cli()
-            mappings = result['mappings']
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and guest_id in mappings[second_org])
+            mappings = result["mappings"]
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and guest_id in mappings[second_org]
+            )
 
             sm_guest_second_org.register()
-            vdc_sku_id = sku_data['vdc_physical']
-            vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id,
-                                                          'Physical')
+            vdc_sku_id = sku_data["vdc_physical"]
+            vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id, "Physical")
             # attach physcial vdc for hypervisor
-            satellite_second_org.attach(host=hypervisor_hostname,
-                                        pool=vdc_pool_id)
+            satellite_second_org.attach(host=hypervisor_hostname, pool=vdc_pool_id)
 
             # attach virtual vdc pool for guest by pool id
             sm_guest_second_org.refresh()
-            sku_data_virt = sm_guest_second_org.available(
-                vdc_virtual_sku, 'Virtual')
-            sm_guest_second_org.attach(pool=sku_data_virt['pool_id'])
+            sku_data_virt = sm_guest_second_org.available(vdc_virtual_sku, "Virtual")
+            sm_guest_second_org.attach(pool=sku_data_virt["pool_id"])
             consumed_data = sm_guest_second_org.consumed(sku_id=vdc_virtual_sku)
-            assert (consumed_data['sku'] == vdc_virtual_sku
-                    and consumed_data['sku_type'] == 'Virtual'
-                    and consumed_data['temporary'] is False)
+            assert (
+                consumed_data["sku"] == vdc_virtual_sku
+                and consumed_data["sku_type"] == "Virtual"
+                and consumed_data["temporary"] is False
+            )
 
         finally:
-            class_hypervisor.update('owner', default_org)
+            class_hypervisor.update("owner", default_org)
             satellite_second_org.host_delete(host=hypervisor_hostname)
 
     def test_non_default_org_without_rhsm_options(
-            self, virtwho, satellite, satellite_second_org, function_hypervisor,
-            hypervisor_data, sm_host, sm_guest_second_org, sku_data
+        self,
+        virtwho,
+        satellite,
+        satellite_second_org,
+        function_hypervisor,
+        hypervisor_data,
+        sm_host,
+        sm_guest_second_org,
+        sku_data,
     ):
         """
 
@@ -500,45 +527,45 @@ class TestSatellite:
             2. in non-default org, hypervisor can deprecate bonus virtual vdc
                 for guest
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        guest_id = hypervisor_data['guest_uuid']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        guest_id = hypervisor_data["guest_uuid"]
         try:
             function_hypervisor.create(rhsm=False)
             sm_host.register()
             satellite.host_delete(host=hypervisor_hostname)
 
-            function_hypervisor.update('owner', second_org)
+            function_hypervisor.update("owner", second_org)
             result = virtwho.run_cli()
-            mappings = result['mappings']
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and guest_id in mappings[second_org])
+            mappings = result["mappings"]
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and guest_id in mappings[second_org]
+            )
 
             sm_guest_second_org.register()
-            vdc_sku_id = sku_data['vdc_physical']
-            vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id,
-                                                          'Physical')
+            vdc_sku_id = sku_data["vdc_physical"]
+            vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id, "Physical")
             # attach physcial vdc for hypervisor
-            satellite_second_org.attach(host=hypervisor_hostname,
-                                        pool=vdc_pool_id)
+            satellite_second_org.attach(host=hypervisor_hostname, pool=vdc_pool_id)
 
             # attach virtual vdc pool for guest by pool id
             sm_guest_second_org.refresh()
-            sku_data_virt = sm_guest_second_org.available(
-                vdc_virtual_sku, 'Virtual')
-            sm_guest_second_org.attach(pool=sku_data_virt['pool_id'])
+            sku_data_virt = sm_guest_second_org.available(vdc_virtual_sku, "Virtual")
+            sm_guest_second_org.attach(pool=sku_data_virt["pool_id"])
             consumed_data = sm_guest_second_org.consumed(sku_id=vdc_virtual_sku)
-            assert (consumed_data['sku'] == vdc_virtual_sku
-                    and consumed_data['sku_type'] == 'Virtual'
-                    and consumed_data['temporary'] is False)
+            assert (
+                consumed_data["sku"] == vdc_virtual_sku
+                and consumed_data["sku_type"] == "Virtual"
+                and consumed_data["temporary"] is False
+            )
 
         finally:
             function_hypervisor.create(rhsm=True)
             satellite_second_org.host_delete(host=hypervisor_hostname)
 
     def test_vdc_virtual_subscription_on_webui(
-            self, virtwho, sm_guest, satellite, hypervisor_data,
-            vdc_pool_physical
+        self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
         """Test the virtual vdc content subscriptions on satellite webui
 
@@ -563,27 +590,32 @@ class TestSatellite:
             2. When guest attached virtual vdc, the subscription consumed number
                 will not be 0
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        if HYPERVISOR == 'local':
-            hypervisor_name = [f'{hypervisor_hostname}']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        if HYPERVISOR == "local":
+            hypervisor_name = [f"{hypervisor_hostname}"]
         else:
-            key = f'virt-who-{hypervisor_hostname}'
+            key = f"virt-who-{hypervisor_hostname}"
             hypervisor_name = [key, key.lower()]
 
         # check the subscription without virtual vdc pool attached for guest
         satellite.host_delete(host=hypervisor_hostname)
         _ = virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
-        vdc_virt_data = sm_guest.available(vdc_virtual_sku, 'Virtual')
-        vdc_virt_pool = vdc_virt_data['pool_id']
+        vdc_virt_data = sm_guest.available(vdc_virtual_sku, "Virtual")
+        vdc_virt_pool = vdc_virt_data["pool_id"]
         subscription = satellite.subscription_on_webui(vdc_virt_pool)
-        assert (subscription['type'] == 'STACK_DERIVED'
-                and subscription["virt_only"] is True
-                and any(key in subscription["hypervisor"]["name"]
-                        for key in hypervisor_name))
-        assert (subscription["available"] == -1
-                and subscription["quantity"] == -1
-                and subscription["consumed"] == 0)
+        assert (
+            subscription["type"] == "STACK_DERIVED"
+            and subscription["virt_only"] is True
+            and any(
+                key in subscription["hypervisor"]["name"] for key in hypervisor_name
+            )
+        )
+        assert (
+            subscription["available"] == -1
+            and subscription["quantity"] == -1
+            and subscription["consumed"] == 0
+        )
 
         # check the subscription without virtual vdc pool attached for guest
         sm_guest.refresh()
@@ -630,49 +662,54 @@ class TestSatellite:
     #     assert register_by == 'admin'
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def sm_guest_ack(register_data):
     """
     Instantication of class SubscriptionManager() for hypervisor guest
     with default org and activation key
     """
     port = 22
-    if HYPERVISOR == 'kubevirt':
+    if HYPERVISOR == "kubevirt":
         port = hypervisor_handler.guest_port
-    return SubscriptionManager(host=hypervisor_handler.guest_ip,
-                               username=hypervisor_handler.guest_username,
-                               password=hypervisor_handler.guest_password,
-                               port=port,
-                               register_type='satellite',
-                               org=config.satellite.default_org,
-                               activation_key=register_data['activation_key'])
+    return SubscriptionManager(
+        host=hypervisor_handler.guest_ip,
+        username=hypervisor_handler.guest_username,
+        password=hypervisor_handler.guest_password,
+        port=port,
+        register_type="satellite",
+        org=config.satellite.default_org,
+        activation_key=register_data["activation_key"],
+    )
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def sm_guest_second_org(register_data):
     """
     Instantication of class SubscriptionManager() for hypervisor guest
     with the second org
     """
     port = 22
-    if HYPERVISOR == 'kubevirt':
+    if HYPERVISOR == "kubevirt":
         port = hypervisor_handler.guest_port
-    return SubscriptionManager(host=hypervisor_handler.guest_ip,
-                               username=hypervisor_handler.guest_username,
-                               password=hypervisor_handler.guest_password,
-                               port=port,
-                               register_type='satellite',
-                               org=second_org)
+    return SubscriptionManager(
+        host=hypervisor_handler.guest_ip,
+        username=hypervisor_handler.guest_username,
+        password=hypervisor_handler.guest_password,
+        port=port,
+        register_type="satellite",
+        org=second_org,
+    )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def satellite_second_org():
     """Instantication of class Satellite() with the second org"""
     return Satellite(
         server=config.satellite.server,
         org=config.satellite.secondary_org,
-        activation_key=config.satellite.activation_key
+        activation_key=config.satellite.activation_key,
     )
+
 
 # used by the draft case 'test_register_by_item_on_webui'
 # def host_register_by_on_webui(satellite, host):

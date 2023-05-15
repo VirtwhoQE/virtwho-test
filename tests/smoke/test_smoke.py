@@ -8,12 +8,13 @@ import pytest
 from virtwho import logger
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('class_hypervisor')
-@pytest.mark.usefixtures('class_debug_true')
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_debug_true")
 class TestSmoke:
-    def test_host_guest_association(self, virtwho, satellite, hypervisor_data,
-                                    register_data, sm_guest, ssh_guest):
+    def test_host_guest_association(
+        self, virtwho, satellite, hypervisor_data, register_data, sm_guest, ssh_guest
+    ):
         """Test the host-to-guest association in mapping log and Satellite
         Web UI.
 
@@ -31,18 +32,21 @@ class TestSmoke:
             1. the host and guest are associated in the both mapping
             and Satellite WebUI
         """
-        guest_uuid = hypervisor_data['guest_uuid']
-        guest_hostname = hypervisor_data['guest_hostname']
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        default_org = register_data['default_org']
+        guest_uuid = hypervisor_data["guest_uuid"]
+        guest_hostname = hypervisor_data["guest_hostname"]
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        default_org = register_data["default_org"]
         # assert the association in mapping
         result = virtwho.run_cli()
-        mappings = result['mappings']
+        mappings = result["mappings"]
         associated_hypervisor_in_mapping = mappings[default_org][guest_uuid][
-            'guest_hypervisor']
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and associated_hypervisor_in_mapping == hypervisor_hostname)
+            "guest_hypervisor"
+        ]
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and associated_hypervisor_in_mapping == hypervisor_hostname
+        )
         # assert the association in Satellite web
         sm_guest.register()
         assert satellite.associate(hypervisor_hostname, guest_hostname) is not False
@@ -77,21 +81,17 @@ class TestSmoke:
             class_hypervisor.create(rhsm=False)
             sm_host.register()
             result = virtwho.run_cli()
-            assert (result['send'] == 1
-                    and result['error'] == 0)
+            assert result["send"] == 1 and result["error"] == 0
 
             sm_host.unregister()
             result = virtwho.run_cli()
-            assert (result['send'] == 0
-                    and result['error'] != 0)
+            assert result["send"] == 0 and result["error"] != 0
         finally:
             class_hypervisor.create(rhsm=True)
             result = virtwho.run_cli()
-            assert (result['send'] == 1
-                    and result['error'] == 0)
+            assert result["send"] == 1 and result["error"] == 0
 
-    def test_rhsm_proxy(self, virtwho, class_hypervisor, proxy_data,
-                        register_data):
+    def test_rhsm_proxy(self, virtwho, class_hypervisor, proxy_data, register_data):
         """Test the rhsm_proxy in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: satellite smoke: test rhsm proxy
@@ -110,37 +110,42 @@ class TestSmoke:
             3. virt-who run well with bad rhsm proxy and no_proxy
         """
         # run virt-who with good rhsm proxy
-        connection_log = proxy_data['connection_log']
-        proxy_log = proxy_data['proxy_log']
-        class_hypervisor.update('rhsm_proxy_hostname', proxy_data['server'])
-        class_hypervisor.update('rhsm_proxy_port', proxy_data['port'])
+        connection_log = proxy_data["connection_log"]
+        proxy_log = proxy_data["proxy_log"]
+        class_hypervisor.update("rhsm_proxy_hostname", proxy_data["server"])
+        class_hypervisor.update("rhsm_proxy_port", proxy_data["port"])
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and connection_log in result['log']
-                and proxy_log in result['log'])
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and connection_log in result["log"]
+            and proxy_log in result["log"]
+        )
         # run virt-who with bad rhsm proxy
-        errors = proxy_data['error']
-        class_hypervisor.update('rhsm_proxy_hostname', proxy_data['bad_server'])
-        class_hypervisor.update('rhsm_proxy_port', proxy_data['bad_port'])
+        errors = proxy_data["error"]
+        class_hypervisor.update("rhsm_proxy_hostname", proxy_data["bad_server"])
+        class_hypervisor.update("rhsm_proxy_port", proxy_data["bad_port"])
         result = virtwho.run_cli()
-        assert (result['send'] == 0
-                and result['error'] != 0
-                and any(error in result['log'] for error in errors))
+        assert (
+            result["send"] == 0
+            and result["error"] != 0
+            and any(error in result["log"] for error in errors)
+        )
         # run virt-who with bad rhsm proxy and no_proxy
-        class_hypervisor.update('rhsm_no_proxy', register_data['server'])
+        class_hypervisor.update("rhsm_no_proxy", register_data["server"])
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and connection_log not in result['log']
-                and proxy_log not in result['log'])
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and connection_log not in result["log"]
+            and proxy_log not in result["log"]
+        )
 
-        class_hypervisor.delete('rhsm_no_proxy')
-        class_hypervisor.delete('rhsm_proxy_port')
-        class_hypervisor.delete('rhsm_proxy_hostname')
+        class_hypervisor.delete("rhsm_no_proxy")
+        class_hypervisor.delete("rhsm_proxy_port")
+        class_hypervisor.delete("rhsm_proxy_hostname")
 
-    def test_hypervisor_id(self, virtwho, satellite, class_hypervisor,
-                           hypervisor_data):
+    def test_hypervisor_id(self, virtwho, satellite, class_hypervisor, hypervisor_data):
         """Test hypervisor_id option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: satellite smoke: test hypervisor_id
@@ -159,35 +164,45 @@ class TestSmoke:
                 uuid/hostname/hwuuid, and keep only one host entry in WebUI
         """
         hypervisor_ids = {
-            'uuid': hypervisor_data['hypervisor_uuid'],
-            'hostname': hypervisor_data['hypervisor_hostname'],
-            'hwuuid': hypervisor_data['hypervisor_hwuuid']
+            "uuid": hypervisor_data["hypervisor_uuid"],
+            "hostname": hypervisor_data["hypervisor_hostname"],
+            "hwuuid": hypervisor_data["hypervisor_hwuuid"],
         }
         try:
-            for key, value in sorted(hypervisor_ids.items(), key=lambda item:item[0]):
+            for key, value in sorted(hypervisor_ids.items(), key=lambda item: item[0]):
                 if value:
-                    logger.info(f'>> start to run with hypervisor_id={key}')
-                    class_hypervisor.update('hypervisor_id', key)
+                    logger.info(f">> start to run with hypervisor_id={key}")
+                    class_hypervisor.update("hypervisor_id", key)
                     result = virtwho.run_cli()
-                    assert (result['send'] == 1
-                            and result['error'] == 0
-                            and result['hypervisor_id'] == value
-                            and satellite.host_id(value))
-                    if hypervisor_ids['hwuuid']:
-                        if key == 'uuid':
-                            assert not satellite.host_id(hypervisor_ids['hostname'])
-                            assert not satellite.host_id(hypervisor_ids['hwuuid'])
-                        if key == 'hostname':
-                            assert not satellite.host_id(hypervisor_ids['uuid'])
-                            assert not satellite.host_id(hypervisor_ids['hwuuid'])
-                    if key == 'hwuuid':
-                        assert not satellite.host_id(hypervisor_ids['uuid'])
-                        assert not satellite.host_id(hypervisor_ids['hostname'])
+                    assert (
+                        result["send"] == 1
+                        and result["error"] == 0
+                        and result["hypervisor_id"] == value
+                        and satellite.host_id(value)
+                    )
+                    if hypervisor_ids["hwuuid"]:
+                        if key == "uuid":
+                            assert not satellite.host_id(hypervisor_ids["hostname"])
+                            assert not satellite.host_id(hypervisor_ids["hwuuid"])
+                        if key == "hostname":
+                            assert not satellite.host_id(hypervisor_ids["uuid"])
+                            assert not satellite.host_id(hypervisor_ids["hwuuid"])
+                    if key == "hwuuid":
+                        assert not satellite.host_id(hypervisor_ids["uuid"])
+                        assert not satellite.host_id(hypervisor_ids["hostname"])
         finally:
-            class_hypervisor.update('hypervisor_id', 'hostname')
+            class_hypervisor.update("hypervisor_id", "hostname")
 
-    def test_vdc_sku(self, virtwho, sm_guest, function_guest_register,
-                     satellite, hypervisor_data, sku_data, vdc_pool_physical):
+    def test_vdc_sku(
+        self,
+        virtwho,
+        sm_guest,
+        function_guest_register,
+        satellite,
+        hypervisor_data,
+        sku_data,
+        vdc_pool_physical,
+    ):
         """Test the guest can get the vdc virtual bonus pool from hypervisor.
 
         :title: virt-who: satellite smoke: test vdc sku attach/unattach
@@ -209,32 +224,38 @@ class TestSmoke:
             2. guest virtual vdc pool is also removed when the physical vdc pool
                 is removed from it's hypervisor.
         """
-        sku_virt = sku_data['vdc_virtual']
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        sku_virt = sku_data["vdc_virtual"]
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0)
+        assert result["send"] == 1 and result["error"] == 0
         # attach vdc for hypervisor, guest can get the bonus virtual pool.
-        satellite.attach(host=hypervisor_hostname,
-                         pool=vdc_pool_physical)
+        satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
         sm_guest.refresh()
-        sku_data_virt = sm_guest.available(sku_virt, 'Virtual')
-        pool_virt = sku_data_virt['pool_id']
+        sku_data_virt = sm_guest.available(sku_virt, "Virtual")
+        pool_virt = sku_data_virt["pool_id"]
         sm_guest.attach(pool=pool_virt)
         consumed_data = sm_guest.consumed(sku_id=sku_virt)
-        assert (consumed_data['sku'] == sku_virt
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
+        assert (
+            consumed_data["sku"] == sku_virt
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is False
+        )
         # remove vdc from hypervisor, the bonus pool will be removed from guest.
-        satellite.unattach(host=hypervisor_hostname,
-                           pool=vdc_pool_physical)
+        satellite.unattach(host=hypervisor_hostname, pool=vdc_pool_physical)
         sm_guest.refresh()
         consumed_data = sm_guest.consumed(sku_id=sku_virt)
         assert consumed_data is None
 
-    def test_temporary_sku(self, virtwho, satellite, sm_guest, sku_data,
-                           function_guest_register, vdc_pool_physical,
-                           hypervisor_data):
+    def test_temporary_sku(
+        self,
+        virtwho,
+        satellite,
+        sm_guest,
+        sku_data,
+        function_guest_register,
+        vdc_pool_physical,
+        hypervisor_data,
+    ):
         """Test the guest can get the vdc temporay bonus pool.
 
         :title: virt-who: rhsm: test vdc temporary sku
@@ -254,33 +275,35 @@ class TestSmoke:
             2. the temporary pool will changed to stable one after associate
                 with one hypervisor.
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        hypervisor_uuid = hypervisor_data['hypervisor_uuid']
-        hypervisor_hwuuid = hypervisor_data['hypervisor_hwuuid']
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        hypervisor_uuid = hypervisor_data["hypervisor_uuid"]
+        hypervisor_hwuuid = hypervisor_data["hypervisor_hwuuid"]
         # delete all hypervisor entries from register server
         satellite.host_delete(hypervisor_hostname)
         satellite.host_delete(hypervisor_uuid)
         if hypervisor_hwuuid:
             satellite.host_delete(hypervisor_hwuuid)
         # check guest can get and subscribe virtual temporary vdc
-        sku_virt = sku_data['vdc_virtual']
+        sku_virt = sku_data["vdc_virtual"]
         sm_guest.refresh()
-        sku_data_virt = sm_guest.available(sku_virt, 'Virtual')
-        pool_virt = sku_data_virt['pool_id']
+        sku_data_virt = sm_guest.available(sku_virt, "Virtual")
+        pool_virt = sku_data_virt["pool_id"]
         sm_guest.attach(pool=pool_virt)
         consumed_data = sm_guest.consumed(sku_id=sku_virt)
-        assert (consumed_data['sku'] == sku_virt
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is True)
+        assert (
+            consumed_data["sku"] == sku_virt
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is True
+        )
         # attach physical vdc to hypervisor
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0)
-        satellite.attach(host=hypervisor_hostname,
-                         pool=vdc_pool_physical)
+        assert result["send"] == 1 and result["error"] == 0
+        satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
         # check the temporary vdc changed to stable one in guest
         sm_guest.refresh()
         consumed_data = sm_guest.consumed(sku_id=sku_virt)
-        assert (consumed_data['sku'] == sku_virt
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
+        assert (
+            consumed_data["sku"] == sku_virt
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is False
+        )

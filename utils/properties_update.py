@@ -4,12 +4,11 @@ import os
 import sys
 import argparse
 
+from virtwho.settings import Configure, TEST_DATA
+
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
-
-from virtwho.settings import Configure, TEST_DATA
-
 
 def virtwho_ini_props_update(args):
     """
@@ -27,18 +26,9 @@ def arguments_parser():
     each arguments.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--section',
-        default=None,
-        required=False)
-    parser.add_argument(
-        '--option',
-        default=None,
-        required=False)
-    parser.add_argument(
-        '--value',
-        default=None,
-        required=False)
+    parser.add_argument("--section", default=None, required=False)
+    parser.add_argument("--option", default=None, required=False)
+    parser.add_argument("--value", default=None, required=False)
     return parser.parse_args()
 
 
@@ -53,8 +43,8 @@ def virtwho_ini_update(section, option, value):
     Used to called by other functions
     """
     os.system(
-        f'python3 {curPath}/properties_update.py '
-        f'--section={section} '
-        f'--option={option} '
+        f"python3 {curPath}/properties_update.py "
+        f"--section={section} "
+        f"--option={option} "
         f'--value="{value}"'
     )

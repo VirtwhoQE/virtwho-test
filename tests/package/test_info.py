@@ -12,9 +12,9 @@ from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG
 from virtwho.settings import DOCS_DIR, TEMP_DIR
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('class_hypervisor')
-@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestVirtwhoPackageInfo:
     def test_shipped_in_supported_arch(self):
         """Test the virt-who package is shipped in all supported arch
@@ -36,9 +36,9 @@ class TestVirtwhoPackageInfo:
         """
         _, repo_extra = base.rhel_compose_url(RHEL_COMPOSE)
         base_url = repo_extra.split("/x86_64/")[0]
-        archs = ['x86_64', 'ppc64le', 'aarch64', 's390x']
+        archs = ["x86_64", "ppc64le", "aarch64", "s390x"]
         for arch in archs:
-            pkg_url = f'{base_url}/{arch}/os/Packages/{VIRTWHO_PKG}.rpm'
+            pkg_url = f"{base_url}/{arch}/os/Packages/{VIRTWHO_PKG}.rpm"
             assert base.url_validation(pkg_url)
 
     @pytest.mark.tier1
@@ -57,13 +57,10 @@ class TestVirtwhoPackageInfo:
         :expectedresults:
             1. the result format should be `virt-who 1.31.23-1`
         """
-        version = re.split('virt-who-|.el', VIRTWHO_PKG)[1]
-        _, output = ssh_host.runcmd('virt-who --version')
-        output = output.split(' ')
-        assert (
-                output[0].strip() == 'virt-who' and
-                output[1].strip() == version
-        )
+        version = re.split("virt-who-|.el", VIRTWHO_PKG)[1]
+        _, output = ssh_host.runcmd("virt-who --version")
+        output = output.split(" ")
+        assert output[0].strip() == "virt-who" and output[1].strip() == version
 
     @pytest.mark.tier1
     def test_man_page(self, ssh_host):
@@ -83,13 +80,12 @@ class TestVirtwhoPackageInfo:
             1. man page can be list successfully
             2. no changes by comparing with the previous build
         """
-        man_page_remote = '/root/man_page'
-        man_page_local = os.path.join(TEMP_DIR, f'virtwho_man_page')
-        man_page_compare = os.path.join(DOCS_DIR, f'virtwho_man_page_rhel_9')
-        if 'RHEL-8' in RHEL_COMPOSE:
-            man_page_compare = os.path.join(DOCS_DIR,
-                                            f'virtwho_man_page_rhel_8')
-        _, _ = ssh_host.runcmd(f'man virt-who > {man_page_remote}')
+        man_page_remote = "/root/man_page"
+        man_page_local = os.path.join(TEMP_DIR, f"virtwho_man_page")
+        man_page_compare = os.path.join(DOCS_DIR, f"virtwho_man_page_rhel_9")
+        if "RHEL-8" in RHEL_COMPOSE:
+            man_page_compare = os.path.join(DOCS_DIR, f"virtwho_man_page_rhel_8")
+        ssh_host.runcmd(f"man virt-who > {man_page_remote}")
         ssh_host.get_file(man_page_remote, man_page_local)
         assert base.local_files_compare(man_page_local, man_page_compare)
 
@@ -111,13 +107,12 @@ class TestVirtwhoPackageInfo:
             1. help page can be list successfully
             2. no changes by comparing with the previous build
         """
-        help_page_remote = '/root/help_page'
-        help_page_local = os.path.join(TEMP_DIR, f'virtwho_help_page')
-        help_page_compare = os.path.join(DOCS_DIR, f'virtwho_help_page_rhel_9')
-        if 'RHEL-8' in RHEL_COMPOSE:
-            help_page_compare = os.path.join(DOCS_DIR,
-                                             f'virtwho_help_page_rhel_8')
-        _, _ = ssh_host.runcmd(f'virt-who --help > {help_page_remote}')
+        help_page_remote = "/root/help_page"
+        help_page_local = os.path.join(TEMP_DIR, f"virtwho_help_page")
+        help_page_compare = os.path.join(DOCS_DIR, f"virtwho_help_page_rhel_9")
+        if "RHEL-8" in RHEL_COMPOSE:
+            help_page_compare = os.path.join(DOCS_DIR, f"virtwho_help_page_rhel_8")
+        ssh_host.runcmd(f"virt-who --help > {help_page_remote}")
         ssh_host.get_file(help_page_remote, help_page_local)
         assert base.local_files_compare(help_page_local, help_page_compare)
 
@@ -138,33 +133,30 @@ class TestVirtwhoPackageInfo:
         :expectedresults:
             1. all values match the expectation
         """
-        pkg_info = base.package_info_analyzer(ssh_host, 'virt-who')
-        virtwho_license = 'GPLv2+ and LGPLv3+'
-        if 'RHEL-8' in RHEL_COMPOSE:
-            virtwho_license = 'GPLv2+'
+        pkg_info = base.package_info_analyzer(ssh_host, "virt-who")
+        virtwho_license = "GPLv2+ and LGPLv3+"
+        if "RHEL-8" in RHEL_COMPOSE:
+            virtwho_license = "GPLv2+"
         assert (
-                pkg_info['Name'] == 'virt-who'
-                and pkg_info['Version'] in VIRTWHO_PKG
-                and pkg_info['Release'] in VIRTWHO_PKG
-                and pkg_info['Architecture'] == 'noarch'
-                and pkg_info['Install Date']
-                and pkg_info['Group'] == 'System Environment/Base'
-                and pkg_info['Size']
-                and pkg_info['License'] == virtwho_license
-                and 'RSA/SHA256' in pkg_info['Signature']
-                and 'Key ID' in pkg_info['Signature']
-                and pkg_info['Source RPM'] == VIRTWHO_PKG.split('noarch')[0]
-                + 'src.rpm'
-                and pkg_info['Build Date']
-                and pkg_info['Build Host']
-                and pkg_info[
-                    'Packager'] == 'Red Hat, Inc. <http://bugzilla.redhat.'
-                                   'com/bugzilla>'
-                and pkg_info['Vendor'] == 'Red Hat, Inc.'
-                and pkg_info['URL'] == 'https://github.com/candlepin/virt-who'
-                and pkg_info[
-                    'Summary'] == 'Agent for reporting virtual guest IDs '
-                                  'to subscription-manager'
+            pkg_info["Name"] == "virt-who"
+            and pkg_info["Version"] in VIRTWHO_PKG
+            and pkg_info["Release"] in VIRTWHO_PKG
+            and pkg_info["Architecture"] == "noarch"
+            and pkg_info["Install Date"]
+            and pkg_info["Group"] == "System Environment/Base"
+            and pkg_info["Size"]
+            and pkg_info["License"] == virtwho_license
+            and "RSA/SHA256" in pkg_info["Signature"]
+            and "Key ID" in pkg_info["Signature"]
+            and pkg_info["Source RPM"] == VIRTWHO_PKG.split("noarch")[0] + "src.rpm"
+            and pkg_info["Build Date"]
+            and pkg_info["Build Host"]
+            and pkg_info["Packager"] == "Red Hat, Inc. <http://bugzilla.redhat."
+            "com/bugzilla>"
+            and pkg_info["Vendor"] == "Red Hat, Inc."
+            and pkg_info["URL"] == "https://github.com/candlepin/virt-who"
+            and pkg_info["Summary"] == "Agent for reporting virtual guest IDs "
+            "to subscription-manager"
         )
 
     @pytest.mark.tier1
@@ -187,10 +179,10 @@ class TestVirtwhoPackageInfo:
         """
         virtwho.stop()
         _, output = ssh_host.runcmd(
-            'export SUBMAN_DEBUG_PRINT_REQUEST=1;'
-            'export SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1;'
-            'virt-who -o',
-            stdout=True
+            "export SUBMAN_DEBUG_PRINT_REQUEST=1;"
+            "export SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1;"
+            "virt-who -o",
+            stdout=True,
         )
-        pkg = base.package_check(ssh_host, 'virt-who')[9:18]
-        assert f'virt-who/{pkg}' in output
+        pkg = base.package_check(ssh_host, "virt-who")[9:18]
+        assert f"virt-who/{pkg}" in output
