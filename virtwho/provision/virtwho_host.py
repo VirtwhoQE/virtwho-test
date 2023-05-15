@@ -203,10 +203,10 @@ def libvirt_access_no_password(ssh):
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key")
     ssh_libvirt.runcmd(
-        f"mkdir ~/.ssh/;" f"echo '{output}' >> ~/.ssh/authorized_keys"
+        f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys"
     )
     ret, _ = ssh.runcmd(
-        f"ssh-keyscan -p 22 {config.libvirt.server} >> " f"~/.ssh/known_hosts"
+        f"ssh-keyscan -p 22 {config.libvirt.server} >> ~/.ssh/known_hosts"
     )
     if ret != 0:
         raise FailException("Failed to configure access libvirt without passwd")
