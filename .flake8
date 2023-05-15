@@ -4,4 +4,5 @@
 ; W503 line break before binary operator
 ; F541 f-string is missing placeholders
 ; E203 whitespace before ':'
-ignore = E501, F632, W503, F541, E203
+; W605 invalid escape sequence '\s'
+ignore = E501, F632, W503, F541, E203, W605
