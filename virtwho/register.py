@@ -58,7 +58,7 @@ class SubscriptionManager:
             if self.activation_key:
                 cmd += f"--activationkey={self.activation_key} "
             else:
-                cmd += f"--username={self.username} " f"--password={self.password} "
+                cmd += f"--username={self.username} --password={self.password} "
             if self.register_type == "satellite":
                 self.satellite_cert_install()
             else:
@@ -572,7 +572,7 @@ class Satellite:
         """
         org = org or self.org
         ret, output = self.ssh.runcmd(
-            f"{self.hammer} organization info " f'--label "{org}" ' f"--fields Id"
+            f'{self.hammer} organization info --label "{org}" --fields Id'
         )
         output = json.loads(output)
         if ret == 0 and output:
@@ -669,7 +669,7 @@ class Satellite:
         :return: subscription id.
         """
         ret, output = self.ssh.runcmd(
-            f"{self.hammer} " f"subscription list " f"--organization-id {self.org_id}"
+            f"{self.hammer} subscription list --organization-id {self.org_id}"
         )
         output = json.loads(output)
         if ret == 0 and output:
@@ -828,11 +828,11 @@ class Satellite:
         ret, output = self.ssh.runcmd(cmd)
         if "Subscription added to activation key" in output:
             logger.info(
-                f"Succeeded to attach subscription for " f"activation key:{key}"
+                f"Succeeded to attach subscription for activation key:{key}"
             )
             return True
         raise FailException(
-            f"Failed to attach subscription for " f"activation key:{key}"
+            f"Failed to attach subscription for activation key:{key}"
         )
 
     def activation_key_unattach(self, pool, key=None):
@@ -869,7 +869,7 @@ class Satellite:
         :return: True or raise Fail.
         """
         ret, output = self.ssh.runcmd(
-            f"hammer settings set " f"--name={name} " f"--value={value}"
+            f"hammer settings set --name={name} --value={value}"
         )
         if ret == 0 and f"Setting [{name}] updated to" in output:
             logger.info(f"Succeeded to set {name}:{value} for satellite")
@@ -964,7 +964,7 @@ class Satellite:
         :return: True or raise fail.
         """
         ret, output = self.ssh.runcmd(
-            f"hammer simple-content-access {sca} " f"--organization-id {self.org_id}"
+            f"hammer simple-content-access {sca} --organization-id {self.org_id}"
         )
         if ret == 0 and "100%" in output:
             logger.info(f"Succeeded to {sca} SCA for satellite")

@@ -127,7 +127,7 @@ def satellite_settings(ssh, name, value):
     :return: True or raise Fail.
     """
     ret, output = ssh.runcmd(
-        f"hammer settings set " f"--name={name} " f"--value={value}"
+        f"hammer settings set --name={name} --value={value}"
     )
     if ret == 0 and f"Setting [{name}] updated to" in output:
         return True
@@ -152,7 +152,7 @@ def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
     else:
         raise FailException("No manifest file found")
     ssh.runcmd(
-        f"hammer subscription delete-manifest " f"--organization-label {org}"
+        f"hammer subscription delete-manifest --organization-label {org}"
     )
     ret, _ = ssh.runcmd(
         f"hammer subscription upload "

@@ -63,7 +63,7 @@ class VirtwhoHypervisorConfig:
                         pwd=self.hypervisor.ssh_password,
                     )
                     hypervisor_server = (
-                        f"https://{hostname_get(ssh_rhevm)}:" f"443/ovirt-engine"
+                        f"https://{hostname_get(ssh_rhevm)}:443/ovirt-engine"
                     )
                 self.update("server", hypervisor_server)
                 self.update("username", self.hypervisor.username)

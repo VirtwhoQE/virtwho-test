@@ -12,11 +12,11 @@ from virtwho.base import system_reboot, rhel_compose_url
 
 old_pkg = "virt-who-1.31.22-1.el9_0.noarch.rpm "
 old_compose = "latest-RHEL-9.0"
-old_compose_path = "http://download.eng.pek2.redhat.com/" "rhel-9/rel-eng/RHEL-9"
+old_compose_path = "http://download.eng.pek2.redhat.com/rhel-9/rel-eng/RHEL-9"
 if "RHEL-8" in RHEL_COMPOSE:
     old_pkg = "virt-who-1.30.8-1.el8.noarch.rpm"
     old_compose = "latest-RHEL-8.5"
-    old_compose_path = "http://download.eng.pek2.redhat.com/" "rhel-8/rel-eng/RHEL-8"
+    old_compose_path = "http://download.eng.pek2.redhat.com/rhel-8/rel-eng/RHEL-8"
 
 
 @pytest.mark.usefixtures("function_globalconf_clean")
