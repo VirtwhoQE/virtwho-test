@@ -6,16 +6,17 @@
 """
 import pytest
 from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
+from virtwho.base import virtwho_package_url
 from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string
-from virtwho.base import system_reboot, rhel_compose_url
+from virtwho.base import system_reboot
 
-old_pkg = 'virt-who-1.31.22-1.el9_0.noarch.rpm '
+old_pkg = 'virt-who-1.31.22-1.el9_0.noarch'
 old_compose = 'latest-RHEL-9.0'
 old_compose_path = 'http://download.eng.pek2.redhat.com/' \
                    'rhel-9/rel-eng/RHEL-9'
 if 'RHEL-8' in RHEL_COMPOSE:
-    old_pkg = 'virt-who-1.30.8-1.el8.noarch.rpm'
+    old_pkg = 'virt-who-1.30.8-1.el8.noarch'
     old_compose = 'latest-RHEL-8.5'
     old_compose_path = 'http://download.eng.pek2.redhat.com/' \
                        'rhel-8/rel-eng/RHEL-8'
@@ -23,6 +24,7 @@ if 'RHEL-8' in RHEL_COMPOSE:
 
 @pytest.mark.usefixtures('function_globalconf_clean')
 @pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures('class_virtwho_d_conf_clean')
 class TestUpgradeDowngrade:
     @pytest.mark.tier1
     def test_upgrade_downgrade_by_yum(self, ssh_host, virtwho, globalconf):
@@ -119,21 +121,22 @@ class TestUpgradeDowngrade:
             globalconf.update('system_environment', 'http_proxy', 'xxx')
             globalconf.update('system_environment', 'no_proxy', '*')
             # download the current virt-who package
-            file_path = '/tmp/virt-who-rpm-' + random_string()
-            _, repo_extra = rhel_compose_url(RHEL_COMPOSE, RHEL_COMPOSE_PATH)
-            pkg_url = f'{repo_extra}/Packages/{VIRTWHO_PKG}.rpm'
-            # download the old virt-who package
-            _, old_repo_extra = rhel_compose_url(old_compose, old_compose_path)
-            old_pkg_url = f'{old_repo_extra}/Packages/{old_pkg}'
+            file_path = "/tmp/packageUpgradeDowngrade-" + random_string()
+            pkg_url = virtwho_package_url(
+                VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
+            )
             wget_download(ssh_host, pkg_url, file_path)
+            # download the old virt-who package
+            old_pkg_url = virtwho_package_url(
+                old_pkg, old_compose, old_compose_path
+            )
             wget_download(ssh_host, old_pkg_url, file_path)
             # downgrade virt-who to check the configurations not change.
             package_downgrade(ssh_host, 'virt-who',
-                              rpm=f'{file_path}/{old_pkg}')
+                              rpm=f'{file_path}/{old_pkg}.rpm')
             result = virtwho.run_service()
             assert (
-                    package_check(ssh_host, 'virt-who') is not False and
-                    package_check(ssh_host, 'virt-who') != VIRTWHO_PKG and
+                    package_check(ssh_host, 'virt-who') == old_pkg and
                     result['send'] == 1 and
                     result['error'] == 0 and
                     result['debug'] is True

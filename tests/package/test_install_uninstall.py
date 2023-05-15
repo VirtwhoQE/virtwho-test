@@ -8,7 +8,7 @@ import re
 
 import pytest
 from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
-from virtwho.base import rhel_compose_url
+from virtwho.base import virtwho_package_url
 from virtwho.base import package_check, package_install, package_uninstall
 from virtwho.base import wget_download, random_string
 
@@ -86,10 +86,9 @@ class TestInstallUninstall:
             package_uninstall(ssh_host, "virt-who", rpm=VIRTWHO_PKG)
             assert package_check(ssh_host, "virt-who") is False
 
-            _, compose_url_extra = rhel_compose_url(
-                RHEL_COMPOSE, RHEL_COMPOSE_PATH
+            pkg_url = virtwho_package_url(
+                VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
             )
-            pkg_url = compose_url_extra + "/Packages/" + VIRTWHO_PKG + ".rpm"
             file_path = "/tmp/packageInstallUninstall-" + random_string()
             wget_download(ssh_host, url=pkg_url, file_path=file_path)
             package_install(ssh_host, "virt-who",
