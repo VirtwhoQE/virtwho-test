@@ -572,7 +572,7 @@ def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
         raise FailException("Failed to create ssh key ")
 
     # copy id_rsa.pup to remote host
-    ssh_remote.runcmd(f"mkdir ~/.ssh/;" f"echo '{output}' >> ~/.ssh/authorized_keys")
+    ssh_remote.runcmd(f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys")
 
     # creat ~/.ssh/known_hosts for local host
     ssh_local.runcmd(
