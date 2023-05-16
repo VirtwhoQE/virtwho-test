@@ -209,7 +209,9 @@ class TestHypervisorPositive:
     @pytest.mark.tier1
     @pytest.mark.notRHEL8
     @pytest.mark.notLocal
-    def test_virtwho_status(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+    def test_virtwho_status(
+        self, virtwho, function_hypervisor, hypervisor_data, register_data
+    ):
         """
         :title: virt-who: hypervisor: test the virtwho status
         :id: 1608c965-c7f5-427b-b45e-c767600cdbf4
@@ -226,17 +228,13 @@ class TestHypervisorPositive:
         """
         # Run virt-who to report the mapping
         result = virtwho.run_cli()
-        assert (
-            result["error"] == 0
-            and result["send"] == 1
-            and result["thread"] == 0
-        )
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 0
 
         # Check '#virt-who --status' with good configuration
         result = virtwho.run_cli(oneshot=False, status=True)
         assert (
-                "success" in result[function_hypervisor.section]["source_status"]
-                and "success" in result[function_hypervisor.section]["destination_status"]
+            "success" in result[function_hypervisor.section]["source_status"]
+            and "success" in result[function_hypervisor.section]["destination_status"]
         )
 
         # Check #virt-who --status --json
@@ -246,9 +244,11 @@ class TestHypervisorPositive:
         elif "esx" in HYPERVISOR:
             source_connection = f"https://{hypervisor_data['hypervisor_server']}"
         elif "rhevm" in HYPERVISOR:
-            source_connection = hypervisor_data['hypervisor_server'].split("ovirt-engine")[0].strip()
+            source_connection = (
+                hypervisor_data["hypervisor_server"].split("ovirt-engine")[0].strip()
+            )
         else:
-            source_connection = hypervisor_data['hypervisor_server']
+            source_connection = hypervisor_data["hypervisor_server"]
         source = result[function_hypervisor.section]["source"]
         destination = result[function_hypervisor.section]["destination"]
         assert (
@@ -274,7 +274,8 @@ class TestHypervisorPositive:
         result = virtwho.run_cli(oneshot=False, status=True, jsn=True)
         assert (
             result[function_hypervisor.section]["source"]["status"] == "failure"
-            and result[function_hypervisor.section]["destination"]["status"] == "failure"
+            and result[function_hypervisor.section]["destination"]["status"]
+            == "failure"
         )
 
     @pytest.mark.tier2
