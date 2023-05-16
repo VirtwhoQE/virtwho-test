@@ -463,7 +463,7 @@ def ahv_monitor():
                 if "BAD" not in ahv_state:
                     ahv_state = state_update
                 if "BAD" in ahv_state and state_update not in ahv_state:
-                    ahv_state = f"Part {ahv_state}, part {state_update}:
+                    ahv_state = f"Part {ahv_state}, part {state_update}
 
         if not ahv_data and not ahv_data_sw:
             ahv_state = state_server_bad
