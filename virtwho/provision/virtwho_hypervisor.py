@@ -276,7 +276,7 @@ def kubevirt_monitor():
                     f">>>Kubevirt: Check if the guest{guest_name} " f"is running."
                 )
                 if not kubevirt_info["guest_ip"]:
-                    kubevirt_state, _= (state_guest_bad, guest_none)
+                    kubevirt_state, _ = (state_guest_bad, guest_none)
                     logger.error(
                         f"Did not find the rhel guest({guest_name}), "
                         f"please install one."

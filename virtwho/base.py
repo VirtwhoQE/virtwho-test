@@ -327,6 +327,7 @@ def local_files_compare(file1, file2):
     fp2.close()
     return operator.eq(flist1, flist2)
 
+
 def package_info_analyzer(ssh, pkg):
     """
     Analyze the package information after '#rpm -qi {pkg}'.
@@ -571,9 +572,7 @@ def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
         raise FailException("Failed to create ssh key ")
 
     # copy id_rsa.pup to remote host
-    ssh_remote.runcmd(
-        f"mkdir ~/.ssh/;" f"echo '{output}' >> ~/.ssh/authorized_keys"
-    )
+    ssh_remote.runcmd(f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys")
 
     # creat ~/.ssh/known_hosts for local host
     ssh_local.runcmd(
@@ -623,3 +622,17 @@ def system_reboot(ssh):
     if ssh_connect(ssh):
         return True
     raise FailException("Failed to reboot system")
+
+
+def virtwho_package_url(pkg, rhel_compose_id, rhel_compose_path=""):
+    """
+    Get the virt-who package url from http://download.eng.pek2.redhat.com/
+    for downloading.
+    :param pkg: virt-who package, such as virt-who-1.31.26-1.el9.noarch
+    :param rhel_compose_id: rhel compose id
+    :param rhel_compose_path: the path of rhel compose id
+    :return: virt-who pkg url
+    """
+    _, compose_url_extra = rhel_compose_url(rhel_compose_id, rhel_compose_path)
+    pkg_url = compose_url_extra + "/Packages/" + pkg + ".rpm"
+    return pkg_url

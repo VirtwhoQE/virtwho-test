@@ -14,6 +14,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
+
 def install_rhel_by_grup(args):
     """
     Install a rhel system beased on an available host by change the grub files.

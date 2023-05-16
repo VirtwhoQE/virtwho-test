@@ -16,6 +16,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
+
 def provision_virtwho_host(args):
     """
     Configure virt-who host for an existing server or a new one installed
@@ -202,9 +203,7 @@ def libvirt_access_no_password(ssh):
     ret, output = ssh.runcmd("cat ~/.ssh/id_rsa.pub")
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key")
-    ssh_libvirt.runcmd(
-        f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys"
-    )
+    ssh_libvirt.runcmd(f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys")
     ret, _ = ssh.runcmd(
         f"ssh-keyscan -p 22 {config.libvirt.server} >> ~/.ssh/known_hosts"
     )

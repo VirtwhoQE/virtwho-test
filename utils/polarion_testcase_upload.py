@@ -12,6 +12,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
+
 def polarion_test_case_upload(args):
     """
     Upload the test cases to Polarion.
@@ -89,7 +90,7 @@ def log_analyzer(job_id):
         ret, output = subprocess.getstatusoutput(f"cat {args.log_file}")
         output = output.replace("&#034;", '"').replace("&#039;", "'")
         log = json.loads(
-            output[output.rfind("Message Content:") + 17:output.rfind("}") + 1],
+            output[output.rfind("Message Content:") + 17 : output.rfind("}") + 1],
             strict=False,
         )
         case_pass_num = 0

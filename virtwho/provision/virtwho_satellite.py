@@ -16,6 +16,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
+
 def satellite_deploy_for_virtwho(args):
     """
     Deploy satellite by cdn or dogfood with required arguments.
@@ -126,9 +127,7 @@ def satellite_settings(ssh, name, value):
     :param value: the value.
     :return: True or raise Fail.
     """
-    ret, output = ssh.runcmd(
-        f"hammer settings set --name={name} --value={value}"
-    )
+    ret, output = ssh.runcmd(f"hammer settings set --name={name} --value={value}")
     if ret == 0 and f"Setting [{name}] updated to" in output:
         return True
     raise FailException(f"Failed to set {name}:{value} for satellite")
@@ -151,9 +150,7 @@ def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
         filename = f"{path}/{output.strip()}"
     else:
         raise FailException("No manifest file found")
-    ssh.runcmd(
-        f"hammer subscription delete-manifest --organization-label {org}"
-    )
+    ssh.runcmd(f"hammer subscription delete-manifest --organization-label {org}")
     ret, _ = ssh.runcmd(
         f"hammer subscription upload "
         f"--organization-label {org} "
