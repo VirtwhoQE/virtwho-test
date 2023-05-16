@@ -666,7 +666,9 @@ class TestRHEVMNegative:
             )
 
     @pytest.mark.tier2
-    def test_url_without_ovirt_engine(self, virtwho, function_hypervisor, hypervisor_data):
+    def test_url_without_ovirt_engine(
+        self, virtwho, function_hypervisor, hypervisor_data
+    ):
         """Test the rhevm url without ovirt engine
 
         :title: virt-who: rhevm: test server url (negative)
@@ -684,16 +686,15 @@ class TestRHEVMNegative:
 
         """
         # run virt-who for rhevm with ovirt-engine/
-        function_hypervisor.update("server", function_hypervisor.rhevm_hypervisor_url + "/")
+        function_hypervisor.update(
+            "server", function_hypervisor.rhevm_hypervisor_url + "/"
+        )
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # run virt-who for rhevm without /ovirt-engine
-        function_hypervisor.update("server",
-                                   function_hypervisor.rhevm_hypervisor_url.rstrip("/ovirt-engine/"))
+        function_hypervisor.update(
+            "server", function_hypervisor.rhevm_hypervisor_url.rstrip("/ovirt-engine/")
+        )
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
