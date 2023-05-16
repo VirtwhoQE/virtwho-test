@@ -309,7 +309,8 @@ def kubevirt_monitor():
                     "cpu": [config.kubevirt.cpu, kubevirt_data["cpu"]],
                     "guest_ip": [config.kubevirt.guest_ip, kubevirt_data["hostname"]],
                     "guest_uuid": [
-                        config.kubevirt.guest_uuid, kubevirt_data["guest_uuid"]
+                        config.kubevirt.guest_uuid,
+                        kubevirt_data["guest_uuid"],
                     ],
                 }
             )
@@ -320,14 +321,17 @@ def kubevirt_monitor():
                     {
                         "uuid_sw": [config.kubevirt.uuid_sw, kubevirt_data_sw["uuid"]],
                         "hostname_sw": [
-                            config.kubevirt.hostname_sw, kubevirt_data_sw["hostname"],
+                            config.kubevirt.hostname_sw,
+                            kubevirt_data_sw["hostname"],
                         ],
                         "version_sw": [
-                            config.kubevirt.version_sw, kubevirt_data_sw["version"]
+                            config.kubevirt.version_sw,
+                            kubevirt_data_sw["version"],
                         ],
                         "cpu_sw": [config.kubevirt.cpu_sw, kubevirt_data_sw["cpu"]],
                         "guest_ip_sw": [
-                            config.kubevirt.guest_ip_sw, kubevirt_data_sw["hostname"],
+                            config.kubevirt.guest_ip_sw,
+                            kubevirt_data_sw["hostname"],
                         ],
                         "guest_uuid_sw": [
                             config.kubevirt.guest_uuid_sw,
@@ -449,10 +453,12 @@ def ahv_monitor():
                 compare_dict.update(
                     {
                         "guest_ip_sw": [
-                            config.ahv.guest_ip_sw, ahv_data_sw["guest_ip"]
+                            config.ahv.guest_ip_sw,
+                            ahv_data_sw["guest_ip"],
                         ],
                         "guest_uuid_sw": [
-                            config.ahv.guest_uuid_sw, ahv_data_sw["guest_uuid"]
+                            config.ahv.guest_uuid_sw,
+                            ahv_data_sw["guest_uuid"],
                         ],
                     }
                 )
