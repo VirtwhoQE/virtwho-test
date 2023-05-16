@@ -267,17 +267,13 @@ def kubevirt_monitor():
 
         else:
             for guest_name, guest_info in guest_dict.items():
-                logger.info(
-                    f">>>Kubevirt: Get the hypervisor data of {guest_name}."
-                )
+                logger.info(f">>>Kubevirt: Get the hypervisor data of {guest_name}.")
                 kubevirt_info = kubevirt.guest_search(
                     guest_name, guest_info["guest_port"]
                 )
                 logger.info(f"=== Kubevirt data:\n{kubevirt_info}\n===")
 
-                logger.info(
-                    f">>>Kubevirt: Check if the guest{guest_name} is running."
-                )
+                logger.info(f">>>Kubevirt: Check if the guest{guest_name} is running.")
                 if not kubevirt_info["guest_ip"]:
                     kubevirt_state, _ = (state_guest_bad, guest_none)
                     logger.error(
@@ -286,9 +282,7 @@ def kubevirt_monitor():
                     )
                 else:
                     if ssh_connect(guest_info["ssh_guest"]):
-                        logger.info(
-                            f"The rhel guest({guest_name}) is running well."
-                        )
+                        logger.info(f"The rhel guest({guest_name}) is running well.")
                     else:
                         kubevirt_state, _ = (state_guest_bad, guest_down)
                         logger.warning(
