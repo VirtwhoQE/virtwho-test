@@ -132,9 +132,7 @@ class TestUpgradeDowngrade:
             )
             wget_download(ssh_host, old_pkg_url, file_path)
             # downgrade virt-who to check the configurations not change.
-            package_downgrade(
-                ssh_host, "virt-who", rpm=f"{file_path}/{old_pkg}.rpm"
-            )
+            package_downgrade(ssh_host, "virt-who", rpm=f"{file_path}/{old_pkg}.rpm")
             result = virtwho.run_service()
             assert (
                     package_check(ssh_host, "virt-who") == old_pkg and

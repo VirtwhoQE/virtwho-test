@@ -91,9 +91,7 @@ class TestInstallUninstall:
             )
             file_path = "/tmp/packageInstallUninstall-" + random_string()
             wget_download(ssh_host, url=pkg_url, file_path=file_path)
-            package_install(
-                ssh_host, "virt-who", rpm=f"{file_path}/{VIRTWHO_PKG}.rpm"
-            )
+            package_install(ssh_host, "virt-who", rpm=f"{file_path}/{VIRTWHO_PKG}.rpm")
             assert package_check(ssh_host, "virt-who") == VIRTWHO_PKG
         finally:
             if package_check(ssh_host, "virt-who") is False:
