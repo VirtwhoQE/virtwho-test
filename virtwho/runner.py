@@ -322,9 +322,9 @@ class VirtwhoRunner:
         elif "virtwho.main DEBUG" in rhsm_log or "rhsm.connection DEBUG" in rhsm_log:
             if "satellite" in self.register_type:
                 if self.mode == "local":
-                    msg = r'Response: status=200, request="PUT /rhsm/consumers"'
+                    msg = r'Response: status=200, request="PUT /rhsm/consumers'
                 else:
-                    msg = r'Response: status=200, request="POST /rhsm/hypervisors"'
+                    msg = r'Response: status=200, request="POST /rhsm/hypervisors'
             if "rhsm" in self.register_type:
                 if self.mode == "local":
                     msg = (
