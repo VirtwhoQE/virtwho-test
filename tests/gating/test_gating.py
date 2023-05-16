@@ -8,8 +8,8 @@ import pytest
 from virtwho import HYPERVISOR, REGISTER
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('class_hypervisor')
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("class_hypervisor")
 class TestGating:
     def test_debug(self, virtwho):
         """Test the '-d' option in virt-who command line
@@ -32,14 +32,10 @@ class TestGating:
             2. [DEBUG] logs are printed with "-d" option
         """
         result = virtwho.run_cli(debug=False)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['debug'] is False)
+        assert result["send"] == 1 and result["error"] == 0 and result["debug"] is False
 
         result = virtwho.run_cli(debug=True)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['debug'] is True)
+        assert result["send"] == 1 and result["error"] == 0 and result["debug"] is True
 
     def test_oneshot(self, virtwho):
         """Test the '-o' option in virt-who command line
@@ -62,16 +58,20 @@ class TestGating:
             2. virt-who thread is terminated after reporting once with "-o"
         """
         result = virtwho.run_cli(oneshot=False)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['thread'] == 1
-                and result['terminate'] == 0)
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and result["thread"] == 1
+            and result["terminate"] == 0
+        )
 
         result = virtwho.run_cli(oneshot=True)
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and result['thread'] == 0
-                and result['terminate'] == 1)
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and result["thread"] == 0
+            and result["terminate"] == 1
+        )
 
     def test_interval(self, virtwho, globalconf, class_debug_true):
         """Test the interval option in /etc/virt-who.conf
@@ -96,19 +96,15 @@ class TestGating:
             3. the interval uses the setting value when run with interval >= 60
         """
         result = virtwho.run_service()
-        assert (result['send'] == 1
-                and result['interval'] == 3600)
+        assert result["send"] == 1 and result["interval"] == 3600
 
-        globalconf.update('global', 'interval', '10')
+        globalconf.update("global", "interval", "10")
         result = virtwho.run_service()
-        assert (result['send'] == 1
-                and result['interval'] == 3600)
+        assert result["send"] == 1 and result["interval"] == 3600
 
-        globalconf.update('global', 'interval', '60')
+        globalconf.update("global", "interval", "60")
         result = virtwho.run_service(wait=60)
-        assert (result['send'] == 1
-                and result['interval'] == 60
-                and result['loop'] == 60)
+        assert result["send"] == 1 and result["interval"] == 60 and result["loop"] == 60
 
     def test_hypervisor_id(self, virtwho, class_hypervisor, hypervisor_data):
         """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
@@ -131,29 +127,29 @@ class TestGating:
             hypervisor id shows uuid/hostname/hwuuid in mapping as the setting.
         """
         try:
-            class_hypervisor.update('hypervisor_id', 'uuid')
+            class_hypervisor.update("hypervisor_id", "uuid")
             result = virtwho.run_cli()
-            assert (result['send'] == 1
-                    and
-                    result['hypervisor_id'] == hypervisor_data[
-                        'hypervisor_uuid'])
+            assert (
+                result["send"] == 1
+                and result["hypervisor_id"] == hypervisor_data["hypervisor_uuid"]
+            )
 
-            class_hypervisor.update('hypervisor_id', 'hostname')
+            class_hypervisor.update("hypervisor_id", "hostname")
             result = virtwho.run_cli()
-            assert (result['send'] == 1
-                    and
-                    result['hypervisor_id'] == hypervisor_data[
-                        'hypervisor_hostname'])
+            assert (
+                result["send"] == 1
+                and result["hypervisor_id"] == hypervisor_data["hypervisor_hostname"]
+            )
 
-            if HYPERVISOR in ['esx', 'rhevm']:
-                class_hypervisor.update('hypervisor_id', 'hwuuid')
+            if HYPERVISOR in ["esx", "rhevm"]:
+                class_hypervisor.update("hypervisor_id", "hwuuid")
                 result = virtwho.run_cli()
-                assert (result['send'] == 1
-                        and
-                        result['hypervisor_id'] == hypervisor_data[
-                            'hypervisor_hwuuid'])
+                assert (
+                    result["send"] == 1
+                    and result["hypervisor_id"] == hypervisor_data["hypervisor_hwuuid"]
+                )
         finally:
-            class_hypervisor.update('hypervisor_id', 'hostname')
+            class_hypervisor.update("hypervisor_id", "hostname")
 
     def test_host_guest_association(self, virtwho, register_data, hypervisor_data):
         """Test the host to guest association from mapping
@@ -174,19 +170,30 @@ class TestGating:
 
             host associated correctly with guest in mapping.
         """
-        guest_uuid = hypervisor_data['guest_uuid']
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        default_org = register_data['default_org']
+        guest_uuid = hypervisor_data["guest_uuid"]
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        default_org = register_data["default_org"]
         # assert the association in mapping
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and virtwho.associate_in_mapping(
-                    result, default_org, hypervisor_hostname, guest_uuid))
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and virtwho.associate_in_mapping(
+                result, default_org, hypervisor_hostname, guest_uuid
+            )
+        )
 
-    def test_vdc_bonus_pool(self, virtwho, sm_guest, function_guest_register,
-                            satellite, rhsm, hypervisor_data, sku_data,
-                            vdc_pool_physical):
+    def test_vdc_bonus_pool(
+        self,
+        virtwho,
+        sm_guest,
+        function_guest_register,
+        satellite,
+        rhsm,
+        hypervisor_data,
+        sku_data,
+        vdc_pool_physical,
+    ):
         """Test the vdc subscription can derive bonus pool for guest using
 
         :title: virt-who: gating: test the derived vdc virtual bonus pool
@@ -208,21 +215,22 @@ class TestGating:
             2. Virtual bonus vdc pool is created
             3. Guest can subscribe the bonus vdc pool
         """
-        sku_virt = sku_data['vdc_virtual']
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        sku_virt = sku_data["vdc_virtual"]
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0)
+        assert result["send"] == 1 and result["error"] == 0
 
         # attach vdc for hypervisor, guest can get the bonus virtual pool.
-        if REGISTER == 'rhsm':
+        if REGISTER == "rhsm":
             rhsm.attach(host_name=hypervisor_hostname, pool=vdc_pool_physical)
         else:
             satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
         sm_guest.refresh()
-        sku_data_virt = sm_guest.available(sku_virt, 'Virtual')
-        sm_guest.attach(pool=sku_data_virt['pool_id'])
+        sku_data_virt = sm_guest.available(sku_virt, "Virtual")
+        sm_guest.attach(pool=sku_data_virt["pool_id"])
         consumed_data = sm_guest.consumed(sku_id=sku_virt)
-        assert (consumed_data['sku'] == sku_virt
-                and consumed_data['sku_type'] == 'Virtual'
-                and consumed_data['temporary'] is False)
+        assert (
+            consumed_data["sku"] == sku_virt
+            and consumed_data["sku_type"] == "Virtual"
+            and consumed_data["temporary"] is False
+        )

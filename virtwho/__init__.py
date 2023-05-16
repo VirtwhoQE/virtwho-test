@@ -9,29 +9,29 @@ RHEL_COMPOSE_PATH = config.job.rhel_compose_path
 
 HYPERVISOR = config.job.hypervisor
 
-SYSCONFIG_FILE = '/etc/sysconfig/virt-who'
+SYSCONFIG_FILE = "/etc/sysconfig/virt-who"
 
-HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}.conf'
+HYPERVISOR_FILE = f"/etc/virt-who.d/{HYPERVISOR}.conf"
 
-PRINT_JSON_FILE = '/root/print.json'
+PRINT_JSON_FILE = "/root/print.json"
 
-FAKE_CONFIG_NAME = 'fake.conf'
+FAKE_CONFIG_NAME = "fake.conf"
 
-FAKE_CONFIG_FILE = f'/etc/virt-who.d/{FAKE_CONFIG_NAME}'
+FAKE_CONFIG_FILE = f"/etc/virt-who.d/{FAKE_CONFIG_NAME}"
 
-SECOND_HYPERVISOR_FILE = f'/etc/virt-who.d/{HYPERVISOR}-second.conf'
+SECOND_HYPERVISOR_FILE = f"/etc/virt-who.d/{HYPERVISOR}-second.conf"
 
-SECOND_HYPERVISOR_SECTION = f'virtwho-{HYPERVISOR}-second'
+SECOND_HYPERVISOR_SECTION = f"virtwho-{HYPERVISOR}-second"
 
 REGISTER = config.job.register
 
 VIRTWHO_PKG = config.virtwho.package
 
 # Backup file for /etc/virt-who.conf
-VIRTWHO_CONF_BACKUP = 'virt-who.conf.save'
+VIRTWHO_CONF_BACKUP = "virt-who.conf.save"
 
 # Backup file for /etc/rhsm/rhsm.conf
-RHSM_CONF_BACKUP = 'rhsm.conf.save'
+RHSM_CONF_BACKUP = "rhsm.conf.save"
 
 
 class FailException(BaseException):

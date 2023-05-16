@@ -9,34 +9,34 @@ from virtwho.settings import config
 from virtwho import REGISTER, HYPERVISOR
 from virtwho.register import Satellite, RHSM
 
-if REGISTER == 'satellite':
+if REGISTER == "satellite":
     register = Satellite(
         server=config.satellite.server,
         org=config.satellite.default_org,
-        activation_key=config.satellite.activation_key
+        activation_key=config.satellite.activation_key,
     )
 else:
     register = RHSM()
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def sca_enable():
     """Enable SCA mode before run test cases"""
-    register.sca(sca='enable')
+    register.sca(sca="enable")
 
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope="class")
 def sca_disable():
     """Disable SCA mode after finished all test cases"""
     yield
-    register.sca(sca='disable')
+    register.sca(sca="disable")
 
 
-@pytest.mark.usefixtures('class_globalconf_clean')
-@pytest.mark.usefixtures('class_hypervisor')
-@pytest.mark.usefixtures('class_debug_true')
-@pytest.mark.usefixtures('sca_enable')
-@pytest.mark.usefixtures('sca_disable')
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("sca_enable")
+@pytest.mark.usefixtures("sca_disable")
 class TestSCA:
     def test_hypervisor_facts(self, virtwho, hypervisor_data, register_data):
         """Test the hypervisor facts in mapping
@@ -55,23 +55,30 @@ class TestSCA:
             2. the hypervisor facts of type, version, socket, dmi and cluster
                 are expected.
         """
-        register_org = register_data['default_org']
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+        register_org = register_data["default_org"]
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         result = virtwho.run_cli()
-        assert (result['send'] == 1
-                and result['error'] == 0)
+        assert result["send"] == 1 and result["error"] == 0
 
-        facts = result['mappings'][register_org][hypervisor_hostname]
-        assert (facts['type'] == hypervisor_data['type']
-                and facts['version'] == hypervisor_data['version']
-                and facts['socket'] == hypervisor_data['cpu']
-                and facts['dmi'] == hypervisor_data['hypervisor_uuid'])
-        if HYPERVISOR in ['esx', 'rhevm', 'ahv']:
-            assert facts['cluster'] == hypervisor_data['cluster']
+        facts = result["mappings"][register_org][hypervisor_hostname]
+        assert (
+            facts["type"] == hypervisor_data["type"]
+            and facts["version"] == hypervisor_data["version"]
+            and facts["socket"] == hypervisor_data["cpu"]
+            and facts["dmi"] == hypervisor_data["hypervisor_uuid"]
+        )
+        if HYPERVISOR in ["esx", "rhevm", "ahv"]:
+            assert facts["cluster"] == hypervisor_data["cluster"]
 
-    def test_host_to_guest_association(self, virtwho, sm_guest, ssh_guest,
-                                       register_data, hypervisor_data,
-                                       function_guest_register):
+    def test_host_to_guest_association(
+        self,
+        virtwho,
+        sm_guest,
+        ssh_guest,
+        register_data,
+        hypervisor_data,
+        function_guest_register,
+    ):
         """Test the host-to-guest association in mapping log and register server
         Web UI.
 
@@ -89,26 +96,30 @@ class TestSCA:
             1. the host and guest are associated in the both mapping
             and register server WebUI
         """
-        guest_uuid = hypervisor_data['guest_uuid']
-        guest_hostname = hypervisor_data['guest_hostname']
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        default_org = register_data['default_org']
+        guest_uuid = hypervisor_data["guest_uuid"]
+        guest_hostname = hypervisor_data["guest_hostname"]
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        default_org = register_data["default_org"]
         # assert the association in mapping
         result = virtwho.run_cli()
-        mappings = result['mappings']
+        mappings = result["mappings"]
         associated_hypervisor_in_mapping = mappings[default_org][guest_uuid][
-            'guest_hypervisor']
-        assert (result['send'] == 1
-                and result['error'] == 0
-                and associated_hypervisor_in_mapping == hypervisor_hostname)
+            "guest_hypervisor"
+        ]
+        assert (
+            result["send"] == 1
+            and result["error"] == 0
+            and associated_hypervisor_in_mapping == hypervisor_hostname
+        )
         # assert the association in Satellite web
-        if REGISTER == 'satellite':
+        if REGISTER == "satellite":
             assert register.associate(hypervisor_hostname, guest_hostname)
         else:
             assert register.associate(hypervisor_hostname, guest_uuid)
 
-    def test_guest_entitlement_status(self, ssh_guest, function_guest_register,
-                                      hypervisor_data):
+    def test_guest_entitlement_status(
+        self, ssh_guest, function_guest_register, hypervisor_data
+    ):
         """Test the guest entitlement status.
 
         :title: virt-who: sca: test guest entitlement status
@@ -127,13 +138,15 @@ class TestSCA:
             2. get the 'This host's organization is in Simple Content Access
                 mode. Auto-attach is disabled'
         """
-        ret, output = ssh_guest.runcmd('subscription-manager status')
-        assert ('Content Access Mode is set to Simple Content Access' in output)
+        ret, output = ssh_guest.runcmd("subscription-manager status")
+        assert "Content Access Mode is set to Simple Content Access" in output
 
-        guest_hostname = hypervisor_data['guest_hostname']
-        if 'satellite' in REGISTER:
-            msg = "This host's organization is in Simple Content Access mode." \
-                  " Auto-attach is disabled"
+        guest_hostname = hypervisor_data["guest_hostname"]
+        if "satellite" in REGISTER:
+            msg = (
+                "This host's organization is in Simple Content Access mode."
+                " Auto-attach is disabled"
+            )
             result = register.attach(host=guest_hostname)
             assert msg in result
         else:
@@ -156,10 +169,12 @@ class TestSCA:
             get the 'This host's organization is in Simple Content Access
                 mode. Auto-attach is disabled'
         """
-        hypervisor_hostname = hypervisor_data['hypervisor_hostname']
-        if 'satellite' in REGISTER:
-            msg = "This host's organization is in Simple Content Access mode." \
-                  " Auto-attach is disabled"
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        if "satellite" in REGISTER:
+            msg = (
+                "This host's organization is in Simple Content Access mode."
+                " Auto-attach is disabled"
+            )
             result = register.attach(host=hypervisor_hostname)
             assert msg in result
         else:

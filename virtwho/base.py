@@ -20,19 +20,19 @@ def system_init(ssh, keyword):
     """
     host_ip = ipaddr_get(ssh)
     host_name = hostname_get(ssh)
-    if ('localhost' in host_name
-            or 'unused' in host_name
-            or 'openshift' in host_name
-            or host_name is None):
-        random_str = ''.join(
-            random.sample(string.ascii_letters + string.digits, 8)
-        )
-        host_name = f'{keyword}-{random_str}.redhat.com'
+    if (
+        "localhost" in host_name
+        or "unused" in host_name
+        or "openshift" in host_name
+        or host_name is None
+    ):
+        random_str = "".join(random.sample(string.ascii_letters + string.digits, 8))
+        host_name = f"{keyword}-{random_str}.redhat.com"
     hostname_set(ssh, host_name)
-    etc_hosts_set(ssh, f'{host_ip} {host_name}')
+    etc_hosts_set(ssh, f"{host_ip} {host_name}")
     firewall_stop(ssh)
     selinux_disable(ssh)
-    logger.info(f'Finished to init system {host_name}')
+    logger.info(f"Finished to init system {host_name}")
 
 
 def ipaddr_get(ssh):
@@ -40,12 +40,11 @@ def ipaddr_get(ssh):
     Get the host ip address.
     :param ssh: ssh access of host
     """
-    ret, output = ssh.runcmd("ip route get 8.8.8.8 |"
-                             "awk '/src/ { print $7 }'")
+    ret, output = ssh.runcmd("ip route get 8.8.8.8 |" "awk '/src/ { print $7 }'")
     if ret == 0 and output:
         return output.strip()
     else:
-        logger.error(f'Failed to get ip address.')
+        logger.error(f"Failed to get ip address.")
         return None
 
 
@@ -54,11 +53,11 @@ def hostname_get(ssh):
     Get the hostname.
     :param ssh: ssh access of host
     """
-    ret, output = ssh.runcmd('hostname')
+    ret, output = ssh.runcmd("hostname")
     if ret == 0 and output:
         return output.strip()
     else:
-        logger.error('Failed to get hostname.')
+        logger.error("Failed to get hostname.")
         return None
 
 
@@ -68,16 +67,20 @@ def hostname_set(ssh, hostname):
     :param ssh: ssh access of host
     :param hostname: hostname
     """
-    ret1, _ = ssh.runcmd(f'hostnamectl set-hostname {hostname}')
-    cmd = (f"if [ -f /etc/hostname ];"
-           f"then sed -i -e '/localhost/d' -e '/{hostname}/d' /etc/hostname;"
-           f"echo {hostname} >> /etc/hostname; fi")
-    if rhel_version(ssh) == '6':
-        cmd = (f"sed -i '/HOSTNAME=/d' /etc/sysconfig/network;"
-               f"echo 'HOSTNAME={hostname}' >> /etc/sysconfig/network")
+    ret1, _ = ssh.runcmd(f"hostnamectl set-hostname {hostname}")
+    cmd = (
+        f"if [ -f /etc/hostname ];"
+        f"then sed -i -e '/localhost/d' -e '/{hostname}/d' /etc/hostname;"
+        f"echo {hostname} >> /etc/hostname; fi"
+    )
+    if rhel_version(ssh) == "6":
+        cmd = (
+            f"sed -i '/HOSTNAME=/d' /etc/sysconfig/network;"
+            f"echo 'HOSTNAME={hostname}' >> /etc/sysconfig/network"
+        )
     ret2, _ = ssh.runcmd(cmd)
     if ret1 != 0 or ret2 != 0:
-        raise FailException(f'Failed to set hostname ({hostname})')
+        raise FailException(f"Failed to set hostname ({hostname})")
 
 
 def etc_hosts_set(ssh, value):
@@ -86,10 +89,11 @@ def etc_hosts_set(ssh, value):
     :param ssh: ssh access of host
     :param value: should be the format of '{ip} {hostname}'
     """
-    ret, _ = ssh.runcmd(f"sed -i '/localhost/!d' /etc/hosts;"
-                        f"echo '{value}' >> /etc/hosts")
+    ret, _ = ssh.runcmd(
+        f"sed -i '/localhost/!d' /etc/hosts;" f"echo '{value}' >> /etc/hosts"
+    )
     if ret != 0:
-        raise FailException('Failed to set /etc/hosts')
+        raise FailException("Failed to set /etc/hosts")
 
 
 def firewall_stop(ssh):
@@ -97,13 +101,12 @@ def firewall_stop(ssh):
     Stop firewall for one host.
     :param ssh: ssh access of host
     """
-    cmd = ('systemctl stop firewalld.service;'
-           'systemctl disable firewalld.service')
-    if rhel_version(ssh) == '6':
-        cmd = 'service iptables stop; chkconfig iptables off'
+    cmd = "systemctl stop firewalld.service;" "systemctl disable firewalld.service"
+    if rhel_version(ssh) == "6":
+        cmd = "service iptables stop; chkconfig iptables off"
     ret, _ = ssh.runcmd(cmd)
     if ret != 0:
-        raise FailException('Failed to stop firewall')
+        raise FailException("Failed to stop firewall")
 
 
 def selinux_disable(ssh):
@@ -111,11 +114,13 @@ def selinux_disable(ssh):
     Disable selinux for one host.
     :param ssh: ssh access of host
     """
-    ret, _ = ssh.runcmd("setenforce 0;"
-                        "sed -i -e 's/SELINUX=.*/SELINUX=disabled/g' "
-                        "/etc/selinux/config")
+    ret, _ = ssh.runcmd(
+        "setenforce 0;"
+        "sed -i -e 's/SELINUX=.*/SELINUX=disabled/g' "
+        "/etc/selinux/config"
+    )
     if ret != 0:
-        raise FailException('Failed to disable selinux')
+        raise FailException("Failed to disable selinux")
 
 
 def ssh_connect(ssh):
@@ -123,9 +128,9 @@ def ssh_connect(ssh):
     Test if the host is running and can be accessed by ssh.
     :param ssh: ssh access of host
     """
-    ret, output = ssh.runcmd('rpm -qa filesystem')
-    if ret == 0 and 'filesystem' in output:
-        logger.info(f'Suceeded to ssh connect the host')
+    ret, output = ssh.runcmd("rpm -qa filesystem")
+    if ret == 0 and "filesystem" in output:
+        logger.info(f"Suceeded to ssh connect the host")
         return True
     return False
 
@@ -136,7 +141,7 @@ def host_ping(host, port=22):
     :param host: host ip/fqdn
     :param port: host port
     """
-    ret = os.system(f'ping -c 5 {host} -p {port}')
+    ret = os.system(f"ping -c 5 {host} -p {port}")
     if ret == 0:
         return True
     return False
@@ -148,12 +153,12 @@ def rhel_version(ssh):
     :param ssh: ssh access of host
     :return: one number, such as 7, 8, 9
     """
-    ret, output = ssh.runcmd('cat /etc/redhat-release')
+    ret, output = ssh.runcmd("cat /etc/redhat-release")
     if ret == 0 and output:
-        m = re.search(r'(?<=release )\d', output)
+        m = re.search(r"(?<=release )\d", output)
         rhel_ver = m.group(0)
         return str(rhel_ver)
-    raise FailException('Failed to check rhel version.')
+    raise FailException("Failed to check rhel version.")
 
 
 def url_validation(url):
@@ -162,11 +167,13 @@ def url_validation(url):
     :param url: url link
     :return: True or False
     """
-    output = os.popen(f"if ( curl -o/dev/null -sfI '{url}' );"
-                      f"then echo 'true';"
-                      f"else echo 'false';"
-                      f"fi").read()
-    if output.strip() == 'true':
+    output = os.popen(
+        f"if ( curl -o/dev/null -sfI '{url}' );"
+        f"then echo 'true';"
+        f"else echo 'false';"
+        f"fi"
+    ).read()
+    if output.strip() == "true":
         return True
     return False
 
@@ -179,39 +186,39 @@ def gating_msg_parser(json_msg):
     """
     env = dict()
     msg = json.loads(json_msg)
-    if 'info' in msg.keys():
-        build_id = msg['info']['build_id']
-        task_id = msg['info']['task_id']
+    if "info" in msg.keys():
+        build_id = msg["info"]["build_id"]
+        task_id = msg["info"]["task_id"]
     else:
         build_id = re.findall(r'"build_id":(.*?),', json_msg)[-1].strip()
         task_id = re.findall(r'"task_id":(.*?),', json_msg)[-1].strip()
-    brew_url = f'{config.virtwho.brew}/brew/buildinfo?buildID={build_id}'
+    brew_url = f"{config.virtwho.brew}/brew/buildinfo?buildID={build_id}"
     pkg_url = re.findall(
         r'<a href="http://(.*?).noarch.rpm">download</a>',
-        os.popen(f'curl -k -s -i {brew_url}').read()
+        os.popen(f"curl -k -s -i {brew_url}").read(),
     )[-1]
     if not pkg_url:
-        raise FailException('no package url found')
-    items = pkg_url.split('/')
+        raise FailException("no package url found")
+    items = pkg_url.split("/")
     rhel_release = items[3]
-    version = '9'
-    if 'rhel-8' in rhel_release:
-        version = '8'
-    latest_compose_url = (f'{config.virtwho.repo}/rhel-{version}/nightly/'
-                          f'RHEL-{version}/latest-RHEL-{version}/COMPOSE_ID')
-    latest_compose_id = os.popen(
-        f'curl -s -k -L {latest_compose_url}'
-    ).read().strip()
-    env['build_id'] = build_id
-    env['task_id'] = task_id
-    env['pkg_url'] = 'http://' + pkg_url + '.noarch.rpm'
-    env['pkg_name'] = items[5]
-    env['pkg_version'] = items[6]
-    env['pkg_release'] = items[7]
-    env['pkg_arch'] = items[8]
-    env['pkg_nvr'] = items[9]
-    env['rhel_release'] = rhel_release
-    env['latest_rhel_compose'] = latest_compose_id
+    version = "9"
+    if "rhel-8" in rhel_release:
+        version = "8"
+    latest_compose_url = (
+        f"{config.virtwho.repo}/rhel-{version}/nightly/"
+        f"RHEL-{version}/latest-RHEL-{version}/COMPOSE_ID"
+    )
+    latest_compose_id = os.popen(f"curl -s -k -L {latest_compose_url}").read().strip()
+    env["build_id"] = build_id
+    env["task_id"] = task_id
+    env["pkg_url"] = "http://" + pkg_url + ".noarch.rpm"
+    env["pkg_name"] = items[5]
+    env["pkg_version"] = items[6]
+    env["pkg_release"] = items[7]
+    env["pkg_arch"] = items[8]
+    env["pkg_nvr"] = items[9]
+    env["rhel_release"] = rhel_release
+    env["latest_rhel_compose"] = latest_compose_id
     return env
 
 
@@ -222,15 +229,13 @@ def url_file_download(ssh, local_file, url):
     :param local_file: local file path and name
     :param url: url link of remote file
     """
-    _, _ = ssh.runcmd(f'rm -f {local_file};'
-                      f'curl -L {url} -o {local_file};'
-                      f'sync')
-    ret, output = ssh.runcmd(f'cat {local_file}')
-    if ret != 0 or 'Not Found' in output:
-        raise FailException(f'Failed to download {url}')
+    ssh.runcmd(f"rm -f {local_file};" f"curl -L {url} -o {local_file};" f"sync")
+    ret, output = ssh.runcmd(f"cat {local_file}")
+    if ret != 0 or "Not Found" in output:
+        raise FailException(f"Failed to download {url}")
 
 
-def rhel_compose_repo(ssh, repo_file, compose_id, compose_path=''):
+def rhel_compose_repo(ssh, repo_file, compose_id, compose_path=""):
     """
     Set the BaseOS and AppStream compose repository of rhel.
     :param ssh: ssh access of host
@@ -239,67 +244,71 @@ def rhel_compose_repo(ssh, repo_file, compose_id, compose_path=''):
     :param repo_file: repository file name
     """
     repo_base, repo_extra = rhel_compose_url(compose_id, compose_path)
-    cmd = (f'cat <<EOF > {repo_file}\n'
-           f'[{compose_id}]\n'
-           f'name={compose_id}\n'
-           f'baseurl={repo_base}\n'
-           f'enabled=1\n'
-           f'gpgcheck=0\n\n'
-           f'[{compose_id}-appstream]\n'
-           f'name={compose_id}-appstream\n'
-           f'baseurl={repo_extra}\n'
-           f'enabled=1\n'
-           f'gpgcheck=0\n'
-           f'EOF')
+    cmd = (
+        f"cat <<EOF > {repo_file}\n"
+        f"[{compose_id}]\n"
+        f"name={compose_id}\n"
+        f"baseurl={repo_base}\n"
+        f"enabled=1\n"
+        f"gpgcheck=0\n\n"
+        f"[{compose_id}-appstream]\n"
+        f"name={compose_id}-appstream\n"
+        f"baseurl={repo_extra}\n"
+        f"enabled=1\n"
+        f"gpgcheck=0\n"
+        f"EOF"
+    )
     ret, _ = ssh.runcmd(cmd)
     if ret != 0:
-        raise FailException('Failed to configure rhel compose repo.')
+        raise FailException("Failed to configure rhel compose repo.")
 
 
-def rhel_compose_url(compose_id, compose_path=''):
+def rhel_compose_url(compose_id, compose_path=""):
     """
     Configure the BaseOS and AppStream compose url
     :param compose_id: rhel compose id
     :param compose_path: rhel compose path, use default path when set null.
     """
     base_url = config.virtwho.repo
-    repo_base = ''
-    repo_extra = ''
+    repo_base = ""
+    repo_extra = ""
     if compose_path:
-        if 'RHEL-7' in compose_id:
-            repo_base = f'{compose_path}/{compose_id}/compose/Server/x86_64/os'
-            repo_extra = f'{compose_path}/{compose_id}/compose/Server-optional/x86_64/os'
+        if "RHEL-7" in compose_id:
+            repo_base = f"{compose_path}/{compose_id}/compose/Server/x86_64/os"
+            repo_extra = (
+                f"{compose_path}/{compose_id}/compose/Server-optional/x86_64/os"
+            )
         else:
-            repo_base = f'{compose_path}/{compose_id}/compose/BaseOS/x86_64/os'
-            repo_extra = f'{compose_path}/{compose_id}/compose/AppStream/x86_64/os'
+            repo_base = f"{compose_path}/{compose_id}/compose/BaseOS/x86_64/os"
+            repo_extra = f"{compose_path}/{compose_id}/compose/AppStream/x86_64/os"
     else:
-        if 'RHEL-7' in compose_id:
-            if 'updates' in compose_id:
-                repo_base = f'{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server/x86_64/os'
-                repo_extra = f'{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
-            elif '.n' in compose_id:
-                repo_base = f'{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server/x86_64/os'
-                repo_extra = f'{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
+        if "RHEL-7" in compose_id:
+            if "updates" in compose_id:
+                repo_base = f"{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server/x86_64/os"
+                repo_extra = f"{base_url}/rhel-7/rel-eng/updates/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os"
+            elif ".n" in compose_id:
+                repo_base = f"{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server/x86_64/os"
+                repo_extra = f"{base_url}/rhel-7/nightly/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os"
             else:
-                repo_base = f'{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server/x86_64/os'
-                repo_extra = f'{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os'
-        if 'RHEL-8' in compose_id:
-            if 'updates' in compose_id:
-                repo_base = f'{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
-                repo_extra = f'{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
-            elif '.d' in compose_id:
-                repo_base = f'{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
-                repo_extra = f'{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
+                repo_base = f"{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server/x86_64/os"
+                repo_extra = f"{base_url}/rhel-7/rel-eng/RHEL-7/{compose_id}/compose/Server-optional/x86_64/os"
+        if "RHEL-8" in compose_id:
+            if "updates" in compose_id:
+                repo_base = f"{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os"
+                repo_extra = f"{base_url}/rhel-8/rel-eng/updates/RHEL-8/{compose_id}/compose/AppStream/x86_64/os"
+            elif ".d" in compose_id:
+                repo_base = f"{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os"
+                repo_extra = f"{base_url}/rhel-8/development/RHEL-8/{compose_id}/compose/AppStream/x86_64/os"
             else:
-                repo_base = f'{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os'
-                repo_extra = f'{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/AppStream/x86_64/os'
-        elif 'RHEL-9' in compose_id:
-            if '.d' in compose_id:
-                repo_base = f'{base_url}/rhel-9/development/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os'
+                repo_base = f"{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/BaseOS/x86_64/os"
+                repo_extra = f"{base_url}/rhel-8/nightly/RHEL-8/{compose_id}/compose/AppStream/x86_64/os"
+        elif "RHEL-9" in compose_id:
+            if ".d" in compose_id:
+                repo_base = f"{base_url}/rhel-9/development/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os"
                 repo_extra = f"{base_url}/rhel-9/development/RHEL-9/{compose_id}/compose/AppStream/x86_64/os"
             else:
-                repo_base = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os'
-                repo_extra = f'{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/AppStream/x86_64/os'
+                repo_base = f"{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/BaseOS/x86_64/os"
+                repo_extra = f"{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/AppStream/x86_64/os"
     return repo_base, repo_extra
 
 
@@ -318,24 +327,6 @@ def local_files_compare(file1, file2):
     fp2.close()
     return operator.eq(flist1, flist2)
 
-
-def url_validation(url):
-    """
-    Test if the url available or not.
-    :param url: url link to check
-    :reture: True or False
-    """
-    output = os.popen(
-        f"if ( curl -o/dev/null -sfI '{url}' );"
-        f"then echo 'true';"
-        f"else echo 'false'; fi"
-    ).read()
-    if output.strip() == 'true':
-        return True
-    logger.warning(f'url({url}) not available')
-    return False
-
-
 def package_info_analyzer(ssh, pkg):
     """
     Analyze the package information after '#rpm -qi {pkg}'.
@@ -343,13 +334,13 @@ def package_info_analyzer(ssh, pkg):
     :param pkg: package to test
     :reture: a dict
     """
-    _, output = ssh.runcmd(f'rpm -qi {pkg}')
+    _, output = ssh.runcmd(f"rpm -qi {pkg}")
     data = dict()
-    info = output.strip().split('\n')
+    info = output.strip().split("\n")
     for line in info:
-        if ': ' not in line:
+        if ": " not in line:
             continue
-        line = line.split(': ')
+        line = line.split(": ")
         data[line[0].strip()] = line[1].strip()
     return data
 
@@ -361,12 +352,12 @@ def package_install(ssh, pkg_name, rpm=None):
     :param pkg_name: package name, such as virt-who
     :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
     """
-    cmd = f'yum install -y {pkg_name}'
+    cmd = f"yum install -y {pkg_name}"
     if rpm:
-        cmd = f'rpm -ivh {rpm}'
-    _, _ = ssh.runcmd(cmd)
+        cmd = f"rpm -ivh {rpm}"
+    ssh.runcmd(cmd)
     if package_check(ssh, pkg_name) is False:
-        raise FailException(f'Failed to install {pkg_name}')
+        raise FailException(f"Failed to install {pkg_name}")
 
 
 def package_uninstall(ssh, pkg_name, rpm=False):
@@ -376,12 +367,12 @@ def package_uninstall(ssh, pkg_name, rpm=False):
     :param pkg_name: package name, such as virt-who
     :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
     """
-    cmd = f'yum remove -y {pkg_name}'
+    cmd = f"yum remove -y {pkg_name}"
     if rpm:
-        cmd = f'rpm -e {rpm} --nodeps'
-    _, _ = ssh.runcmd(cmd)
+        cmd = f"rpm -e {rpm} --nodeps"
+    ssh.runcmd(cmd)
     if package_check(ssh, pkg_name) is True:
-        raise FailException(f'Failed to uninstall {pkg_name}')
+        raise FailException(f"Failed to uninstall {pkg_name}")
 
 
 def package_upgrade(ssh, pkg_name, rpm=None):
@@ -391,12 +382,12 @@ def package_upgrade(ssh, pkg_name, rpm=None):
     :param pkg_name: package name, such as virt-who
     :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
     """
-    cmd = f'yum upgrade -y {pkg_name}'
+    cmd = f"yum upgrade -y {pkg_name}"
     if rpm:
-        cmd = f'rpm -Uvh {rpm}'
+        cmd = f"rpm -Uvh {rpm}"
     ret, output = ssh.runcmd(cmd)
     if ret != 0:
-        raise FailException(f'Failed to upgrade {pkg_name}')
+        raise FailException(f"Failed to upgrade {pkg_name}")
 
 
 def package_downgrade(ssh, pkg_name, rpm=False):
@@ -406,12 +397,12 @@ def package_downgrade(ssh, pkg_name, rpm=False):
     :param pkg_name: package name, such as virt-who
     :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
     """
-    cmd = f'yum downgrade -y {pkg_name}'
+    cmd = f"yum downgrade -y {pkg_name}"
     if rpm:
-        cmd = f'rpm -Uvh --oldpackage {rpm}'
+        cmd = f"rpm -Uvh --oldpackage {rpm}"
     ret, output = ssh.runcmd(cmd)
     if ret != 0:
-        raise FailException(f'Failed to downgrade {pkg_name}')
+        raise FailException(f"Failed to downgrade {pkg_name}")
 
 
 def package_check(ssh, pkg_name):
@@ -421,7 +412,7 @@ def package_check(ssh, pkg_name):
     :param pkg_name: package name, such as virt-who
     :return: the package or False
     """
-    ret, output = ssh.runcmd(f'rpm -qa {pkg_name}')
+    ret, output = ssh.runcmd(f"rpm -qa {pkg_name}")
     if ret == 0 and pkg_name in output:
         return output.strip()
     return False
@@ -435,16 +426,16 @@ def wget_download(ssh, url, file_path, file_name=None):
     :param file_path: the save path
     :param file_name: the save name
     """
-    _, ouput = ssh.runcmd(f'ls {file_path}')
-    if 'No such file or directory' in ouput:
-        _, _ = ssh.runcmd(f'mkdir -p {file_path}')
-    cmd = f'wget {url} -P {file_path} '
+    _, ouput = ssh.runcmd(f"ls {file_path}")
+    if "No such file or directory" in ouput:
+        ssh.runcmd(f"mkdir -p {file_path}")
+    cmd = f"wget {url} -P {file_path} "
     if file_name:
-        cmd += f' -O {file_name}'
+        cmd += f" -O {file_name}"
     ret, output = ssh.runcmd(cmd)
-    if ret == 0 and '100%' in output:
+    if ret == 0 and "100%" in output:
         return True
-    raise FailException(f'Failed to wget download from {url}')
+    raise FailException(f"Failed to wget download from {url}")
 
 
 def random_string(num=8):
@@ -452,9 +443,7 @@ def random_string(num=8):
     Create a random string with ascii and digit, such as 'Ca9KGqlY'
     :param num: the string numbers, default is 8
     """
-    random_str = ''.join(
-        random.sample(string.ascii_letters + string.digits, num)
-    )
+    random_str = "".join(random.sample(string.ascii_letters + string.digits, num))
     return random_str
 
 
@@ -466,27 +455,29 @@ def encrypt_password(ssh, password, option=None):
     :param option: -p, --password
     :return: the encrypted password
     """
-    log_file = '/tmp/virtwho_encry_password'
+    log_file = "/tmp/virtwho_encry_password"
     if not option:
-        attrs = [f'Password:|{password}']
-        ret, output = expect_run(ssh, 'virt-who-password', attrs)
+        attrs = [f"Password:|{password}"]
+        ret, output = expect_run(ssh, "virt-who-password", attrs)
         if ret == 0 and output:
-            encrypted_value = output.split('\r\n')[-2].strip()
+            encrypted_value = output.split("\r\n")[-2].strip()
             logger.info(
-                f'Succeeded to get encrypted_password without option: '
-                f'{encrypted_value}')
+                f"Succeeded to get encrypted_password without option: "
+                f"{encrypted_value}"
+            )
             return encrypted_value
-        raise FailException('Failed to get encrypted password without option')
+        raise FailException("Failed to get encrypted password without option")
     else:
-        cmd = f'virt-who-password -p {password} > {log_file}'
+        cmd = f"virt-who-password -p {password} > {log_file}"
         ret, output = ssh.runcmd(cmd)
         if ret == 0:
-            ret, output = ssh.runcmd(f'cat {log_file}')
+            ret, output = ssh.runcmd(f"cat {log_file}")
             if output:
                 encrypted_value = output.strip()
                 logger.info(
-                    f'Succeeded to get encrypted_password with option '
-                    f'"{option}": {encrypted_value}')
+                    f"Succeeded to get encrypted_password with option "
+                    f'"{option}": {encrypted_value}'
+                )
                 return encrypted_value
         raise FailException(f'Failed to get encrypted password with "{option}"')
 
@@ -499,7 +490,7 @@ def get_host_domain_id(host_hwuuid, log_info):
     :return: the domain_id from the host
     """
     domain_id = re.findall(
-        fr"Skipping host '{host_hwuuid}' because its parent '(.*?)'", log_info
+        rf"Skipping host '{host_hwuuid}' because its parent '(.*?)'", log_info
     )[0]
     return domain_id
 
@@ -510,14 +501,14 @@ def rhel_host_uuid_get(ssh):
     :param ssh: ssh access of testing host
     :return: rhel host uuid
     """
-    ret, output = ssh.runcmd(f'dmidecode -t system |grep UUID')
-    if ret == 0 and 'UUID' in output:
-        uuid = output.split(':')[1].strip()
+    ret, output = ssh.runcmd(f"dmidecode -t system |grep UUID")
+    if ret == 0 and "UUID" in output:
+        uuid = output.split(":")[1].strip()
         return uuid
     return None
 
 
-def msg_search(output, msgs, check='or'):
+def msg_search(output, msgs, check="or"):
     """
     Check if the key messages exist or not in output.
     :param output: messages to search around
@@ -540,9 +531,9 @@ def msg_search(output, msgs, check='or'):
         else:
             if msg_number(output, msg) > 0:
                 if_find = "Yes"
-                logger.info(f'Succeeded to find message: {msg}')
+                logger.info(f"Succeeded to find message: {msg}")
         search_list.append(if_find)
-    if check == 'or':
+    if check == "or":
         if "Yes" in search_list:
             return True
         return False
@@ -574,18 +565,20 @@ def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
     :param remote_port: remote host port
     """
     # create ssh key for local host
-    _, _ = ssh_local.runcmd('echo -e "\n" | ssh-keygen -N "" &> /dev/null')
-    ret, output = ssh_local.runcmd('cat ~/.ssh/id_rsa.pub')
+    ssh_local.runcmd('echo -e "\n" | ssh-keygen -N "" &> /dev/null')
+    ret, output = ssh_local.runcmd("cat ~/.ssh/id_rsa.pub")
     if ret != 0 or output is None:
-        raise FailException('Failed to create ssh key ')
+        raise FailException("Failed to create ssh key ")
 
     # copy id_rsa.pup to remote host
-    _, _ = ssh_remote.runcmd(f"mkdir ~/.ssh/;"
-                             f"echo '{output}' >> ~/.ssh/authorized_keys")
+    ssh_remote.runcmd(
+        f"mkdir ~/.ssh/;" f"echo '{output}' >> ~/.ssh/authorized_keys"
+    )
 
     # creat ~/.ssh/known_hosts for local host
-    _, _ = ssh_local.runcmd(
-        f'ssh-keyscan -p {remote_port} {remote_host} >> ~/.ssh/known_hosts')
+    ssh_local.runcmd(
+        f"ssh-keyscan -p {remote_port} {remote_host} >> ~/.ssh/known_hosts"
+    )
 
 
 def expect_run(ssh, cmd, attrs):
@@ -597,23 +590,25 @@ def expect_run(ssh, cmd, attrs):
     :param attrs: such as ['Password:|password']
     """
     options = list()
-    filename = '/tmp/virtwho.sh'
+    filename = "/tmp/virtwho.sh"
     for attr in attrs:
-        expect_value = attr.split('|')[0]
-        send_value = attr.split('|')[1]
-        expect = fr'expect "{expect_value}"'
-        send = fr'send "{send_value}\r"'
-        options.append(expect + '\n' + send)
-    options = '\n'.join(options)
-    cmd = (f'cat <<EOF > {filename}\n'
-           f'#!/usr/bin/expect\n'
-           f'spawn {cmd}\n'
-           f'{options}\n'
-           f'expect eof\n'
-           f'exit\n'
-           f'EOF')
-    _, _ = ssh.runcmd(cmd)
-    ret, output = ssh.runcmd(f'chmod +x {filename}; {filename}')
+        expect_value = attr.split("|")[0]
+        send_value = attr.split("|")[1]
+        expect = rf'expect "{expect_value}"'
+        send = rf'send "{send_value}\r"'
+        options.append(expect + "\n" + send)
+    options = "\n".join(options)
+    cmd = (
+        f"cat <<EOF > {filename}\n"
+        f"#!/usr/bin/expect\n"
+        f"spawn {cmd}\n"
+        f"{options}\n"
+        f"expect eof\n"
+        f"exit\n"
+        f"EOF"
+    )
+    ssh.runcmd(cmd)
+    ret, output = ssh.runcmd(f"chmod +x {filename}; {filename}")
     return ret, output
 
 
@@ -623,7 +618,7 @@ def system_reboot(ssh):
     :param ssh: ssh access of testing host
     :return: True or raise fail.
     """
-    _, _ = ssh.runcmd('sync;sync;sync;sync;reboot')
+    ssh.runcmd("sync;sync;sync;sync;reboot")
     time.sleep(120)
     if ssh_connect(ssh):
         return True

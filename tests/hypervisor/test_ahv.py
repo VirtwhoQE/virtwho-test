@@ -18,13 +18,14 @@ from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
 
 
-@pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('class_debug_true')
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures("function_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("class_globalconf_clean")
 class TestAHVPositive:
     @pytest.mark.tier1
-    def test_encrypted_password(self, virtwho, function_hypervisor,
-                                hypervisor_data, ssh_host):
+    def test_encrypted_password(
+        self, virtwho, function_hypervisor, hypervisor_data, ssh_host
+    ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_ahv.conf
 
         :title: virt-who: ahv: test encrypted_password option
@@ -41,16 +42,18 @@ class TestAHVPositive:
             2. Succeeded to run the virt-who, no error messages in the log info
         """
         # encrypted_password option is valid value
-        function_hypervisor.delete('password')
-        encrypted_pwd = encrypt_password(ssh_host, hypervisor_data['hypervisor_password'])
-        function_hypervisor.update('encrypted_password', encrypted_pwd)
+        function_hypervisor.delete("password")
+        encrypted_pwd = encrypt_password(
+            ssh_host, hypervisor_data["hypervisor_password"]
+        )
+        function_hypervisor.update("encrypted_password", encrypted_pwd)
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1)
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier1
-    def test_hypervisor_id(self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite):
+    def test_hypervisor_id(
+        self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite
+    ):
         """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: ahv: test hypervisor_id function
@@ -69,24 +72,27 @@ class TestAHVPositive:
 
             hypervisor id shows uuid/hostname in mapping as the setting.
         """
-        hypervisor_ids = ['hostname', 'uuid']
+        hypervisor_ids = ["hostname", "uuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and result['hypervisor_id'] == hypervisor_data[f'hypervisor_{hypervisor_id}'])
-            if REGISTER == 'rhsm':
-                assert rhsm.consumers(hypervisor_data['hypervisor_hostname'])
-                rhsm.delete(hypervisor_data['hypervisor_hostname'])
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and result["hypervisor_id"]
+                == hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            )
+            if REGISTER == "rhsm":
+                assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
+                rhsm.delete(hypervisor_data["hypervisor_hostname"])
             else:
-                if hypervisor_id == 'hostname':
-                    assert satellite.host_id(hypervisor_data['hypervisor_hostname'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_uuid'])
-                elif hypervisor_id == 'uuid':
-                    assert satellite.host_id(hypervisor_data['hypervisor_uuid'])
-                    assert not satellite.host_id(hypervisor_data['hypervisor_hostname'])
+                if hypervisor_id == "hostname":
+                    assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_uuid"])
+                elif hypervisor_id == "uuid":
+                    assert satellite.host_id(hypervisor_data["hypervisor_uuid"])
+                    assert not satellite.host_id(hypervisor_data["hypervisor_hostname"])
 
     @pytest.mark.tier1
     def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
@@ -106,17 +112,19 @@ class TestAHVPositive:
             2. Succeeded to run the virt-who, can find hostname in the log message
             3. Succeeded to run the virt-who, can find host_uuid in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid']
+        hypervisor_ids = ["hostname", "uuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
 
-            function_hypervisor.update('filter_hosts', hypervisor_id_data)
+            function_hypervisor.update("filter_hosts", hypervisor_id_data)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hypervisor_id_data in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hypervisor_id_data in str(result["mappings"])
+            )
 
     @pytest.mark.tier1
     def test_exclude_hosts(self, virtwho, function_hypervisor, hypervisor_data):
@@ -136,17 +144,19 @@ class TestAHVPositive:
             2. Succeeded to run the virt-who, cannot find hostname in the log message
             3. Succeeded to run the virt-who, cannot find host_uuid in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid']
+        hypervisor_ids = ["hostname", "uuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
 
-            function_hypervisor.update('exclude_hosts', hypervisor_id_data)
+            function_hypervisor.update("exclude_hosts", hypervisor_id_data)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hypervisor_id_data not in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hypervisor_id_data not in str(result["mappings"])
+            )
 
     @pytest.mark.tier1
     def test_prism_central(self):
@@ -180,28 +190,30 @@ class TestAHVPositive:
             2. Succeed to run the virt-who service, can find the host_uuid and guest_uuid in the
             rhsm.log file
         """
-        host_uuid = hypervisor_data['hypervisor_uuid']
-        guest_uuid = hypervisor_data['guest_uuid']
-        function_hypervisor.update('hypervisor_id', 'uuid')
+        host_uuid = hypervisor_data["hypervisor_uuid"]
+        guest_uuid = hypervisor_data["guest_uuid"]
+        function_hypervisor.update("hypervisor_id", "uuid")
         virtwho.run_cli(prt=True, oneshot=False)
         function_hypervisor.destroy()
 
-        fake_config = hypervisor_create('fake', REGISTER, rhsm=False)
-        fake_config.update('file', PRINT_JSON_FILE)
-        fake_config.update('is_hypervisor', 'True')
+        fake_config = hypervisor_create("fake", REGISTER, rhsm=False)
+        fake_config.update("file", PRINT_JSON_FILE)
+        fake_config.update("is_hypervisor", "True")
         result = virtwho.run_service()
-        assert (result['error'] == 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and host_uuid in result['log']
-                and guest_uuid in result['log'])
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and host_uuid in result["log"]
+            and guest_uuid in result["log"]
+        )
         # Todo: Need to add the test cases for host-guest association in mapping, web and the test
         #  cases for the vdc pool's subscription.
 
 
-@pytest.mark.usefixtures('function_virtwho_d_conf_clean')
-@pytest.mark.usefixtures('class_debug_true')
-@pytest.mark.usefixtures('class_globalconf_clean')
+@pytest.mark.usefixtures("function_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("class_globalconf_clean")
 class TestAHVNegative:
     @pytest.mark.tier2
     def test_type(self, virtwho, function_hypervisor, ahv_assertion):
@@ -226,44 +238,51 @@ class TestAHVNegative:
             4. The good config works fine
         """
         # type option is invalid value
-        assertion = ahv_assertion['type']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = ahv_assertion["type"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('type', value)
+            function_hypervisor.update("type", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 0)
-            if 'RHEL-9' in RHEL_COMPOSE:
-                assert assertion['invalid'][f'{value}'] in result['error_msg']
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 0
+            )
+            if "RHEL-9" in RHEL_COMPOSE:
+                assert assertion["invalid"][f"{value}"] in result["error_msg"]
             else:
-                assert assertion['non_rhel9'] in result['error_msg']
+                assert assertion["non_rhel9"] in result["error_msg"]
 
         # type option is disable
-        function_hypervisor.delete('type')
+        function_hypervisor.delete("type")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 1
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 1
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # type option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # type option is null but another config is ok
-        function_hypervisor.update('type', '')
+        function_hypervisor.update("type", "")
         result = virtwho.run_service()
-        assert (result['send'] == 1
-                and result['thread'] == 1)
-        if 'RHEL-9' in RHEL_COMPOSE:
-            assert result['error'] == 1
+        assert result["send"] == 1 and result["thread"] == 1
+        if "RHEL-9" in RHEL_COMPOSE:
+            assert result["error"] == 1
         else:
-            assert result['error'] == 0
+            assert result["error"] == 0
 
     @pytest.mark.tier2
     def test_server(self, virtwho, function_hypervisor, ahv_assertion):
@@ -289,38 +308,48 @@ class TestAHVNegative:
             works fine
         """
         # server option is invalid value
-        assertion = ahv_assertion['server']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = ahv_assertion["server"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('server', value)
+            function_hypervisor.update("server", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and assertion["invalid"][f"{value}"] in result["error_msg"]
+            )
 
         # server option is disable
-        function_hypervisor.delete('server')
+        function_hypervisor.delete("server")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # server option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # server option is null but another config is ok
-        function_hypervisor.update('server', '')
+        function_hypervisor.update("server", "")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["null_multi_configs"] in result["error_msg"]
+        )
 
     @pytest.mark.tier2
     def test_username(self, function_hypervisor, virtwho, ahv_assertion):
@@ -346,39 +375,49 @@ class TestAHVNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # username option is invalid value
-        assertion = ahv_assertion['username']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = ahv_assertion["username"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('username', value)
+            function_hypervisor.update("username", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and assertion["invalid"][f"{value}"] in result["error_msg"]
+            )
 
         # username option is disable
-        function_hypervisor.delete('username')
+        function_hypervisor.delete("username")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # username option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # username option is null but another config is ok
-        function_hypervisor.update('username', '')
+        function_hypervisor.update("username", "")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["null_multi_configs"] in result["error_msg"]
+        )
 
     @pytest.mark.tier2
     def test_password(self, virtwho, function_hypervisor, ahv_assertion):
@@ -404,43 +443,54 @@ class TestAHVNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # password option is invalid value
-        assertion = ahv_assertion['password']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        assertion = ahv_assertion["password"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('password', value)
+            function_hypervisor.update("password", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 1
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 1
+                and assertion["invalid"][f"{value}"] in result["error_msg"]
+            )
 
         # password option is disable
-        function_hypervisor.delete('password')
+        function_hypervisor.delete("password")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 0
-                and result['thread'] == 0
-                and assertion['disable'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 0
+            and result["thread"] == 0
+            and assertion["disable"] in result["error_msg"]
+        )
 
         # password option is disable but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['disable_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["disable_multi_configs"] in result["error_msg"]
+        )
 
         # password option is null but another config is ok
-        function_hypervisor.update('password', '')
+        function_hypervisor.update("password", "")
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['null_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["null_multi_configs"] in result["error_msg"]
+        )
 
     @pytest.mark.tier2
-    def test_encrypted_password(self, virtwho, function_hypervisor, hyperv_assertion,
-                                hypervisor_data, ssh_host):
+    def test_encrypted_password(
+        self, virtwho, function_hypervisor, hyperv_assertion, hypervisor_data, ssh_host
+    ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_ahv.conf
 
         :title: virt-who: ahv: test encrypted_password option
@@ -459,24 +509,30 @@ class TestAHVNegative:
             2. Find warning message: 'Option "encrypted_password" cannot be decrypted'
         """
         # encrypted_password option is invalid value
-        function_hypervisor.delete('password')
-        assertion = hyperv_assertion['encrypted_password']
-        assertion_invalid_list = list(assertion['invalid'].keys())
+        function_hypervisor.delete("password")
+        assertion = hyperv_assertion["encrypted_password"]
+        assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
-            function_hypervisor.update('encrypted_password', value)
+            function_hypervisor.update("encrypted_password", value)
             result = virtwho.run_service()
-            assert (result['error'] is not 0
-                    and result['send'] == 0
-                    and result['thread'] == 0
-                    and assertion['invalid'][f'{value}'] in result['error_msg'])
+            assert (
+                result["error"] is not 0
+                and result["send"] == 0
+                and result["thread"] == 0
+                and assertion["invalid"][f"{value}"] in result["error_msg"]
+            )
 
         # encrypted_password option is valid but another config is ok
-        hypervisor_create(HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION)
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         result = virtwho.run_service()
-        assert (result['error'] is not 0
-                and result['send'] == 1
-                and result['thread'] == 1
-                and assertion['valid_multi_configs'] in result['error_msg'])
+        assert (
+            result["error"] is not 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and assertion["valid_multi_configs"] in result["error_msg"]
+        )
 
     @pytest.mark.tier2
     def test_filter_hosts(self, virtwho, function_hypervisor, hypervisor_data):
@@ -506,42 +562,48 @@ class TestAHVNegative:
             7. Succeeded to run the virt-who, can find hostname in the log message
             8. Succeeded to run the virt-who, can find hostname in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid']
+        hypervisor_ids = ["hostname", "uuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            wildcard = hypervisor_id_data[:3] + '*' + hypervisor_id_data[4:]
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            wildcard = hypervisor_id_data[:3] + "*" + hypervisor_id_data[4:]
 
-            for filter_hosts in ['*', wildcard]:
-                function_hypervisor.update('filter_hosts', filter_hosts)
+            for filter_hosts in ["*", wildcard]:
+                function_hypervisor.update("filter_hosts", filter_hosts)
                 result = virtwho.run_service()
-                assert (result['error'] == 0
-                        and result['send'] == 1
-                        and result['thread'] == 1
-                        and hypervisor_id_data in str(result['mappings']))
+                assert (
+                    result["error"] == 0
+                    and result["send"] == 1
+                    and result["thread"] == 1
+                    and hypervisor_id_data in str(result["mappings"])
+                )
 
-            function_hypervisor.delete('hypervisor_id')
+            function_hypervisor.delete("hypervisor_id")
 
-        hostname = hypervisor_data['hypervisor_hostname']
-        function_hypervisor.update('hypervisor_id', 'hostname')
+        hostname = hypervisor_data["hypervisor_hostname"]
+        function_hypervisor.update("hypervisor_id", "hostname")
 
         # config filter_hosts with null option
-        for filter_hosts in ['', "''", '""']:
-            function_hypervisor.update('filter_hosts', filter_hosts)
+        for filter_hosts in ["", "''", '""']:
+            function_hypervisor.update("filter_hosts", filter_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname not in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname not in str(result["mappings"])
+            )
 
         # config filter_hosts with 'hostname' and "hostname"
         for filter_hosts in [f"'{hostname}'", f'"{hostname}"']:
-            function_hypervisor.update('filter_hosts', filter_hosts)
+            function_hypervisor.update("filter_hosts", filter_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname in str(result["mappings"])
+            )
 
     @pytest.mark.tier2
     def test_exclude_host(self, virtwho, function_hypervisor, hypervisor_data):
@@ -571,35 +633,41 @@ class TestAHVNegative:
             7. Succeeded to run the virt-who, cannot find hostname in the log message
             8. Succeeded to run the virt-who, cannot find hostname in the log message
         """
-        hypervisor_ids = ['hostname', 'uuid']
+        hypervisor_ids = ["hostname", "uuid"]
         for hypervisor_id in hypervisor_ids:
-            function_hypervisor.update('hypervisor_id', hypervisor_id)
-            hypervisor_id_data = hypervisor_data[f'hypervisor_{hypervisor_id}']
-            wildcard = hypervisor_id_data[:3] + '*' + hypervisor_id_data[4:]
+            function_hypervisor.update("hypervisor_id", hypervisor_id)
+            hypervisor_id_data = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+            wildcard = hypervisor_id_data[:3] + "*" + hypervisor_id_data[4:]
 
-            for exclude_hosts in ['*', wildcard]:
-                function_hypervisor.update('exclude_hosts', exclude_hosts)
+            for exclude_hosts in ["*", wildcard]:
+                function_hypervisor.update("exclude_hosts", exclude_hosts)
                 result = virtwho.run_service()
-                assert (result['error'] == 0
-                        and result['send'] == 1
-                        and result['thread'] == 1
-                        and hypervisor_id_data not in str(result['mappings']))
+                assert (
+                    result["error"] == 0
+                    and result["send"] == 1
+                    and result["thread"] == 1
+                    and hypervisor_id_data not in str(result["mappings"])
+                )
 
-        hostname = hypervisor_data['hypervisor_hostname']
-        function_hypervisor.update('hypervisor_id', 'hostname')
+        hostname = hypervisor_data["hypervisor_hostname"]
+        function_hypervisor.update("hypervisor_id", "hostname")
 
-        for exclude_hosts in ['', "''", '""']:
-            function_hypervisor.update('exclude_hosts', exclude_hosts)
+        for exclude_hosts in ["", "''", '""']:
+            function_hypervisor.update("exclude_hosts", exclude_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname in str(result["mappings"])
+            )
 
         for exclude_hosts in [f"'{hostname}'", f'"{hostname}"']:
-            function_hypervisor.update('exclude_hosts', exclude_hosts)
+            function_hypervisor.update("exclude_hosts", exclude_hosts)
             result = virtwho.run_service()
-            assert (result['error'] == 0
-                    and result['send'] == 1
-                    and result['thread'] == 1
-                    and hostname not in str(result['mappings']))
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and hostname not in str(result["mappings"])
+            )

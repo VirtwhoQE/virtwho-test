@@ -5,6 +5,7 @@ from virtwho import logger
 
 class SSHConnect:
     """Extended SSHClient allowing custom methods"""
+
     def __init__(self, host, user, pwd=None, rsafile=None, port=22, timeout=1800):
         """
         :param str host: The hostname or ip of the server to establish connection.
@@ -44,12 +45,7 @@ class SSHConnect:
         """SSH command execution connection by password"""
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            self.host,
-            self.port,
-            self.user,
-            self.pwd,
-            timeout=self.timeout)
+        ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
         return ssh
 
     def rsa_connect(self):
@@ -57,12 +53,7 @@ class SSHConnect:
         pkey = paramiko.RSAKey.from_private_key_file(self.rsa)
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            self.host,
-            self.port,
-            self.user,
-            pkey=pkey,
-            timeout=self.timeout)
+        ssh.connect(self.host, self.port, self.user, pkey=pkey, timeout=self.timeout)
         return ssh
 
     def pwd_transfer(self):
@@ -99,8 +90,7 @@ class SSHConnect:
             return code, stderr.decode()
 
     def get_file(self, remote_file, local_file):
-        """Download a remote file to the local machine.
-        """
+        """Download a remote file to the local machine."""
         sftp, conn = self._transfer()
         sftp.get(remote_file, local_file)
         conn.close()
@@ -123,25 +113,25 @@ class SSHConnect:
         conn.close()
 
     def put_dir(self, local_dir, remote_dir):
-        """ Upload all files from directory to a remote directory
+        """Upload all files from directory to a remote directory
         :param local_dir: all files from local path to be uploaded.
         :param remote_dir: a remote path where the uploaded files will be placed.
         """
         sftp, conn = self._transfer()
         for root, dirs, files in os.walk(local_dir):
             for filespath in files:
-                local_file = os.path.join(root,filespath)
-                a = local_file.replace(local_dir,'')
-                remote_file = os.path.join(remote_dir,a)
+                local_file = os.path.join(root, filespath)
+                a = local_file.replace(local_dir, "")
+                remote_file = os.path.join(remote_dir, a)
                 try:
-                    sftp.put(local_file,remote_file)
-                except Exception as e:
+                    sftp.put(local_file, remote_file)
+                except Exception:
                     sftp.mkdir(os.path.split(remote_file)[0])
-                    sftp.put(local_file,remote_file)
+                    sftp.put(local_file, remote_file)
             for name in dirs:
-                local_path = os.path.join(root,name)
-                a = local_path.replace(local_dir,'')
-                remote_path = os.path.join(remote_dir,a)
+                local_path = os.path.join(root, name)
+                a = local_path.replace(local_dir, "")
+                remote_path = os.path.join(remote_dir, a)
                 try:
                     sftp.mkdir(remote_path)
                 except Exception as e:

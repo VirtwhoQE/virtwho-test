@@ -16,30 +16,31 @@ from virtwho.provision.virtwho_hypervisor import xen_monitor
 
 class TestHypervisorsState:
     """The test cases for hypervisor-monitor"""
+
     def test_state_esx(self):
         """Test the esx state"""
-        assert esx_monitor() == 'GOOD'
+        assert esx_monitor() == "GOOD"
 
     def test_state_hyperv(self):
         """Test the hyperv state"""
-        assert hyperv_monitor() == 'GOOD'
+        assert hyperv_monitor() == "GOOD"
 
     def test_state_kubevirt(self):
         """Test the kubevirt state"""
-        assert kubevirt_monitor() == 'GOOD'
+        assert kubevirt_monitor() == "GOOD"
 
     def test_state_ahv(self):
         """Test the ahv state"""
-        assert ahv_monitor() == 'GOOD'
+        assert ahv_monitor() == "GOOD"
 
     def test_state_libvirt(self):
         """Test the libvirt state"""
-        assert libvirt_monitor() == 'GOOD'
+        assert libvirt_monitor() == "GOOD"
 
     def test_state_rhevm(self):
         """Test the rhevm state"""
-        assert rhevm_monitor() == 'GOOD'
+        assert rhevm_monitor() == "GOOD"
 
     def test_state_xen(self):
         """Test the xen state"""
-        assert xen_monitor() == 'GOOD'
+        assert xen_monitor() == "GOOD"

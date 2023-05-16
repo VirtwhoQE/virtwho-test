@@ -1,0 +1,8 @@
+[flake8]
+; E501 means the line length limted
+; F632 use ==/!= to compare constant literals (str, bytes, int, float, tuple)
+; W503 line break before binary operator
+; F541 f-string is missing placeholders
+; E203 whitespace before ':'
+; W605 invalid escape sequence '\s'
+ignore = E501, F632, W503, F541, E203, W605

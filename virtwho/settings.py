@@ -11,7 +11,7 @@ class AttrDict(dict):
 
 class Configure:
     """Configure class is able to parse and handle local or remote ini
-     file.
+    file.
     """
 
     def __init__(self, local_file, remote_ssh=None, remote_file=None):
@@ -39,7 +39,7 @@ class Configure:
         """
         for key in self.config._sections.keys():
             setattr(self, key, getattr(self.config._sections, key))
-        with open(self.local_file, 'w') as f:
+        with open(self.local_file, "w") as f:
             self.config.write(f, space_around_delimiters=False)
         if self.remote_ssh and self.remote_file:
             self.remote_ssh.put_file(self.local_file, self.remote_file)
@@ -69,22 +69,16 @@ class Configure:
         self.save()
 
 
-DOCS_DIR = os.path.join(os.path.realpath(os.path.join(
-    os.path.dirname(__file__),
-    os.pardir)),
-    "docs"
-    )
+DOCS_DIR = os.path.join(
+    os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir)), "docs"
+)
 
-TEMP_DIR = os.path.join(os.path.realpath(os.path.join(
-    os.path.dirname(__file__),
-    os.pardir)),
-    "temp"
-    )
+TEMP_DIR = os.path.join(
+    os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir)), "temp"
+)
 
-TEST_DATA = os.path.join(os.path.realpath(os.path.join(
-    os.path.dirname(__file__),
-    os.pardir)),
-    "virtwho.ini"
-    )
+TEST_DATA = os.path.join(
+    os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir)), "virtwho.ini"
+)
 
 config = Configure(TEST_DATA)
