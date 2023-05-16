@@ -129,10 +129,10 @@ class TestUpgradeDowngrade:
             package_downgrade(ssh_host, "virt-who", rpm=f"{file_path}/{old_pkg}.rpm")
             result = virtwho.run_service()
             assert (
-                    package_check(ssh_host, "virt-who") == old_pkg and
-                    result["send"] == 1 and
-                    result["error"] == 0 and
-                    result["debug"] is True
+                package_check(ssh_host, "virt-who") == old_pkg
+                and result["send"] == 1
+                and result["error"] == 0
+                and result["debug"] is True
             )
             # upgrade virt-who to check the configurations not change.
             package_upgrade(ssh_host, "virt-who", rpm=f"{file_path}/{VIRTWHO_PKG}.rpm")

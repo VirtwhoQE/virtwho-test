@@ -134,9 +134,7 @@ class TestVirtwhoService:
         assert status == "dead"
 
         # start
-        ssh_guest.runcmd(
-            f"ssh {server} -p {port} " f'"systemctl restart virt-who"'
-        )
+        ssh_guest.runcmd(f"ssh {server} -p {port} " f'"systemctl restart virt-who"')
         _, status = virtwho.operate_service(action="status")
         assert status == "running"
 

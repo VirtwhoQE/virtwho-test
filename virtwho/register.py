@@ -827,13 +827,9 @@ class Satellite:
             cmd += f" --quantity {quantity}"
         ret, output = self.ssh.runcmd(cmd)
         if "Subscription added to activation key" in output:
-            logger.info(
-                f"Succeeded to attach subscription for activation key:{key}"
-            )
+            logger.info(f"Succeeded to attach subscription for activation key:{key}")
             return True
-        raise FailException(
-            f"Failed to attach subscription for activation key:{key}"
-        )
+        raise FailException(f"Failed to attach subscription for activation key:{key}")
 
     def activation_key_unattach(self, pool, key=None):
         """
