@@ -65,13 +65,13 @@ def esx_monitor():
         logger.info(f">>>vCenter: Check if the esxi host is running well.")
         ret2 = host_ping(host=esx_ip)
         if not ret2:
-            esx_state, esx_ip = ("BAD (ESXi Host Down)", "Broke")
+            esx_ip = "Broke"
             logger.error(f"The esxi host has broken, please repaire it.")
 
-        logger.info(f">>>vCenter: Check if the windows client is running.")
+        logger.info(f">>>vCenter: Check if the windows client is running well.")
         ret3 = host_ping(host=client_server)
         if not ret3:
-            esx_state, esx_ip = ("BAD (Windows Client Down)", "Broke")
+            client_server = "Broke"
             logger.error(f"The windows Client has broken, please repaire it.")
 
         if ret1 and ret2 and ret3:
@@ -109,6 +109,7 @@ def esx_monitor():
         esx_dict = {
             "server": server,
             "esx_ip": esx_ip,
+            "ssh_ip": client_server,
             "guest_ip": guest_ip,
         }
         if esx_data:
@@ -224,33 +225,10 @@ def kubevirt_monitor():
     kubevirt_data = {}
     kubevirt_data_sw = {}
 
-    ssh_guest = SSHConnect(
-        host=config.kubevirt.guest_ip,
-        user=config.kubevirt.guest_username,
-        pwd=config.kubevirt.guest_password,
-        port=config.kubevirt.guest_port,
-    )
-    guest_dict = {
-        config.kubevirt.guest_name: {
-            "guest_ip": config.kubevirt.guest_ip,
-            "guest_port": config.kubevirt.guest_port,
-            "ssh_guest": ssh_guest,
-        }
-    }
-
+    guest_name = config.kubevirt.guest_name
+    guest_ip = config.kubevirt.guest_ip
     guest_name_sw = config.kubevirt.guest_name_sw
-    if guest_name_sw:
-        ssh_guest_sw = SSHConnect(
-            host=config.kubevirt.guest_ip_sw,
-            user=config.kubevirt.guest_username_sw,
-            pwd=config.kubevirt.guest_password_sw,
-            port=config.kubevirt.guest_port_sw,
-        )
-        guest_dict[guest_name_sw] = {
-            "guest_ip": config.kubevirt.guest_ip_sw,
-            "guest_port": config.kubevirt.guest_port_sw,
-            "ssh_guest": ssh_guest_sw,
-        }
+    guest_ip_sw = config.kubevirt.guest_ip_sw
 
     endpoint = config.kubevirt.endpoint
     server = re.findall(r"https://(.+?):6443", endpoint)[0]
@@ -258,86 +236,114 @@ def kubevirt_monitor():
     try:
         logger.info(f">>>Kubevirt: Check if the hypervisor is running.")
         if not host_ping(host=server):
-            kubevirt_state, endpoint, _ = (
-                state_server_bad,
-                server_broke,
-                guest_none,
-            )
+            kubevirt_state, endpoint = (state_server_bad, server_broke)
             logger.error(f"The kubevirt host has broken, please repaire it.")
 
         else:
-            for guest_name, guest_info in guest_dict.items():
-                logger.info(f">>>Kubevirt: Get the hypervisor data of {guest_name}.")
-                kubevirt_info = kubevirt.guest_search(
-                    guest_name, guest_info["guest_port"]
+            logger.info(f">>>Kubevirt: Test the guest {guest_name}.")
+            kubevirt_data = kubevirt.guest_search(
+                guest_name, config.kubevirt.guest_port
+            )
+            logger.info(f"=== Kubevirt data of {guest_name}:\n{kubevirt_data}\n===")
+            if not kubevirt_data:
+                kubevirt_state, guest_ip = (state_guest_bad, guest_none)
+                logger.error(
+                    f"Did not find the guest({guest_name}), please install one."
                 )
-                logger.info(f"=== Kubevirt data:\n{kubevirt_info}\n===")
+            else:
+                ssh_guest = SSHConnect(
+                    host=kubevirt_data["hostname"],
+                    user=config.kubevirt.guest_username,
+                    pwd=config.kubevirt.guest_password,
+                    port=config.kubevirt.guest_port,
+                )
+                if ssh_connect(ssh_guest):
+                    logger.info(f"The guest({guest_name}) is running well.")
+                else:
+                    kubevirt_state, guest_ip = (state_guest_bad, guest_down)
+                    logger.warning(
+                        f"The guest({guest_name}) is unavailable, please repair it."
+                    )
 
-                logger.info(f">>>Kubevirt: Check if the guest{guest_name} is running.")
-                if not kubevirt_info["guest_ip"]:
-                    kubevirt_state, _ = (state_guest_bad, guest_none)
+            if guest_name_sw:
+                logger.info(f">>>Kubevirt: Test the guest {guest_name_sw}.")
+                kubevirt_data_sw = kubevirt.guest_search(
+                    guest_name_sw, config.kubevirt.guest_port_sw
+                )
+                logger.info(
+                    f"=== Kubevirt data of {guest_name_sw}:\n{kubevirt_data_sw}\n==="
+                )
+                if not kubevirt_data_sw:
+                    kubevirt_state, guest_ip_sw = (state_guest_bad, guest_none)
                     logger.error(
-                        f"Did not find the rhel guest({guest_name}), "
-                        f"please install one."
+                        f"Did not find the guest({guest_name_sw}), please install one."
                     )
                 else:
-                    if ssh_connect(guest_info["ssh_guest"]):
-                        logger.info(f"The rhel guest({guest_name}) is running well.")
+                    ssh_guest_sw = SSHConnect(
+                        host=kubevirt_data_sw["hostname"],
+                        user=config.kubevirt.guest_username_sw,
+                        pwd=config.kubevirt.guest_password_sw,
+                        port=config.kubevirt.guest_port_sw,
+                    )
+                    if ssh_connect(ssh_guest_sw):
+                        logger.info(f"The guest({guest_name_sw}) is running well.")
                     else:
-                        kubevirt_state, _ = (state_guest_bad, guest_down)
+                        kubevirt_state, guest_ip_sw = (state_guest_bad, guest_down)
                         logger.warning(
-                            f"The rhel guest({guest_name}) is "
-                            f"unavailable, please repair it."
+                            f"The guest({guest_name}) is unavailable, please repair it."
                         )
-                if "sw" in guest_name:
-                    kubevirt_data_sw = kubevirt_info
-                else:
-                    kubevirt_data = kubevirt_info
 
     finally:
         logger.info(f">>>Kubevirt: Compare and update the data in virtwho.ini.")
         kubevirt_dict = {
             "endpoint": endpoint,
-            "guest_ip": config.kubevirt.guest_ip,
-            "guest_ip_sw": config.kubevirt.guest_ip_sw,
+            "guest_ip": guest_ip,
         }
+        compare_dict = {}
         if kubevirt_data:
-            compare_dict = {
-                "uuid": [config.kubevirt.uuid, kubevirt_data["uuid"]],
-                "hostname": [config.kubevirt.hostname, kubevirt_data["hostname"]],
-                "version": [config.kubevirt.version, kubevirt_data["version"]],
-                "cpu": [config.kubevirt.cpu, kubevirt_data["cpu"]],
-                "guest_ip": [config.kubevirt.guest_ip, kubevirt_data["hostname"]],
-                "guest_uuid": [config.kubevirt.guest_uuid, kubevirt_data["guest_uuid"]],
-            }
+            compare_dict.update(
+                {
+                    "uuid": [config.kubevirt.uuid, kubevirt_data["uuid"]],
+                    "hostname": [config.kubevirt.hostname, kubevirt_data["hostname"]],
+                    "version": [config.kubevirt.version, kubevirt_data["version"]],
+                    "cpu": [config.kubevirt.cpu, kubevirt_data["cpu"]],
+                    "guest_ip": [config.kubevirt.guest_ip, kubevirt_data["hostname"]],
+                    "guest_uuid": [
+                        config.kubevirt.guest_uuid, kubevirt_data["guest_uuid"]
+                    ],
+                }
+            )
+        if guest_name_sw:
+            kubevirt_dict["guest_ip_sw"] = guest_ip_sw
+            if kubevirt_data_sw:
+                compare_dict.update(
+                    {
+                        "uuid_sw": [config.kubevirt.uuid_sw, kubevirt_data_sw["uuid"]],
+                        "hostname_sw": [
+                            config.kubevirt.hostname_sw, kubevirt_data_sw["hostname"],
+                        ],
+                        "version_sw": [
+                            config.kubevirt.version_sw, kubevirt_data_sw["version"]
+                        ],
+                        "cpu_sw": [config.kubevirt.cpu_sw, kubevirt_data_sw["cpu"]],
+                        "guest_ip_sw": [
+                            config.kubevirt.guest_ip_sw, kubevirt_data_sw["hostname"],
+                        ],
+                        "guest_uuid_sw": [
+                            config.kubevirt.guest_uuid_sw,
+                            kubevirt_data_sw["guest_uuid"],
+                        ],
+                    }
+                )
             for key, value in compare_dict.items():
                 if value[0] != value[1]:
                     logger.info(f"The kubevirt({key}) changed.")
                     kubevirt_dict[key] = f"{value[1]} (Updated)"
-                    kubevirt_state = state_update
-        if kubevirt_data_sw:
-            compare_dict = {
-                "uuid_sw": [config.kubevirt.uuid_sw, kubevirt_data_sw["uuid"]],
-                "hostname_sw": [
-                    config.kubevirt.hostname_sw,
-                    kubevirt_data_sw["hostname"],
-                ],
-                "version_sw": [config.kubevirt.version_sw, kubevirt_data_sw["version"]],
-                "cpu_sw": [config.kubevirt.cpu_sw, kubevirt_data_sw["cpu"]],
-                "guest_ip_sw": [
-                    config.kubevirt.guest_ip_sw,
-                    kubevirt_data_sw["hostname"],
-                ],
-                "guest_uuid_sw": [
-                    config.kubevirt.guest_uuid_sw,
-                    kubevirt_data_sw["guest_uuid"],
-                ],
-            }
-            for key, value in compare_dict.items():
-                if value[0] != value[1]:
-                    logger.info(f"The kubevirt({key}) changed.")
-                    kubevirt_dict[key] = f"{value[1]} (Updated)"
-                    kubevirt_state = state_update
+                    if "BAD" not in kubevirt_state:
+                        kubevirt_state = state_update
+                    if "BAD" in kubevirt_state and state_update not in kubevirt_state:
+                        kubevirt_state = f"Part {kubevirt_state}, part {state_update}"
+
         if not kubevirt_data and not kubevirt_data_sw:
             kubevirt_state = state_server_bad
 
@@ -359,29 +365,10 @@ def ahv_monitor():
     ahv_data_sw = {}
     server = config.ahv.server
 
-    ssh_guest = SSHConnect(
-        host=config.ahv.guest_ip,
-        user=config.ahv.guest_username,
-        pwd=config.ahv.guest_password,
-    )
-    guest_dict = {
-        config.ahv.guest_name: {
-            "guest_ip": config.ahv.guest_ip,
-            "ssh_guest": ssh_guest,
-        }
-    }
-
+    guest_name = config.ahv.guest_name
+    guest_ip = config.ahv.guest_ip
     guest_name_sw = config.ahv.guest_name_sw
-    if guest_name_sw:
-        ssh_guest_sw = SSHConnect(
-            host=config.ahv.guest_ip_sw,
-            user=config.ahv.guest_username_sw,
-            pwd=config.ahv.guest_password_sw,
-        )
-        guest_dict[guest_name_sw] = {
-            "guest_ip": config.ahv.guest_ip_sw,
-            "ssh_guest": ssh_guest_sw,
-        }
+    guest_ip_sw = config.ahv.guest_ip_sw
 
     ahv = AHVApi(
         server=server, username=config.ahv.username, password=config.ahv.password
@@ -390,78 +377,94 @@ def ahv_monitor():
     try:
         logger.info(f">>>Nutanix: Check if the hypervisor is running well.")
         if not host_ping(host=server):
-            ahv_state, server, _ = (state_server_bad, server_broke, guest_none)
+            ahv_state, server = (state_server_bad, server_broke)
             logger.error(f"The Nutanix host has broken, please repaire it.")
 
         else:
-            for guest_name, guest_info in guest_dict.items():
-                logger.info(
-                    f">>>Nutanix: Get the hypervisor info of guest ({guest_name})."
+            logger.info(f">>>Nutanix: Test the guest {guest_name}.")
+            ahv_data = ahv.guest_search(guest_name)
+            logger.info(f"===Nutanix data of {guest_name}:\n{ahv_data}\n===")
+            if not ahv_data:
+                ahv_state, guest_ip = (state_guest_bad, guest_none)
+                logger.error(
+                    f"Did not find the guest({guest_name}), please install one."
                 )
-                ahv_info = ahv.guest_search(guest_name)
-                logger.info(f"===Nutanix data:\n{ahv_info}\n===")
-
-                logger.info(
-                    f">>>Nutanix: Check if the rhel guest({guest_name})"
-                    f" is running well."
+            else:
+                ssh_guest = SSHConnect(
+                    host=ahv_data["guest_ip"],
+                    user=config.ahv.guest_username,
+                    pwd=config.ahv.guest_password,
                 )
-                if not ahv_info:
-                    ahv_state, _ = (state_guest_bad, guest_none)
+                if ssh_connect(ssh_guest):
+                    logger.info(f"The guest{guest_name} is running well.")
+                else:
+                    ahv_state, guest_ip = (state_guest_bad, guest_down)
+                    logger.warning(
+                        f"The guest({guest_name}) is down, please repair it."
+                    )
+            if guest_name_sw:
+                ahv_data_sw = ahv.guest_search(guest_name_sw)
+                logger.info(f"===Nutanix data of {guest_name_sw}:\n{ahv_data_sw}\n===")
+                if not ahv_data_sw:
+                    ahv_state, guest_ip_sw = (state_guest_bad, guest_none)
                     logger.error(
-                        f"Did not find the rhel guest({guest_name}), "
-                        f"please install one."
+                        f"Did not find the guest({guest_name_sw}), please install one."
                     )
                 else:
-                    if ssh_connect(guest_info["ssh_guest"]):
-                        logger.info(f"The rhel guest{guest_name} is running well.")
+                    ssh_guest_sw = SSHConnect(
+                        host=ahv_data_sw["guest_ip"],
+                        user=config.ahv.guest_username_sw,
+                        pwd=config.ahv.guest_password_sw,
+                    )
+                    if ssh_connect(ssh_guest_sw):
+                        logger.info(f"The guest{guest_name_sw} is running well.")
                     else:
-                        ahv_state, _ = (state_guest_bad, guest_down)
+                        ahv_state, guest_ip_sw = (state_guest_bad, guest_down)
                         logger.warning(
-                            f"The rhel guest({guest_name}) is down, "
-                            f"please start it."
+                            f"The guest({guest_name_sw}) is down, please repair it."
                         )
-                if "SW" in guest_name:
-                    ahv_data_sw = ahv_info
-                else:
-                    ahv_data = ahv_info
 
     finally:
         logger.info(f">>>Nutanix: Compare and update the data in virtwho.ini.")
         ahv_dict = {
             "server": server,
-            "guest_ip": config.ahv.guest_ip,
-            "guest_ip_sw": config.ahv.guest_ip_sw,
+            "guest_ip": guest_ip,
         }
+        compare_dict = {}
         if ahv_data:
-            compare_dict = {
-                "uuid": [config.ahv.uuid, ahv_data["uuid"]],
-                "hostname": [config.ahv.hostname, ahv_data["hostname"]],
-                "version": [config.ahv.version, ahv_data["version"]],
-                "cpu": [config.ahv.cpu, ahv_data["cpu"]],
-                "cluster": [config.ahv.cluster, ahv_data["cluster"]],
-                "guest_ip": [config.ahv.guest_ip, ahv_data["guest_ip"]],
-                "guest_uuid": [config.ahv.guest_uuid, ahv_data["guest_uuid"]],
-            }
-            for key, value in compare_dict.items():
-                if value[0] != value[1]:
-                    logger.info(f"The Nutanix({key}) changed.")
-                    ahv_dict[key] = f"{value[1]} (Updated)"
+            compare_dict.update(
+                {
+                    "uuid": [config.ahv.uuid, ahv_data["uuid"]],
+                    "hostname": [config.ahv.hostname, ahv_data["hostname"]],
+                    "version": [config.ahv.version, ahv_data["version"]],
+                    "cpu": [config.ahv.cpu, ahv_data["cpu"]],
+                    "cluster": [config.ahv.cluster, ahv_data["cluster"]],
+                    "guest_ip": [config.ahv.guest_ip, ahv_data["guest_ip"]],
+                    "guest_uuid": [config.ahv.guest_uuid, ahv_data["guest_uuid"]],
+                }
+            )
+        if guest_name_sw:
+            ahv_dict["guest_ip_sw"] = guest_ip_sw
+            if ahv_data_sw:
+                compare_dict.update(
+                    {
+                        "guest_ip_sw": [
+                            config.ahv.guest_ip_sw, ahv_data_sw["guest_ip"]
+                        ],
+                        "guest_uuid_sw": [
+                            config.ahv.guest_uuid_sw, ahv_data_sw["guest_uuid"]
+                        ],
+                    }
+                )
+        for key, value in compare_dict.items():
+            if value[0] != value[1]:
+                logger.info(f"The Nutanix({key}) changed.")
+                ahv_dict[key] = f"{value[1]} (Updated)"
+                if "BAD" not in ahv_state:
                     ahv_state = state_update
-        if ahv_data_sw:
-            compare_dict = {
-                "uuid": [config.ahv.uuid, ahv_data_sw["uuid"]],
-                "hostname": [config.ahv.hostname, ahv_data_sw["hostname"]],
-                "version": [config.ahv.version, ahv_data_sw["version"]],
-                "cpu": [config.ahv.cpu, ahv_data_sw["cpu"]],
-                "cluster": [config.ahv.cluster, ahv_data_sw["cluster"]],
-                "guest_ip_sw": [config.ahv.guest_ip_sw, ahv_data_sw["guest_ip"]],
-                "guest_uuid_sw": [config.ahv.guest_uuid_sw, ahv_data_sw["guest_uuid"]],
-            }
-            for key, value in compare_dict.items():
-                if value[0] != value[1]:
-                    logger.info(f"The Nutanix({key}) changed.")
-                    ahv_dict[key] = f"{value[1]} (Updated)"
-                    ahv_state = state_update
+                if "BAD" in ahv_state and state_update not in ahv_state:
+                    ahv_state = f"Part {ahv_state}, part {state_update}:
+
         if not ahv_data and not ahv_data_sw:
             ahv_state = state_server_bad
 
