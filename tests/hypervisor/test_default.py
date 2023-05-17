@@ -206,6 +206,78 @@ class TestHypervisorPositive:
         virt_is_guest = output.split(":")[1].strip()
         assert virt_is_guest == "True"
 
+    @pytest.mark.tier1
+    @pytest.mark.notRHEL8
+    @pytest.mark.notLocal
+    def test_virtwho_status(
+        self, virtwho, function_hypervisor, hypervisor_data, register_data
+    ):
+        """
+        :title: virt-who: hypervisor: test the virtwho status
+        :id: 1608c965-c7f5-427b-b45e-c767600cdbf4
+            1. Run the virt-who service by cli -do to report the mapping
+            2. Run the virt-who service by cli -s with good configuration
+            3. Run the virt-who service by cli -s -j with good configuration
+            4. Run the virt-who service by cli -s -j with bad configuration
+
+        :expectedresults:
+            1. Succeed to send the mapping
+            2. Succeed to find the success status
+            3. Succeed to print the json status info
+            4. Succeed to find the failure status
+        """
+        # Run virt-who to report the mapping
+        result = virtwho.run_cli()
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 0
+
+        # Check '#virt-who --status' with good configuration
+        result = virtwho.run_cli(oneshot=False, status=True)
+        assert (
+            "success" in result[function_hypervisor.section]["source_status"]
+            and "success" in result[function_hypervisor.section]["destination_status"]
+        )
+
+        # Check #virt-who --status --json
+        result = virtwho.run_cli(oneshot=False, status=True, jsn=True)
+        if "libvirt" in HYPERVISOR:
+            source_connection = f"qemu+ssh://root@{hypervisor_data['hypervisor_server']}/system?no_tty=1"
+        elif "esx" in HYPERVISOR:
+            source_connection = f"https://{hypervisor_data['hypervisor_server']}"
+        elif "rhevm" in HYPERVISOR:
+            source_connection = (
+                hypervisor_data["hypervisor_server"].split("ovirt-engine")[0].strip()
+            )
+        else:
+            source_connection = hypervisor_data["hypervisor_server"]
+        source = result[function_hypervisor.section]["source"]
+        destination = result[function_hypervisor.section]["destination"]
+        assert (
+            source["connection"] == source_connection
+            and source["status"] == "success"
+            and source["last_successful_retrieve"].split(" ")[2] == "UTC"
+            and source["hypervisors"] >= 1
+            and source["guests"] >= 1
+            and destination["connection"] == register_data["server"]
+            and destination["status"] == "success"
+            and destination["last_successful_send"].split(" ")[2] == "UTC"
+            and destination["last_successful_send_job_status"] == "FINISHED"
+        )
+
+        # Check '#virt-who --status --json' with bad configuration
+        option = "password"
+        if "kubevirt" in HYPERVISOR:
+            option = "kubeconfig"
+        if "libvirt" in HYPERVISOR:
+            option = "server"
+        function_hypervisor.update(option, "xxx")
+        function_hypervisor.update("owner", "xxx")
+        result = virtwho.run_cli(oneshot=False, status=True, jsn=True)
+        assert (
+            result[function_hypervisor.section]["source"]["status"] == "failure"
+            and result[function_hypervisor.section]["destination"]["status"]
+            == "failure"
+        )
+
     @pytest.mark.tier2
     def test_delete_host_hypervisor(
         self,
