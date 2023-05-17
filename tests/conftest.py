@@ -272,11 +272,6 @@ def hypervisor_data(ssh_guest):
         data["hypervisor_password"] = hypervisor_handler.password
         data["hypervisor_server"] = hypervisor_handler.server
         data["hypervisor_username"] = hypervisor_handler.username
-        data['hypervisor_uuid'] = hypervisor_handler.uuid
-        data['hypervisor_hostname'] = hypervisor_handler.hostname
-        data['type'] = hypervisor_handler.type
-        data['version'] = hypervisor_handler.version
-        data['cpu'] = hypervisor_handler.cpu
     return data
 
 
