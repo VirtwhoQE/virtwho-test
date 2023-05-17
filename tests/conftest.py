@@ -264,10 +264,10 @@ def hypervisor_data(ssh_guest):
         data["cluster"] = hypervisor_handler.cluster
     if HYPERVISOR == "kubevirt":
         data["hypervisor_server"] = hypervisor_handler.endpoint
-        data['hypervisor_config_file'] = hypervisor_handler.config_file
-        data['hypervisor_config_file_no_cert'] = hypervisor_handler.config_file_no_cert
-        data['hypervisor_config_url'] = hypervisor_handler.config_url
-        data['hypervisor_config_url_no_cert'] = hypervisor_handler.config_url_no_cert
+        data["hypervisor_config_file"] = hypervisor_handler.config_file
+        data["hypervisor_config_file_no_cert"] = hypervisor_handler.config_file_no_cert
+        data["hypervisor_config_url"] = hypervisor_handler.config_url
+        data["hypervisor_config_url_no_cert"] = hypervisor_handler.config_url_no_cert
     else:
         data["hypervisor_password"] = hypervisor_handler.password
         data["hypervisor_server"] = hypervisor_handler.server
