@@ -1,8 +1,6 @@
-#!/usr/bin/python
-
-import os
-import sys
 import argparse
+import sys
+sys.path.append(".")
 
 from virtwho import FailException, logger
 from virtwho.register import Satellite
@@ -11,10 +9,6 @@ from virtwho.settings import config
 from utils.beaker import install_rhel_by_beaker
 from utils.satellite import satellite_deploy
 from utils.properties_update import virtwho_ini_props_update
-
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(os.path.split(rootPath)[0])
 
 
 def satellite_deploy_for_virtwho(args):

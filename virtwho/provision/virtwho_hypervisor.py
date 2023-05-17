@@ -1,8 +1,7 @@
-#!/usr/bin/python
-import os
 import re
-import sys
 import argparse
+import sys
+sys.path.append(".")
 
 from virtwho import logger
 from virtwho.settings import config
@@ -15,10 +14,6 @@ from hypervisor.virt.esx.powercli import PowerCLI
 from hypervisor.virt.hyperv.hypervcli import HypervCLI
 from hypervisor.virt.kubevirt.kubevirtapi import KubevirtApi
 from hypervisor.virt.ahv.ahvapi import AHVApi
-
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(os.path.split(rootPath)[0])
 
 state_good = "GOOD"
 state_update = "UPDATED"

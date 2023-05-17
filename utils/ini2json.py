@@ -1,13 +1,9 @@
-#!/usr/bin/python
 import json
-import os
-import sys
 import argparse
-from configparser import ConfigParser
+import sys
+sys.path.append(".")
 
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
+from configparser import ConfigParser
 
 
 def ini2json(args):

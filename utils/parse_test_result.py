@@ -1,14 +1,9 @@
-#!/usr/bin/python
-import os
-import sys
 import argparse
+import sys
+sys.path.append(".")
 
 from xml.dom import minidom
 from properties_update import virtwho_ini_props_update
-
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
 
 
 def test_result_parser(args):
