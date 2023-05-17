@@ -27,6 +27,7 @@ class VirtwhoHypervisorConfig:
         self.register = get_register_handler(register_type)
         self.hypervisor = get_hypervisor_handler(mode)
         self.remote_ssh = virtwho_ssh_connect(mode)
+        self.rhevm_hypervisor_url = None
         if not os.path.exists(TEMP_DIR):
             os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, f"{mode}.conf")
@@ -65,6 +66,7 @@ class VirtwhoHypervisorConfig:
                     hypervisor_server = (
                         f"https://{hostname_get(ssh_rhevm)}:443/ovirt-engine"
                     )
+                    self.rhevm_hypervisor_url = hypervisor_server
                 self.update("server", hypervisor_server)
                 self.update("username", self.hypervisor.username)
                 self.update("password", self.hypervisor.password)
