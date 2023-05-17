@@ -7,6 +7,7 @@ sys.path.append(".")
 from virtwho import logger, FailException
 from virtwho.base import rhel_compose_repo
 from virtwho.ssh import SSHConnect
+from utils import CURRENT_PATH
 
 
 def create_rhel_container_by_docker(args):
@@ -34,7 +35,7 @@ def create_rhel_container_by_docker(args):
     ssh_docker.runcmd(
         "rm -rf /tmp/docker/;" "rm -rf /tmp/mkimage*;" "rm -f /etc/yum.repos.d/*.repo"
     )
-    local_dir = os.path.join(curPath, "docker/")
+    local_dir = os.path.join(CURRENT_PATH, "docker/")
     remote_dir = "/tmp/docker/"
     ssh_docker.put_dir(local_dir, remote_dir)
 
