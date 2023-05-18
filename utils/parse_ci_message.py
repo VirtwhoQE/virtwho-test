@@ -1,16 +1,12 @@
-#!/usr/bin/python
 import json
 import os
 import re
-import sys
 import argparse
+import sys
+sys.path.append(".")
 
 from virtwho import logger, FailException
 from virtwho.settings import config
-
-curPath = os.path.abspath(os.path.dirname(__file__))
-rootPath = os.path.split(curPath)[0]
-sys.path.append(rootPath)
 
 
 def umb_ci_message_parser(args):
