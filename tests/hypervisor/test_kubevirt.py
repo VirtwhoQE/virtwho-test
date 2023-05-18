@@ -374,3 +374,58 @@ class TestKubevirtNegative:
                 and result["thread"] == 1
                 and hostname not in str(result["mappings"])
             )
+
+    @pytest.mark.tier2
+    @pytest.mark.notRHEL8
+    def test_insecure(self, virtwho, function_hypervisor, hypervisor_data, ssh_host):
+        """Test the insecure option in /etc/virt-who.d/hypervisor.conf
+
+        :title: virt-who: kubevirt: test insecure option
+        :id: bb777123-3210-4392-9c0d-e7fc332dc762
+        :caseimportance: High
+        :tags: tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Configure kubeconfig without cert
+            2. Configure the insecure option with "none", "", "0", "False" value and run virt-who
+            3. Configure the insecure option with "1", "True" value and run virt-who
+        :expectedresults:
+            2. Failed to run the virt-who service with the error message:
+            "certificate verify failed"
+            3. Succeed to start the virt-who service
+        """
+        config_file_no_cert = "/root/kube.conf_no_cert"
+        config_url_no_cert = hypervisor_data["hypervisor_config_url_no_cert"]
+        cmd = (
+            f"rm -f {config_file_no_cert}; "
+            f"curl -L {config_url_no_cert} -o {config_file_no_cert}; sync"
+        )
+        ssh_host.runcmd(cmd)
+        function_hypervisor.update("kubeconfig", config_file_no_cert)
+
+        # configure kubeconfig without cert and run virt-who
+        for value in ("none", "", "0", "False"):
+            # none -> run virt-who without insecure= option
+            if value != "none":
+                function_hypervisor.update("insecure", value)
+            result = virtwho.run_service()
+            error_msg = "certificate verify failed"
+            assert (
+                result["error"] == 1
+                and result["send"] == 0
+                and result["thread"] == 1
+                and error_msg in result["log"]
+            )
+            function_hypervisor.delete("insecure")
+
+        # test insecure=1/True can ignore checking cert"
+        for value in ("1", "True"):
+            function_hypervisor.update("insecure", value)
+            result = virtwho.run_service()
+            assert (
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+            )
+            function_hypervisor.delete("insecure")
+
+        ssh_host.runcmd(f"rm -rf {config_file_no_cert}")
