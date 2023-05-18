@@ -2,7 +2,10 @@ import os
 import random
 import argparse
 import sys
-sys.path.append(".")
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 from virtwho import logger, FailException
 from virtwho.base import rhel_compose_repo
@@ -34,8 +37,7 @@ def create_rhel_container_by_docker(args):
     ssh_docker.runcmd(
         "rm -rf /tmp/docker/;" "rm -rf /tmp/mkimage*;" "rm -f /etc/yum.repos.d/*.repo"
     )
-    current_path = os.path.abspath(os.path.dirname(__file__))
-    local_dir = os.path.join(current_path, "docker/")
+    local_dir = os.path.join(curPath, "docker/")
     remote_dir = "/tmp/docker/"
     ssh_docker.put_dir(local_dir, remote_dir)
 

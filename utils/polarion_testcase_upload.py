@@ -1,9 +1,13 @@
 import json
+import os
 import subprocess
 import argparse
 import time
 import sys
-sys.path.append(".")
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 from virtwho import logger, FailException
 

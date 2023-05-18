@@ -1,7 +1,10 @@
 import os
 import argparse
 import sys
-sys.path.append(".")
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 from virtwho.settings import Configure, TEST_DATA
 
@@ -38,9 +41,8 @@ def virtwho_ini_update(section, option, value):
     Update the property of virtwho.ini for testing/using
     Used to called by other functions
     """
-    current_path = os.path.abspath(os.path.dirname(__file__))
     os.system(
-        f"python3 {current_path}/properties_update.py "
+        f"python3 {curPath}/properties_update.py "
         f"--section={section} "
         f"--option={option} "
         f'--value="{value}"'

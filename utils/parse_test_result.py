@@ -1,6 +1,10 @@
 import argparse
+import os
 import sys
-sys.path.append(".")
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 
 from xml.dom import minidom
 from properties_update import virtwho_ini_props_update
