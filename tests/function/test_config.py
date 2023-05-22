@@ -11,7 +11,7 @@ from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
 from virtwho import SYSCONFIG_FILE
 
-from virtwho.base import hostname_get
+from virtwho.base import hostname_get, msg_search
 
 
 @pytest.mark.usefixtures("function_globalconf_clean")
@@ -394,7 +394,7 @@ class TestConfiguration:
             result["error"] == 0
             and result["send"] == 1
             and result["thread"] == 1
-            and guest_uuid in result["log"]
+            and guest_uuid in str(result["mappings"])
         )
 
     @pytest.mark.tier1
@@ -567,7 +567,7 @@ class TestSysConfiguration:
         function_sysconfig.clean()
 
     @pytest.mark.tier1
-    def test_oneshot_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
+    def test_oneshot_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_ONE_SHOT option in /etc/sysconfig/virt-who
 
         :title: virt-who: config: test VIRTWHO_ONE_SHOT option
@@ -609,7 +609,7 @@ class TestSysConfiguration:
         function_sysconfig.clean()
 
     @pytest.mark.tier1
-    def test_interval_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
+    def test_interval_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_INTERVAL option in /etc/sysconfig/virt-who
 
         :title: virt-who: config: test VIRTWHO_INTERVAL option

@@ -351,8 +351,10 @@ def owner_data():
         f"Organization with id {bad_owner} could not be found",
         f"Couldn't find Organization '{bad_owner}'",
     ]
+    # the errors for null are different when virt-who host registered and unreigstered.
     owner["null_error"] = [
         "Communication with subscription manager failed",
+        "Unable to read certificate, system is not registered or you are not root"
     ]
     return owner
 
