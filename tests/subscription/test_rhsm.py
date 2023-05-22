@@ -206,7 +206,7 @@ class TestRHSM:
         )
 
     @pytest.mark.tier1
-    @pytest.mark.notRemoteMode
+    @pytest.mark.notRemote
     def test_vdc_physcial_pool_consumed_status_in_physical_host(
         self, sm_host, vdc_pool_physical
     ):
