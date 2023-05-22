@@ -18,6 +18,7 @@ vdc_virtual_sku = config.sku.vdc_virtual
 @pytest.mark.usefixtures("class_guest_register")
 @pytest.mark.usefixtures("function_guest_unattach")
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
+@pytest.mark.usefixtures("class_rhsm_sca_disable")
 class TestRHSM:
     @pytest.mark.tier1
     def test_vdc_virtual_pool_attach_by_poolId(
@@ -320,6 +321,7 @@ class TestRHSM:
         finally:
             sm_guest.facts_remove()
 
+    @pytest.mark.tier2
     def test_vdc_virtual_pool_attach_in_fake_mode(
         self, virtwho, sm_guest, rhsm, hypervisor_data, vdc_pool_physical
     ):

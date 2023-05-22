@@ -202,12 +202,24 @@ def satellite():
     return None
 
 
+@pytest.fixture(scope="class")
+def class_satellite_sca_disable(satellite):
+    """Enable sca mode for default org"""
+    satellite.sca(sca="disable")
+
+
 @pytest.fixture(scope="session")
 def rhsm():
     """Instantication of class RHSM()"""
     if REGISTER == "rhsm":
         return RHSM()
     return None
+
+
+@pytest.fixture(scope="class")
+def class_rhsm_sca_disable(rhsm):
+    """Disable sca mode for stage candlepin"""
+    rhsm.sca(sca="disable")
 
 
 @pytest.fixture(scope="session")
