@@ -182,7 +182,7 @@ class TestVirtwhoPackageInfo:
             "export SUBMAN_DEBUG_PRINT_REQUEST=1;"
             "export SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1;"
             "virt-who -o",
-            stdout=True,
+            if_stdout=True,
         )
         pkg = base.package_check(ssh_host, "virt-who")[9:18]
         assert f"virt-who/{pkg}" in output
