@@ -588,7 +588,8 @@ def expect_run(ssh, cmd, attrs):
     :param attrs: such as ['Password:|password']
     """
     options = list()
-    filename = "/tmp/virtwho.sh"
+    random_str = random_string()
+    filename = f"/tmp/virtwho-{random_str}.sh"
     for attr in attrs:
         expect_value = attr.split("|")[0]
         send_value = attr.split("|")[1]
