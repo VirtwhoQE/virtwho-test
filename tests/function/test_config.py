@@ -6,12 +6,12 @@
 """
 import pytest
 
-from virtwho import HYPERVISOR, logger
+from virtwho import HYPERVISOR
 from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
 from virtwho import SYSCONFIG_FILE
 
-from virtwho.base import hostname_get, msg_search
+from virtwho.base import hostname_get
 
 
 @pytest.mark.usefixtures("function_globalconf_clean")
