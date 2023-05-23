@@ -118,7 +118,9 @@ class TestConfiguration:
         )
 
     @pytest.mark.tier1
-    def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data, ssh_host):
+    def test_print_in_virtwho_conf(
+        self, virtwho, globalconf, hypervisor_data, ssh_host
+    ):
         """Test the print_ option in /etc/virtwho.conf
 
         :title: virt-who: config: test print_ option (positive)
@@ -144,11 +146,11 @@ class TestConfiguration:
         guest_id = hypervisor_data["guest_uuid"]
         globalconf.update("global", "print_", "True")
         globalconf.update("global", "debug", "True")
-        _, output = ssh_host.runcmd('virt-who', if_stdout=True)
+        _, output = ssh_host.runcmd("virt-who", if_stdout=True)
         assert guest_id in output
 
         globalconf.update("global", "debug", "False")
-        _, output = ssh_host.runcmd('virt-who', if_stdout=True)
+        _, output = ssh_host.runcmd("virt-who", if_stdout=True)
         assert guest_id in output
 
     @pytest.mark.tier1

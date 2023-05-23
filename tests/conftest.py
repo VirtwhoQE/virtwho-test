@@ -366,7 +366,7 @@ def owner_data():
     # the errors for null are different when virt-who host registered and unreigstered.
     owner["null_error"] = [
         "Communication with subscription manager failed",
-        "Unable to read certificate, system is not registered or you are not root"
+        "Unable to read certificate, system is not registered or you are not root",
     ]
     return owner
 
