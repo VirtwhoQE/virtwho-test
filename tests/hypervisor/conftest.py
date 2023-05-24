@@ -303,18 +303,14 @@ def libvirt_assertion():
                 "": "Cannot recv data: Host key verification failed.",
             },
             "disable": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
-            "disable_multi_configs": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
-            "null_multi_configs": "Cannot recv data: Host key verification failed.",
         },
         "username": {
             "invalid": {
                 "xxx": login_error,
-                "红帽€467aa": login_error,
+                "红帽€467aa": "Unable to parse URI qemu+ssh://",
                 "": login_error,
             },
             "disable": 'Required option: "username" not set',
-            "disable_multi_configs": 'Required option: "username" not set',
-            "null_multi_configs": login_error,
         },
         "password": {
             "invalid": {
@@ -323,8 +319,6 @@ def libvirt_assertion():
                 "": login_error,
             },
             "disable": 'Required option: "password" not set',
-            "disable_multi_configs": 'Required option: "password" not set',
-            "null_multi_configs": login_error,
         },
         "encrypted_password": {
             "invalid": {
