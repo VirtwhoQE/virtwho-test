@@ -159,7 +159,7 @@ class TestHypervPositive:
             )
 
     def test_fake_type(
-            self, virtwho, function_hypervisor, hypervisor_data, function_host_register
+        self, virtwho, function_hypervisor, hypervisor_data, function_host_register
     ):
         """Test the fake type in /etc/virt-who.d/hypervisor.conf
 

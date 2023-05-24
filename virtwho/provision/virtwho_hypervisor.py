@@ -166,7 +166,19 @@ def hyperv_monitor():
             logger.info(f">>>Hyperv: Get the hypervisor data.")
             hyperv_data = hyperv.guest_search(guest_name)
             uuid = hyperv_data["hyperv_uuid"]
-            hyperv_data["hyperv_uuid"] = uuid[6:8] + uuid[4:6] + uuid[2:4] + uuid[0:2] + "-" + uuid[11:13] + uuid[9:11] + "-" + uuid[16:18] + uuid[14:16] + uuid[18:]
+            hyperv_data["hyperv_uuid"] = (
+                uuid[6:8]
+                + uuid[4:6]
+                + uuid[2:4]
+                + uuid[0:2]
+                + "-"
+                + uuid[11:13]
+                + uuid[9:11]
+                + "-"
+                + uuid[16:18]
+                + uuid[14:16]
+                + uuid[18:]
+            )
             logger.info(f"=== Hyperv Data:\n{hyperv_data}\n===")
 
             logger.info(f">>>Hyperv: Check if the rhel guest if running.")
@@ -177,8 +189,9 @@ def hyperv_monitor():
                     f"please install one."
                 )
             else:
-                if (hyperv_data["guest_state"] == 2
-                        and host_ping(host=hyperv_data["guest_ip"])):
+                if hyperv_data["guest_state"] == 2 and host_ping(
+                    host=hyperv_data["guest_ip"]
+                ):
                     logger.info(f"The rhel guest({guest_name}) is running well.")
                     ssh_guest = SSHConnect(
                         host=hyperv_data["guest_ip"],
