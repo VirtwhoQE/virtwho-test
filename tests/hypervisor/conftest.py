@@ -225,6 +225,11 @@ def ahv_assertion():
     :return:
     """
     login_error = "HTTP Auth Failed get"
+
+    username_password_non_ascii_error = "internal error: Unable to parse URI qemu+ssh"
+    if "RHEL-9" in RHEL_COMPOSE:
+        username_password_non_ascii_error = login_error
+
     data = {
         "type": {
             "invalid": {
@@ -249,16 +254,18 @@ def ahv_assertion():
         "username": {
             "invalid": {
                 "xxx": login_error,
-                "红帽€467aa": "internal error: Unable to parse URI qemu+ssh",
-                "": "",
+                "红帽€467aa": username_password_non_ascii_error,
+                "": login_error,
             },
+            "disable": 'Required option: "username" not set',
         },
         "password": {
             "invalid": {
-                "xxx": "",
-                "红帽€467aa": "",
-                "": "",
+                "xxx": login_error,
+                "红帽€467aa": username_password_non_ascii_error,
+                "": login_error,
             },
+            "disable": 'Required option: "password" not set',
         },
         "encrypted_password": {
             "invalid": {
