@@ -199,6 +199,9 @@ def kubevirt_assertion():
     Collect all the assertion info for kubevirt to this fixture
     :return:
     """
+    disable_error = "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
+    if "RHEL-9" in RHEL_COMPOSE:
+        disable_error = "Cannot use direct socket mode if no URI is set"
     data = {
         "type": {
             "invalid": {
@@ -207,7 +210,7 @@ def kubevirt_assertion():
                 "": "Unsupported virtual type '' is set",
             },
             "non_rhel9": "virt-who can't be started",
-            "disable": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
+            "disable": disable_error,
             "disable_multi_configs": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
         },
     }
