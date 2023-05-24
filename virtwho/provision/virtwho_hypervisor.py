@@ -76,12 +76,6 @@ def esx_monitor():
         if ret1 and ret2 and ret3:
             logger.info(f">>>vCenter: Get the Hypervisor data.")
             esx_data = esx.guest_search(guest_name, uuid_info=True)
-            ssh_guest = SSHConnect(
-                host=esx_data["guest_ip"],
-                user=config.esx.guest_username,
-                pwd=config.esx.guest_password,
-            )
-            esx_data["guest_uuid"] = rhel_host_uuid_get(ssh_guest)
             esx_data["esx_hostname"] = hostname_get(ssh_esx)
             logger.info(f"=== vCenter Data:\n{esx_data}\n===")
 
@@ -97,6 +91,12 @@ def esx_monitor():
                     host=esx_data["guest_ip"]
                 ):
                     logger.info(f"The rhel guest({guest_name}) is running well.")
+                    ssh_guest = SSHConnect(
+                        host=esx_data["guest_ip"],
+                        user=config.esx.guest_username,
+                        pwd=config.esx.guest_password,
+                    )
+                    esx_data["guest_uuid"] = rhel_host_uuid_get(ssh_guest)
                 else:
                     esx_state, guest_ip = (state_guest_bad, guest_down)
                     logger.error(
@@ -165,6 +165,8 @@ def hyperv_monitor():
         else:
             logger.info(f">>>Hyperv: Get the hypervisor data.")
             hyperv_data = hyperv.guest_search(guest_name)
+            uuid = hyperv_data["hyperv_uuid"]
+            hyperv_data["hyperv_uuid"] = uuid[6:8] + uuid[4:6] + uuid[2:4] + uuid[0:2] + "-" + uuid[11:13] + uuid[9:11] + "-" + uuid[16:18] + uuid[14:16] + uuid[18:]
             logger.info(f"=== Hyperv Data:\n{hyperv_data}\n===")
 
             logger.info(f">>>Hyperv: Check if the rhel guest if running.")
@@ -175,8 +177,15 @@ def hyperv_monitor():
                     f"please install one."
                 )
             else:
-                if hyperv_data["guest_state"] == 2 and host_ping(host=guest_ip):
+                if (hyperv_data["guest_state"] == 2
+                        and host_ping(host=hyperv_data["guest_ip"])):
                     logger.info(f"The rhel guest({guest_name}) is running well.")
+                    ssh_guest = SSHConnect(
+                        host=hyperv_data["guest_ip"],
+                        user=config.esx.guest_username,
+                        pwd=config.esx.guest_password,
+                    )
+                    hyperv_data["guest_uuid"] = rhel_host_uuid_get(ssh_guest).upper()
                 else:
                     hyperv_state, guest_ip = (state_guest_bad, guest_down)
                     logger.warning(

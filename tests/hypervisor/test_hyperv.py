@@ -85,7 +85,7 @@ class TestHypervPositive:
             )
             if REGISTER == "rhsm":
                 assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
-                rhsm.delete(hypervisor_data["hypervisor_hostname"])
+                rhsm.host_delete(hypervisor_data["hypervisor_hostname"])
             else:
                 if hypervisor_id == "hostname":
                     assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
@@ -158,7 +158,9 @@ class TestHypervPositive:
                 and hypervisor_id_data not in str(result["mappings"])
             )
 
-    def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
+    def test_fake_type(
+            self, virtwho, function_hypervisor, hypervisor_data, function_host_register
+    ):
         """Test the fake type in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: hyperv: test fake type
@@ -169,8 +171,8 @@ class TestHypervPositive:
 
         :expectedresults:
             1. Can find the json data in the specific path
-            2. Succeed to run the virt-who service, can find the host_uuid and guest_uuid in the
-            rhsm.log file
+            2. Succeed to run the virt-who service, can find the host_uuid and
+                guest_uuid in the rhsm.log file
         """
         host_uuid = hypervisor_data["hypervisor_uuid"]
         guest_uuid = hypervisor_data["guest_uuid"]

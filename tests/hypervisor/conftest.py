@@ -1,4 +1,5 @@
 import pytest
+from virtwho import RHEL_COMPOSE
 
 
 @pytest.fixture(scope="session")
@@ -137,6 +138,8 @@ def hyperv_assertion():
     :return:
     """
     login_error = "Incorrect domain/username/password"
+    if "RHEL-9" in RHEL_COMPOSE:
+        login_error = "Authentication failed"
     data = {
         "type": {
             "invalid": {
