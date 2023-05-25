@@ -16,6 +16,7 @@ from virtwho.settings import DOCS_DIR, TEMP_DIR
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestVirtwhoPackageInfo:
+    @pytest.mark.tier1
     def test_shipped_in_supported_arch(self):
         """Test the virt-who package is shipped in all supported arch
 
