@@ -11,6 +11,7 @@ from virtwho.base import system_init
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager
 from virtwho.settings import config
+from virtwho.register import RHSM
 
 
 def satellite_deploy(args):
@@ -23,6 +24,10 @@ def satellite_deploy(args):
     rhel_ver = args.rhel_compose.split("-")[1].split(".")[0]
     ssh = SSHConnect(host=args.server, user=args.ssh_username, pwd=args.ssh_password)
     system_init(ssh, "satellite")
+
+    # Disable rhsm SCA mode to support the Satellite deployment
+    rhsm = RHSM()
+    rhsm.sca(sca="disable")
 
     # Enable repos of cnd or dogfood
     if "cdn" in sat_repo:
