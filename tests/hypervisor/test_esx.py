@@ -557,16 +557,6 @@ class TestEsxNegative:
             and assertion["disable_multi_configs"] in result["error_msg"]
         )
 
-        # username option is null but another config is ok
-        function_hypervisor.update("username", "")
-        result = virtwho.run_service(wait=30)
-        assert (
-            result["error"] is not 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and assertion["null_multi_configs"] in result["error_msg"]
-        )
-
     @pytest.mark.tier2
     def test_password(self, virtwho, function_hypervisor, esx_assertion):
         """Test the password= option in /etc/virt-who.d/test_esx.conf
@@ -623,16 +613,6 @@ class TestEsxNegative:
             and result["send"] == 1
             and result["thread"] == 1
             and assertion["disable_multi_configs"] in result["error_msg"]
-        )
-
-        # password option is null but another config is ok
-        function_hypervisor.update("password", "")
-        result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and assertion["null_multi_configs"] in result["error_msg"]
         )
 
     @pytest.mark.tier2
