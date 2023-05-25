@@ -953,19 +953,22 @@ class Satellite:
         logger.warning(f"Failed to get host info for {host} on satellite webui")
         return None
 
-    def sca(self, sca="disable"):
+    def sca(self, org=None, sca="disable"):
         """
         Enable/disable simple content access.
+        :param org: org lable, default use the Default_Organization.
         :param sca: enable/disable.
         :return: True or raise fail.
         """
+        org = org or self.org
+        org_id = self.organization_id(org=org)
         ret, output = self.ssh.runcmd(
-            f"hammer simple-content-access {sca} --organization-id {self.org_id}"
+            f"hammer simple-content-access {sca} --organization-id {org_id}"
         )
         if ret == 0 and "100%" in output:
-            logger.info(f"Succeeded to {sca} SCA for satellite")
+            logger.info(f"Succeeded to {sca} SCA for satellite:{org}")
             return True
-        raise FailException(f"Failed to {sca} SCA for satellite")
+        raise FailException(f"Failed to {sca} SCA for satellite:{org}")
 
     def facts_get(self, host_id):
         """

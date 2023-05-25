@@ -44,7 +44,9 @@ def satellite_deploy_for_virtwho(args):
     satellite_settings(ssh_satellite, "failed_login_attempts_limit", "0")
     satellite_settings(ssh_satellite, "unregister_delete_host", "true")
 
-    # Upload manifest to the default org
+    # Default Org: setup SCA mode and upload manifest as requirement
+    satellite = Satellite(server=args.server)
+    satellite.sca(org=None, sca=args.sca)
     satellite_manifest_upload(
         org="Default_Organization",
         ssh=ssh_satellite,
@@ -53,11 +55,11 @@ def satellite_deploy_for_virtwho(args):
         admin_password=args.admin_password,
     )
 
-    # Create the second org and upload manifest as requirement.
-    satellite = Satellite(server=args.server)
+    # Second org: create org, then setup sca and upload manifest as requirement.
     second_org = config.satellite.secondary_org
     if second_org:
         satellite.org_create(name=second_org, label=second_org)
+        satellite.sca(org=second_org, sca=args.sca)
         satellite_manifest_upload(
             org=second_org,
             ssh=ssh_satellite,
@@ -207,7 +209,13 @@ def virtwho_satellite_arguments_parser():
         "--beaker-host",
         default="%dell-per740-69-vm%",
         required=False,
-        help="Define/filter system as hostrequire. " "Such as: %hp-dl360g9-08-vm%",
+        help="Define/filter system as hostrequire. Such as: %hp-dl360g9-08-vm%",
+    )
+    parser.add_argument(
+        "--sca",
+        default="enable",
+        required=False,
+        help="SCA mode, disable/enable",
     )
     return parser.parse_args()
 

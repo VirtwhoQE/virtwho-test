@@ -24,6 +24,7 @@ second_org = config.satellite.secondary_org
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 
 
+@pytest.mark.usefixtures("module_satellite_sca_recover")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_globalconf_clean")
@@ -31,7 +32,7 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 @pytest.mark.usefixtures("class_guest_register")
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("class_satellite_sca_disable")
-class TestSatellite:
+class TestSatelliteScaDisable:
     @pytest.mark.tier1
     def test_vdc_virtual_pool_attach_by_poolId(
         self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
@@ -668,6 +669,16 @@ class TestSatellite:
     #     register_by = satellite.hosts_info_on_webui(guest_hostname)
     #     assert register_by == 'admin'
 
+# @pytest.mark.usefixtures("module_satellite_sca_recover")
+# @pytest.mark.usefixtures("class_hypervisor")
+# @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
+# @pytest.mark.usefixtures("class_globalconf_clean")
+# @pytest.mark.usefixtures("function_guest_unattach")
+# @pytest.mark.usefixtures("class_guest_register")
+# @pytest.mark.usefixtures("function_host_register_for_local_mode")
+# @pytest.mark.usefixtures("class_satellite_sca_enable")
+# class TestSatelliteScaEnable:
+
 
 @pytest.fixture(scope="class")
 def sm_guest_ack(register_data):
@@ -727,3 +738,15 @@ def satellite_second_org():
 #             return register_by
 #     logger.error(f'Failed to get the register_by value for {host}')
 #     return None
+
+@pytest.fixture(scope="class")
+def class_satellite_sca_disable(satellite):
+    """Disable sca mode for default org"""
+    satellite.sca(org=None, sca="disable")
+
+
+@pytest.fixture(scope="module")
+def module_satellite_sca_recover(satellite):
+    """Recover the sca mode for default org as configuration in virtwho.ini."""
+    yield
+    satellite.sca(org=None, sca=config.job.sca)

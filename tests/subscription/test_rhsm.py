@@ -13,13 +13,14 @@ vdc_physical_sku = config.sku.vdc
 vdc_virtual_sku = config.sku.vdc_virtual
 
 
+@pytest.mark.usefixtures("module_rhsm_sca_recover")
 @pytest.mark.usefixtures("class_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_guest_register")
 @pytest.mark.usefixtures("function_guest_unattach")
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("class_rhsm_sca_disable")
-class TestRHSM:
+class TestRhsmScaDisable:
     @pytest.mark.tier1
     def test_vdc_virtual_pool_attach_by_poolId(
         self, virtwho, sm_guest, rhsm, hypervisor_data, vdc_pool_physical
@@ -379,3 +380,26 @@ class TestRHSM:
         sm_guest.refresh()
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
         assert consumed_data is None
+
+
+# @pytest.mark.usefixtures("module_rhsm_sca_recover")
+# @pytest.mark.usefixtures("class_globalconf_clean")
+# @pytest.mark.usefixtures("class_hypervisor")
+# @pytest.mark.usefixtures("class_guest_register")
+# @pytest.mark.usefixtures("function_guest_unattach")
+# @pytest.mark.usefixtures("function_host_register_for_local_mode")
+# @pytest.mark.usefixtures("class_rhsm_sca_enable")
+# class TestRhsmScaEnable:
+
+
+@pytest.fixture(scope="class")
+def class_rhsm_sca_disable(rhsm):
+    """Disable sca mode for stage candlepin"""
+    rhsm.sca(sca="disable")
+
+
+@pytest.fixture(scope="module")
+def module_rhsm_sca_recover(rhsm):
+    """Recover the sca mode as configuration in virtwho.ini."""
+    yield
+    rhsm.sca(sca=config.job.sca)
