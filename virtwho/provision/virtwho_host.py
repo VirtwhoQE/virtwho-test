@@ -62,7 +62,7 @@ def provision_virtwho_host(args):
     )
     rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
-    ssh_host.runcmd("yum install -y expect net-tools")
+    ssh_host.runcmd("yum install -y expect net-tools wget")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
     # Update the virtwho.ini properties
