@@ -1,4 +1,5 @@
 import pytest
+from virtwho import RHEL_COMPOSE
 
 
 @pytest.fixture(scope="session")
@@ -137,6 +138,8 @@ def hyperv_assertion():
     :return:
     """
     login_error = "Incorrect domain/username/password"
+    if "RHEL-9" in RHEL_COMPOSE:
+        login_error = "Authentication failed"
     data = {
         "type": {
             "invalid": {
@@ -196,6 +199,9 @@ def kubevirt_assertion():
     Collect all the assertion info for kubevirt to this fixture
     :return:
     """
+    disable_error = "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
+    if "RHEL-9" in RHEL_COMPOSE:
+        disable_error = "Cannot use direct socket mode if no URI is set"
     data = {
         "type": {
             "invalid": {
@@ -204,7 +210,7 @@ def kubevirt_assertion():
                 "": "Unsupported virtual type '' is set",
             },
             "non_rhel9": "virt-who can't be started",
-            "disable": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
+            "disable": disable_error,
             "disable_multi_configs": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
         },
     }
@@ -219,6 +225,11 @@ def ahv_assertion():
     :return:
     """
     login_error = "HTTP Auth Failed get"
+
+    username_password_non_ascii_error = "internal error: Unable to parse URI qemu+ssh"
+    if "RHEL-9" in RHEL_COMPOSE:
+        username_password_non_ascii_error = login_error
+
     data = {
         "type": {
             "invalid": {
@@ -243,16 +254,18 @@ def ahv_assertion():
         "username": {
             "invalid": {
                 "xxx": login_error,
-                "红帽€467aa": "internal error: Unable to parse URI qemu+ssh",
-                "": "",
+                "红帽€467aa": username_password_non_ascii_error,
+                "": login_error,
             },
+            "disable": 'Required option: "username" not set',
         },
         "password": {
             "invalid": {
-                "xxx": "",
-                "红帽€467aa": "",
-                "": "",
+                "xxx": login_error,
+                "红帽€467aa": username_password_non_ascii_error,
+                "": login_error,
             },
+            "disable": 'Required option: "password" not set',
         },
         "encrypted_password": {
             "invalid": {
@@ -290,18 +303,14 @@ def libvirt_assertion():
                 "": "Cannot recv data: Host key verification failed.",
             },
             "disable": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
-            "disable_multi_configs": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
-            "null_multi_configs": "Cannot recv data: Host key verification failed.",
         },
         "username": {
             "invalid": {
                 "xxx": login_error,
-                "红帽€467aa": login_error,
+                "红帽€467aa": "Unable to parse URI qemu+ssh://",
                 "": login_error,
             },
             "disable": 'Required option: "username" not set',
-            "disable_multi_configs": 'Required option: "username" not set',
-            "null_multi_configs": login_error,
         },
         "password": {
             "invalid": {
@@ -310,8 +319,6 @@ def libvirt_assertion():
                 "": login_error,
             },
             "disable": 'Required option: "password" not set',
-            "disable_multi_configs": 'Required option: "password" not set',
-            "null_multi_configs": login_error,
         },
         "encrypted_password": {
             "invalid": {

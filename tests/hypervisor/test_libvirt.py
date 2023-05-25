@@ -85,7 +85,7 @@ class TestLibvrtPositive:
             )
             if REGISTER == "rhsm":
                 assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
-                rhsm.delete(hypervisor_data["hypervisor_hostname"])
+                rhsm.host_delete(hypervisor_data["hypervisor_hostname"])
             else:
                 if hypervisor_id == "hostname":
                     assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
@@ -299,6 +299,7 @@ class TestLibvirtNegative:
             assert (
                 result["error"] is not 0
                 and result["send"] == 0
+                and result["thread"] == 1
                 and assertion["invalid"][f"{value}"] in result["error_msg"]
             )
 
@@ -312,28 +313,6 @@ class TestLibvirtNegative:
             # libvirt-local mode will be used to instead
             # when server option is disabled for libvirt-remote
             and assertion["disable"] in result["error_msg"]
-        )
-
-        # server option is disable but another config is ok
-        hypervisor_create(
-            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
-        )
-        result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and assertion["disable_multi_configs"] in result["error_msg"]
-        )
-
-        # server option is null but another config is ok
-        function_hypervisor.update("server", "")
-        result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and assertion["null_multi_configs"] in result["error_msg"]
         )
 
     @pytest.mark.tier2

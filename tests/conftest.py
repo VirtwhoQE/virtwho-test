@@ -202,12 +202,24 @@ def satellite():
     return None
 
 
+@pytest.fixture(scope="class")
+def class_satellite_sca_disable(satellite):
+    """Enable sca mode for default org"""
+    satellite.sca(sca="disable")
+
+
 @pytest.fixture(scope="session")
 def rhsm():
     """Instantication of class RHSM()"""
     if REGISTER == "rhsm":
         return RHSM()
     return None
+
+
+@pytest.fixture(scope="class")
+def class_rhsm_sca_disable(rhsm):
+    """Disable sca mode for stage candlepin"""
+    rhsm.sca(sca="disable")
 
 
 @pytest.fixture(scope="session")
@@ -351,8 +363,10 @@ def owner_data():
         f"Organization with id {bad_owner} could not be found",
         f"Couldn't find Organization '{bad_owner}'",
     ]
+    # the errors for null are different when virt-who host registered and unreigstered.
     owner["null_error"] = [
         "Communication with subscription manager failed",
+        "Unable to read certificate, system is not registered or you are not root",
     ]
     return owner
 

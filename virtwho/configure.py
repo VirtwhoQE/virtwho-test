@@ -237,7 +237,7 @@ class RHSMConf:
         """
         os.system(f"\\cp -f {self.save_file} {self.local_file}")
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
-        logger.info(f"*** Recover /etc/rhsm/rhsm.con")
+        logger.info(f"*** Recover /etc/rhsm/rhsm.conf")
 
 
 def virtwho_ssh_connect(mode=None):

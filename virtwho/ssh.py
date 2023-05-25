@@ -71,10 +71,10 @@ class SSHConnect:
         sftp = paramiko.SFTPClient.from_transport(transport)
         return sftp, transport
 
-    def runcmd(self, cmd, stdout=False):
+    def runcmd(self, cmd, if_stdout=False):
         """Executes SSH command on remote hostname.
         :param str cmd: The command to run
-        :param str stdout: default to return to stderr
+        :param str if_stdout: default to return to stderr
         """
         ssh = self._connect()
         logger.info(">>> {}".format(cmd))
@@ -82,7 +82,7 @@ class SSHConnect:
         code = stdout.channel.recv_exit_status()
         stdout, stderr = stdout.read(), stderr.read()
         ssh.close()
-        if stdout or not stderr:
+        if if_stdout or not stderr:
             logger.info("<<< stdout\n{}".format(stdout.decode()))
             return code, stdout.decode()
         else:

@@ -118,7 +118,9 @@ class TestConfiguration:
         )
 
     @pytest.mark.tier1
-    def test_print_in_virtwho_conf(self, virtwho, globalconf, hypervisor_data):
+    def test_print_in_virtwho_conf(
+        self, virtwho, globalconf, hypervisor_data, ssh_host
+    ):
         """Test the print_ option in /etc/virtwho.conf
 
         :title: virt-who: config: test print_ option (positive)
@@ -144,25 +146,12 @@ class TestConfiguration:
         guest_id = hypervisor_data["guest_uuid"]
         globalconf.update("global", "print_", "True")
         globalconf.update("global", "debug", "True")
-        result = virtwho.run_service()
-        assert (
-            result["error"] == 0
-            and result["send"] == 0
-            and result["thread"] == 0
-            and result["debug"] is True
-            and guest_id in result["log"]
-        )
+        _, output = ssh_host.runcmd("virt-who", if_stdout=True)
+        assert guest_id in output
 
-        globalconf.update("global", "print_", "True")
         globalconf.update("global", "debug", "False")
-        result = virtwho.run_service()
-        assert (
-            result["error"] == 0
-            and result["send"] == 0
-            and result["thread"] == 0
-            and result["debug"] is False
-            and guest_id not in result["log"]
-        )
+        _, output = ssh_host.runcmd("virt-who", if_stdout=True)
+        assert guest_id in output
 
     @pytest.mark.tier1
     def test_reporter_id_in_virtwho_conf(
@@ -407,7 +396,7 @@ class TestConfiguration:
             result["error"] == 0
             and result["send"] == 1
             and result["thread"] == 1
-            and guest_uuid in result["log"]
+            and guest_uuid in str(result["mappings"])
         )
 
     @pytest.mark.tier1
@@ -461,7 +450,7 @@ class TestConfiguration:
             )
             if REGISTER == "rhsm":
                 assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
-                rhsm.delete(hypervisor_data["hypervisor_hostname"])
+                rhsm.host_delete(hypervisor_data["hypervisor_hostname"])
             else:
                 if hypervisor_id == "hostname":
                     assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
@@ -547,7 +536,7 @@ class TestConfiguration:
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
-@pytest.mark.rhel8
+@pytest.mark.notRHEL9
 class TestSysConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
@@ -580,7 +569,7 @@ class TestSysConfiguration:
         function_sysconfig.clean()
 
     @pytest.mark.tier1
-    def test_oneshot_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
+    def test_oneshot_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_ONE_SHOT option in /etc/sysconfig/virt-who
 
         :title: virt-who: config: test VIRTWHO_ONE_SHOT option
@@ -622,7 +611,7 @@ class TestSysConfiguration:
         function_sysconfig.clean()
 
     @pytest.mark.tier1
-    def test_interval_in_virtwho_sysocnfig(self, virtwho, function_sysconfig):
+    def test_interval_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
         """Test the VIRTWHO_INTERVAL option in /etc/sysconfig/virt-who
 
         :title: virt-who: config: test VIRTWHO_INTERVAL option

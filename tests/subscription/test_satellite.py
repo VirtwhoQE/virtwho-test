@@ -24,14 +24,15 @@ second_org = config.satellite.secondary_org
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 
 
-@pytest.mark.tier1
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_globalconf_clean")
 @pytest.mark.usefixtures("function_guest_unattach")
 @pytest.mark.usefixtures("class_guest_register")
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
+@pytest.mark.usefixtures("class_satellite_sca_disable")
 class TestSatellite:
+    @pytest.mark.tier1
     def test_vdc_virtual_pool_attach_by_poolId(
         self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
@@ -212,6 +213,7 @@ class TestSatellite:
             output, "Invalid"
         )
 
+    @pytest.mark.tier1
     def test_vdc_virtual_pool_attach_in_fake_mode(
         self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
@@ -273,6 +275,7 @@ class TestSatellite:
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
         assert consumed_data is None
 
+    @pytest.mark.tier2
     def test_guest_auto_attach_rule_by_activation_key(
         self,
         virtwho,
@@ -377,6 +380,7 @@ class TestSatellite:
         limit_consumed_data = sm_guest_ack.consumed(limit_sku, "Virtual")
         assert vdc_consumed_data and not limit_consumed_data
 
+    @pytest.mark.tier2
     def test_guest_auto_attach_temporary_pool_by_activation_key(
         self, virtwho, sm_guest_ack, satellite, hypervisor_data
     ):
@@ -423,6 +427,7 @@ class TestSatellite:
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data["temporary"] is False
 
+    @pytest.mark.tier2
     def test_non_default_org_with_rhsm_options(
         self,
         virtwho,
@@ -491,6 +496,7 @@ class TestSatellite:
             class_hypervisor.update("owner", default_org)
             satellite_second_org.host_delete(host=hypervisor_hostname)
 
+    @pytest.mark.tier2
     def test_non_default_org_without_rhsm_options(
         self,
         virtwho,
@@ -564,6 +570,7 @@ class TestSatellite:
             function_hypervisor.create(rhsm=True)
             satellite_second_org.host_delete(host=hypervisor_hostname)
 
+    @pytest.mark.tier2
     def test_vdc_virtual_subscription_on_webui(
         self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):

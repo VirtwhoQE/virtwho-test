@@ -518,8 +518,7 @@ class VirtwhoRunner:
         Get and return the json created by print function.
         :return: json output
         """
-        _, output = self.ssh.runcmd("cat /etc/virt-who.conf")
-        if (cli and "-p " in cli) or ("print_=" in output):
+        if cli and "-p " in cli:
             ret, output = self.ssh.runcmd(f"cat {PRINT_JSON_FILE}")
             if ret == 0 and output != "":
                 return output
