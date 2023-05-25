@@ -669,6 +669,7 @@ class TestSatelliteScaDisable:
     #     register_by = satellite.hosts_info_on_webui(guest_hostname)
     #     assert register_by == 'admin'
 
+
 # @pytest.mark.usefixtures("module_satellite_sca_recover")
 # @pytest.mark.usefixtures("class_hypervisor")
 # @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
@@ -738,6 +739,7 @@ def satellite_second_org():
 #             return register_by
 #     logger.error(f'Failed to get the register_by value for {host}')
 #     return None
+
 
 @pytest.fixture(scope="class")
 def class_satellite_sca_disable(satellite):
