@@ -30,13 +30,14 @@ def xml_file_add_hyperlink():
     """
     logger.info("Start to add hyperlinks with role testscript in testcases ")
     tree = ET.parse(args.xml_file)
-    children = tree.getroot().findall('testcase')
+    children = tree.getroot().findall("testcase")
     for child in children:
-        hyperlinks_element = ET.SubElement(child, 'hyperlinks')
-        hyperlink_element = ET.SubElement(hyperlinks_element, 'hyperlink')
-        hyperlink_element.set('role-id', 'testscript')
-        hyperlink_element.set('uri',
-                              child.find('custom-fields').find('custom-field').get('content'))
+        hyperlinks_element = ET.SubElement(child, "hyperlinks")
+        hyperlink_element = ET.SubElement(hyperlinks_element, "hyperlink")
+        hyperlink_element.set("role-id", "testscript")
+        hyperlink_element.set(
+            "uri", child.find("custom-fields").find("custom-field").get("content")
+        )
     tree.write(args.xml_file)
 
 
