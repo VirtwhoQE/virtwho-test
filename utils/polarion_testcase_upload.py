@@ -4,6 +4,7 @@ import subprocess
 import argparse
 import time
 import sys
+import xml.etree.ElementTree as ET
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -18,8 +19,26 @@ def polarion_test_case_upload(args):
     Requires curl and betelgeuse pypi package installed
     """
     xml_file_generate()
+    xml_file_add_hyperlink()
     xml_file_upload()
     log_analyzer(job_id_get())
+
+
+def xml_file_add_hyperlink():
+    """
+    Add the hyperlinks to test cases xml file
+    """
+    logger.info("Start to add hyperlinks with role testscript in testcases ")
+    tree = ET.parse(args.xml_file)
+    children = tree.getroot().findall("testcase")
+    for child in children:
+        hyperlinks_element = ET.SubElement(child, "hyperlinks")
+        hyperlink_element = ET.SubElement(hyperlinks_element, "hyperlink")
+        hyperlink_element.set("role-id", "testscript")
+        hyperlink_element.set(
+            "uri", child.find("custom-fields").find("custom-field").get("content")
+        )
+    tree.write(args.xml_file)
 
 
 def xml_file_generate():
