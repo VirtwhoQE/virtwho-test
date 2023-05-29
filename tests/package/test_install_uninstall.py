@@ -3,6 +3,8 @@
 :casecomponent: virt-who
 :testtype: nonfunctional
 :caseautomation: Automated
+:subsystemteam: sst_subscription_virtwho
+:caselevel: Component
 """
 import re
 

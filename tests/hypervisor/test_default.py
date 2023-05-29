@@ -3,6 +3,8 @@
 :casecomponent: virt-who
 :testtype: functional
 :caseautomation: Automated
+:subsystemteam: sst_subscription_virtwho
+:caselevel: Component
 """
 import pytest
 
@@ -32,6 +34,11 @@ class TestHypervisorPositive:
         """
         :title: virt-who: hypervisor : check the guest address by curl
         :id: d9dd2559-4650-4ae0-8ebb-f8e296d3920a
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Config the virt-who config file, run virt-who service
             2. check guest attributes by curl
 
@@ -75,6 +82,11 @@ class TestHypervisorPositive:
         """
         :title: virt-who: hypervisor: check associated info by rhsm.log and webui
         :id: cc0fd665-7154-4efa-ad71-b509b4224e22
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Config the virt-who config file, run virt-who service
             2. check host-to-guest association in rhsm.log/Web UI
 
@@ -111,6 +123,11 @@ class TestHypervisorPositive:
         """
         :title: virt-who: hypervisor: test the mapping info
         :id: 745cae04-c558-4ecf-8226-54c826d97eea
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Run the virt-who service by cli
             2. Check the mapping info from the rhsm.log
             3. Run the virt-who service by by starting service
@@ -172,6 +189,20 @@ class TestHypervisorPositive:
         """
         :title: virt-who: default: test the mapping info
         :id: 09e1754d-5f3a-49c5-aebc-91d4f4a8471e
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Check virt.uuid fact by subscription-manager in guest
+            2. Check virt.host_type fact by subscription-manager in guest
+            3. Check virt.is_guest fact by subscription-manager in guest
+            4. Run the virt-who service by cli -s -j with bad configuration
+
+        :expectedresults:
+            1. Succeed to check virt.uuid fact
+            2. Succeed to check virt.host_type fact
+            3. Succeed to check virt.is_guest fact
         """
         guest_uuid = hypervisor_data["guest_uuid"]
         virt_type = {
@@ -184,7 +215,7 @@ class TestHypervisorPositive:
             "kubevirt": "kvm",
             "ahv": "nutanix_ahv",
         }
-        # check virt.uuid fact by subscription-manager in guest")
+        # check virt.uuid fact by subscription-manager in guest
         cmd = "subscription-manager facts --list | grep virt.uuid"
         _, output = ssh_guest.runcmd(cmd)
         virt_uuid = output.split(":")[1].strip()
@@ -215,6 +246,11 @@ class TestHypervisorPositive:
         """
         :title: virt-who: hypervisor: test the virtwho status
         :id: 1608c965-c7f5-427b-b45e-c767600cdbf4
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Run the virt-who service by cli -do to report the mapping
             2. Run the virt-who service by cli -s with good configuration
             3. Run the virt-who service by cli -s -j with good configuration

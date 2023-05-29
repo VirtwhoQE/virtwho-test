@@ -2,7 +2,9 @@
 
 :casecomponent: virt-who
 :testtype: nonfunctional
-:caseautomation: Automated
+:caseautomation: Automated:subsystemteam: sst_subscription_virtwho
+:caselevel: Component
+
 """
 import pytest
 from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
