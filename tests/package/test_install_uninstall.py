@@ -23,7 +23,6 @@ class TestInstallUninstall:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. uninstall virt-who by #yum remove virt-who
             2. install virt-who by #yum install virt-who
@@ -76,7 +75,6 @@ class TestInstallUninstall:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. uninstall virt-who by #rpm -e
             2. install virt-who by #rpm -ivh

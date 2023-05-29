@@ -33,7 +33,6 @@ class TestUpgradeDowngrade:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. configure virt-who configurations
             2. downgrade virt-who by yum
@@ -102,7 +101,6 @@ class TestUpgradeDowngrade:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. configure virt-who configurations
             2. downgrade virt-who by rpm
@@ -158,7 +156,6 @@ class TestUpgradeDowngrade:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. configure virt-who configurations
             2. downgrade virt-who by rpm

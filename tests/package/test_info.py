@@ -25,7 +25,6 @@ class TestVirtwhoPackageInfo:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. test virt-who package is shipped with x86_64 arch
             2. test virt-who package is shipped with ppc64le arch
@@ -51,7 +50,6 @@ class TestVirtwhoPackageInfo:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. run #virt-who --version
 
@@ -72,7 +70,6 @@ class TestVirtwhoPackageInfo:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. run "#man virt-who"
             2. compare man page with the previous version
@@ -99,7 +96,6 @@ class TestVirtwhoPackageInfo:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. run "#virt-who -h"
             2. compare help page with the previous version
@@ -126,7 +122,6 @@ class TestVirtwhoPackageInfo:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. run "#rpm -qi virt-who"
             2. check each value
@@ -169,7 +164,6 @@ class TestVirtwhoPackageInfo:
         :caseimportance: High
         :tags: tier1
         :customerscenario: false
-        :upstream: no
         :steps:
             1. export the SUBMAN_DEBUG_PRINT_REQUEST=1 and
                 SUBMAN_DEBUG_PRINT_REQUEST_HEADER=1
