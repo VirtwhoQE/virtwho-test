@@ -140,7 +140,7 @@ def log_analyzer(job_id):
         ret, output = subprocess.getstatusoutput(f"cat {args.log_file}")
         output = output.replace("&#034;", '"').replace("&#039;", "'")
         log = json.loads(
-            output[output.rfind("Message Content:") + 17: output.rfind("}") + 1],
+            output[output.rfind("Message Content:") + 17 : output.rfind("}") + 1],
             strict=False,
         )
         case_pass_num = 0
@@ -183,19 +183,19 @@ def arguments_parser():
         "--username",
         required=False,
         default=config.polarion.username,
-        help="The polarion account"
+        help="The polarion account",
     )
     parser.add_argument(
         "--password",
         required=False,
         default=config.polarion.password,
-        help="The polarion account password"
+        help="The polarion account password",
     )
     parser.add_argument(
         "--project",
         required=False,
         default=config.polarion.project,
-        help="The project id, such as 'RHELSS'"
+        help="The project id, such as 'RHELSS'",
     )
     parser.add_argument(
         "--test-directory",
