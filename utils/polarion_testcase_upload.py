@@ -224,7 +224,7 @@ def arguments_parser():
         "--subsystemteam",
         required=False,
         default="",
-        help="The path to store the result log file",
+        help="The subsystem team, such as: sst_subscription_virtwho",
     )
     return parser.parse_args()
 
