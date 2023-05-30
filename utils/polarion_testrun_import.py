@@ -63,27 +63,29 @@ def betelgeuse_xml_file_transform(testrun_id, xml_file, output_xml_file):
     :param xml_file: the original xml file
     :param output_xml_file: the new xml file to match the polarion format
     """
-    cmd = f'betelgeuse test-run ' \
-          f'--custom-fields composeid="{args.composeid}" ' \
-          f'--custom-fields isautomated="true" ' \
-          f'--custom-fields arch="x86_64" ' \
-          f'--custom-fields variant="server" ' \
-          f'--custom-fields plannedin="{args.plannedin}" ' \
-          f'--custom-fields assignee="{args.assignee}" ' \
-          f'--custom-fields component="{args.component}" ' \
-          f'--custom-fields build="{args.build}" ' \
-          f'--custom-fields subsystemteam="{args.subsystemteam}" ' \
-          f'--custom-fields type="{args.type}" ' \
-          f'--custom-fields jenkinsjobs="{args.jenkinsjobs}" ' \
-          f'--custom-fields notes="{args.notes}" ' \
-          f'--test-run-id="{testrun_id}" ' \
-          f'--test-run-title="{args.title}" ' \
-          f'--status="finished" ' \
-          f'"{xml_file}" ' \
-          f'"{args.source_code}" ' \
-          f'"{args.username}" ' \
-          f'"{args.project}" ' \
-          f'"{output_xml_file}"'
+    cmd = (
+        f"betelgeuse test-run "
+        f'--custom-fields composeid="{args.composeid}" '
+        f'--custom-fields isautomated="true" '
+        f'--custom-fields arch="x86_64" '
+        f'--custom-fields variant="server" '
+        f'--custom-fields plannedin="{args.plannedin}" '
+        f'--custom-fields assignee="{args.assignee}" '
+        f'--custom-fields component="{args.component}" '
+        f'--custom-fields build="{args.build}" '
+        f'--custom-fields subsystemteam="{args.subsystemteam}" '
+        f'--custom-fields type="{args.type}" '
+        f'--custom-fields jenkinsjobs="{args.jenkinsjobs}" '
+        f'--custom-fields notes="{args.notes}" '
+        f'--test-run-id="{testrun_id}" '
+        f'--test-run-title="{args.title}" '
+        f'--status="finished" '
+        f'"{xml_file}" '
+        f'"{args.source_code}" '
+        f'"{args.username}" '
+        f'"{args.project}" '
+        f'"{output_xml_file}"'
+    )
     logger.info(f"\n{cmd}")
     ret, output = subprocess.getstatusoutput(cmd)
     if ret != 0:
@@ -99,8 +101,10 @@ def polarion_xml_file_import(testrun_id, polarion_xml_file):
     """
     import_url = f"{args.url}/import/xunit"
     testrun_url = f"{args.url}/#/project/{args.project}"
-    cmd = f"curl -k -u {args.username}:{args.password} -X POST -F " \
-          f"file=@{polarion_xml_file} {import_url}"
+    cmd = (
+        f"curl -k -u {args.username}:{args.password} -X POST -F "
+        f"file=@{polarion_xml_file} {import_url}"
+    )
     output = os.popen(cmd).read()
     logger.info(f"\n{cmd}")
     logger.info(output)
@@ -128,26 +132,24 @@ def arguments_parser():
         "--username",
         required=False,
         default=config.polarion.username,
-        help="The polarion account"
+        help="The polarion account",
     )
     parser.add_argument(
         "--password",
         required=False,
         default=config.polarion.password,
-        help="The polarion account password"
+        help="The polarion account password",
     )
     parser.add_argument(
         "--project",
         required=False,
         default=config.polarion.project,
-        help="The project id, such as 'RHELSS'"
+        help="The project id, such as 'RHELSS'",
     )
     parser.add_argument(
         "--id", required=False, default="", help="The testrun id, such as: RHSS"
     )
-    parser.add_argument(
-        "--title", required=True, help="The testrun title"
-    )
+    parser.add_argument("--title", required=True, help="The testrun title")
     parser.add_argument(
         "--assignee", required=False, default="", help="The testrun title"
     )
@@ -155,42 +157,35 @@ def arguments_parser():
         "--composeid",
         required=False,
         default=config.job.rhel_compose,
-        help="The rhel compose, such as RHEL-9.2.0-20230516.55"
+        help="The rhel compose, such as RHEL-9.2.0-20230516.55",
     )
     parser.add_argument(
         "--component",
         required=False,
         default="",
-        help="The test component, such as virt-who"
+        help="The test component, such as virt-who",
     )
     parser.add_argument(
         "--build",
         required=False,
         default=config.virtwho.package,
-        help="The component build, such as virt-who-1.31.26-1.el9.noarch"
+        help="The component build, such as virt-who-1.31.26-1.el9.noarch",
     )
     parser.add_argument(
         "--jenkinsjobs", required=False, default="", help="The jenkins build url"
     )
     parser.add_argument(
-        "--plannedin", required=False, default="",  help="The plans of polarion project"
+        "--plannedin", required=False, default="", help="The plans of polarion project"
     )
 
     parser.add_argument(
         "--subsystemteam",
         required=False,
         default="",
-        help="Subsystem Team, such as: sst_subscription_virtwho"
+        help="Subsystem Team, such as: sst_subscription_virtwho",
     )
-    parser.add_argument(
-        "--type",
-        required=False,
-        default="regression",
-        help=""
-    )
-    parser.add_argument(
-        "--notes", required=False, default="", help="The custom notes"
-    )
+    parser.add_argument("--type", required=False, default="regression", help="")
+    parser.add_argument("--notes", required=False, default="", help="The custom notes")
     parser.add_argument(
         "--xml-file",
         required=False,
