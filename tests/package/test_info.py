@@ -22,7 +22,7 @@ class TestVirtwhoPackageInfo:
     def test_shipped_in_supported_arch(self):
         """Test the virt-who package is shipped in all supported arch
 
-        :title: virt-who: info: test package is shipped in arch
+        :title: virt-who: package: test package is shipped in arch
         :id: f273943a-595f-4995-9e7c-fd266253642f
         :caseimportance: High
         :tags: tier1
@@ -47,7 +47,7 @@ class TestVirtwhoPackageInfo:
     def test_version(self, ssh_host):
         """Check the virt-who version by command #virt-who --version
 
-        :title: virt-who: info: test #virt-who --version
+        :title: virt-who: package: test #virt-who --version
         :id: 4b207364-ba7f-4ef6-a336-66025a95b182
         :caseimportance: High
         :tags: tier1
@@ -67,7 +67,7 @@ class TestVirtwhoPackageInfo:
     def test_man_page(self, ssh_host):
         """Test the changes of virt-who man page
 
-        :title: virt-who: info: test man page
+        :title: virt-who: package: test man page
         :id: ba708ea8-0658-4abf-8dbd-739956e9b945
         :caseimportance: High
         :tags: tier1
@@ -93,7 +93,7 @@ class TestVirtwhoPackageInfo:
     def test_help_page(self, virtwho, ssh_host):
         """Test the changes of virt-who help page
 
-        :title: virt-who: cli: test help page
+        :title: virt-who: package: test help page
         :id: d5a8e2d3-1626-4fdc-a5c6-db52c266b96d
         :caseimportance: High
         :tags: tier1
@@ -119,7 +119,7 @@ class TestVirtwhoPackageInfo:
     def test_package_info(self, ssh_host):
         """Test the virt-who package detail info by #rpm -qi virt-who
 
-        :title: virt-who: cli: test virt-who package information
+        :title: virt-who: package: test virt-who package information
         :id: 51beaf61-f01d-4edd-870e-8682c18d07bb
         :caseimportance: High
         :tags: tier1
@@ -161,7 +161,7 @@ class TestVirtwhoPackageInfo:
     def test_package_info_with_User_Agent_header(self, ssh_host, virtwho):
         """
 
-        :title: virt-who: cli: test virt-who package information
+        :title: virt-who: package: test virt-who package information
         :id: 9ec0e56e-e643-4c7d-b622-2d34915e407b
         :caseimportance: High
         :tags: tier1

@@ -10,7 +10,7 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import logger, FailException
+from virtwho import logger, FailException, config
 
 
 def polarion_test_case_upload(args):
@@ -19,26 +19,8 @@ def polarion_test_case_upload(args):
     Requires curl and betelgeuse pypi package installed
     """
     xml_file_generate()
-    xml_file_add_hyperlink()
     xml_file_upload()
     log_analyzer(job_id_get())
-
-
-def xml_file_add_hyperlink():
-    """
-    Add the hyperlinks to test cases xml file
-    """
-    logger.info("Start to add hyperlinks with role testscript in testcases ")
-    tree = ET.parse(args.xml_file)
-    children = tree.getroot().findall("testcase")
-    for child in children:
-        hyperlinks_element = ET.SubElement(child, "hyperlinks")
-        hyperlink_element = ET.SubElement(hyperlinks_element, "hyperlink")
-        hyperlink_element.set("role-id", "testscript")
-        hyperlink_element.set(
-            "uri", child.find("custom-fields").find("custom-field").get("content")
-        )
-    tree.write(args.xml_file)
 
 
 def xml_file_generate():
@@ -60,6 +42,56 @@ def xml_file_generate():
         logger.info(f"Succeeded to generate test case xml file")
     else:
         raise FailException(f"Failed to generate test case xml file")
+    xml_file_upstream_remove()
+    xml_file_hyperlink_add()
+    if args.subsystemteam:
+        xml_file_subsystemteam_add()
+
+
+def xml_file_hyperlink_add():
+    """
+    Add the hyperlinks to test cases xml file
+    """
+    logger.info("Start to add hyperlinks with role testscript in testcases ")
+    tree = ET.parse(args.xml_file)
+    children = tree.getroot().findall("testcase")
+    for child in children:
+        hyperlinks_element = ET.SubElement(child, "hyperlinks")
+        hyperlink_element = ET.SubElement(hyperlinks_element, "hyperlink")
+        hyperlink_element.set("role-id", "testscript")
+        hyperlink_element.set(
+            "uri", child.find("custom-fields").find("custom-field").get("content")
+        )
+    tree.write(args.xml_file)
+
+
+def xml_file_upstream_remove():
+    """
+    Remove the upstream custom field
+    """
+    with open(args.xml_file, "r+") as f:
+        contents = f.read()
+        contents = contents.replace('<custom-field content="no" id="upstream" />', "")
+        contents = contents.replace('<custom-field content="yes" id="upstream" />', "")
+        f.seek(0)
+        f.write(contents)
+        f.truncate()
+        f.close()
+
+
+def xml_file_subsystemteam_add():
+    """
+    Add the subsystemteam custom filed
+    """
+    logger.info("Start to add subsystemteam/sst field in testcases ")
+    tree = ET.parse(args.xml_file)
+    children = tree.getroot().findall("testcase")
+    for child in children:
+        field_element = child.findall("custom-fields")[0]
+        field_element = ET.SubElement(field_element, "custom-field")
+        field_element.set("content", args.subsystemteam)
+        field_element.set("id", "subsystemteam")
+    tree.write(args.xml_file)
 
 
 def xml_file_upload():
@@ -147,12 +179,23 @@ def arguments_parser():
         default="https://polarion.engineering.redhat.com/polarion/import/testcase",
         help="The polarion url to import test cases",
     )
-    parser.add_argument("--username", required=True, help="The polarion account")
     parser.add_argument(
-        "--password", required=True, help="The polarion account password"
+        "--username",
+        required=False,
+        default=config.polarion.username,
+        help="The polarion account",
     )
     parser.add_argument(
-        "--project", required=True, help="The project id, such as 'RHELSS'"
+        "--password",
+        required=False,
+        default=config.polarion.password,
+        help="The polarion account password",
+    )
+    parser.add_argument(
+        "--project",
+        required=False,
+        default=config.polarion.project,
+        help="The project id, such as 'RHELSS'",
     )
     parser.add_argument(
         "--test-directory",
@@ -175,6 +218,12 @@ def arguments_parser():
         "--log-file",
         required=False,
         default="temp/polarion_testcase.log",
+        help="The path to store the result log file",
+    )
+    parser.add_argument(
+        "--subsystemteam",
+        required=False,
+        default="",
         help="The path to store the result log file",
     )
     return parser.parse_args()
