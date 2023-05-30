@@ -76,7 +76,9 @@ class TestConfiguration:
 
         globalconf.update("global", "interval", "60")
         result = virtwho.run_service(wait=60)
-        assert result["send"] == 1 and result["error"] == 0 and result["loop"] in [60, 61]
+        assert (
+            result["send"] == 1 and result["error"] == 0 and result["loop"] in [60, 61]
+        )
 
     @pytest.mark.tier1
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
