@@ -634,7 +634,7 @@ class Satellite:
         output = json.loads(output)
         if ret == 0 and len(output) >= 1:
             for item in output:
-                if host in item["Name"]:
+                if host or host.lower() in item["Name"]:
                     host_id = item["Id"]
                     logger.info(f"Succeeded to get the host id, {host}:{host_id}")
                     return host_id
