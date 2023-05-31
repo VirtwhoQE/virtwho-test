@@ -9,6 +9,8 @@
 import threading
 import time
 import pytest
+
+from virtwho import HYPERVISOR
 from virtwho import HYPERVISOR_FILE, config
 from virtwho.base import encrypt_password
 
@@ -73,14 +75,21 @@ class TestCli:
             and result["oneshot"] is False
         )
 
+        # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
+        if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
+            assert result["oneshot"] is False
+
         result = virtwho.run_cli(oneshot=True)
         assert (
             result["send"] == 1
             and result["error"] == 0
             and result["thread"] == 0
             and result["terminate"] == 1
-            and result["oneshot"] is True
         )
+
+        # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
+        if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
+            assert result["oneshot"] is True
 
     @pytest.mark.tier1
     def test_interval(self, virtwho):
