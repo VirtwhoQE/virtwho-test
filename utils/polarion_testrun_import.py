@@ -201,7 +201,7 @@ def arguments_parser():
         "--source-code",
         required=False,
         default="tests",
-        help="The path of the test results.xml file",
+        help="The test case source code path",
     )
     return parser.parse_args()
 
