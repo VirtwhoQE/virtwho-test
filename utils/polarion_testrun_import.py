@@ -18,7 +18,7 @@ def polarion_test_run_upload(args):
     Requires curl and betelgeuse pypi package installed
     """
     testrun_id = testrun_id_generate()
-    results_update_xml = f"{args.directory}/{args.xml_file}_update.xml"
+    results_update_xml = f"{args.directory}/results_update.xml"
     polarion_xml = f"{args.directory}/polarion_testrun.xml"
     xml_file_update(results_update_xml)
     betelgeuse_xml_file_transform(testrun_id, results_update_xml, polarion_xml)
@@ -40,7 +40,7 @@ def xml_file_update(update_xml_file):
     recoganization.
     :param update_xml_file: a new xml_file.
     """
-    old_file = open(args.xml_file)
+    old_file = open(f"{args.directory}/{args.xml_file}")
     lines = old_file.readlines()
     newlines = []
     for line in lines:
