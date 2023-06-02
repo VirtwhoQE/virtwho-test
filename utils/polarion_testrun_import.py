@@ -19,9 +19,7 @@ def polarion_test_run_upload(args):
     """
     testrun_id = testrun_id_generate()
     results_xml = f"{args.directory}/results.xml"
-    # results_update_xml = f"{args.directory}/results_update.xml"
     polarion_xml = f"{args.directory}/polarion_testrun.xml"
-    # xml_file_update(results_update_xml)
     betelgeuse_xml_file_transform(testrun_id, results_xml, polarion_xml)
     polarion_xml_file_import(testrun_id, polarion_xml)
 
@@ -33,42 +31,6 @@ def testrun_id_generate():
     create_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     testrun_id = f"{args.id}_{create_time}"
     return testrun_id
-
-
-def xml_file_update(update_xml_file):
-    """
-    Update the original args.xml_file to a new update_xml_file to support betelgeuse
-    recoganization.
-    :param update_xml_file: a new xml_file.
-    """
-    old_file = open(f"{args.directory}/{args.xml_file}")
-    lines = old_file.readlines()
-    # delete the useless lines before <testsuites>
-    testsuits_index = lines.index("<testsuites>\n")
-    del lines[0:testsuits_index]
-    newlines = []
-    for line in lines:
-        line = line.replace("skipped=", "skip=")
-        line = line.replace("...", "")
-        if "failure message=" in line:
-            # delete the long and useless message info, starting from "self ="
-            res = re.findall(r"^.*?self =", line)
-            if res:
-                line = res[0].strip("self =") + "</failure>"
-            # replace &, <, >, which are not recognized by xml file
-            res = re.findall(r'(?<=<failure message=").*(?="></failure>)', line)
-            replace_dict = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
-            if res:
-                res = res[0]
-                for key, value in replace_dict.items():
-                    if key in res:
-                        res = res.replace(key, value)
-                line = '<failure message="' + res + '"></failure>'
-        newlines.append(line)
-    new_file = open(update_xml_file, "w")
-    new_file.writelines(newlines)
-    new_file.close()
-    old_file.close()
 
 
 def betelgeuse_xml_file_transform(testrun_id, xml_file, output_xml_file):
