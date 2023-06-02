@@ -42,22 +42,27 @@ def xml_file_update(update_xml_file):
     """
     old_file = open(f"{args.directory}/{args.xml_file}")
     lines = old_file.readlines()
+    # delete the useless lines before <testsuites>
+    testsuits_index = lines.index("<testsuites>\n")
+    del lines[0:testsuits_index]
     newlines = []
     for line in lines:
         line = line.replace("skipped=", "skip=")
         line = line.replace("...", "")
         if "failure message=" in line:
-            # delete the long and useless message infro, starting from "self ="
-            res = re.findall(r".*(?=self =)", line)
+            # delete the long and useless message info, starting from "self ="
+            res = re.findall(r"^.*?self =", line)
             if res:
-                line = res[0] + "</failure>"
+                line = res[0].strip("self =") + "</failure>"
             # replace &, <, >, which are not recognized by xml file
-            res = re.findall(r'(?<=<failure message=").*(?="></failure>)', line)[0]
+            res = re.findall(r'(?<=<failure message=").*(?="></failure>)', line)
             replace_dict = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
-            for key, value in replace_dict.items():
-                if key in res:
-                    res = res.replace(key, value)
-            line = '<failure message="' + res + '"></failure>'
+            if res:
+                res = res[0]
+                for key, value in replace_dict.items():
+                    if key in res:
+                        res = res.replace(key, value)
+                line = '<failure message="' + res + '"></failure>'
         newlines.append(line)
     new_file = open(update_xml_file, "w")
     new_file.writelines(newlines)
