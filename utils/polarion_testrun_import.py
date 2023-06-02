@@ -18,10 +18,11 @@ def polarion_test_run_upload(args):
     Requires curl and betelgeuse pypi package installed
     """
     testrun_id = testrun_id_generate()
-    results_update_xml = f"{args.directory}/results_update.xml"
+    results_xml = f"{args.directory}/results.xml"
+    # results_update_xml = f"{args.directory}/results_update.xml"
     polarion_xml = f"{args.directory}/polarion_testrun.xml"
-    xml_file_update(results_update_xml)
-    betelgeuse_xml_file_transform(testrun_id, results_update_xml, polarion_xml)
+    # xml_file_update(results_update_xml)
+    betelgeuse_xml_file_transform(testrun_id, results_xml, polarion_xml)
     polarion_xml_file_import(testrun_id, polarion_xml)
 
 
