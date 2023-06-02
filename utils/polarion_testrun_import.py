@@ -47,8 +47,17 @@ def xml_file_update(update_xml_file):
         line = line.replace("skipped=", "skip=")
         line = line.replace("...", "")
         if "failure message=" in line:
-            line = re.findall(r".*(?=self =)", line)[0]
-            line = line + "</failure>"
+            # delete the long and useless message infro, starting from "self ="
+            res = re.findall(r".*(?=self =)", line)
+            if res:
+                line = res[0] + "</failure>"
+            # replace &, <, >, which are not recognized by xml file
+            res = re.findall(r'(?<=<failure message=").*(?="></failure>)', line)[0]
+            replace_dict = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
+            for (key, value) in replace_dict.items():
+                if key in res:
+                    res = res.replace(key, value)
+            line = '<failure message="' + res + '"></failure>'
         newlines.append(line)
     new_file = open(update_xml_file, "w")
     new_file.writelines(newlines)
