@@ -479,6 +479,7 @@ class TestSatelliteScaDisable:
                 and guest_id in mappings[second_org]
             )
 
+            satellite.sca(org=sm_guest_second_org.org, sca="disable")
             sm_guest_second_org.register()
             vdc_sku_id = sku_data["vdc_physical"]
             vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id, "Physical")
@@ -553,6 +554,7 @@ class TestSatelliteScaDisable:
                 and guest_id in mappings[second_org]
             )
 
+            satellite.sca(org=sm_guest_second_org.org, sca="disable")
             sm_guest_second_org.register()
             vdc_sku_id = sku_data["vdc_physical"]
             vdc_pool_id = sm_guest_second_org.pool_id_get(vdc_sku_id, "Physical")
