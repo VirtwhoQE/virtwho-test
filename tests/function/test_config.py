@@ -105,21 +105,19 @@ class TestConfiguration:
         globalconf.update("global", "debug", "True")
         globalconf.update("global", "oneshot", "True")
         result = virtwho.run_service()
-        assert (
-            result["send"] == 1
-            and result["error"] == 0
-            and result["terminate"] == 1
-            and result["oneshot"] is True
-        )
+        assert result["send"] == 1 and result["error"] == 0 and result["terminate"] == 1
+
+        # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
+        if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
+            assert result["oneshot"] is True
 
         globalconf.update("global", "oneshot", "False")
         result = virtwho.run_service()
-        assert (
-            result["send"] == 1
-            and result["error"] == 0
-            and result["terminate"] == 0
-            and result["oneshot"] is False
-        )
+        assert result["send"] == 1 and result["error"] == 0 and result["terminate"] == 0
+
+        # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
+        if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
+            assert result["oneshot"] is True
 
     @pytest.mark.tier1
     def test_print_in_virtwho_conf(
@@ -599,22 +597,20 @@ class TestSysConfiguration:
         sysconfg_options = {"VIRTWHO_DEBUG": "1", "VIRTWHO_ONE_SHOT": "1"}
         function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service()
-        assert (
-            result["send"] == 1
-            and result["error"] == 0
-            and result["terminate"] == 1
-            and result["oneshot"] is True
-        )
+        assert result["send"] == 1 and result["error"] == 0 and result["terminate"] == 1
+
+        # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
+        if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
+            assert result["oneshot"] is True
 
         sysconfg_options["VIRTWHO_ONE_SHOT"] = 0
         function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service()
-        assert (
-            result["send"] == 1
-            and result["error"] == 0
-            and result["terminate"] == 0
-            and result["oneshot"] is False
-        )
+        assert result["send"] == 1 and result["error"] == 0 and result["terminate"] == 0
+
+        # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
+        if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
+            assert result["oneshot"] is False
 
         function_sysconfig.clean()
 
