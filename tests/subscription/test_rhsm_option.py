@@ -56,7 +56,7 @@ class TestSubscriptionPositive:
         assert (
             result["send"] == 0
             and result["error"] != 0
-            and msg_search(result["error_msg"], register_assertion["unregister_host"])
+            and msg_search(result["log"], register_assertion["unregister_host"])
         )
 
     @pytest.mark.tier1
@@ -265,7 +265,7 @@ class TestSubscriptionNegative:
                 result["error"] is not 0
                 and result["send"] == 0
                 and result["thread"] == 1
-                and msg_search(result["error_msg"], value)
+                and msg_search(result["log"], value)
             )
 
         # disable
@@ -318,7 +318,7 @@ class TestSubscriptionNegative:
                 result["error"] is not 0
                 and result["send"] == 0
                 and result["thread"] == 1
-                and msg_search(result["error_msg"], value)
+                and msg_search(result["log"], value)
             )
 
         # null, will use the default 443
@@ -445,7 +445,7 @@ class TestSubscriptionNegative:
                 result["error"] is not 0
                 and result["send"] == 0
                 and result["thread"] == 1
-                and msg_search(result["error_msg"], value)
+                and msg_search(result["log"], value)
             )
 
         # disable
@@ -455,7 +455,7 @@ class TestSubscriptionNegative:
             result["error"] is not 0
             and result["send"] == 0
             and result["thread"] == 1
-            and msg_search(result["error_msg"], assertion["disable"])
+            and msg_search(result["log"], assertion["disable"])
         )
 
     @pytest.mark.tier2
@@ -492,7 +492,7 @@ class TestSubscriptionNegative:
                 result["error"] is not 0
                 and result["send"] == 0
                 and result["thread"] == 1
-                and msg_search(result["error_msg"], value)
+                and msg_search(result["log"], value)
             )
 
         # disable
@@ -502,7 +502,7 @@ class TestSubscriptionNegative:
             result["error"] is not 0
             and result["send"] == 0
             and result["thread"] == 1
-            and msg_search(result["error_msg"], assertion["disable"])
+            and msg_search(result["log"], assertion["disable"])
         )
 
     @pytest.mark.tier2
