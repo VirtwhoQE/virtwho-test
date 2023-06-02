@@ -50,7 +50,7 @@ def xml_file_update(update_xml_file):
         line = line.replace("skipped=", "skip=")
         line = line.replace("...", "")
         if "failure message=" in line:
-            # delete the long and useless message infro, starting from "self ="
+            # delete the long and useless message info, starting from "self ="
             res = re.findall(r"^.*?self =", line)
             if res:
                 line = res[0].strip("self =") + "</failure>"
