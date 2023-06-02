@@ -134,16 +134,20 @@ class TestConfiguration:
         :steps:
 
             1. Run virt-who with "print_=True" in /etc/virt-who.conf
-            2. Run virt-who with "print_=False" in /etc/virt-who.conf
+            2. Run virt-who with "print_=True" and "debug=True" in /etc/virt-who.conf
+            3. Run virt-who with "print_=True" and "debug=False" in /etc/virt-who.conf
 
         :expectedresults:
 
-            1. the mappings send number and alive thread number of the virt-who is 0
-            2. the mappings send number and alive thread number of the virt-who is 1
+            1. the mappings send number and alive thread number of the virt-who is 1
+            2. Succeed to send the mapping info in rhsm.log
+            3. Succeed to send the mapping info in rhsm.log
         """
         globalconf.update("global", "print_", "False")
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+
+        virtwho.stop()
 
         guest_id = hypervisor_data["guest_uuid"]
         globalconf.update("global", "print_", "True")
