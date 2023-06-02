@@ -54,7 +54,7 @@ def xml_file_update(update_xml_file):
             # replace &, <, >, which are not recognized by xml file
             res = re.findall(r'(?<=<failure message=").*(?="></failure>)', line)[0]
             replace_dict = {"&": "&amp;", "<": "&lt;", ">": "&gt;"}
-            for (key, value) in replace_dict.items():
+            for key, value in replace_dict.items():
                 if key in res:
                     res = res.replace(key, value)
             line = '<failure message="' + res + '"></failure>'
