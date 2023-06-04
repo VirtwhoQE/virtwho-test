@@ -370,7 +370,7 @@ class TestEsxNegative:
         """Test the type= option in /etc/virt-who.d/test_esx.conf
 
         :title: virt-who: esx: test type option
-        :id: 0f2fcf4f-ac60-4c3c-905a-fabe22536ab2
+        :id: abc67f6f-c79d-4458-9c69-ac788f0697a6
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -439,7 +439,7 @@ class TestEsxNegative:
         """Test the server= option in /etc/virt-who.d/test_esx.conf
 
         :title: virt-who: esx: test server option
-        :id: 0f2fcf4f-ac60-4c3c-905a-fabe22536ab2
+        :id: 428aad86-947d-40f1-aac4-ddd2676ad855
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -870,6 +870,7 @@ class TestEsxNegative:
         :tags: tier1
         :customerscenario: false
         :upstream: no
+        :steps:
             1. Run virt-who with filter_host_parents='' to get domain_id
             2. Set hypervisor_id=hostname.
             3. Configure filter_host_parents='', run the virt-who service.

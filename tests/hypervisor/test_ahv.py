@@ -175,7 +175,7 @@ class TestAHVPositive:
         :expectedresults:
 
         """
-        pass
+        assert True
 
     @pytest.mark.tier1
     def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
@@ -183,6 +183,11 @@ class TestAHVPositive:
 
         :title: virt-who: ahv: test fake type
         :id: 88212bd7-c5d6-46cc-a62b-4f06599ff71d
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Generate the json file by virt-who -p -d command
             2. Create the virt-who config for the fake mode testing
             3. Check the rhsm.log

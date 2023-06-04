@@ -35,8 +35,9 @@ def xml_file_generate():
         f"{args.project} "
         f"{args.xml_file}"
     )
-    logger.info(cmd)
-    ret, _ = subprocess.getstatusoutput(cmd)
+    logger.info(f"\n{cmd}\n")
+    ret, output = subprocess.getstatusoutput(cmd)
+    logger.info(f"\n{output}\n")
     _, output = subprocess.getstatusoutput(f"ls {args.xml_file}")
     if ret == 0 and args.xml_file in output:
         logger.info(f"Succeeded to generate test case xml file")

@@ -7,7 +7,6 @@
 :caselevel: Component
 """
 import time
-
 import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config

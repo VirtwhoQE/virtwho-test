@@ -22,11 +22,12 @@ class TestXen:
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. pending
         :expectedresults:
-            1.
+            1. pending
         """
         logger.info("Succeeded to run the 'test_hostname_option'")
+        assert True
 
     @pytest.mark.tier2
     def test_http_option(self):
@@ -39,8 +40,9 @@ class TestXen:
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. pending
         :expectedresults:
-            1.
+            1. pending
         """
         logger.info("Succeeded to run the 'test_http_option'")
+        assert True

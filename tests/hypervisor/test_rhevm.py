@@ -176,6 +176,11 @@ class TestRHEVMPositive:
 
         :title: virt-who: rhevm: test fake type
         :id: 59cf1330-3127-467d-bf1c-3b0cbe2fdd84
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Generate the json file by virt-who -p -d command
             2. Create the virt-who config for the fake mode testing
             3. Check the rhsm.log
