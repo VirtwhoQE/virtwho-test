@@ -81,7 +81,7 @@ class SubscriptionManager:
         Unregister and clean host by subscription-manager.
         """
         ret, _ = self.ssh.runcmd(
-            "subscription-manager unregister;" "subscription-manager clean"
+            "subscription-manager unregister; subscription-manager clean"
         )
         if ret == 0:
             # if self.register_type == 'satellite':
