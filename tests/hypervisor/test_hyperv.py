@@ -160,6 +160,7 @@ class TestHypervPositive:
                 and hypervisor_id_data not in str(result["mappings"])
             )
 
+    @pytest.mark.tier1
     def test_fake_type(
         self, virtwho, function_hypervisor, hypervisor_data, function_host_register
     ):
@@ -167,6 +168,11 @@ class TestHypervPositive:
 
         :title: virt-who: hyperv: test fake type
         :id: a2c30d57-4eae-451e-b131-2547f046463c
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Generate the json file by virt-who -p -d command
             2. Create the virt-who config for the fake mode testing
             3. Check the rhsm.log
@@ -275,7 +281,7 @@ class TestHypervNegative:
         """Test the server= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: hyperv: test server option
-        :id: ea6c1a97-575d-4b8b-9100-bfd90ab5f26f
+        :id: a31efe61-9368-470e-836a-bf4c59af1694
         :caseimportance: High
         :tags: tier2
         :customerscenario: false

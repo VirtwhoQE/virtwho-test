@@ -166,6 +166,11 @@ class TestLibvrtPositive:
 
         :title: virt-who: libvirt: test fake type
         :id: a2c30d57-4eae-451e-b131-2547f046463c
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Generate the json file by virt-who -p -d command
             2. Create the virt-who config for the fake mode testing
             3. Check the rhsm.log
@@ -274,7 +279,7 @@ class TestLibvirtNegative:
         """Test the server= option in /etc/virt-who.d/test_libvirt.conf
 
         :title: virt-who: libvirt: test server option
-        :id: ea6c1a97-575d-4b8b-9100-bfd90ab5f26f
+        :id: 6ae154b8-df28-4d50-b227-2ffb96de3d53
         :caseimportance: High
         :tags: tier2
         :customerscenario: false
@@ -322,7 +327,7 @@ class TestLibvirtNegative:
         """Test the username= option in /etc/virt-who.d/test_libvirt.conf
 
         :title: virt-who: libvirt: test username option
-        :id: ea6c1a97-575d-4b8b-9100-bfd90ab5f26f
+        :id: 1cdb5f01-ccb5-41e0-af40-3f5ccc3877dd
         :caseimportance: High
         :tags: tier2
         :customerscenario: false

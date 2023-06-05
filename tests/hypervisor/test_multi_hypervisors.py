@@ -13,15 +13,16 @@ class TestMultiHypervisors:
     def test_multi_hypervisors_report_together(self):
         """Test virt-who can report multi hypervisors together
 
-        :title: virt-who: base: test multi hypervisors report together
+        :title: virt-who: multiHypervisors: test multi hypervisors report together
         :id: 9fb6694e-7535-4d9f-9ac0-75e6cbe3066d
         :caseimportance: High
         :tags: multiHypervisor
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. demo
         :expectedresults:
-            1.
+            1. demo
         """
         logger.info("Succeeded to run the 'test_multi_hypervisors_report'")
+        assert True

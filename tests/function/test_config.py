@@ -125,7 +125,7 @@ class TestConfiguration:
     ):
         """Test the print_ option in /etc/virtwho.conf
 
-        :title: virt-who: config: test print_ option (positive)
+        :title: virt-who: config: test print option (positive)
         :id: 25de8130-677f-43ca-b07d-a15f49e91205
         :caseimportance: High
         :tags: tier1

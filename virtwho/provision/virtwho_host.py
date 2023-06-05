@@ -54,6 +54,7 @@ def provision_virtwho_host(args):
 
     # Initially setup the virt-who host
     ssh_host.runcmd(cmd="rm -f /etc/yum.repos.d/*.repo")
+    ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     rhel_compose_repo(
         ssh=ssh_host,
         repo_file="/etc/yum.repos.d/compose.repo",

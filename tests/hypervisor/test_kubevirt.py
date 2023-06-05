@@ -131,11 +131,17 @@ class TestKubevirtPositive:
                 and hypervisor_id_data not in str(result["mappings"])
             )
 
+    @pytest.mark.tier1
     def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):
         """Test the fake type in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: kubevirt: test fake type
         :id: 8f130d78-28c4-4efb-9e02-3167b4e15be1
+        :caseimportance: High
+        :tags: tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. Generate the json file by virt-who -p -d command
             2. Create the virt-who config for the fake mode testing
             3. Check the rhsm.log
