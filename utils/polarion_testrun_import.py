@@ -26,7 +26,6 @@ def polarion_test_run_upload(args):
 def betelgeuse_xml_file_transform(xml_file, output_xml_file):
     """
     Transform the original xml file by betelgeuse to match the polarion request.
-    # :param testrun_id: polarion testrun id
     :param xml_file: the original xml file
     :param output_xml_file: the new xml file to match the polarion format
     """
@@ -78,7 +77,6 @@ def xml_file_testrun_id_remove(xml_file):
 def polarion_xml_file_import(polarion_xml_file):
     """
     Import the xml file to Polarion to create testrun.
-    # :param testrun_id: polarion testrun id
     :param polarion_xml_file: the polarion xml file that match the polarion format
     """
     import_url = f"{args.url}/import/xunit"
@@ -95,17 +93,6 @@ def polarion_xml_file_import(polarion_xml_file):
         logger.info(f"Successed to import xml to polarion")
     else:
         raise FailException("Failed to import xml to polarion")
-
-
-def polarion_testrun_id_get():
-    """
-    Get the testrun id in Polarion
-    """
-    testrun_url = f"{args.url}/#/project/{args.project}"
-    cmd = (
-        f"curl -k -u {args.username}:{args.password} -X GET -F "
-        f""
-    )
 
 
 def arguments_parser():
