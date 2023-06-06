@@ -65,7 +65,7 @@ def xml_file_testrun_id_remove(xml_file):
         contents = f.read()
         res = re.findall(
             r'<property name="polarion-testrun-id" value="test-run-\d{10,}" />',
-            contents
+            contents,
         )
         contents = contents.replace(res[0], "")
         f.seek(0)
@@ -127,10 +127,7 @@ def arguments_parser():
         help="The project id, such as 'RHELSS'",
     )
     parser.add_argument(
-        "--template-id",
-        required=False,
-        default="",
-        help="The testrun template id"
+        "--template-id", required=False, default="", help="The testrun template id"
     )
     parser.add_argument("--title", required=True, help="The testrun title")
     parser.add_argument(
