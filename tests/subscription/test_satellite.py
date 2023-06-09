@@ -41,8 +41,7 @@ class TestSatelliteScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool by pool id
 
-        :title: virt-who: satellite: test guest attach virtual vdc pool by
-            pool id
+        :title: virt-who: satellite: test guest attach virtual vdc pool by pool id
         :id: 38e213ef-70cc-445a-85b2-8f9639064f12
         :caseimportance: High
         :tags: tier1
