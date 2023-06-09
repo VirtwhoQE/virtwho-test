@@ -35,7 +35,7 @@ class TestHypervisorPositive:
         :title: virt-who: hypervisor : check the guest address by curl
         :id: d9dd2559-4650-4ae0-8ebb-f8e296d3920a
         :caseimportance: High
-        :tags: hypervisor,default,default,tier1
+        :tags: hypervisor,default,tier1
         :customerscenario: false
         :upstream: no
         :steps:

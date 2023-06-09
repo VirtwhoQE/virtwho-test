@@ -12,7 +12,6 @@ from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho.base import host_ping, rhel_compose_repo, system_init, rhel_version
 from virtwho.base import url_validation, url_file_download, hostname_get
-from virtwho.base import random_string
 from utils.parse_ci_message import umb_ci_message_parser
 from utils.beaker import install_rhel_by_beaker
 from utils.properties_update import virtwho_ini_props_update
