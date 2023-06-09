@@ -83,7 +83,7 @@ def provision_virtwho_host(args):
     # Configure the virt-who host for local libvirt mode
     if config.job.hypervisor == "local" or "local" in config.job.multi_hypervisors:
         libvirt_pkg_install(ssh_host)
-        libvirt_bridge_setup('br0', ssh_host)
+        libvirt_bridge_setup("br0", ssh_host)
         guest_data = local_mode_guest_add()
         virtwho_ini_props["local"] = {
             "server": args.server,
@@ -250,7 +250,7 @@ def local_mode_guest_add():
             image_url=config.local.guest_image_url,
             xml_url=config.local.guest_xml_url,
             image_path=f"{config.local.guest_image_path} + '-' + {random_string()}",
-            xml_path=f"{config.local.guest_xml_path}"
+            xml_path=f"{config.local.guest_xml_path}",
         )
     else:
         local.guest_start(guest_name)
