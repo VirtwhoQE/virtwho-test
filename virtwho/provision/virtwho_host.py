@@ -1,6 +1,7 @@
 import os
 import argparse
 import sys
+import time
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -10,10 +11,12 @@ from virtwho import logger, FailException
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho.base import host_ping, rhel_compose_repo, system_init, rhel_version
-from virtwho.base import url_validation, url_file_download
+from virtwho.base import url_validation, url_file_download, hostname_get
+from virtwho.base import random_string
 from utils.parse_ci_message import umb_ci_message_parser
 from utils.beaker import install_rhel_by_beaker
 from utils.properties_update import virtwho_ini_props_update
+from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 
 
 def provision_virtwho_host(args):
@@ -66,6 +69,32 @@ def provision_virtwho_host(args):
     ssh_host.runcmd("yum install -y expect net-tools wget")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
+    # Configure the virt-who host for remote libvirt mode
+    if config.job.hypervisor == "libvirt" or "libvirt" in config.job.multi_hypervisors:
+        libvirt_access_no_password(ssh_host)
+
+    # Configure the virt-who host for kubevirt mode
+    if (
+        config.job.hypervisor == "kubevirt"
+        or "kubevirt" in config.job.multi_hypervisors
+    ):
+        kubevirt_config_file(ssh_host)
+
+    # Configure the virt-who host for local libvirt mode
+    if config.job.hypervisor == "local" or "local" in config.job.multi_hypervisors:
+        libvirt_pkg_install(ssh_host)
+        libvirt_bridge_setup('br0', ssh_host)
+        guest_data = local_mode_guest_add()
+        virtwho_ini_props["local"] = {
+            "server": args.server,
+            "username": args.username,
+            "password": args.password,
+            "hostname": hostname_get(ssh_host),
+            "uuid": guest_data["host_uuid"],
+            "guest_ip": guest_data["guest_ip"],
+            "guest_uuid": guest_data["guest_uuid"],
+        }
+
     # Update the virtwho.ini properties
     virtwho_ini_props["job"] = {
         "rhel_compose": args.rhel_compose,
@@ -77,23 +106,9 @@ def provision_virtwho_host(args):
         "password": args.password,
         "package": virtwho_pkg,
     }
-    virtwho_ini_props["local"] = {
-        "server": args.server,
-        "username": args.username,
-        "password": args.password,
-    }
     for args.section, data in virtwho_ini_props.items():
         for args.option, args.value in data.items():
             virtwho_ini_props_update(args)
-
-    # Configure the virt-who host as mode requirements
-    if config.job.hypervisor == "libvirt" or "libvirt" in config.job.multi_hypervisors:
-        libvirt_access_no_password(ssh_host)
-    if (
-        config.job.hypervisor == "kubevirt"
-        or "kubevirt" in config.job.multi_hypervisors
-    ):
-        kubevirt_config_file(ssh_host)
 
     logger.info(
         f"+++ Suceeded to deploy the virt-who host "
@@ -222,6 +237,58 @@ def kubevirt_config_file(ssh):
     )
 
 
+def local_mode_guest_add():
+    """
+    Add rhel guest for the local mode.
+    Return the guest data dic.
+    """
+    local = LibvirtCLI(args.server, args.username, args.password)
+    guest_name = config.local.guest_name
+    if not local.guest_exist(guest_name):
+        local.guest_add(
+            guest_name=guest_name,
+            image_url=config.local.guest_image_url,
+            xml_url=config.local.guest_xml_url,
+            image_path=f"{config.local.guest_image_path} + '-' + {random_string()}",
+            xml_path=f"{config.local.guest_xml_path}"
+        )
+    else:
+        local.guest_start(guest_name)
+    time.sleep(15)
+    return local.guest_search(guest_name)
+
+
+def libvirt_pkg_install(ssh):
+    """
+    Install libvirt related packages.
+    :param ssh: ssh access of virt-who host.
+    """
+    ssh.runcmd(
+        "yum clean all;"
+        "yum install -y @virtualization-client @virtualization-hypervisor "
+        "@virtualization-platform @virtualization-tools nmap libguestfs-tools "
+        "net-tools iproute rpcbind libvirt virt-manager"
+    )
+    ret, _ = ssh.runcmd("systemctl restart libvirtd;systemctl enable libvirtd")
+    if ret == 0:
+        logger.info("Succeeded to start libvirtd service")
+    else:
+        raise FailException("Failed to start libvirtd service")
+
+
+def libvirt_bridge_setup(bridge_name, ssh):
+    """
+    Setup bridge for libvirt host
+    :param bridge_name: bridge name.
+    :param ssh: ssh access of virt-who host.
+    """
+    local_file = os.path.join(rootPath, "../utils/libvirt_bridge_setup.sh")
+    remote_file = "/tmp/libvirt_bridge_setup.sh"
+    ssh.put_file(local_file, remote_file)
+    _, output = ssh.runcmd(f"sh {remote_file} -b {bridge_name}")
+    logger.info(output)
+
+
 def virtwho_arguments_parser():
     """
     Parse and convert the arguments from command line to parameters
@@ -246,7 +313,7 @@ def virtwho_arguments_parser():
         "--server",
         required=False,
         default="",
-        help="IP/fqdn of virt-who host, " "will install one by beaker if not provide.",
+        help="IP/fqdn of virt-who host, will install one by beaker if not provide.",
     )
     parser.add_argument(
         "--username",
