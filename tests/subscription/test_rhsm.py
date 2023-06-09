@@ -30,7 +30,7 @@ class TestRhsmScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool by pool id
 
-        :title: virt-who: satellite: test guest attach virtual vdc pool by
+        :title: virt-who: rhsm: test guest attach virtual vdc pool by
             pool id
         :id: 39717357-eadb-4ac7-bf44-2b323cda3717
         :caseimportance: High
