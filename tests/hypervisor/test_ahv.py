@@ -30,7 +30,7 @@ class TestAHVPositive:
     ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_ahv.conf
 
-        :title: virt-who: ahv: test encrypted_password option
+        :title: virt-who: ahv: test encrypted_password option (positive)
         :id: 05096e7f-7126-46bf-ac4c-eb674dd8cfc3
         :caseimportance: High
         :tags: tier1
@@ -480,7 +480,7 @@ class TestAHVNegative:
     ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_ahv.conf
 
-        :title: virt-who: ahv: test encrypted_password option
+        :title: virt-who: ahv: test encrypted_password option (negative)
         :id: cb642ea7-fc86-4de4-b6a8-9dbb6de36ca3
         :caseimportance: High
         :tags: tier2

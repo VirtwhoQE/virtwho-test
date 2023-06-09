@@ -161,7 +161,7 @@ class TestVirtwhoPackageInfo:
     def test_package_info_with_User_Agent_header(self, ssh_host, virtwho):
         """
 
-        :title: virt-who: package: test virt-who package information
+        :title: virt-who: package: test virt-who package information with user agent header
         :id: 9ec0e56e-e643-4c7d-b622-2d34915e407b
         :caseimportance: High
         :tags: tier1

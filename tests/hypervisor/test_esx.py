@@ -40,7 +40,7 @@ class TestEsxPositive:
     ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_esx.conf
 
-        :title: virt-who: esx: test encrypted_password option
+        :title: virt-who: esx: test encrypted_password option (positive)
         :id: f07205a4-8f18-4c6b-8a2c-285664b59ed3
         :caseimportance: High
         :tags: tier2
@@ -623,7 +623,7 @@ class TestEsxNegative:
     ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_esx.conf
 
-        :title: virt-who: esx: test encrypted_password option
+        :title: virt-who: esx: test encrypted_password option (negative)
         :id: 5014c314-8d57-44ce-820b-6de88810044e
         :caseimportance: High
         :tags: tier2

@@ -187,7 +187,7 @@ class TestHypervisorPositive:
         ssh_guest,
     ):
         """
-        :title: virt-who: default: test the mapping info
+        :title: virt-who: hypervisor: test the mapping info
         :id: 09e1754d-5f3a-49c5-aebc-91d4f4a8471e
         :caseimportance: High
         :tags: tier1
@@ -327,7 +327,7 @@ class TestHypervisorPositive:
         function_host_register,
     ):
         """
-        :title: virt-who: default: test the mapping info after deleting the host and hypervisor
+        :title: virt-who: hypervisor: test the mapping info after deleting the host and hypervisor
         :id: 19b84057-69a3-43bc-9b24-f39bc31ed3a8
         :caseimportance: High
         :tags: tier2
