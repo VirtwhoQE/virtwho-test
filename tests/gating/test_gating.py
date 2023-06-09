@@ -112,7 +112,7 @@ class TestGating:
         """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: gating: test hypervisor_id function
-        :id: 03b79c0b-8b1f-4f32-8285-370773b7124b
+        :id: ed08021a-7ca7-4e01-81d0-eff08890b860
         :caseimportance: High
         :tags: gating
         :customerscenario: false
