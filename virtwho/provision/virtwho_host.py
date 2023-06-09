@@ -249,8 +249,8 @@ def local_mode_guest_add():
             guest_name=guest_name,
             image_url=config.local.guest_image_url,
             xml_url=config.local.guest_xml_url,
-            image_path=f"{config.local.guest_image_path} + '-' + {random_string()}",
-            xml_path=f"{config.local.guest_xml_path}",
+            image_path=config.local.guest_image_path,
+            xml_path=config.local.guest_xml_path,
         )
     else:
         local.guest_start(guest_name)
@@ -265,9 +265,7 @@ def libvirt_pkg_install(ssh):
     """
     ssh.runcmd(
         "yum clean all;"
-        "yum install -y @virtualization-client @virtualization-hypervisor "
-        "@virtualization-platform @virtualization-tools nmap libguestfs-tools "
-        "net-tools iproute rpcbind libvirt virt-manager"
+        "yum install -y nmap iproute rpcbind libvirt* virt-manager Xorg* gnome*"
     )
     ret, _ = ssh.runcmd("systemctl restart libvirtd;systemctl enable libvirtd")
     if ret == 0:
