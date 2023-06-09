@@ -25,7 +25,7 @@ class TestCli:
         :title: virt-who: cli: test option -d
         :id: 9389396f-d4c3-4be2-8aec-a9f7be3d25f1
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -52,7 +52,7 @@ class TestCli:
         :title: virt-who: cli: test option -o
         :id: 6902b844-8b71-490c-abf1-fa6087987666
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -98,7 +98,7 @@ class TestCli:
         :title: virt-who: cli: test option -i
         :id: e43d9fd0-0f1b-4b25-98f6-c421046e1c47
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -134,7 +134,7 @@ class TestCli:
         :title: virt-who: cli: test option -p
         :id: 16c01269-f4ab-4fe5-a29e-a3d5dc69a32a
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -174,7 +174,7 @@ class TestCli:
         :title: virt-who: cli: test option -c
         :id: 851a41fd-4fdc-4f8a-ac1b-e185079452fa
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -201,7 +201,7 @@ class TestCli:
         :title: virt-who: cli: test kill virt-who in terminal
         :id: 9ed38e14-87dc-45b5-8656-b7933f6c72f2
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -236,7 +236,7 @@ class TestCli:
         :title: virt-who: cli: test run virt-who cli when the service is running
         :id: 8921e482-ddf7-4f6d-882e-582fa0745b31
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -260,7 +260,7 @@ class TestCli:
         :title: virt-who: cli: encrypted password with/without option
         :id: 694300a4-7d18-4f1b-bebb-5697751147f5
         :caseimportance: High
-        :tags: tier1
+        :tags: function,cli,tier1
         :customerscenario: false
         :upstream: no
         :steps:

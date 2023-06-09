@@ -33,7 +33,7 @@ class TestRhsmScaDisable:
         :title: virt-who: rhsm: test guest attach virtual vdc pool by pool id
         :id: 39717357-eadb-4ac7-bf44-2b323cda3717
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -85,7 +85,7 @@ class TestRhsmScaDisable:
         :title: virt-who: rhsm: test guest attach virtual vdc pool by auto
         :id: d082e0c1-e925-46ea-8ab1-d65355709f55
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -143,7 +143,7 @@ class TestRhsmScaDisable:
         :title: virt-who: rhsm: test temporary vdc pool in guest
         :id: d1c42adf-dee5-42bf-80b6-017948e77baf
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -221,7 +221,7 @@ class TestRhsmScaDisable:
             physical host
         :id: cbf0e07b-c51c-4e6d-9c80-07c2c8dd7692
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -279,7 +279,7 @@ class TestRhsmScaDisable:
         :title: virt-who: rhsm: test vdc virtual pool consumed status in guest
         :id: 93af0dad-21e6-4732-8a06-2fb2e86a05a3
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -333,7 +333,7 @@ class TestRhsmScaDisable:
         :title: virt-who: rhsm: test guest attach virtual vdc pool in fake mode
         :id: f97afcd8-2b23-4754-8c40-a70605009e8f
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm,tier2
         :customerscenario: false
         :upstream: no
         :steps:

@@ -18,7 +18,7 @@ class TestXen:
         :title: virt-who: xen: test hostname option
         :id: 10bcaf27-5c53-4d2e-8a4a-6a6ee9b19b0b
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,xen,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -36,7 +36,7 @@ class TestXen:
         :title: virt-who: xen: test http option
         :id: ac1a58e9-5b29-461f-ab27-3a952429c984
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,xen,tier2
         :customerscenario: false
         :upstream: no
         :steps:

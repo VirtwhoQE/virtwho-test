@@ -35,7 +35,7 @@ class TestHypervisorPositive:
         :title: virt-who: hypervisor : check the guest address by curl
         :id: d9dd2559-4650-4ae0-8ebb-f8e296d3920a
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,default,default,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -83,7 +83,7 @@ class TestHypervisorPositive:
         :title: virt-who: hypervisor: check associated info by rhsm.log and webui
         :id: cc0fd665-7154-4efa-ad71-b509b4224e22
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,default,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -124,7 +124,7 @@ class TestHypervisorPositive:
         :title: virt-who: hypervisor: test the mapping info
         :id: 745cae04-c558-4ecf-8226-54c826d97eea
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,default,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -190,7 +190,7 @@ class TestHypervisorPositive:
         :title: virt-who: hypervisor: test the mapping info
         :id: 09e1754d-5f3a-49c5-aebc-91d4f4a8471e
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,default,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -247,7 +247,7 @@ class TestHypervisorPositive:
         :title: virt-who: hypervisor: test the virtwho status
         :id: 1608c965-c7f5-427b-b45e-c767600cdbf4
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,default,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -330,7 +330,7 @@ class TestHypervisorPositive:
         :title: virt-who: hypervisor: test the mapping info after deleting the host and hypervisor
         :id: 19b84057-69a3-43bc-9b24-f39bc31ed3a8
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,default,tier2
         :customerscenario: false
         :upstream: no
         :steps:

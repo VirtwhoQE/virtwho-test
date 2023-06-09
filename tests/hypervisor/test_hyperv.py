@@ -33,7 +33,7 @@ class TestHypervPositive:
         :title: virt-who: hyperv: test encrypted_password option
         :id: f6f6523f-28f7-4cf7-8282-5820383c68f9
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,hyperv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -61,7 +61,7 @@ class TestHypervPositive:
         :title: virt-who: hyperv: test hypervisor_id function
         :id: 49349a44-18c1-45c8-8edf-758a4f95109d
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,hyperv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -103,7 +103,7 @@ class TestHypervPositive:
         :title: virt-who: hyperv: test filter_hosts option
         :id: 45bd062a-96a9-44cf-ac00-4c108a4d3351
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,hyperv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -135,7 +135,7 @@ class TestHypervPositive:
         :title: virt-who: hyperv: test exclude_hosts option
         :id: 41677d4c-2bef-4e6d-8e48-55d1d6f7ae14
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,hyperv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -169,7 +169,7 @@ class TestHypervPositive:
         :title: virt-who: hyperv: test fake type
         :id: a2c30d57-4eae-451e-b131-2547f046463c
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,hyperv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -214,7 +214,7 @@ class TestHypervNegative:
         :title: virt-who: hyperv: test type option
         :id: c51a3bcc-bca7-4b45-a55a-8230bb25d7f0
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,hyperv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -283,7 +283,7 @@ class TestHypervNegative:
         :title: virt-who: hyperv: test server option
         :id: a31efe61-9368-470e-836a-bf4c59af1694
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,hyperv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -350,7 +350,7 @@ class TestHypervNegative:
         :title: virt-who: hyperv: test username option
         :id: ea6c1a97-575d-4b8b-9100-bfd90ab5f26f
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,hyperv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -418,7 +418,7 @@ class TestHypervNegative:
         :title: virt-who: hyperv: test password option
         :id: efe153df-c9ac-4ae2-9ec1-e5c05a3cc3d0
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,hyperv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -488,7 +488,7 @@ class TestHypervNegative:
         :title: virt-who: hyperv: test encrypted_password option
         :id: 273f9701-1eab-49b1-98c3-d1b38f6f6493
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,hyperv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -533,7 +533,7 @@ class TestHypervNegative:
         :title: virt-who: hyperv: test filter_hosts negative option
         :id: 8531124d-cff1-4ca8-acca-56f28345dcaf
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,hyperv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -604,7 +604,7 @@ class TestHypervNegative:
         :title: virt-who: hyperv: test exclude_hosts negative option
         :id: b8b3d98a-0376-48de-88b6-9f7b4da849ac
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,hyperv,tier2
         :customerscenario: false
         :upstream: no
         :steps:

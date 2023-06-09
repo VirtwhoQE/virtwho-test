@@ -43,7 +43,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test encrypted_password option (positive)
         :id: f07205a4-8f18-4c6b-8a2c-285664b59ed3
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -71,7 +71,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test hypervisor_id function
         :id: be5877d9-3a59-46aa-bd9a-6c1e3ed5f5ee
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -120,7 +120,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test filter_hosts option
         :id: fd3e4f83-af37-4947-aa45-297ec47ccade
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -154,7 +154,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test exclude_hosts option
         :id: ca2f2c5e-cb2a-4dea-9d8e-010058e31947
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -188,7 +188,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test filter_host_parents option
         :id: 8569eb02-3953-4c00-bfe6-df55fc386e90
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -228,7 +228,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test exclude_host_parents option
         :id: 6b8d2dc1-f4ea-4f82-b39d-2fc1260c949d
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -268,7 +268,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test simplified_vim option
         :id: 4e0a0ab3-8426-4121-8bbd-2e39794043d8
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -293,7 +293,7 @@ class TestEsxPositive:
         :title: virt-who: esx: test fake type
         :id: 14d3af84-92c3-4335-8bff-8a96cf211c1d
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -333,7 +333,7 @@ class TestEsxPositive:
         :title: virt-who: esx: check mapping info by the read only account
         :id: c13c05c0-fadb-4187-80f1-a2f52f0610db
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -372,7 +372,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test type option
         :id: abc67f6f-c79d-4458-9c69-ac788f0697a6
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -441,7 +441,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test server option
         :id: 428aad86-947d-40f1-aac4-ddd2676ad855
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -508,7 +508,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test username option
         :id: 98359dec-7e49-4037-8399-8224e054c5b4
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -566,7 +566,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test password option
         :id: 19f7305b-0ac5-4ac8-8d39-d32168e5b634
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -626,7 +626,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test encrypted_password option (negative)
         :id: 5014c314-8d57-44ce-820b-6de88810044e
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -671,7 +671,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test filter_hosts negative option
         :id: a32bacac-77e8-46a3-a2ca-b1f4691acb70
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -742,7 +742,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test exclude_hosts negative option
         :id: fc8cd6bb-3e14-4929-8240-134d13995bfa
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -809,7 +809,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test filter_hosts and exclude_hosts related mix function
         :id: da952c46-6983-4c60-8b3d-c5704643ea2a
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -867,7 +867,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test filter_host_parents negative function
         :id: c16e70f8-a343-4a66-b206-644011688a34
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -923,7 +923,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test exclude_host_parents negative function
         :id: fd3534a1-4c79-4c3d-bdc5-b795919dea0a
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,esx,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -981,7 +981,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test unsupported options in /etc/virt-who.d/ dir
         :id: ffd1fe9f-8c85-43ab-b2ae-16e824b5e880
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1017,7 +1017,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test extension file name in /etc/virt-who.d/ dir
         :id: 3e5ca411-147b-4ac6-87b0-fe2720ff2e17
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1052,7 +1052,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test the quoted options in /etc/virt-who.d/ dir
         :id: 75dc69a9-e025-401c-bf84-8dea86263e77
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1084,7 +1084,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test the redundant options in /etc/virt-who.d/ dir
         :id: cba7b507-f490-405b-85b7-ca448da901f2
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1139,7 +1139,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test commented line with tab space virt-who config file
         :id: d2444fd4-0a2c-4a08-a873-cb9d39e6b98b
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1180,7 +1180,7 @@ class TestEsxNegative:
         :title: virt-who: esx: test the hypervisors fqdn
         :id: ef3ecbc5-2433-44ae-9517-39dbe9590726
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1236,7 +1236,7 @@ class TestEsxNegative:
         :title: virt-who: esx: trigger event with different interval
         :id: a1972ea5-3c4b-455e-8690-c9f69fa88972
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1296,7 +1296,7 @@ class TestEsxNegative:
         :title: virt-who: esx: Run virt-who for hostname without domain name
         :id: 5a100319-b68e-44db-a3ac-172f9ae90bec
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1343,7 +1343,7 @@ class TestEsxNegative:
         :title: virt-who: esx: Run virt-who for cluster name with special char
         :id: 4de43160-1db8-4516-a2e2-1955f6f4f612
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -1403,7 +1403,7 @@ class TestEsxNegative:
         :title: virt-who: esx: post large json data to satellite server
         :id: 8b14bb1f-7b92-483f-af35-7ec97a621436
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,esx,tier2
         :customerscenario: false
         :upstream: no
         :steps:

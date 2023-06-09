@@ -32,7 +32,7 @@ class TestKubevirtPositive:
         :title: virt-who: kubevirt: test hypervisor_id function
         :id: c72b5b8b-3b10-49e4-8268-540d1b5a2630
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,kubevirt,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -74,7 +74,7 @@ class TestKubevirtPositive:
         :title: virt-who: kubevirt: test filter_hosts option
         :id: b26052e6-daba-467c-ac2c-012fe0fd8248
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,kubevirt,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -106,7 +106,7 @@ class TestKubevirtPositive:
         :title: virt-who: kubevirt: test exclude_hosts option
         :id: 7067ef5a-6289-4db1-b7bd-a4466407f522
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,kubevirt,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -138,7 +138,7 @@ class TestKubevirtPositive:
         :title: virt-who: kubevirt: test fake type
         :id: 8f130d78-28c4-4efb-9e02-3167b4e15be1
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,kubevirt,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -183,7 +183,7 @@ class TestKubevirtNegative:
         :title: virt-who: kubevirt: test type option
         :id: cf06f7a2-e417-45bd-bcea-48d1cac3736c
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,kubevirt,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -252,7 +252,7 @@ class TestKubevirtNegative:
         :title: virt-who: kubevirt: test filter_hosts negative option
         :id: 24d7bb49-cd9b-4cd3-85d1-fa86af2d581d
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,kubevirt,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -323,7 +323,7 @@ class TestKubevirtNegative:
         :title: virt-who: kubevirt: test exclude_hosts negative option
         :id: ee14d972-cd47-4f64-9237-f704f275cf56
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,kubevirt,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -391,7 +391,7 @@ class TestKubevirtNegative:
         :title: virt-who: kubevirt: test insecure option
         :id: bb777123-3210-4392-9c0d-e7fc332dc762
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,kubevirt,tier2
         :customerscenario: false
         :upstream: no
         :steps:

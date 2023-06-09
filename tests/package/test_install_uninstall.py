@@ -23,7 +23,7 @@ class TestInstallUninstall:
         :title: virt-who: package: install/uninstall by yum
         :id: 7b32612a-11eb-437e-92c9-b7d501d2e8a0
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. uninstall virt-who by #yum remove virt-who
@@ -75,7 +75,7 @@ class TestInstallUninstall:
         :title: virt-who: package: install/uninstall by rpm
         :id: 14152159-22a7-4550-9281-1109c4440f34
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. uninstall virt-who by #rpm -e

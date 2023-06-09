@@ -33,7 +33,7 @@ class TestSubscriptionPositive:
         :title: virt-who: rhsm_option: test no rhsm options in config file (positive)
         :id: 09167890-bbd0-470a-a342-66bbe29f91f9
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,rhsm_option,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -68,7 +68,7 @@ class TestSubscriptionPositive:
         :title: virt-who: rhsm_option: test rhsm_encrypted_password option (positive)
         :id: a748e63c-0c80-444d-8bc4-0f6cad783be6
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,rhsm_option,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -93,7 +93,7 @@ class TestSubscriptionPositive:
         :title: virt-who: rhsm_option: test rhsm_proxy=
         :id: a1b22c6c-74f7-4c14-8276-f55f589ba746
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,rhsm_option,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -168,7 +168,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm_option: test owner option (negative)
         :id: ae0abf52-ab25-4544-a0f7-5ba13bcfaf3e
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -240,7 +240,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm_option: test rhsm_hostname option (negative)
         :id: 055f5ea2-e4f2-4342-9fb8-aa0e4b765394
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -288,7 +288,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm_option: test rhsm_port option (negative)
         :id: a1149344-b6c0-485c-96fc-9da4705e6b15
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -340,7 +340,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm_option: test rhsm_prefix option (negative)
         :id: 5c91dca3-835a-4d5a-936e-e93d3a13d1f6
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -418,7 +418,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm_option: test rhsm_username option (negative)
         :id: c6db8133-678f-41e0-8ce9-649afe6a6615
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -465,7 +465,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm_option: test rhsm_password option (negative)
         :id: 0a9496e2-8634-4725-983f-d56a2133e3d4
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -515,7 +515,7 @@ class TestSubscriptionNegative:
             (negative)
         :id: daab24a6-21a9-49dc-a129-46c742a9ef84
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -560,7 +560,7 @@ class TestSubscriptionNegative:
             (negative)
         :id: a1e0f565-bdd2-43af-914a-d21f6d247227
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -649,7 +649,7 @@ class TestSubscriptionNegative:
         :title: virt-who: rhsm_option: test rhsm_proxy= in /etc/virt-who.d/
         :id: 3cc1562b-3843-42fe-80a9-4d5b6801b703
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,rhsm_option,tier2
         :customerscenario: false
         :upstream: no
         :steps:

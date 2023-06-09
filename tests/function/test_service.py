@@ -28,7 +28,7 @@ class TestVirtwhoService:
         :title: virt-who: service: test start and stop virt-who service
         :id: 42891e5b-5e84-43d0-ba56-7c4f4348bdc4
         :caseimportance: High
-        :tags: tier1
+        :tags: function,service,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -54,7 +54,7 @@ class TestVirtwhoService:
         :title: virt-who: service: test restart virt-who service
         :id: 60071821-31a8-49d0-a656-4a27f64ec18a
         :caseimportance: High
-        :tags: tier1
+        :tags: function,service,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -73,7 +73,7 @@ class TestVirtwhoService:
         :title: virt-who: service: test try-restart virt-who service
         :id: 5fe64b1b-ca5c-4b6e-bf11-207d8d0b7736
         :caseimportance: High
-        :tags: tier1
+        :tags: function,service,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -92,7 +92,7 @@ class TestVirtwhoService:
         :title: virt-who: service: test force-reload virt-who service
         :id: 91e933c8-88fc-44d9-bf07-d349fe18d8a5
         :caseimportance: High
-        :tags: tier1
+        :tags: function,service,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -111,7 +111,7 @@ class TestVirtwhoService:
         :title: virt-who: service: test virt-who service control by ssh connect
         :id: 486e180d-691b-4c89-af66-b93d4dd84b8c
         :caseimportance: High
-        :tags: tier1
+        :tags: function,service,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -152,7 +152,7 @@ class TestVirtwhoService:
         :title: virt-who: service: test virt-who and rhsmcertd service
         :id: ab28679b-f505-47fb-a7ae-760d2cec7045
         :caseimportance: High
-        :tags: tier1
+        :tags: function,service,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -182,7 +182,7 @@ class TestVirtwhoService:
         file
         :id: 85d390dd-5b9c-4428-85d9-ef28568faae8
         :caseimportance: High
-        :tags: tier1
+        :tags: function,service,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -216,7 +216,7 @@ class TestVirtwhoService:
         :title: virt-who: service: test virt-who in non_root user
         :id: fa260cd0-0f1b-4238-84c6-271a175add94
         :caseimportance: High
-        :tags: tier2
+        :tags: function,service,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -249,6 +249,11 @@ class TestVirtwhoService:
 
         :title: virt-who: service: test virt-who service after host reregister
         :id: 7e7bba4c-cb32-4385-a9b7-1416cd026837
+        :caseimportance: High
+        :tags: function,service,tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
             1. start virt-who service with virt-who host registered.
             2. unregister and clean virt-who host together to check rhsm log
             3. register the virt-who host again and restart virt-who service to
