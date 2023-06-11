@@ -25,7 +25,7 @@ class TestVirtwhoPackageInfo:
         :title: virt-who: package: test package is shipped in arch
         :id: f273943a-595f-4995-9e7c-fd266253642f
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. test virt-who package is shipped with x86_64 arch
@@ -50,7 +50,7 @@ class TestVirtwhoPackageInfo:
         :title: virt-who: package: test #virt-who --version
         :id: 4b207364-ba7f-4ef6-a336-66025a95b182
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. run #virt-who --version
@@ -70,7 +70,7 @@ class TestVirtwhoPackageInfo:
         :title: virt-who: package: test man page
         :id: ba708ea8-0658-4abf-8dbd-739956e9b945
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. run "#man virt-who"
@@ -96,7 +96,7 @@ class TestVirtwhoPackageInfo:
         :title: virt-who: package: test help page
         :id: d5a8e2d3-1626-4fdc-a5c6-db52c266b96d
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. run "#virt-who -h"
@@ -122,7 +122,7 @@ class TestVirtwhoPackageInfo:
         :title: virt-who: package: test virt-who package information
         :id: 51beaf61-f01d-4edd-870e-8682c18d07bb
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. run "#rpm -qi virt-who"
@@ -164,7 +164,7 @@ class TestVirtwhoPackageInfo:
         :title: virt-who: package: test virt-who package information with user agent header
         :id: 9ec0e56e-e643-4c7d-b622-2d34915e407b
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. export the SUBMAN_DEBUG_PRINT_REQUEST=1 and

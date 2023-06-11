@@ -18,13 +18,13 @@ class TestLocal:
         :title: virt-who: local: test hostname option
         :id: 33cc5ba0-c529-481b-8cfa-8613adbe23ee
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,local,tier1
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1.demo
         :expectedresults:
-            1.
+            1.demo
         """
         logger.info("Succeeded to run the 'test_hostname_option'")
 
@@ -35,12 +35,12 @@ class TestLocal:
         :title: virt-who: local: test http option
         :id: a66787b3-1a5f-4b6f-9c09-0873d6490de3
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,local,tier2
         :customerscenario: false
         :upstream: no
         :steps:
-            1.
+            1. demo
         :expectedresults:
-            1.
+            1. demo
         """
         logger.info("Succeeded to run the 'test_http_option'")

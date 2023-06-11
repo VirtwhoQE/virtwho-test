@@ -33,7 +33,7 @@ class TestRHEVMPositive:
         :title: virt-who: rhevm: test encrypted_password option
         :id: 1a113c7e-d54d-46a1-941d-16d94a62ef0f
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,rhevm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -61,7 +61,7 @@ class TestRHEVMPositive:
         :title: virt-who: rhevm: test hypervisor_id function
         :id: a69aff68-beff-4666-b9a0-03be32b6fdff
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,rhevm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -110,7 +110,7 @@ class TestRHEVMPositive:
         :title: virt-who: rhevm: test filter_hosts option
         :id: 16970ea6-8148-42ff-bd6d-4946e64077d4
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,rhevm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -144,7 +144,7 @@ class TestRHEVMPositive:
         :title: virt-who: rhevm: test exclude_hosts option
         :id: 557ead54-9c01-4bf3-8cd3-192d5bd70ba8
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,rhevm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -177,7 +177,7 @@ class TestRHEVMPositive:
         :title: virt-who: rhevm: test fake type
         :id: 59cf1330-3127-467d-bf1c-3b0cbe2fdd84
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,rhevm,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -222,7 +222,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test type option
         :id: f2533fe1-5536-4bd5-830b-b2141f0896d7
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -291,7 +291,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test server option
         :id: 70eec0cb-317b-4ee9-933c-88ff3310137e
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -358,7 +358,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test username option
         :id: 19f8643b-0aa9-4380-b91c-afe6384dbb75
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -426,7 +426,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test password option
         :id: 10127e23-95df-4906-a77f-943cf2a271b9
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -496,7 +496,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test encrypted_password option
         :id: 0e2197fe-c806-4f8c-b6ca-e93fb69b07a1
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -541,7 +541,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test filter_hosts negative option
         :id: f8f4dae1-7c00-4224-a685-fe86762d795c
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -612,7 +612,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test exclude_hosts negative option
         :id: d779d83c-a5a9-44c2-a331-315c00a78f0c
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -681,7 +681,7 @@ class TestRHEVMNegative:
         :title: virt-who: rhevm: test server url (negative)
         :id: 530d86f7-d8f9-44f6-b860-579611758cd8
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,rhevm,tier2
         :customerscenario: false
         :upstream: no
         :steps:

@@ -33,7 +33,7 @@ class TestAHVPositive:
         :title: virt-who: ahv: test encrypted_password option (positive)
         :id: 05096e7f-7126-46bf-ac4c-eb674dd8cfc3
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,ahv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -61,7 +61,7 @@ class TestAHVPositive:
         :title: virt-who: ahv: test hypervisor_id function
         :id: 746ae298-2360-4e72-9477-c3cfb5e05841
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,ahv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -103,7 +103,7 @@ class TestAHVPositive:
         :title: virt-who: ahv: test filter_hosts option
         :id: a2bed239-6447-4347-81da-a9e3e32cf347
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,ahv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -135,7 +135,7 @@ class TestAHVPositive:
         :title: virt-who: ahv: test exclude_hosts option
         :id: a8f4f6a7-717e-46c7-9f60-0b934ff11705
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,ahv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -167,7 +167,7 @@ class TestAHVPositive:
         :title: virt-who: ahv: test prism_central option
         :id: 3ec82ad4-d1f5-4c4c-8ee4-b03c364203e0
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,ahv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -184,7 +184,7 @@ class TestAHVPositive:
         :title: virt-who: ahv: test fake type
         :id: 88212bd7-c5d6-46cc-a62b-4f06599ff71d
         :caseimportance: High
-        :tags: tier1
+        :tags: hypervisor,ahv,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -229,7 +229,7 @@ class TestAHVNegative:
         :title: virt-who: ahv: test type option
         :id: ca74f1bd-3095-4e1a-8da9-0386c46ae60e
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,ahv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -298,7 +298,7 @@ class TestAHVNegative:
         :title: virt-who: ahv: test server option
         :id: 4b4b3e6c-eb0b-4bfc-9d62-015c8aa68082
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,ahv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -365,7 +365,7 @@ class TestAHVNegative:
         :title: virt-who: ahv: test username option
         :id: eaaec9c916-9f90-491e-b2e9-4ea5a99d2118
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,ahv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -423,7 +423,7 @@ class TestAHVNegative:
         :title: virt-who: ahv: test password option
         :id: ef295e96d-66ba-4fc5-a879-e169090f6cae
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,ahv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -483,7 +483,7 @@ class TestAHVNegative:
         :title: virt-who: ahv: test encrypted_password option (negative)
         :id: cb642ea7-fc86-4de4-b6a8-9dbb6de36ca3
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,ahv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -528,7 +528,7 @@ class TestAHVNegative:
         :title: virt-who: ahv: test filter_hosts negative option
         :id: 21957221-88a7-4ea9-8937-c06ec09000e2
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,ahv,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -599,7 +599,7 @@ class TestAHVNegative:
         :title: virt-who: ahv: test exclude_hosts negative option
         :id: cbb10d76-b9ff-4999-8bb4-ea824e6d9e5f
         :caseimportance: High
-        :tags: tier2
+        :tags: hypervisor,ahv,tier2
         :customerscenario: false
         :upstream: no
         :steps:

@@ -34,7 +34,7 @@ class TestUpgradeDowngrade:
         :title: virt-who: package: upgrade/downgrade by yum
         :id: 318cb940-b68f-4ad8-8070-4ea60d05545e
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. configure virt-who configurations
@@ -102,7 +102,7 @@ class TestUpgradeDowngrade:
         :title: virt-who: package: upgrade/downgrade by rpm
         :id: b363a4f4-c4cb-46b0-a378-fdaf956dd345
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. configure virt-who configurations
@@ -157,7 +157,7 @@ class TestUpgradeDowngrade:
         :title: virt-who: package: global options migration after upgrade
         :id: 3947857c-a9d2-4ae8-990e-91ab0a4c60ad
         :caseimportance: High
-        :tags: tier1
+        :tags: package,tier1
         :customerscenario: false
         :steps:
             1. configure virt-who configurations

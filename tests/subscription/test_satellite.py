@@ -44,7 +44,7 @@ class TestSatelliteScaDisable:
         :title: virt-who: satellite: test guest attach virtual vdc pool by pool id
         :id: 38e213ef-70cc-445a-85b2-8f9639064f12
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,satellite,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -96,7 +96,7 @@ class TestSatelliteScaDisable:
         :title: virt-who: satellite: test guest attach virtual vdc pool by auto
         :id: 812aac00-5b4d-4307-bb4e-bdd774330128
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,satellite,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -154,7 +154,7 @@ class TestSatelliteScaDisable:
         :title: virt-who: satellite: test temporary vdc pool in guest
         :id: 733ce7d0-bb51-4d80-87cc-a5ee5fbdf542
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,satellite,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -225,7 +225,7 @@ class TestSatelliteScaDisable:
             fake mode
         :id: 164f2d20-d357-4f25-a0e4-f5260012a266
         :caseimportance: High
-        :tags: tier1
+        :tags: subscription,satellite,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -292,7 +292,7 @@ class TestSatelliteScaDisable:
         :title: virt-who: satellite: test guest attach rule by activation_key
         :id: 6d0e169c-74a7-41a0-a97a-81e084f0aabf
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,satellite,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -393,7 +393,7 @@ class TestSatelliteScaDisable:
             activation key
         :id: ae58e185-3e78-4c3d-90fb-c5bd1ff01382
         :caseimportance: Medium
-        :tags: tier2
+        :tags: subscription,satellite,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -445,7 +445,7 @@ class TestSatelliteScaDisable:
         :title: virt-who: satellite: test non-default org with rhsm options
         :id: c372adf9-645e-4b79-9bcd-af462e5be03a
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,satellite,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -517,7 +517,7 @@ class TestSatelliteScaDisable:
             rhsm options
         :id: e6702ccb-d0ad-4215-9503-cf973c14b31c
         :caseimportance: High
-        :tags: tier2
+        :tags: subscription,satellite,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -583,7 +583,7 @@ class TestSatelliteScaDisable:
         :title: virt-who: satellite: test vdc virtual subscriptions on webui
         :id: 5c71d37c-b5e2-4789-87f6-24357a96819b
         :caseimportance: Medium
-        :tags: tier2
+        :tags: subscription,satellite,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -645,7 +645,7 @@ class TestSatelliteScaDisable:
     #     :title: virt-who: satellite: test vdc virtual subscriptions on webui
     #     :id: 9f2f64d5-d5fc-425a-8f11-33a1cadc1acd
     #     :caseimportance: Medium
-    #     :tags: tier2
+    #     :tags: subscription,satellite,tier2
     #     :customerscenario: false
     #     :upstream: no
     #     :steps:

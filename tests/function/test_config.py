@@ -27,7 +27,7 @@ class TestConfiguration:
         :title: virt-who: config: test debug option (positive)
         :id: 6f238133-43db-4a52-b01c-441faba0cf74
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -55,7 +55,7 @@ class TestConfiguration:
         :title: virt-who: config: test interval option (positive)
         :id: f1d39429-62c0-44f0-a6d3-4ffc8dc704b1
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -89,7 +89,7 @@ class TestConfiguration:
         :title: virt-who: config: test oneshot option (positive)
         :id: 9e39f91f-80b5-4773-bef0-7facf8cb85e2
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -128,7 +128,7 @@ class TestConfiguration:
         :title: virt-who: config: test print option (positive)
         :id: 25de8130-677f-43ca-b07d-a15f49e91205
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -168,7 +168,7 @@ class TestConfiguration:
         :title: virt-who: config: test reporter_id option (positive)
         :id: 83df76e6-27c6-4429-b32b-fbc2be0564a4
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -209,7 +209,7 @@ class TestConfiguration:
         :title: virt-who: config: test log_per_config option
         :id: 85accd49-54dc-4899-a9cf-c6fb07b2fe3c
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -281,7 +281,7 @@ class TestConfiguration:
         :title: virt-who: config: test log_dir and log_file option
         :id: b20c8bf6-25f1-485a-a659-2f4194ee7fcc
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -325,7 +325,7 @@ class TestConfiguration:
         :title: virt-who: config: test configs option (positive)
         :id: 03db48c3-4a98-4956-bd6f-a8ac4da7da8e
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -368,7 +368,7 @@ class TestConfiguration:
         :title: virt-who: config: test owner option (positive)
         :id: ce219d82-cf66-4019-af17-3197c53c72a0
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -421,7 +421,7 @@ class TestConfiguration:
         :title: virt-who: config: test hypervisor_id option (positive)
         :id: fed463a6-9538-4242-9990-2e4995d1f473
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -484,7 +484,7 @@ class TestConfiguration:
         :title: virt-who: config: test http_proxy, https_proxy and no_proxy options (positive)
         :id: f7d2d5fc-2446-46ae-8fd4-eda0109f75a5
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -551,7 +551,7 @@ class TestSysConfiguration:
         :title: virt-who: config: test VIRTWHO_DEBUG option
         :id: 0b60fbdb-4554-4f92-bbc9-fdd43ff71adb
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -581,7 +581,7 @@ class TestSysConfiguration:
         :title: virt-who: config: test VIRTWHO_ONE_SHOT option
         :id: 8f8204c7-6c6d-4189-8947-774ed5018835
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -621,7 +621,7 @@ class TestSysConfiguration:
         :title: virt-who: config: test VIRTWHO_INTERVAL option
         :id: e46ceb4c-e4ed-47c2-9d3e-2a15a0c34d83
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -654,7 +654,7 @@ class TestSysConfiguration:
         :title: virt-who: config: test the sysconfig and pid files permission
         :id: 21bf00ef-8b58-48b8-a36c-d65bc7b18dc0
         :caseimportance: High
-        :tags: tier1
+        :tags: function,config,tier1
         :customerscenario: false
         :upstream: no
         :steps:
@@ -696,7 +696,7 @@ class TestConfigurationNegative:
         :title: virt-who: config: test debug option (negative)
         :id: d06ee580-767f-43f6-9dab-51947ed9d4db
         :caseimportance: High
-        :tags: tier2
+        :tags: function,config,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -722,7 +722,7 @@ class TestConfigurationNegative:
         :title: virt-who: config: test oneshot option (negative)
         :id: 843f67cb-c98e-4074-9527-ae216fb036df
         :caseimportance: High
-        :tags: tier2
+        :tags: function,config,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -751,7 +751,7 @@ class TestConfigurationNegative:
         :title: virt-who: config: test reporter_id option (negative)
         :id: 5b7ea6e2-2ed9-4d56-8833-7ab627aa75d0
         :caseimportance: High
-        :tags: tier2
+        :tags: function,config,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -806,7 +806,7 @@ class TestConfigurationNegative:
         :title: virt-who: config: test debug option (negative)
         :id: 1fa15308-d344-4ab8-9a7e-c08e1698f25f
         :caseimportance: High
-        :tags: tier2
+        :tags: function,config,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -868,7 +868,7 @@ class TestConfigurationNegative:
         :title: virt-who: config: test owner option (negative)
         :id: 2b6f68bb-ea7e-4c01-abe5-7c27da3b3d3f
         :caseimportance: High
-        :tags: tier2
+        :tags: function,config,tier2
         :customerscenario: false
         :upstream: no
         :steps:
@@ -910,7 +910,7 @@ class TestConfigurationNegative:
         :title: virt-who: config: test hypervisor_id option (negative)
         :id: fc2dcc791-0182-4309-a3d8-fc899d3938fa
         :caseimportance: High
-        :tags: tier2
+        :tags: function,config,tier2
         :customerscenario: false
         :upstream: no
         :steps:
