@@ -39,9 +39,11 @@ class TestLocalPositive:
 
         # run virt-who service to check the thread number
         result = virtwho.run_service()
-        thread_berfore = result['thread']
+        thread_berfore = result["thread"]
         assert thread_berfore == 1
-        logger.info(f"Succeeded to start virt-who service and the thread_num is {thread_berfore}")
+        logger.info(
+            f"Succeeded to start virt-who service and the thread_num is {thread_berfore}"
+        )
 
         # update libvirt config, and restart libvirtd service
         libvirt_conf = "/etc/libvirt/libvirtd.conf"
