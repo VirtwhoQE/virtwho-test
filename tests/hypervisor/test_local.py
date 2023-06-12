@@ -19,7 +19,7 @@ class TestLocalPositive:
     @pytest.mark.tier1
     def test_threads_number_after_reconfig_libvirt(self, virtwho, ssh_host):
         """
-        :title: virt-who: loacl: test threads number after reconfig libvirt config file
+        :title: virt-who: local: test threads number after reconfig libvirt config file
         :id: 4d2552ce-af14-4e4f-84ab-64764db64fe2
         :caseimportance: High
         :tags: hypervisor,local,tier1
@@ -40,67 +40,48 @@ class TestLocalPositive:
         # run virt-who service to check the thread number
         result = virtwho.run_service()
         thread_berfore = result['thread']
+        assert thread_berfore == 1
         logger.info(f"Succeeded to start virt-who service and the thread_num is {thread_berfore}")
 
         # update libvirt config, and restart libvirtd service
         libvirt_conf = "/etc/libvirt/libvirtd.conf"
-        option_enable("listen_tls", libvirt_conf, ssh_host)
-        option_enable("listen_tcp", libvirt_conf, ssh_host)
-        option_enable("auth_tcp", libvirt_conf, ssh_host)
-        option_enable("tcp_port", libvirt_conf, ssh_host)
+        try:
+            operate_option("enable", "listen_tls", libvirt_conf, ssh_host)
+            operate_option("enable", "listen_tcp", libvirt_conf, ssh_host)
+            operate_option("enable", "auth_tcp", libvirt_conf, ssh_host)
+            operate_option("enable", "tcp_port", libvirt_conf, ssh_host)
 
-        run_service(ssh_host, "libvirtd", "restart")
-        _, output = run_service(ssh_host, "libvirtd", "status")
-        assert "is running" in output or "Active: active (running)" in output
+            run_service(ssh_host, "libvirtd", "restart")
+            _, output = run_service(ssh_host, "libvirtd", "status")
+            assert "is running" in output or "Active: active (running)" in output
 
-        # check virt-who thread_num is changed or not
-        thread_after = virtwho.thread_number()
-        assert thread_berfore == thread_after
+            # check virt-who thread_num is changed or not
+            thread_after = virtwho.thread_number()
+            assert thread_berfore == thread_after
 
-        # recovery libvirt config
-        option_disable("listen_tls", libvirt_conf, ssh_host)
-        option_disable("listen_tcp", libvirt_conf, ssh_host)
-        option_disable("auth_tcp", libvirt_conf, ssh_host)
-        option_disable("tcp_port", libvirt_conf, ssh_host)
+        finally:
+            # recovery libvirt config
+            operate_option("disable", "listen_tls", libvirt_conf, ssh_host)
+            operate_option("disable", "listen_tcp", libvirt_conf, ssh_host)
+            operate_option("disable", "auth_tcp", libvirt_conf, ssh_host)
+            operate_option("disable", "tcp_port", libvirt_conf, ssh_host)
 
-        run_service(ssh_host, "libvirtd", "restart")
-        _, output = run_service(ssh_host, "libvirtd", "status")
-        assert "is running" in output or "Active: active (running)" in output
+            run_service(ssh_host, "libvirtd", "restart")
+            _, output = run_service(ssh_host, "libvirtd", "status")
+            assert "is running" in output or "Active: active (running)" in output
 
 
-def option_enable(option, file, ssh_host):
-    """
-    Enable the option for the specfic file
-    :param option: the name of the option
-    :param file: the name of the file
-    :param ssh_host: the ssh host for running the command
-    :return:
-    """
-    cmd = f'sed -i "s|^#{option}|{option}|g" {file}'
+def operate_option(action, option, file, ssh_host):
+    if action == 'enable':
+        cmd = f'sed -i "s|^#{option}|{option}|g" {file}'
+    else:
+        cmd = f'sed -i "s|^{option}|#{option}|g" {file}'
     ret, output = ssh_host.runcmd(cmd)
     if ret == 0:
-        logger.info(f"Succeeded to enable option {option}")
+        logger.info(f"Succeeded to {action} option {option}")
         return True
     else:
-        logger.error(f"Failed to enable option {option}")
-        return False
-
-
-def option_disable(option, file, ssh_host):
-    """
-    Disable the option for the specfic file
-    :param option: the name of the option
-    :param file: the name of the file
-    :param ssh_host: the ssh host for running the command
-    :return: Succeed to run the command, return True; Else, return False
-    """
-    cmd = f'sed -i "s|^{option}|#{option}|g" {file}'
-    ret, output = ssh_host.runcmd(cmd)
-    if ret == 0:
-        logger.info(f"Succeeded to disable option {option}")
-        return True
-    else:
-        logger.error(f"Failed to disable option {option}")
+        logger.error(f"Failed to {action} option {option}")
         return False
 
 
