@@ -72,9 +72,18 @@ class TestLocalPositive:
 
 
 def operate_option(action, option, file, ssh_host):
-    if action == 'enable':
+    """
+    Disable/Enable the option for the specific file
+    :param action: Disable or Enable
+    :param option: the name of the option
+    :param file: the name of the file
+    :param ssh_host: the ssh host for running the command
+    :return: Succeed to run the command, return True; Else, return False
+    """
+    cmd = ""
+    if action == "enable":
         cmd = f'sed -i "s|^#{option}|{option}|g" {file}'
-    else:
+    elif action == "disable":
         cmd = f'sed -i "s|^{option}|#{option}|g" {file}'
     ret, output = ssh_host.runcmd(cmd)
     if ret == 0:
