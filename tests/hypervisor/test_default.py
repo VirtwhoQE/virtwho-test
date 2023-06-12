@@ -187,7 +187,7 @@ class TestHypervisorPositive:
         ssh_guest,
     ):
         """
-        :title: virt-who: hypervisor: test the mapping info
+        :title: virt-who: hypervisor: test the guest facts
         :id: 09e1754d-5f3a-49c5-aebc-91d4f4a8471e
         :caseimportance: High
         :tags: hypervisor,default,tier1

@@ -178,8 +178,7 @@ class TestVirtwhoService:
     def test_virtwho_ignore_swp_file(self, virtwho, ssh_host):
         """
 
-        :title: virt-who: service: test virt-who service ignores /etc/virt-who.d/xx.swp
-        file
+        :title: virt-who: service: test virt-who service ignores /etc/virt-who.d/xx.swp file
         :id: 85d390dd-5b9c-4428-85d9-ef28568faae8
         :caseimportance: High
         :tags: function,service,tier1

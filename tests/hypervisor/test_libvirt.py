@@ -31,7 +31,7 @@ class TestLibvrtPositive:
         """Test the encrypted_password= option in /etc/virt-who.d/test_libvirt.conf
 
         :title: virt-who: libvirt: test encrypted_password option
-        :id: f6f6523f-28f7-4cf7-8282-5820383c68f9
+        :id: f6d4f309-388c-42cd-8f0b-b24b0a249579
         :caseimportance: High
         :tags: hypervisor,libvirt,tier1
         :customerscenario: false
@@ -59,7 +59,7 @@ class TestLibvrtPositive:
         """Test the hypervisor_id= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: libvirt: test hypervisor_id function
-        :id: 49349a44-18c1-45c8-8edf-758a4f95109d
+        :id: 519a763c-bf96-4991-98aa-351bfc8a5131
         :caseimportance: High
         :tags: hypervisor,libvirt,tier1
         :customerscenario: false
@@ -101,7 +101,7 @@ class TestLibvrtPositive:
         """Test the filter_hosts= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: libvirt: test filter_hosts option
-        :id: 45bd062a-96a9-44cf-ac00-4c108a4d3351
+        :id: 4387e20a-733b-485c-8c1d-4524bfd04a79
         :caseimportance: High
         :tags: hypervisor,libvirt,tier1
         :customerscenario: false
@@ -133,7 +133,7 @@ class TestLibvrtPositive:
         """Test the exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: libvirt: test exclude_hosts option
-        :id: 41677d4c-2bef-4e6d-8e48-55d1d6f7ae14
+        :id: 88979729-2638-43f9-90dc-a1fe6e6b594a
         :caseimportance: High
         :tags: hypervisor,libvirt,tier1
         :customerscenario: false
@@ -165,7 +165,7 @@ class TestLibvrtPositive:
         """Test the fake type in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: libvirt: test fake type
-        :id: a2c30d57-4eae-451e-b131-2547f046463c
+        :id: 4478b494-1da8-429d-9aa4-6959391e777f
         :caseimportance: High
         :tags: hypervisor,libvirt,tier1
         :customerscenario: false
@@ -210,7 +210,7 @@ class TestLibvirtNegative:
         """Test the type= option in /etc/virt-who.d/test_libvirt.conf
 
         :title: virt-who: libvirt: test type option
-        :id: c51a3bcc-bca7-4b45-a55a-8230bb25d7f0
+        :id: 462e47c5-56b4-4c63-85a4-ba4415f89b57
         :caseimportance: High
         :tags: hypervisor,libvirt,tier2
         :customerscenario: false
@@ -372,7 +372,7 @@ class TestLibvirtNegative:
         """Test the password= option in /etc/virt-who.d/test_libvirt.conf
 
         :title: virt-who: libvirt: test password option
-        :id: efe153df-c9ac-4ae2-9ec1-e5c05a3cc3d0
+        :id: 8ba01a32-e067-4a89-80b8-4b0eeffee04f
         :caseimportance: High
         :tags: hypervisor,libvirt,tier2
         :customerscenario: false
@@ -409,7 +409,7 @@ class TestLibvirtNegative:
         """Test the encrypted_password= option in /etc/virt-who.d/test_libvirt.conf
 
         :title: virt-who: libvirt: test encrypted_password option
-        :id: 273f9701-1eab-49b1-98c3-d1b38f6f6493
+        :id: 4f66d895-5b82-474c-9409-9a42bc316271
         :caseimportance: High
         :tags: hypervisor,libvirt,tier2
         :customerscenario: false
@@ -436,7 +436,7 @@ class TestLibvirtNegative:
         """Test the filter_hosts= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: libvirt: test filter_hosts negative option
-        :id: 8531124d-cff1-4ca8-acca-56f28345dcaf
+        :id: 62f3bfc1-4409-4e1d-be9f-c46f5e385c93
         :caseimportance: High
         :tags: hypervisor,libvirt,tier2
         :customerscenario: false
@@ -507,7 +507,7 @@ class TestLibvirtNegative:
         """Test the exclude_hosts= option in /etc/virt-who.d/hypervisor.conf
 
         :title: virt-who: libvirt: test exclude_hosts negative option
-        :id: b8b3d98a-0376-48de-88b6-9f7b4da849ac
+        :id: a4f07b69-2d34-4516-903c-3e393ea30355
         :caseimportance: High
         :tags: hypervisor,libvirt,tier2
         :customerscenario: false
