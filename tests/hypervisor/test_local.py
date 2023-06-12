@@ -103,6 +103,6 @@ def run_service(ssh_host, name, action):
     :return: Succeed to run the command, return True; Else, return False
     """
     cmd = f"service {name} {action}"
-    ret, output = ssh_host.runcmd(cmd)
+    ret, output = ssh_host.runcmd(cmd, True)
     time.sleep(10)
     return ret, output
