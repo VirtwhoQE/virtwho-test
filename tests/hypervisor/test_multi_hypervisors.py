@@ -16,7 +16,7 @@ class TestMultiHypervisors:
         :title: virt-who: multiHypervisors: test multi hypervisors report together
         :id: 9fb6694e-7535-4d9f-9ac0-75e6cbe3066d
         :caseimportance: High
-        :tags: multiHypervisor
+        :tags: hypervisor,multiHypervisor
         :customerscenario: false
         :upstream: no
         :steps:
