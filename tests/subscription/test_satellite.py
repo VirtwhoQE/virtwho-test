@@ -421,13 +421,21 @@ class TestSatelliteScaDisable:
 
         sm_guest_ack.unregister()
         sm_guest_ack.register()
-        consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
-        assert consumed_data["temporary"] is True
+        consumed_data_vdc = sm_guest_ack.consumed(vdc_virtual_sku)
+        consumed_data_limit = sm_guest_ack.consumed(limit_sku)
+        consumed_data_1 = consumed_data_vdc
+        if consumed_data_limit is not None:
+            consumed_data_1 = consumed_data_limit
+        assert consumed_data_1["temporary"] is True
 
         _ = virtwho.run_cli()
         sm_guest_ack.refresh()
-        consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
-        assert consumed_data["temporary"] is False
+        consumed_data_vdc = sm_guest_ack.consumed(vdc_virtual_sku)
+        consumed_data_limit = sm_guest_ack.consumed(limit_sku)
+        consumed_data_2 = consumed_data_vdc
+        if consumed_data_limit is not None:
+            consumed_data_2 = consumed_data_limit
+        assert consumed_data_2["temporary"] is False
 
     @pytest.mark.tier2
     def test_non_default_org_with_rhsm_options(
