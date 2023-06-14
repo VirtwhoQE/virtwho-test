@@ -88,7 +88,7 @@ class TestRHEVMPositive:
             )
             if REGISTER == "rhsm":
                 assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
-                rhsm.delete(hypervisor_data["hypervisor_hostname"])
+                rhsm.host_delete(hypervisor_data["hypervisor_hostname"])
             else:
                 if hypervisor_id == "hostname":
                     assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
