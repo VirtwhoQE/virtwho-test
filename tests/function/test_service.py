@@ -15,6 +15,7 @@ from virtwho import HYPERVISOR, REGISTER
 from virtwho.ssh import SSHConnect
 
 
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_globalconf_clean")

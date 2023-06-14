@@ -12,6 +12,7 @@ import time
 from hypervisor import logger
 
 
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_debug_true")
 @pytest.mark.usefixtures("class_globalconf_clean")
