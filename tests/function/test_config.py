@@ -12,6 +12,7 @@ from virtwho import HYPERVISOR
 from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
 from virtwho import SYSCONFIG_FILE
+from virtwho import logger
 
 from virtwho.base import hostname_get
 
@@ -507,20 +508,22 @@ class TestConfiguration:
             6. Succeeded to run virt-who
         """
         globalconf.update("global", "debug", "True")
+        connection_msg = proxy_data["connection_log"]
+        proxy_msg = proxy_data["proxy_log"]
 
         for proxy in ["http_proxy", "https_proxy"]:
             # run virt-who with http_proxy/https_proxy setting
             globalconf.update("system_environment", proxy, proxy_data[proxy])
-            connection_msg = proxy_data["connection_log"]
-            proxy_msg = proxy_data["proxy_log"]
             result = virtwho.run_service()
             assert (
                 result["error"] == 0
                 and result["send"] == 1
                 and result["thread"] == 1
-                and connection_msg in result["log"]
-                and proxy_msg in result["log"]
+                # Skip the below assertion due to open bz1989354
+                # and connection_msg in result["log"]
+                # and proxy_msg in result["log"]
             )
+            bz1989354_test = result["log"]
 
             # run virt-who with unreachable http_proxy/https_proxy setting
             globalconf.update("system_environment", proxy, proxy_data[f"bad_{proxy}"])
@@ -538,6 +541,9 @@ class TestConfiguration:
             )
 
             globalconf.delete("system_environment")
+
+        logger.info("=== Passed all other steps, start to test the bz1989354 ===")
+        assert connection_msg in bz1989354_test and proxy_msg in bz1989354_test
 
 
 @pytest.mark.usefixtures("function_globalconf_clean")
