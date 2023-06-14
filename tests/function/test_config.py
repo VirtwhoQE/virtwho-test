@@ -528,7 +528,8 @@ class TestConfiguration:
             # run virt-who with unreachable http_proxy/https_proxy setting
             globalconf.update("system_environment", proxy, proxy_data[f"bad_{proxy}"])
             result = virtwho.run_service()
-            assert result["error"] == 1 or 2
+            logger.info("=== Kubevirt/Hyperv/Libvirt: failed with the bz2175098 ===")
+            assert result["error"] in (1, 2)
             assert any(
                 error_msg in result["error_msg"] for error_msg in proxy_data["error"]
             )
@@ -542,7 +543,7 @@ class TestConfiguration:
 
             globalconf.delete("system_environment")
 
-        logger.info("=== Passed all other steps, start to test the bz1989354 ===")
+        logger.info("=== ESX: Passed all other steps, failed with the bz1989354 ===")
         assert connection_msg in bz1989354_test and proxy_msg in bz1989354_test
 
 
