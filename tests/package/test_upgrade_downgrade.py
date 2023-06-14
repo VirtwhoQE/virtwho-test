@@ -26,6 +26,7 @@ if "RHEL-8" in RHEL_COMPOSE:
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 class TestUpgradeDowngrade:
     @pytest.mark.tier1
     def test_upgrade_downgrade_by_yum(self, ssh_host, virtwho, globalconf):

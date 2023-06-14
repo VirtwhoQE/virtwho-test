@@ -15,6 +15,7 @@ from virtwho import HYPERVISOR_FILE, config
 from virtwho.base import encrypt_password
 
 
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("class_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 class TestCli:

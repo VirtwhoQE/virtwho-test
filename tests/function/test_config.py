@@ -16,6 +16,7 @@ from virtwho import SYSCONFIG_FILE
 from virtwho.base import hostname_get
 
 
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
