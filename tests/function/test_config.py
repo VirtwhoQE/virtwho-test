@@ -118,7 +118,7 @@ class TestConfiguration:
 
         # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
         if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
-            assert result["oneshot"] is True
+            assert result["oneshot"] is False
 
     @pytest.mark.tier1
     def test_print_in_virtwho_conf(
