@@ -235,8 +235,9 @@ class RHSMConf:
         """
         Recover the rhsm.conf to default one.
         """
-        os.system(f"\\cp -f {self.save_file} {self.local_file}")
-        self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+        # os.system(f"\\cp -f {self.save_file} {self.local_file}")
+        # self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+        self.remote_ssh.runcmd("\\cp -f '/backup/rhsm.conf' '/etc/rhsm/rhsm.conf'")
         logger.info(f"*** Recover /etc/rhsm/rhsm.conf")
 
 
