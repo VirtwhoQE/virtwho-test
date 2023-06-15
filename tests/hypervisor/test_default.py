@@ -370,7 +370,7 @@ class TestHypervisorPositive:
             result["error"] is not 0
             and result["send"] == 0
             and result["thread"] == 1
-            and error_msg in result["error_msg"]
+            and error_msg in result["log"]
         )
 
         # re-register host and run virt-who
