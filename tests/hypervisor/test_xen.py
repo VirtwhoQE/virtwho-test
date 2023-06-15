@@ -208,7 +208,7 @@ class TestXenPositive:
 @pytest.mark.usefixtures("class_globalconf_clean")
 class TestXenNegative:
     @pytest.mark.tier2
-    def test_type(self, virtwho, function_hypervisor, hyperv_assertion):
+    def test_type(self, virtwho, function_hypervisor, xen_assertion):
         """Test the type= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: xen: test type option
@@ -230,7 +230,7 @@ class TestXenNegative:
             4. The good config works fine
         """
         # type option is invalid value
-        assertion = hyperv_assertion["type"]
+        assertion = xen_assertion["type"]
         assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update("type", value)
@@ -277,7 +277,7 @@ class TestXenNegative:
             assert result["error"] == 0
 
     @pytest.mark.tier2
-    def test_server(self, virtwho, function_hypervisor, hyperv_assertion):
+    def test_server(self, virtwho, function_hypervisor, xen_assertion):
         """Test the server= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: xen: test server option
@@ -300,7 +300,7 @@ class TestXenNegative:
             works fine
         """
         # server option is invalid value
-        assertion = hyperv_assertion["server"]
+        assertion = xen_assertion["server"]
         assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update("server", value)
@@ -344,7 +344,7 @@ class TestXenNegative:
         )
 
     @pytest.mark.tier2
-    def test_username(self, function_hypervisor, virtwho, hyperv_assertion):
+    def test_username(self, function_hypervisor, virtwho, xen_assertion):
         """Test the username= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: xen: test username option
@@ -367,7 +367,7 @@ class TestXenNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # username option is invalid value
-        assertion = hyperv_assertion["username"]
+        assertion = xen_assertion["username"]
         assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update("username", value)
@@ -403,7 +403,7 @@ class TestXenNegative:
 
         # username option is null but another config is ok
         function_hypervisor.update("username", "")
-        result = virtwho.run_service()
+        result = virtwho.run_service(wait=10)
         assert (
             result["error"] is not 0
             and result["send"] == 1
@@ -412,7 +412,7 @@ class TestXenNegative:
         )
 
     @pytest.mark.tier2
-    def test_password(self, virtwho, function_hypervisor, hyperv_assertion):
+    def test_password(self, virtwho, function_hypervisor, xen_assertion):
         """Test the password= option in /etc/virt-who.d/test_hyperv.conf
 
         :title: virt-who: xen: test password option
@@ -435,7 +435,7 @@ class TestXenNegative:
             4. Find error message: 'Unable to login to ESX', the good config works fine
         """
         # password option is invalid value
-        assertion = hyperv_assertion["password"]
+        assertion = xen_assertion["password"]
         assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update("password", value)
@@ -471,7 +471,7 @@ class TestXenNegative:
 
         # password option is null but another config is ok
         function_hypervisor.update("password", "")
-        result = virtwho.run_service()
+        result = virtwho.run_service(wait=10)
         assert (
             result["error"] is not 0
             and result["send"] == 1
@@ -481,7 +481,7 @@ class TestXenNegative:
 
     @pytest.mark.tier2
     def test_encrypted_password(
-        self, virtwho, function_hypervisor, hyperv_assertion, hypervisor_data, ssh_host
+        self, virtwho, function_hypervisor, xen_assertion, hypervisor_data, ssh_host
     ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_hyperv.conf
 
@@ -502,7 +502,7 @@ class TestXenNegative:
         """
         # encrypted_password option is invalid value
         function_hypervisor.delete("password")
-        assertion = hyperv_assertion["encrypted_password"]
+        assertion = xen_assertion["encrypted_password"]
         assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update("encrypted_password", value)
