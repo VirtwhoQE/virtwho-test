@@ -476,7 +476,7 @@ class TestAHVNegative:
 
     @pytest.mark.tier2
     def test_encrypted_password(
-        self, virtwho, function_hypervisor, hyperv_assertion, hypervisor_data, ssh_host
+        self, virtwho, function_hypervisor, ahv_assertion, hypervisor_data, ssh_host
     ):
         """Test the encrypted_password= option in /etc/virt-who.d/test_ahv.conf
 
@@ -497,7 +497,7 @@ class TestAHVNegative:
         """
         # encrypted_password option is invalid value
         function_hypervisor.delete("password")
-        assertion = hyperv_assertion["encrypted_password"]
+        assertion = ahv_assertion["encrypted_password"]
         assertion_invalid_list = list(assertion["invalid"].keys())
         for value in assertion_invalid_list:
             function_hypervisor.update("encrypted_password", value)
