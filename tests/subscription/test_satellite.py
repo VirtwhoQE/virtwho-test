@@ -384,9 +384,8 @@ class TestSatelliteScaDisable:
         sm_guest_ack.register()
         vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, "Virtual")
         limit_consumed_data = sm_guest_ack.consumed(limit_sku, "Virtual")
-        assert (
-                (vdc_consumed_data and not limit_consumed_data)
-                or (not vdc_consumed_data and limit_consumed_data)
+        assert (vdc_consumed_data and not limit_consumed_data) or (
+            not vdc_consumed_data and limit_consumed_data
         )
 
     @pytest.mark.tier2
