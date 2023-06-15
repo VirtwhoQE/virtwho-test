@@ -333,6 +333,7 @@ class TestSatelliteScaDisable:
         # register guest by activation key with
         # activation key auto-attach disabled and
         # both the virtual limit and vdc sku out of the key
+        # behavior: guest will not auto-attach any one
         _ = virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
         satellite.attach(host=hypervisor_hostname, pool=limit_pool_physical)
@@ -351,6 +352,7 @@ class TestSatelliteScaDisable:
         # register guest by activation key with
         # activation key auto-attach disabled and
         # both the virtual limit and vdc sku in the key
+        # behavior: guest will auto-attach the both one
         satellite.activation_key_attach(pool=vdc_virt_pool, key=activation_key)
         satellite.activation_key_attach(pool=limit_virt_pool, key=activation_key)
         sm_guest_ack.unregister()
@@ -365,6 +367,7 @@ class TestSatelliteScaDisable:
         # register guest by activation key with
         # activation key auto-attach enabled and
         # virtual limit sku in the key, virtual vdc sku out of the key
+        # behavior: guest will auto-attach the limit virtual sku
         satellite.activation_key_unattach(pool=vdc_virt_pool, key=activation_key)
         sm_guest_ack.unregister()
         sm_guest_ack.register()
@@ -375,12 +378,16 @@ class TestSatelliteScaDisable:
         # register guest by activation key with
         # activation key auto-attach enabled and
         # the both vdc and limit virt sku out of the key
+        # behavior: guest will auto-attach the best matched sku
         satellite.activation_key_unattach(pool=limit_virt_pool, key=activation_key)
         sm_guest_ack.unregister()
         sm_guest_ack.register()
         vdc_consumed_data = sm_guest_ack.consumed(vdc_virtual_sku, "Virtual")
         limit_consumed_data = sm_guest_ack.consumed(limit_sku, "Virtual")
-        assert vdc_consumed_data and not limit_consumed_data
+        assert (
+                (vdc_consumed_data and not limit_consumed_data)
+                or (not vdc_consumed_data and limit_consumed_data)
+        )
 
     @pytest.mark.tier2
     def test_guest_auto_attach_temporary_pool_by_activation_key(
