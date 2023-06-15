@@ -248,7 +248,7 @@ class TestHypervisorPositive:
         function_hypervisor,
         hypervisor_data,
         register_data,
-        function_debug_false
+        function_debug_false,
     ):
         """
         :title: virt-who: hypervisor: test the virtwho status
