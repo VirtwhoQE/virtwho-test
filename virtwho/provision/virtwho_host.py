@@ -12,6 +12,7 @@ from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho.base import host_ping, rhel_compose_repo, system_init, rhel_version
 from virtwho.base import url_validation, url_file_download, hostname_get
+from virtwho.base import ipaddr_get
 from utils.parse_ci_message import umb_ci_message_parser
 from utils.beaker import install_rhel_by_beaker
 from utils.properties_update import virtwho_ini_props_update
@@ -83,7 +84,7 @@ def provision_virtwho_host(args):
     if config.job.hypervisor == "local" or "local" in config.job.multi_hypervisors:
         libvirt_pkg_install(ssh_host)
         libvirt_bridge_setup("br0", ssh_host)
-        guest_data = local_mode_guest_add()
+        guest_data = local_mode_guest_add(ssh_host)
         virtwho_ini_props["local"] = {
             "server": args.server,
             "username": args.username,
@@ -236,12 +237,14 @@ def kubevirt_config_file(ssh):
     )
 
 
-def local_mode_guest_add():
+def local_mode_guest_add(ssh):
     """
     Add rhel guest for the local mode.
+    :param ssh: ssh access of virt-who host.
     Return the guest data dic.
     """
-    local = LibvirtCLI(args.server, args.username, args.password)
+    server_ip = ipaddr_get(ssh)
+    local = LibvirtCLI(server_ip, args.username, args.password)
     guest_name = config.local.guest_name
     if not local.guest_exist(guest_name):
         local.guest_add(
@@ -253,7 +256,7 @@ def local_mode_guest_add():
         )
     else:
         local.guest_start(guest_name)
-    time.sleep(30)
+    time.sleep(15)
     return local.guest_search(guest_name)
 
 
@@ -296,20 +299,20 @@ def virtwho_arguments_parser():
     parser.add_argument(
         "--rhel-compose",
         required=False,
-        default="",
+        default=config.job.rhel_compose,
         help="Such as: RHEL-8.5.0-20211013.2, optional for gating test.",
     )
     parser.add_argument(
         "--rhel-compose-path",
         required=False,
-        default="",
+        default=config.job.rhel_compose_path,
         help="Such as http://download.eng.pek2.redhat.com/rhel-9/nightly/RHEL-9. "
         "If leave it None, will use the specified path in code.",
     )
     parser.add_argument(
         "--server",
         required=False,
-        default="",
+        default=config.virtwho.server,
         help="IP/fqdn of virt-who host, will install one by beaker if not provide.",
     )
     parser.add_argument(
@@ -330,8 +333,8 @@ def virtwho_arguments_parser():
         "--beaker-host",
         required=False,
         default="",
-        help="Define/filter system as hostrequire. "
-        "Such as: %ent-02-vm%, ent-02-vm-20.lab.eng.nay.redhat.com",
+        help="Define/filter system as hostrequire."
+        "Such as: %hp-z220%, %hp-dl360g9-08-vm%, %dell-per740-69-vm%",
     )
     parser.add_argument(
         "--gating-msg", default="", required=False, help="Gating msg from UMB"
