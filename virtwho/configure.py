@@ -210,7 +210,7 @@ class RHSMConf:
         self.remote_file = "/etc/rhsm/rhsm.conf"
         self.save_file = os.path.join(TEMP_DIR, RHSM_CONF_BACKUP)
         if not os.path.exists(self.save_file):
-            self.remote_ssh.get_file(self.remote_file, self.save_file)
+            self.remote_ssh.get_file("/backup/rhsm.conf", self.save_file)
         os.system(f"\\cp -f {self.save_file} {self.local_file}")
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
 
@@ -235,9 +235,9 @@ class RHSMConf:
         """
         Recover the rhsm.conf to default one.
         """
-        # os.system(f"\\cp -f {self.save_file} {self.local_file}")
-        # self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
-        self.remote_ssh.runcmd("\\cp -f '/backup/rhsm.conf' '/etc/rhsm/rhsm.conf'")
+        self.remote_ssh.get_file("/backup/rhsm.conf", self.save_file)
+        os.system(f"\\cp -f {self.save_file} {self.local_file}")
+        self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
         logger.info(f"*** Recover /etc/rhsm/rhsm.conf")
 
 
