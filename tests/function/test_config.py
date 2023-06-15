@@ -202,6 +202,7 @@ class TestConfiguration:
         )
 
     @pytest.mark.tier1
+    @pytest.mark.notLocal
     def test_log_per_config_in_virtwho_conf(
         self, virtwho, globalconf, hypervisor_data, ssh_host
     ):
@@ -355,6 +356,7 @@ class TestConfiguration:
         )
 
     @pytest.mark.tier1
+    @pytest.mark.notLocal
     def test_owner_in_virtwho_conf(
         self,
         virtwho,
@@ -407,6 +409,7 @@ class TestConfiguration:
         )
 
     @pytest.mark.tier1
+    @pytest.mark.notLocal
     def test_hypervisor_id_in_virtwho_conf(
         self,
         virtwho,
@@ -479,6 +482,7 @@ class TestConfiguration:
                     assert not satellite.host_id(hypervisor_data["hypervisor_uuid"])
 
     @pytest.mark.tier1
+    @pytest.mark.notLocal
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
@@ -540,6 +544,7 @@ class TestConfiguration:
             globalconf.delete("system_environment")
 
 
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
@@ -686,6 +691,7 @@ class TestSysConfiguration:
         )
 
 
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
