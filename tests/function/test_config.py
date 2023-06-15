@@ -515,7 +515,8 @@ class TestConfiguration:
             # run virt-who with http_proxy/https_proxy setting
             globalconf.update("system_environment", proxy, proxy_data[proxy])
             result = virtwho.run_service()
-            logger.info("=== AHV: failed with the bz1992619 ===")
+            if HYPERVISOR == "ahv":
+                logger.info("=== AHV: failed with bz1992619 ===")
             assert (
                 result["error"] == 0
                 and result["send"] == 1
@@ -529,7 +530,8 @@ class TestConfiguration:
             # run virt-who with unreachable http_proxy/https_proxy setting
             globalconf.update("system_environment", proxy, proxy_data[f"bad_{proxy}"])
             result = virtwho.run_service()
-            logger.info("=== Kubevirt/Hyperv/Libvirt: failed with the bz2175098 ===")
+            if HYPERVISOR in ("kubvirt", "hyperv", "libvirt"):
+                logger.info("=== Kubevirt/Hyperv/Libvirt: failed with bz2175098 ===")
             assert result["error"] in (1, 2)
             assert any(
                 error_msg in result["error_msg"] for error_msg in proxy_data["error"]
@@ -544,7 +546,7 @@ class TestConfiguration:
 
             globalconf.delete("system_environment")
 
-        logger.info("=== All Hypervisors: failed with the bz1989354 ===")
+        logger.info("=== All Hypervisors: failed with bz1989354 ===")
         assert connection_msg in bz1989354_test and proxy_msg in bz1989354_test
 
 
