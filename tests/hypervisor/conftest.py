@@ -281,7 +281,9 @@ def libvirt_assertion():
     :return:
     """
     login_error = "fails with error: Cannot recv data"
-    server_disable_error = "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
+    server_disable_error = (
+        "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
+    )
     if "RHEL-9" in RHEL_COMPOSE:
         server_disable_error = "Cannot use direct socket mode if no URI is set"
     data = {
