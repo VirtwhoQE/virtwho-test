@@ -112,6 +112,7 @@ class TestHypervisorPositive:
             assert satellite.associate_on_webui(host_name, guest_hostname)
 
     @pytest.mark.tier1
+    @pytest.mark.notLocal
     def test_mapping_info(
         self,
         virtwho,
@@ -369,7 +370,7 @@ class TestHypervisorPositive:
             result["error"] is not 0
             and result["send"] == 0
             and result["thread"] == 1
-            and error_msg in result["error_msg"]
+            and error_msg in result["log"]
         )
 
         # re-register host and run virt-who
@@ -379,7 +380,7 @@ class TestHypervisorPositive:
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # delete hypervisor from webui
-        if HYPERVISOR is not "local":
+        if HYPERVISOR != "local":
             if REGISTER == "rhsm":
                 rhsm.host_delete(host_name)
             else:
