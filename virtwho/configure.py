@@ -71,7 +71,7 @@ class VirtwhoHypervisorConfig:
                 self.update("username", self.hypervisor.username)
                 self.update("password", self.hypervisor.password)
             self.update("owner", self.register.default_org)
-        if rhsm is True:
+        if rhsm is True and HYPERVISOR != "local":
             self.update("rhsm_hostname", self.register.server)
             self.update("rhsm_username", self.register.username)
             self.update("rhsm_password", self.register.password)

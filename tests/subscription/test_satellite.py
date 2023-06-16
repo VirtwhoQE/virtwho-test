@@ -194,6 +194,8 @@ class TestSatelliteScaDisable:
             and consumed_data["temporary"] is True
         )
 
+        if HYPERVISOR == "local":
+            sm_host.register()
         _ = virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
 
@@ -384,7 +386,7 @@ class TestSatelliteScaDisable:
 
     @pytest.mark.tier2
     def test_guest_auto_attach_temporary_pool_by_activation_key(
-        self, virtwho, sm_guest_ack, satellite, hypervisor_data
+        self, virtwho, sm_guest_ack, satellite, hypervisor_data, sm_host
     ):
         """Test the guest can auto attach temporary sku when registering with
             activation key
@@ -424,12 +426,15 @@ class TestSatelliteScaDisable:
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data["temporary"] is True
 
+        if HYPERVISOR == "local":
+            sm_host.register()
         _ = virtwho.run_cli()
         sm_guest_ack.refresh()
         consumed_data = sm_guest_ack.consumed(vdc_virtual_sku)
         assert consumed_data["temporary"] is False
 
     @pytest.mark.tier2
+    @pytest.mark.notLocal
     def test_non_default_org_with_rhsm_options(
         self,
         virtwho,
@@ -500,6 +505,7 @@ class TestSatelliteScaDisable:
             satellite_second_org.host_delete(host=hypervisor_hostname)
 
     @pytest.mark.tier2
+    @pytest.mark.notLocal
     def test_non_default_org_without_rhsm_options(
         self,
         virtwho,
@@ -609,7 +615,8 @@ class TestSatelliteScaDisable:
             hypervisor_name = [key, key.lower()]
 
         # check the subscription without virtual vdc pool attached for guest
-        satellite.host_delete(host=hypervisor_hostname)
+        if HYPERVISOR != "local":
+            satellite.host_delete(host=hypervisor_hostname)
         _ = virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
         vdc_virt_data = sm_guest.available(vdc_virtual_sku, "Virtual")
@@ -628,7 +635,7 @@ class TestSatelliteScaDisable:
             and subscription["consumed"] == 0
         )
 
-        # check the subscription without virtual vdc pool attached for guest
+        # check the subscription with virtual vdc pool attached for guest
         sm_guest.refresh()
         sm_guest.attach(pool=vdc_virt_pool)
         for i in range(3):
