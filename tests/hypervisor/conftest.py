@@ -281,6 +281,11 @@ def libvirt_assertion():
     :return:
     """
     login_error = "fails with error: Cannot recv data"
+    server_disable_error = (
+        "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
+    )
+    if "RHEL-9" in RHEL_COMPOSE:
+        server_disable_error = "Cannot use direct socket mode if no URI is set"
     data = {
         "type": {
             "invalid": {
@@ -298,7 +303,7 @@ def libvirt_assertion():
                 "红帽€467aa": "internal error: Unable to parse URI qemu+ssh",
                 "": "Cannot recv data: Host key verification failed.",
             },
-            "disable": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
+            "disable": server_disable_error,
         },
         "username": {
             "invalid": {

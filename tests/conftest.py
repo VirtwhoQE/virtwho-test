@@ -83,6 +83,18 @@ def class_debug_true(globalconf):
     globalconf.update("global", "debug", "true")
 
 
+@pytest.fixture(scope="function")
+def function_debug_true(globalconf):
+    """Set the debug=True in /etc/virt-who.conf"""
+    globalconf.update("global", "debug", "true")
+
+
+@pytest.fixture(scope="function")
+def function_debug_false(globalconf):
+    """Set the debug=False in /etc/virt-who.conf"""
+    globalconf.update("global", "debug", "false")
+
+
 @pytest.fixture(scope="session")
 def virtwho():
     """Instantication of class VirtwhoRunner()"""

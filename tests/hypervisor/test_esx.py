@@ -1172,7 +1172,7 @@ class TestEsxNegative:
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier2
-    @pytest.mark.notStage
+    @pytest.mark.notRHSM
     def test_hypervisors_fqdn(
         self, virtwho, function_hypervisor, hypervisor_data, satellite, ssh_host
     ):

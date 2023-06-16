@@ -10,6 +10,7 @@ import pytest
 
 from virtwho import REGISTER
 from virtwho import HYPERVISOR
+from virtwho import logger
 
 from virtwho.base import hostname_get
 from virtwho.configure import hypervisor_create
@@ -17,7 +18,7 @@ from virtwho.configure import hypervisor_create
 
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
-@pytest.mark.usefixtures("class_debug_true")
+@pytest.mark.usefixtures("function_debug_true")
 @pytest.mark.usefixtures("class_globalconf_clean")
 class TestHypervisorPositive:
     @pytest.mark.tier1
@@ -243,7 +244,12 @@ class TestHypervisorPositive:
     @pytest.mark.notRHEL8
     @pytest.mark.notLocal
     def test_virtwho_status(
-        self, virtwho, function_hypervisor, hypervisor_data, register_data
+        self,
+        virtwho,
+        function_hypervisor,
+        hypervisor_data,
+        register_data,
+        function_debug_false,
     ):
         """
         :title: virt-who: hypervisor: test the virtwho status
@@ -269,14 +275,14 @@ class TestHypervisorPositive:
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 0
 
         # Check '#virt-who --status' with good configuration
-        result = virtwho.run_cli(oneshot=False, status=True)
+        result = virtwho.run_cli(oneshot=False, debug=False, status=True)
         assert (
             "success" in result[function_hypervisor.section]["source_status"]
             and "success" in result[function_hypervisor.section]["destination_status"]
         )
 
         # Check #virt-who --status --json
-        result = virtwho.run_cli(oneshot=False, status=True, jsn=True)
+        result = virtwho.run_cli(oneshot=False, debug=False, status=True, jsn=True)
         if "libvirt" in HYPERVISOR:
             source_connection = f"qemu+ssh://root@{hypervisor_data['hypervisor_server']}/system?no_tty=1"
         elif "esx" in HYPERVISOR:
@@ -309,7 +315,9 @@ class TestHypervisorPositive:
             option = "server"
         function_hypervisor.update(option, "xxx")
         function_hypervisor.update("owner", "xxx")
-        result = virtwho.run_cli(oneshot=False, status=True, jsn=True)
+        result = virtwho.run_cli(oneshot=False, debug=False, status=True, jsn=True)
+        if HYPERVISOR == "ahv":
+            logger.info("=== AHV: failed with bz2177721 ===")
         assert (
             result[function_hypervisor.section]["source"]["status"] == "failure"
             and result[function_hypervisor.section]["destination"]["status"]
