@@ -254,6 +254,9 @@ class TestLibvirtNegative:
         )
 
         # type option is null but another config is ok
+        hypervisor_create(
+            HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
+        )
         function_hypervisor.update("type", "")
         result = virtwho.run_service()
         assert result["send"] == 1 and result["thread"] == 1
