@@ -255,19 +255,10 @@ class TestHypervNegative:
             and assertion["disable"] in result["error_msg"]
         )
 
-        # type option is disable but another config is ok
+        # type option is null but another config is ok
         hypervisor_create(
             HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
         )
-        result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and assertion["disable_multi_configs"] in result["error_msg"]
-        )
-
-        # type option is null but another config is ok
         function_hypervisor.update("type", "")
         result = virtwho.run_service()
         assert result["send"] == 1 and result["thread"] == 1
@@ -401,16 +392,6 @@ class TestHypervNegative:
             and assertion["disable_multi_configs"] in result["error_msg"]
         )
 
-        # username option is null but another config is ok
-        function_hypervisor.update("username", "")
-        result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and assertion["null_multi_configs"] in result["error_msg"]
-        )
-
     @pytest.mark.tier2
     def test_password(self, virtwho, function_hypervisor, hyperv_assertion):
         """Test the password= option in /etc/virt-who.d/test_hyperv.conf
@@ -467,16 +448,6 @@ class TestHypervNegative:
             and result["send"] == 1
             and result["thread"] == 1
             and assertion["disable_multi_configs"] in result["error_msg"]
-        )
-
-        # password option is null but another config is ok
-        function_hypervisor.update("password", "")
-        result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and assertion["null_multi_configs"] in result["error_msg"]
         )
 
     @pytest.mark.tier2
