@@ -10,7 +10,7 @@ sys.path.append(os.path.split(rootPath)[0])
 from virtwho import logger, FailException
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
-from virtwho.base import host_ping, rhel_compose_repo, system_init, rhel_version
+from virtwho.base import ssh_connect, rhel_compose_repo, system_init, rhel_version
 from virtwho.base import url_validation, url_file_download, hostname_get
 from virtwho.base import ipaddr_get
 from utils.parse_ci_message import umb_ci_message_parser
@@ -31,10 +31,16 @@ def provision_virtwho_host(args):
     if args.gating_msg:
         msg = umb_ci_message_parser(args)
         args.virtwho_pkg_url = msg["pkg_url"]
-        if "el9" in msg["pkg_nvr"] and host_ping(config.gating.host_el9):
-            args.server = config.gating.host_el9
-        if "el8" in msg["pkg_nvr"] and host_ping(config.gating.host_el9):
-            args.server = config.gating.host_el8
+        gating_stable_server = config.gating.host_el9
+        if "el8" in msg["pkg_nvr"]:
+            gating_stable_server = config.gating.host_el8
+        ssh_gating_server = SSHConnect(
+            host=gating_stable_server,
+            user=args.username,
+            pwd=args.password,
+        )
+        if ssh_connect(ssh_gating_server):
+            args.server = gating_stable_server
 
         if not args.rhel_compose:
             args.rhel_compose = rhel_latest_compose(msg["rhel_release"])
