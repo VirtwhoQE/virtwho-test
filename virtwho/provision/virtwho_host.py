@@ -256,7 +256,7 @@ def local_mode_guest_add(ssh):
         )
     else:
         local.guest_start(guest_name)
-    time.sleep(15)
+    time.sleep(60)
     return local.guest_search(guest_name)
 
 
