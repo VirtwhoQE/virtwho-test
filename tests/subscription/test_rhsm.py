@@ -9,7 +9,7 @@
 import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config
-from virtwho import HYPERVISOR, FAKE_CONFIG_FILE
+from virtwho import HYPERVISOR, FAKE_CONFIG_FILE, logger
 from virtwho.configure import hypervisor_create
 
 vdc_physical_sku = config.sku.vdc
@@ -30,7 +30,7 @@ class TestRhsmScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool by pool id
 
-        :title: virt-who: rhsm: test guest attach virtual vdc pool by pool id
+        :title: virt-who: rhsm: [sca/disable] test guest attach virtual vdc pool by pool id
         :id: 39717357-eadb-4ac7-bf44-2b323cda3717
         :caseimportance: High
         :tags: subscription,rhsm,tier1
@@ -82,7 +82,7 @@ class TestRhsmScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool by auto
 
-        :title: virt-who: rhsm: test guest attach virtual vdc pool by auto
+        :title: virt-who: rhsm: [sca/disable] test guest attach virtual vdc pool by auto
         :id: d082e0c1-e925-46ea-8ab1-d65355709f55
         :caseimportance: High
         :tags: subscription,rhsm,tier1
@@ -140,7 +140,7 @@ class TestRhsmScaDisable:
     ):
         """Test the temporary vdc pool in guest
 
-        :title: virt-who: rhsm: test temporary vdc pool in guest
+        :title: virt-who: rhsm: [sca/disable] test temporary vdc pool in guest
         :id: d1c42adf-dee5-42bf-80b6-017948e77baf
         :caseimportance: High
         :tags: subscription,rhsm,tier1
@@ -217,8 +217,7 @@ class TestRhsmScaDisable:
         """Test vdc physcial pool consumed status in physical host when
             set cpu_socket(s).
 
-        :title: virt-who: rhsm: test physcial vdc pool consumed status in
-            physical host
+        :title: virt-who: rhsm: [sca/disable] test physcial vdc pool consumed status in physical host
         :id: cbf0e07b-c51c-4e6d-9c80-07c2c8dd7692
         :caseimportance: High
         :tags: subscription,rhsm,tier1
@@ -276,7 +275,7 @@ class TestRhsmScaDisable:
         """Test vdc virtual pool consumed status in guest when
             set cpu_socket(s).
 
-        :title: virt-who: rhsm: test vdc virtual pool consumed status in guest
+        :title: virt-who: rhsm: [sca/disable] test vdc virtual pool consumed status in guest
         :id: 93af0dad-21e6-4732-8a06-2fb2e86a05a3
         :caseimportance: High
         :tags: subscription,rhsm,tier2
@@ -330,7 +329,7 @@ class TestRhsmScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool in fake mode
 
-        :title: virt-who: rhsm: test guest attach virtual vdc pool in fake mode
+        :title: virt-who: rhsm: [sca/disable] test guest attach virtual vdc pool in fake mode
         :id: f97afcd8-2b23-4754-8c40-a70605009e8f
         :caseimportance: High
         :tags: subscription,rhsm,tier2
@@ -384,20 +383,101 @@ class TestRhsmScaDisable:
         assert consumed_data is None
 
 
-# @pytest.mark.usefixtures("module_rhsm_sca_recover")
-# @pytest.mark.usefixtures("class_globalconf_clean")
-# @pytest.mark.usefixtures("class_hypervisor")
-# @pytest.mark.usefixtures("class_guest_register")
-# @pytest.mark.usefixtures("function_guest_unattach")
-# @pytest.mark.usefixtures("function_host_register_for_local_mode")
-# @pytest.mark.usefixtures("class_rhsm_sca_enable")
-# class TestRhsmScaEnable:
+@pytest.mark.usefixtures("module_rhsm_sca_recover")
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_guest_register")
+@pytest.mark.usefixtures("function_guest_unattach")
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
+@pytest.mark.usefixtures("class_rhsm_sca_enable")
+class TestRhsmScaEnable:
+    @pytest.mark.tier1
+    def test_hypervisor_entitlement_status(
+            self, virtwho, hypervisor_data, rhsm, vdc_pool_physical
+    ):
+        """Test the hypervisor entitlement status.
+
+        :title: virt-who: rhsm: [sca/enable] test hypervisor entitlement status
+        :id:
+        :caseimportance: High
+        :tags: subscription,rhsm,tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. run virt-who to report mappings
+            2. try to auto-attach subscription for hypervisor
+
+        :expectedresults:
+
+            get the 'This host's organization is in Simple Content Access
+                mode. Auto-attach is disabled'
+        """
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        result = virtwho.run_cli()
+        assert result["send"] == 1 and result["error"] == 0
+
+        logger.info("=== RHSM has bz2017774, skip the checking tempoparily ===")
+        rhsm.attach(host_name=hypervisor_hostname, pool=vdc_pool_physical)
+
+    @pytest.mark.tier1
+    def test_guest_entitlement_status(
+        self,
+        virtwho,
+        ssh_guest,
+        sm_guest,
+        function_guest_register,
+        hypervisor_data,
+        rhsm,
+        vdc_pool_physical
+    ):
+        """
+
+        :title: virt-who: rhsm: [sca/enable] test guest entitlement status
+        :id:
+        :caseimportance: High
+        :tags: subscription,rhsm,tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. register guest
+            2. check the #subscription-manager status
+            3. try to auto-attach subscription for guest
+            4. try to attach subscription for guest by rhsm web
+
+        :expectedresults:
+
+            2. get the output with 'Content Access Mode is set to Simple Content
+                Access' by #subscription-manager status
+            3. get the 'This host's organization is in Simple Content Access
+                mode. Auto-attach is disabled'
+        """
+        guest_hostname = hypervisor_data["guest_hostname"]
+        virtwho.run_cli()
+
+        ret, output = ssh_guest.runcmd("subscription-manager status")
+        msg = "Content Access Mode is set to Simple Content Access. This host has access to content, regardless of subscription status."
+        assert msg_search(output, msg)
+
+        output = sm_guest.attach(pool=vdc_pool_physical)
+        msg = "Attaching subscriptions is disabled .* because Simple Content Access .* is enabled."
+        assert msg_search(output, msg)
+
+        logger.info("=== RHSM has bz2017774, skip the checking tempoparily ===")
+        rhsm.attach(host_name=guest_hostname, pool=vdc_pool_physical)
 
 
 @pytest.fixture(scope="class")
 def class_rhsm_sca_disable(rhsm):
     """Disable sca mode for stage candlepin"""
     rhsm.sca(sca="disable")
+
+
+@pytest.fixture(scope="class")
+def class_rhsm_sca_enable(rhsm):
+    """Enable sca mode for stage candlepin"""
+    rhsm.sca(sca="enable")
 
 
 @pytest.fixture(scope="module")

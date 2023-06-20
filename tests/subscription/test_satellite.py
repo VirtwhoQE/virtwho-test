@@ -10,7 +10,7 @@ import time
 import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config
-from virtwho import HYPERVISOR, FAKE_CONFIG_FILE
+from virtwho import HYPERVISOR, FAKE_CONFIG_FILE, logger
 from virtwho.configure import hypervisor_create
 from virtwho.configure import get_hypervisor_handler
 from virtwho.register import SubscriptionManager, Satellite
@@ -41,7 +41,7 @@ class TestSatelliteScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool by pool id
 
-        :title: virt-who: satellite: test guest attach virtual vdc pool by pool id
+        :title: virt-who: satellite: [sca/disable] test guest attach virtual vdc pool by pool id
         :id: 38e213ef-70cc-445a-85b2-8f9639064f12
         :caseimportance: High
         :tags: subscription,satellite,tier1
@@ -93,7 +93,7 @@ class TestSatelliteScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool by auto
 
-        :title: virt-who: satellite: test guest attach virtual vdc pool by auto
+        :title: virt-who: satellite: [sca/disable] test guest attach virtual vdc pool by auto
         :id: 812aac00-5b4d-4307-bb4e-bdd774330128
         :caseimportance: High
         :tags: subscription,satellite,tier1
@@ -151,7 +151,7 @@ class TestSatelliteScaDisable:
     ):
         """Test the temporary vdc pool in guest
 
-        :title: virt-who: satellite: test temporary vdc pool in guest
+        :title: virt-who: satellite: [sca/disable] test temporary vdc pool in guest
         :id: 733ce7d0-bb51-4d80-87cc-a5ee5fbdf542
         :caseimportance: High
         :tags: subscription,satellite,tier1
@@ -223,8 +223,7 @@ class TestSatelliteScaDisable:
     ):
         """Test the guest can get and attach the virtual vdc pool in fake mode
 
-        :title: virt-who: satellite: test guest attach virtual vdc pool in
-            fake mode
+        :title: virt-who: satellite: [sca/disable] test guest attach virtual vdc pool in fake mode
         :id: 164f2d20-d357-4f25-a0e4-f5260012a266
         :caseimportance: High
         :tags: subscription,satellite,tier1
@@ -291,7 +290,7 @@ class TestSatelliteScaDisable:
     ):
         """Test the guest register by activation_key
 
-        :title: virt-who: satellite: test guest attach rule by activation_key
+        :title: virt-who: satellite: [sca/disable] test guest attach rule by activation_key
         :id: 6d0e169c-74a7-41a0-a97a-81e084f0aabf
         :caseimportance: High
         :tags: subscription,satellite,tier2
@@ -397,8 +396,7 @@ class TestSatelliteScaDisable:
         """Test the guest can auto attach temporary sku when registering with
             activation key
 
-        :title: virt-who: satellite: test guest auto attach temporay sku with
-            activation key
+        :title: virt-who: satellite: [sca/disable] test guest auto attach temporay sku with activation key
         :id: ae58e185-3e78-4c3d-90fb-c5bd1ff01382
         :caseimportance: Medium
         :tags: subscription,satellite,tier2
@@ -461,7 +459,7 @@ class TestSatelliteScaDisable:
     ):
         """
 
-        :title: virt-who: satellite: test non-default org with rhsm options
+        :title: virt-who: satellite: [sca/disable] test non-default org with rhsm options
         :id: c372adf9-645e-4b79-9bcd-af462e5be03a
         :caseimportance: High
         :tags: subscription,satellite,tier2
@@ -533,8 +531,7 @@ class TestSatelliteScaDisable:
     ):
         """
 
-        :title: virt-who: satellite: test the non-default org without
-            rhsm options
+        :title: virt-who: satellite: [sca/disable] test the non-default org without rhsm options
         :id: e6702ccb-d0ad-4215-9503-cf973c14b31c
         :caseimportance: High
         :tags: subscription,satellite,tier2
@@ -600,7 +597,7 @@ class TestSatelliteScaDisable:
     ):
         """Test the virtual vdc content subscriptions on satellite webui
 
-        :title: virt-who: satellite: test vdc virtual subscriptions on webui
+        :title: virt-who: satellite: [sca/disable] test vdc virtual subscriptions on webui
         :id: 5c71d37c-b5e2-4789-87f6-24357a96819b
         :caseimportance: Medium
         :tags: subscription,satellite,tier2
@@ -694,15 +691,83 @@ class TestSatelliteScaDisable:
     #     assert register_by == 'admin'
 
 
-# @pytest.mark.usefixtures("module_satellite_sca_recover")
-# @pytest.mark.usefixtures("class_hypervisor")
-# @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
-# @pytest.mark.usefixtures("class_globalconf_clean")
-# @pytest.mark.usefixtures("function_guest_unattach")
-# @pytest.mark.usefixtures("class_guest_register")
-# @pytest.mark.usefixtures("function_host_register_for_local_mode")
-# @pytest.mark.usefixtures("class_satellite_sca_enable")
-# class TestSatelliteScaEnable:
+@pytest.mark.usefixtures("module_satellite_sca_recover")
+@pytest.mark.usefixtures("class_hypervisor")
+@pytest.mark.usefixtures("class_virtwho_d_conf_clean")
+@pytest.mark.usefixtures("class_globalconf_clean")
+@pytest.mark.usefixtures("function_guest_unattach")
+@pytest.mark.usefixtures("class_guest_register")
+@pytest.mark.usefixtures("function_host_register_for_local_mode")
+@pytest.mark.usefixtures("class_satellite_sca_enable")
+class TestSatelliteScaEnable:
+    @pytest.mark.tier1
+    def test_hypervisor_entitlement_status(self, virtwho, hypervisor_data, satellite, vdc_pool_physical):
+        """Test the hypervisor entitlement status.
+
+        :title: virt-who: satellite: [sca/enable] test hypervisor entitlement status
+        :id:
+        :caseimportance: High
+        :tags: subscription,satellite,tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. run virt-who to report mappings
+            2. try to auto-attach subscription for hypervisor
+
+        :expectedresults:
+
+            get the 'This host's organization is in Simple Content Access
+                mode. Auto-attach is disabled'
+        """
+        hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
+        result = virtwho.run_cli()
+        assert result["send"] == 1 and result["error"] == 0
+
+        msg ="This host's organization is in Simple Content Access mode. Attaching subscriptions is disabled."
+        result = satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
+        assert msg_search(result, msg)
+
+    @pytest.mark.tier1
+    def test_guest_entitlement_status(
+        self, virtwho, ssh_guest, sm_guest, function_guest_register, hypervisor_data, satellite, vdc_pool_physical
+    ):
+        """
+
+        :title: virt-who: satellite: [sca/enable] test guest entitlement status
+        :id:
+        :caseimportance: High
+        :tags: subscription,rhsm,tier1
+        :customerscenario: false
+        :upstream: no
+        :steps:
+
+            1. register guest
+            2. check the #subscription-manager status
+            3. try to auto-attach subscription for guest
+            4. try to attach subscription for guest by satellite web
+
+        :expectedresults:
+
+            2. get the output with 'Content Access Mode is set to Simple Content
+                Access' by #subscription-manager status
+            3. get the 'This host's organization is in Simple Content Access
+                mode. Auto-attach is disabled'
+        """
+        guest_hostname = hypervisor_data["guest_hostname"]
+        # virtwho.run_cli()
+
+        ret, output = ssh_guest.runcmd("subscription-manager status")
+        msg = "Content Access Mode is set to Simple Content Access"
+        assert msg_search(output, msg)
+
+        output = sm_guest.attach(pool=vdc_pool_physical)
+        msg = "Attaching subscriptions is disabled .* because Simple Content Access .* is enabled."
+        assert msg_search(output, msg)
+
+        msg = "This host's organization is in Simple Content Access mode. Attaching subscriptions is disabled."
+        result = satellite.attach(host=guest_hostname, pool=vdc_pool_physical)
+        assert msg in result
 
 
 @pytest.fixture(scope="class")
@@ -769,6 +834,12 @@ def satellite_second_org():
 def class_satellite_sca_disable(satellite):
     """Disable sca mode for default org"""
     satellite.sca(org=None, sca="disable")
+
+
+@pytest.fixture(scope="class")
+def class_satellite_sca_enable(satellite):
+    """Enable sca mode for default org"""
+    satellite.sca(org=None, sca="enable")
 
 
 @pytest.fixture(scope="module")
