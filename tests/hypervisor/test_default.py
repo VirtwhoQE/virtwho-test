@@ -79,7 +79,7 @@ class TestHypervisorPositive:
 
     @pytest.mark.tier1
     def test_associated_info_by_rhsmlog_and_webui(
-        self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite
+        self, virtwho, function_hypervisor, hypervisor_data, rhsm, satellite, register_data
     ):
         """
         :title: virt-who: hypervisor: check associated info by rhsm.log and webui
@@ -99,12 +99,15 @@ class TestHypervisorPositive:
         host_name = hypervisor_data["hypervisor_hostname"]
         guest_uuid = hypervisor_data["guest_uuid"]
         guest_hostname = hypervisor_data["guest_hostname"]
+        default_org = register_data["default_org"]
 
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # check host-to-guest association in rhsm.log
-        assert guest_uuid in result["log"]
+        mappings = result["mappings"]
+        associated_hypervisor_in_mapping = mappings[default_org][guest_uuid]["guest_hypervisor"]
+        assert associated_hypervisor_in_mapping == host_name
 
         # check host-to-guest association in webui
         if REGISTER == "rhsm":
