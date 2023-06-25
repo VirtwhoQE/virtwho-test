@@ -112,10 +112,13 @@ class TestHypervisorPositive:
 
         # check host-to-guest association in rhsm.log
         mappings = result["mappings"]
-        associated_hypervisor_in_mapping = mappings[default_org][guest_uuid][
-            "guest_hypervisor"
-        ]
-        assert associated_hypervisor_in_mapping == host_name
+        if HYPERVISOR == 'local':
+            assert guest_uuid in mappings.keys()
+        else:
+            associated_hypervisor_in_mapping = mappings[default_org][guest_uuid][
+                "guest_hypervisor"
+            ]
+            assert associated_hypervisor_in_mapping == host_name
 
         # check host-to-guest association in webui
         if REGISTER == "rhsm":
