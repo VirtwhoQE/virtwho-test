@@ -29,7 +29,7 @@ if "RHEL-8" in RHEL_COMPOSE:
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 class TestUpgradeDowngrade:
     @pytest.mark.tier1
-    def test_upgrade_downgrade_by_yum(self, ssh_host, virtwho, globalconf):
+    def test_upgrade_downgrade_by_yum(self, ssh_host, virtwho, globalconf, rhsm):
         """Test virt-who upgrade/downgrade by yum
 
         :title: virt-who: package: upgrade/downgrade by yum
@@ -63,6 +63,7 @@ class TestUpgradeDowngrade:
                 compose_path=old_compose_path,
             )
             # downgrade virt-who to check the configurations not change.
+            rhsm.sca(sca="disable")
             package_downgrade(ssh_host, "virt-who")
             result = virtwho.run_service()
             assert (
