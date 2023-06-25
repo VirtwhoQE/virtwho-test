@@ -10,7 +10,7 @@ import time
 import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config
-from virtwho import HYPERVISOR, FAKE_CONFIG_FILE, logger
+from virtwho import HYPERVISOR, FAKE_CONFIG_FILE
 from virtwho.configure import hypervisor_create
 from virtwho.configure import get_hypervisor_handler
 from virtwho.register import SubscriptionManager, Satellite
