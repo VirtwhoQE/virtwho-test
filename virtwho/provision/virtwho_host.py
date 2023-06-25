@@ -12,7 +12,7 @@ from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 from virtwho.base import ssh_connect, rhel_compose_repo, system_init, rhel_version
 from virtwho.base import url_validation, url_file_download, hostname_get
-from virtwho.base import ipaddr_get
+from virtwho.base import ipaddr_get, random_string
 from utils.parse_ci_message import umb_ci_message_parser
 from utils.beaker import install_rhel_by_beaker
 from utils.properties_update import virtwho_ini_props_update
@@ -263,7 +263,23 @@ def local_mode_guest_add(ssh):
     else:
         local.guest_start(guest_name)
     time.sleep(60)
-    return local.guest_search(guest_name)
+    guest_info = local.guest_search(guest_name)
+    ssh_guest = SSHConnect(
+        host=guest_info["guest_ip"],
+        user=config.local.guest_username,
+        pwd=config.local.guest_password,
+        )
+    hostname = hostname_get(ssh_guest)
+    if (
+            "localhost" in hostname
+            or "unused" in hostname
+            or "openshift" in hostname
+            or hostname is None
+    ):
+        hostname = "local-libvirt-vm-" + random_string()
+        ssh_guest.runcmd(f"hostnamectl set-hostname {hostname}")
+        ssh_guest.runcmd(f"echo '{hostname}' > /etc/hostname")
+    return guest_info
 
 
 def libvirt_pkg_install(ssh):
