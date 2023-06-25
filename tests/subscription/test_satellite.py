@@ -701,7 +701,9 @@ class TestSatelliteScaDisable:
 @pytest.mark.usefixtures("class_satellite_sca_enable")
 class TestSatelliteScaEnable:
     @pytest.mark.tier1
-    def test_hypervisor_entitlement_status(self, virtwho, hypervisor_data, satellite, vdc_pool_physical):
+    def test_hypervisor_entitlement_status(
+        self, virtwho, hypervisor_data, satellite, vdc_pool_physical
+    ):
         """Test the hypervisor entitlement status.
 
         :title: virt-who: satellite: [sca/enable] test hypervisor entitlement status
@@ -724,13 +726,20 @@ class TestSatelliteScaEnable:
         result = virtwho.run_cli()
         assert result["send"] == 1 and result["error"] == 0
 
-        msg ="This host's organization is in Simple Content Access mode. Attaching subscriptions is disabled."
+        msg = "This host's organization is in Simple Content Access mode. Attaching subscriptions is disabled."
         result = satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
         assert msg_search(result, msg)
 
     @pytest.mark.tier1
     def test_guest_entitlement_status(
-        self, virtwho, ssh_guest, sm_guest, function_guest_register, hypervisor_data, satellite, vdc_pool_physical
+        self,
+        virtwho,
+        ssh_guest,
+        sm_guest,
+        function_guest_register,
+        hypervisor_data,
+        satellite,
+        vdc_pool_physical,
     ):
         """
 

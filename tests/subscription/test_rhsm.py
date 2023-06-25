@@ -393,7 +393,7 @@ class TestRhsmScaDisable:
 class TestRhsmScaEnable:
     @pytest.mark.tier1
     def test_hypervisor_entitlement_status(
-            self, virtwho, hypervisor_data, rhsm, vdc_pool_physical
+        self, virtwho, hypervisor_data, rhsm, vdc_pool_physical
     ):
         """Test the hypervisor entitlement status.
 
@@ -429,7 +429,7 @@ class TestRhsmScaEnable:
         function_guest_register,
         hypervisor_data,
         rhsm,
-        vdc_pool_physical
+        vdc_pool_physical,
     ):
         """
 
