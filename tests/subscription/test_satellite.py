@@ -715,12 +715,12 @@ class TestSatelliteScaEnable:
         :steps:
 
             1. run virt-who to report mappings
-            2. try to auto-attach subscription for hypervisor
+            2. try to attach vdc sku for hypervisor
 
         :expectedresults:
 
-            get the 'This host's organization is in Simple Content Access
-                mode. Auto-attach is disabled'
+            get the 'This host's organization is in Simple Content Access mode.
+            Attaching subscriptions is disabled.'
         """
         hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         result = virtwho.run_cli()
@@ -753,15 +753,16 @@ class TestSatelliteScaEnable:
 
             1. register guest
             2. check the #subscription-manager status
-            3. try to auto-attach subscription for guest
-            4. try to attach subscription for guest by satellite web
+            3. try to attach vdc sku for guest by terminal
+            4. try to attach vdc sku for guest by satellite web
 
         :expectedresults:
 
-            2. get the output with 'Content Access Mode is set to Simple Content
-                Access' by #subscription-manager status
-            3. get the 'This host's organization is in Simple Content Access
-                mode. Auto-attach is disabled'
+            2. get the output with 'Content Access Mode is set to Simple Content Access'
+            3. get the 'Attaching subscriptions is disabled .* because Simple Content
+            Access .* is enabled'
+            4. get the 'This host's organization is in Simple Content Access mode.
+            Attaching subscriptions is disabled.'
         """
         guest_hostname = hypervisor_data["guest_hostname"]
         # virtwho.run_cli()

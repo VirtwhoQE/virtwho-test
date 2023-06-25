@@ -406,12 +406,11 @@ class TestRhsmScaEnable:
         :steps:
 
             1. run virt-who to report mappings
-            2. try to auto-attach subscription for hypervisor
+            2. try to attach vdc sku for hypervisor
 
         :expectedresults:
 
-            get the 'This host's organization is in Simple Content Access
-                mode. Auto-attach is disabled'
+            failed to attach any sku with sca enabled. bz2017774 exists for rhsm.
         """
         hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
         result = virtwho.run_cli()
@@ -443,15 +442,16 @@ class TestRhsmScaEnable:
 
             1. register guest
             2. check the #subscription-manager status
-            3. try to auto-attach subscription for guest
-            4. try to attach subscription for guest by rhsm web
+            3. try to attach vdc sku for guest by terminal
+            4. try to attach vdc sku for guest by rhsm web
 
         :expectedresults:
 
-            2. get the output with 'Content Access Mode is set to Simple Content
-                Access' by #subscription-manager status
-            3. get the 'This host's organization is in Simple Content Access
-                mode. Auto-attach is disabled'
+            2. get the output with 'Content Access Mode is set to Simple Content Access.
+            This host has access to content, regardless of subscription status'
+            3. get the 'Attaching subscriptions is disabled .* because Simple Content
+            Access .* is enabled.'
+            4. failed to attach any sku with sca enabled. bz2017774 exists for rhsm.
         """
         guest_hostname = hypervisor_data["guest_hostname"]
         virtwho.run_cli()
