@@ -268,13 +268,13 @@ def local_mode_guest_add(ssh):
         host=guest_info["guest_ip"],
         user=config.local.guest_username,
         pwd=config.local.guest_password,
-        )
+    )
     hostname = hostname_get(ssh_guest)
     if (
-            "localhost" in hostname
-            or "unused" in hostname
-            or "openshift" in hostname
-            or hostname is None
+        "localhost" in hostname
+        or "unused" in hostname
+        or "openshift" in hostname
+        or hostname is None
     ):
         hostname = "local-libvirt-vm-" + random_string()
         ssh_guest.runcmd(f"hostnamectl set-hostname {hostname}")
