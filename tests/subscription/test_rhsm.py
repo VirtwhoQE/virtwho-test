@@ -398,7 +398,7 @@ class TestRhsmScaEnable:
         """Test the hypervisor entitlement status.
 
         :title: virt-who: rhsm: [sca/enable] test hypervisor entitlement status
-        :id:
+        :id: c505edb4-9afa-401f-bc3d-f562d8081955
         :caseimportance: High
         :tags: subscription,rhsm,tier1
         :customerscenario: false
@@ -434,7 +434,7 @@ class TestRhsmScaEnable:
         """
 
         :title: virt-who: rhsm: [sca/enable] test guest entitlement status
-        :id:
+        :id: 20c09b1b-f23e-4691-b927-ed5262c188da
         :caseimportance: High
         :tags: subscription,rhsm,tier1
         :customerscenario: false

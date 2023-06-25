@@ -707,7 +707,7 @@ class TestSatelliteScaEnable:
         """Test the hypervisor entitlement status.
 
         :title: virt-who: satellite: [sca/enable] test hypervisor entitlement status
-        :id:
+        :id: bda68020-b17e-4442-bcfd-91537e9499e1
         :caseimportance: High
         :tags: subscription,satellite,tier1
         :customerscenario: false
@@ -744,7 +744,7 @@ class TestSatelliteScaEnable:
         """
 
         :title: virt-who: satellite: [sca/enable] test guest entitlement status
-        :id:
+        :id: fcbb4e43-da1e-49c8-a454-0f0979a7717a
         :caseimportance: High
         :tags: subscription,rhsm,tier1
         :customerscenario: false
