@@ -21,6 +21,7 @@ def satellite_deploy(args):
     """
     sat_ver = args.version
     sat_repo = args.repo
+    snap_ver = args.snap
     rhel_ver = args.rhel_compose.split("-")[1].split(".")[0]
     ssh = SSHConnect(host=args.server, user=args.ssh_username, pwd=args.ssh_password)
     system_init(ssh, "satellite")
@@ -47,7 +48,7 @@ def satellite_deploy(args):
             password=args.ssh_password,
             register_type="rhsm",
         )
-        satellite_repo_enable(sm, ssh, rhel_ver, sat_ver)
+        satellite_repo_enable(sm, ssh, rhel_ver, sat_ver, snap_ver)
 
     # Install satellite
     satellite_pkg_install(ssh)
@@ -74,7 +75,7 @@ def satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver):
         ssh.runcmd(f"dnf -y module enable satellite:el{rhel_ver}")
 
 
-def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver):
+def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver, snap_ver):
     """
     Enable the required repos for installing satellite that is still
     in development.
@@ -82,6 +83,7 @@ def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver):
     :param ssh: ssh access to satellite host.
     :param sat_ver: satellite version, such as 6.13, 6.12.
     :param rhel_ver: rhel version, such as 6, 7, 8.
+    :param snap_ver: snap version, such as 5.0, 6.0.
     :return: True or raise Fail.
     """
     sm.register()
@@ -105,7 +107,7 @@ def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver):
     ret, _ = ssh.runcmd(
         f"curl -o /etc/yum.repos.d/satellite-capsule.repo "
         f"http://ohsnap.sat.engineering.redhat.com/api/releases/"
-        f"{sat_ver}.0/el{rhel_ver}/satellite/repo_file"
+        f"{sat_ver}.0/snaps/{snap_ver}/el{rhel_ver}/satellite/repo_file"
     )
 
     if ret == 0:
@@ -223,6 +225,9 @@ def satellite_arguments_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--version", required=True, help="Satellite version, such as '6.13', '6.12'"
+    )
+    parser.add_argument(
+        "--snap", required=False, help="Satellite snap version, such as '5.0', '6.0'"
     )
     parser.add_argument(
         "--repo", required=True, help="One of ['cdn', 'dogfood', 'repo']"
