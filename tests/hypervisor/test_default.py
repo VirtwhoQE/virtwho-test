@@ -111,7 +111,7 @@ class TestHypervisorPositive:
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # check host-to-guest association in rhsm.log
-        if HYPERVISOR != 'local':
+        if HYPERVISOR != "local":
             mappings = result["mappings"]
             associated_hypervisor_in_mapping = mappings[default_org][guest_uuid][
                 "guest_hypervisor"
