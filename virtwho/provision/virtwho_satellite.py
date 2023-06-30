@@ -217,6 +217,9 @@ def virtwho_satellite_arguments_parser():
         required=False,
         help="SCA mode, disable/enable",
     )
+    parser.add_argument(
+        "--snap", required=False, help="Satellite snap version, such as '5.0', '6.0'"
+    )
     return parser.parse_args()
 
 
