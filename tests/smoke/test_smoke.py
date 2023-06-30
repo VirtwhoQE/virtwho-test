@@ -51,7 +51,9 @@ class TestSmoke:
         )
         # assert the association in Satellite web
         sm_guest.register()
-        assert satellite.associate(hypervisor_hostname, guest_hostname) is not False
+        assert satellite.associate_on_webui(
+            hypervisor_hostname, guest_hostname
+        ) is not False
 
     def test_rhsm_options(self, virtwho, class_hypervisor, sm_host):
         """Test the rhsm_hostname/username/password/prefix/port
@@ -260,7 +262,7 @@ class TestSmoke:
     ):
         """Test the guest can get the vdc temporay bonus pool.
 
-        :title: virt-who: rhsm: test vdc temporary sku
+        :title: virt-who: satellite smoke: test vdc temporary sku
         :id: c016e44b-6de4-4585-a282-94189639025f
         :caseimportance: High
         :tags: tier1

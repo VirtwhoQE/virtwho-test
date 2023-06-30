@@ -1,3 +1,12 @@
+"""Test cases Global fields
+
+:casecomponent: virt-who
+:testtype: nonfunctional
+:caseautomation: Automated
+:subsystemteam: sst_subscription_virtwho
+:caselevel: Component
+"""
+
 import pytest
 from virtwho.configure import config, hypervisor_create
 from virtwho.register import SubscriptionManager, RHSM
