@@ -29,6 +29,7 @@ if "RHEL-8" in RHEL_COMPOSE:
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 class TestUpgradeDowngrade:
     @pytest.mark.tier1
+    @pytest.mark.notLocal
     def test_upgrade_downgrade_by_yum(self, ssh_host, virtwho, globalconf):
         """Test virt-who upgrade/downgrade by yum
 
