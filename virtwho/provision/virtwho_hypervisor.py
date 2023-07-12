@@ -360,14 +360,14 @@ def kubevirt_monitor():
                         ],
                     }
                 )
-            for key, value in compare_dict.items():
-                if value[0] != value[1]:
-                    logger.info(f"The kubevirt({key}) changed.")
-                    kubevirt_dict[key] = f"{value[1]} (Updated)"
-                    if "BAD" not in kubevirt_state:
-                        kubevirt_state = state_update
-                    if "BAD" in kubevirt_state and state_update not in kubevirt_state:
-                        kubevirt_state = f"Part {kubevirt_state}, part {state_update}"
+        for key, value in compare_dict.items():
+            if value[0] != value[1]:
+                logger.info(f"The kubevirt({key}) changed.")
+                kubevirt_dict[key] = f"{value[1]} (Updated)"
+                if "BAD" not in kubevirt_state:
+                    kubevirt_state = state_update
+                if "BAD" in kubevirt_state and state_update not in kubevirt_state:
+                    kubevirt_state = f"Part {kubevirt_state}, part {state_update}"
 
         if not kubevirt_data and not kubevirt_data_sw:
             kubevirt_state = state_server_bad
