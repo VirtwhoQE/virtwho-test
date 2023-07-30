@@ -659,7 +659,9 @@ class TestSysConfiguration:
         sysconfg_options["VIRTWHO_INTERVAL"] = 60
         function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service(wait=60)
-        assert result["send"] == 1 and result["error"] == 0 and result["loop"] in [60, 61]
+        assert (
+            result["send"] == 1 and result["error"] == 0 and result["loop"] in [60, 61]
+        )
 
         function_sysconfig.clean()
 
