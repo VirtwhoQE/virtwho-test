@@ -461,10 +461,16 @@ class TestRhsmScaEnable:
         assert msg_search(output, msg)
 
         output = sm_guest.attach(pool=vdc_pool_physical)
+
         msg = "Attaching subscriptions is disabled .* because Simple Content Access .* is enabled."
         if "RHEL-8" in RHEL_COMPOSE:
-            msg = "Ignoring request to attach. " \
-                  "It is disabled for org .* because of the content access mode setting."
+            msg = [
+                "Ignoring request to attach. "
+                "It is disabled for org .* because of the content access mode setting.",  # esx
+                "Ignoring the request to attach. Attaching subscriptions is disabled "
+                "for organization .* because Simple Content Access .* is enabled",       # kubevirt
+            ]
+
         assert msg_search(output, msg)
 
         logger.info("=== RHSM has bz2017774, skip the checking tempoparily ===")
