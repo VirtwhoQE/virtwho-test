@@ -457,7 +457,8 @@ class TestRhsmScaEnable:
         virtwho.run_cli()
 
         ret, output = ssh_guest.runcmd("subscription-manager status")
-        msg = "Content Access Mode is set to Simple Content Access. This host has access to content, regardless of subscription status."
+        msg = "Content Access Mode is set to Simple Content Access. " \
+              "This host has access to content, regardless of subscription status."
         assert msg_search(output, msg)
 
         output = sm_guest.attach(pool=vdc_pool_physical)
