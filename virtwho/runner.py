@@ -326,16 +326,10 @@ class VirtwhoRunner:
                 else:
                     msg = r'Response: status=200, request="POST /rhsm/hypervisors'
             if "rhsm" in self.register_type:
-                if self.mode == "local":
-                    msg = (
-                        r"Response: status=20.*requestUuid.*request="
-                        r'"PUT /subscription/consumers'
-                    )
-                else:
-                    msg = (
-                        r"Response: status=20.*requestUuid.*request="
-                        r'"POST /subscription/hypervisors'
-                    )
+                msg = (
+                    r"Response: status=20.*requestUuid.*request="
+                    r'"PUT /subscription/.*'
+                )
         else:
             if self.mode == "local":
                 msg = r"Sending update in guests lists for config"
