@@ -780,8 +780,10 @@ class TestSatelliteScaEnable:
         ]
         assert msg_search(output, msg)
 
-        msg = "This host's organization is in Simple Content Access mode. " \
-              "Attaching subscriptions is disabled."
+        msg = (
+            "This host's organization is in Simple Content Access mode. "
+            "Attaching subscriptions is disabled."
+        )
         result = satellite.attach(host=guest_hostname, pool=vdc_pool_physical)
         assert msg in result
 
