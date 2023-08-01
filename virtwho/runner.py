@@ -326,10 +326,27 @@ class VirtwhoRunner:
                 else:
                     msg = r'Response: status=200, request="POST /rhsm/hypervisors'
             if "rhsm" in self.register_type:
-                msg = (
-                    r"Response: status=20.*requestUuid.*request="
-                    r'"PUT /subscription/.*'
-                )
+                if self.mode == "local":
+                    msg = (
+                        r"Response: status=20.*requestUuid.*request="
+                        r'"PUT /subscription/consumers'
+                    )
+                    return len(re.findall(msg, rhsm_log, re.I))
+                else:
+                    # mode is other hypervisor but also have local mode on virt-who host
+                    msg = (
+                        r"Response: status=20.*requestUuid.*request="
+                        r'"PUT /subscription/consumers'
+                    )
+                    if re.findall(msg, rhsm_log, re.I):
+                        return len(re.findall(msg, rhsm_log, re.I))
+                    # mode is other hypervisor but don't have local mode on virt-who host
+                    msg = (
+                        r"Response: status=20.*requestUuid.*request="
+                        r'"POST /subscription/hypervisors'
+                    )
+                    if re.findall(msg, rhsm_log, re.I):
+                        return len(re.findall(msg, rhsm_log, re.I))
         else:
             if self.mode == "local":
                 msg = r"Sending update in guests lists for config"
