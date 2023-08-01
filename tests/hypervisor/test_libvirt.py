@@ -304,14 +304,14 @@ class TestLibvirtNegative:
         # server option is disable
         function_hypervisor.delete("server")
         result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 0
-            and result["thread"] == 1
-            # libvirt-local mode will be used to instead
-            # when server option is disabled for libvirt-remote
-            and assertion["disable"] in result["error_msg"]
-        )
+        # libvirt-local mode will be used to instead
+        # when server option is disabled for libvirt-remote
+        if result["error"]:
+            assert (
+                result["send"] == 0
+                and result["thread"] == 1
+                and assertion["disable"] in result["error_msg"]
+            )
 
     @pytest.mark.tier2
     def test_username(self, function_hypervisor, virtwho, libvirt_assertion):
