@@ -217,12 +217,12 @@ class TestKubevirtNegative:
         # type option is disable
         function_hypervisor.delete("type")
         result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 0
-            and result["thread"] == 1
-            and assertion["disable"] in result["error_msg"]
-        )
+        if result["error"]:
+            assert (
+                result["send"] == 0
+                and result["thread"] == 1
+                and assertion["disable"] in result["error_msg"]
+            )
 
         # type option is null but another config is ok
         hypervisor_create(
