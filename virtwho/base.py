@@ -643,4 +643,4 @@ def hypervisors_list():
     Get the hypervisors list from virtwho.ini file
     :return: hypervisors_list
     """
-    return config.job.multi_hypervisors.strip('[').strip(']').split(',')
+    return config.job.multi_hypervisors.strip("[").strip("]").split(",")
