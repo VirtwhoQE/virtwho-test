@@ -8,7 +8,7 @@
 """
 import pytest
 
-from virtwho.settings import config
+from virtwho.base import hypervisors_list
 from virtwho.configure import hypervisor_create
 
 
@@ -32,7 +32,7 @@ class TestMultiHypervisors:
         :expectedresults:
             1. Succeed to run the virt-who, no error messages in the rhsm.log
         """
-        for mode in config.job.multi_hypervisors.strip('[').strip(']').split(','):
+        for mode in hypervisors_list:
             hypervisor_create(mode)
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
