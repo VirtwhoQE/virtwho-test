@@ -636,3 +636,11 @@ def virtwho_package_url(pkg, rhel_compose_id, rhel_compose_path=""):
     _, compose_url_extra = rhel_compose_url(rhel_compose_id, rhel_compose_path)
     pkg_url = compose_url_extra + "/Packages/" + pkg + ".rpm"
     return pkg_url
+
+
+def hypervisors_list():
+    """
+    Get the hypervisors list from virtwho.ini file
+    :return: hypervisors_list
+    """
+    return config.job.multi_hypervisors.strip("[").strip("]").split(",")
