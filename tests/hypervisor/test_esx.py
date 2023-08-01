@@ -1027,15 +1027,17 @@ class TestEsxNegative:
 
         warning_msg = esx_assertion["extension_file_name"]["warining_msg"]
         error_msg = esx_assertion["extension_file_name"]["error_msg"]
-
         result = virtwho.run_service()
-        assert (
-            result["error"] is not 0
-            and result["send"] == 0
-            and result["thread"] == 1
-            and error_msg in result["error_msg"]
-            and warning_msg in result["warning_msg"]
-        )
+        if result["error"]:
+            assert (
+                result["send"] == 0
+                and result["thread"] == 1
+                and error_msg in result["error_msg"]
+                and warning_msg in result["warning_msg"]
+            )
+        else:
+            # Now we also have the libvirt local mode on host, so just assert the warning msg
+            assert warning_msg in result["warning_msg"]
 
     @pytest.mark.tier2
     def test_quoted_options(self, virtwho, function_hypervisor, ssh_host):
