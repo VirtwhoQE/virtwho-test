@@ -323,8 +323,16 @@ class VirtwhoRunner:
             if "satellite" in self.register_type:
                 if self.mode == "local":
                     msg = r'Response: status=200, request="PUT /rhsm/consumers'
+                    return len(re.findall(msg, rhsm_log, re.I))
                 else:
+                    # mode is other hypervisor but also have local mode on virt-who host
+                    msg = r'Response: status=200, request="PUT /rhsm/consumers'
+                    if re.findall(msg, rhsm_log, re.I):
+                        return len(re.findall(msg, rhsm_log, re.I))
+                    # mode is other hypervisor but don't have local mode on virt-who host
                     msg = r'Response: status=200, request="POST /rhsm/hypervisors'
+                    if re.findall(msg, rhsm_log, re.I):
+                        return len(re.findall(msg, rhsm_log, re.I))
             if "rhsm" in self.register_type:
                 if self.mode == "local":
                     msg = (
