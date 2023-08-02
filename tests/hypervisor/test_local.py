@@ -10,6 +10,7 @@ import pytest
 import time
 
 from hypervisor import logger
+from virtwho import RHEL_COMPOSE
 
 
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
@@ -55,8 +56,10 @@ class TestLocalPositive:
             operate_option("enable", "tcp_port", libvirt_conf, ssh_host)
 
             run_service(ssh_host, "libvirtd", "restart")
-            _, output = run_service(ssh_host, "libvirtd", "status")
-            assert "is running" in output or "Active: active (running)" in output
+            if "RHEL-8" in RHEL_COMPOSE:
+                # for RHEL-9, the libvirt service will not alwayws active
+                _, output = run_service(ssh_host, "libvirtd", "status")
+                assert "is running" in output or "Active: active (running)" in output
 
             # check virt-who thread_num is changed or not
             thread_after = virtwho.thread_number()
@@ -70,8 +73,10 @@ class TestLocalPositive:
             operate_option("disable", "tcp_port", libvirt_conf, ssh_host)
 
             run_service(ssh_host, "libvirtd", "restart")
-            _, output = run_service(ssh_host, "libvirtd", "status")
-            assert "is running" in output or "Active: active (running)" in output
+            if "RHEL-8" in RHEL_COMPOSE:
+                # for RHEL-9, the libvirt service will not alwayws active
+                _, output = run_service(ssh_host, "libvirtd", "status")
+                assert "is running" in output or "Active: active (running)" in output
 
 
 def operate_option(action, option, file, ssh_host):
