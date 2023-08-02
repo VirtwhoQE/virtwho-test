@@ -9,7 +9,7 @@
 import pytest
 from virtwho.base import msg_search
 from virtwho.settings import config
-from virtwho import HYPERVISOR, FAKE_CONFIG_FILE, logger
+from virtwho import HYPERVISOR, FAKE_CONFIG_FILE, RHEL_COMPOSE, logger
 from virtwho.configure import hypervisor_create
 
 vdc_physical_sku = config.sku.vdc
@@ -457,11 +457,23 @@ class TestRhsmScaEnable:
         virtwho.run_cli()
 
         ret, output = ssh_guest.runcmd("subscription-manager status")
-        msg = "Content Access Mode is set to Simple Content Access. This host has access to content, regardless of subscription status."
+        msg = (
+            "Content Access Mode is set to Simple Content Access. "
+            "This host has access to content, regardless of subscription status."
+        )
         assert msg_search(output, msg)
 
         output = sm_guest.attach(pool=vdc_pool_physical)
+
         msg = "Attaching subscriptions is disabled .* because Simple Content Access .* is enabled."
+        if "RHEL-8" in RHEL_COMPOSE:
+            msg = [
+                "Ignoring request to attach. "
+                "It is disabled for org .* because of the content access mode setting.",  # esx
+                "Ignoring the request to attach. Attaching subscriptions is disabled "
+                "for organization .* because Simple Content Access .* is enabled",  # kubevirt
+            ]
+
         assert msg_search(output, msg)
 
         logger.info("=== RHSM has bz2017774, skip the checking tempoparily ===")
