@@ -33,6 +33,7 @@ class VirtwhoHypervisorConfig:
         self.local_file = os.path.join(TEMP_DIR, f"{mode}.conf")
         self.remote_file = config_name or f"/etc/virt-who.d/{mode}.conf"
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+        logger.info(f"*** Init {self.remote_file}")
 
     def create(self, rhsm=True):
         """create virt-who config file under /etc/virt-who.d/.
@@ -120,6 +121,7 @@ class VirtwhoGlobalConfig:
         if not os.path.exists(self.save_file):
             self.remote_ssh.get_file(self.remote_file, self.save_file)
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+        logger.info(f"*** Init {self.remote_file}")
 
     def update(self, section, option, value):
         """Add section, add option or update option
@@ -167,6 +169,7 @@ class VirtwhoSysConfig:
         self.save_file = os.path.join(TEMP_DIR, "virt-who.save")
         if not os.path.exists(self.save_file):
             self.remote_ssh.get_file(self.remote_file, self.save_file)
+        logger.info(f"*** Init {self.remote_file}")
 
     def update(self, **configs):
         """
@@ -182,6 +185,7 @@ class VirtwhoSysConfig:
                     "VIRTWHO_INTERVAL",
                 ]
                 fp.write(f"{option}={configs[f'{option}']}\n")
+                logger.info(f"*** Update {option}={configs[f'{option}']}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
 
     def clean(self):
@@ -190,6 +194,7 @@ class VirtwhoSysConfig:
         """
         os.system(f"echo '' > {self.local_file}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
+        logger.info(f"*** Clean /etc/sysconfig/virt-who")
 
 
 class RHSMConf:
@@ -213,6 +218,7 @@ class RHSMConf:
             self.remote_ssh.get_file("/backup/rhsm.conf", self.save_file)
         os.system(f"\\cp -f {self.save_file} {self.local_file}")
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
+        logger.info(f"*** Init {self.remote_file}")
 
     def update(self, section, option, value):
         """Add section, add option or update option
