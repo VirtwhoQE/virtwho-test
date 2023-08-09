@@ -19,11 +19,11 @@ register_handler = get_register_handler(REGISTER)
 
 
 def pytest_runtest_logstart(nodeid, location):
-    logger.info(f'Started Test: {nodeid}')
+    logger.info(f"Started Test: {nodeid}")
 
 
 def pytest_runtest_logfinish(nodeid, location):
-    logger.info(f'Finished Test: {nodeid}')
+    logger.info(f"Finished Test: {nodeid}")
 
 
 @pytest.fixture(scope="class")
