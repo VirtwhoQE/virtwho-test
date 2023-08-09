@@ -11,11 +11,19 @@ from virtwho.configure import hypervisor_create
 
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager, Satellite, RHSM
-from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE
+from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, logger
 from virtwho.base import hostname_get
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
+
+
+def pytest_runtest_logstart(nodeid, location):
+    logger.info(f'Started Test: {nodeid}')
+
+
+def pytest_runtest_logfinish(nodeid, location):
+    logger.info(f'Finished Test: {nodeid}')
 
 
 @pytest.fixture(scope="class")
