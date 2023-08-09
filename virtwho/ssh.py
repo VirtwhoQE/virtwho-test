@@ -77,7 +77,7 @@ class SSHConnect:
         :param str if_stdout: default to return to stderr
         """
         ssh = self._connect()
-        logger.info(">>> {}".format(cmd))
+        logger.info(f"[{self.host}:{self.port}] >>> {cmd}")
         stdin, stdout, stderr = ssh.exec_command(cmd)
         code = stdout.channel.recv_exit_status()
         stdout, stderr = stdout.read(), stderr.read()

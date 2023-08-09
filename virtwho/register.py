@@ -992,6 +992,7 @@ def request_get(url, auth, verify=False):
     :return: response status code and json output.
     """
     res = requests.get(url=url, auth=auth, verify=verify)
+    logger.info(f"Making request: GET {url}")
     return res.status_code, res.json()
 
 
@@ -1006,6 +1007,7 @@ def request_post(url, auth, params, verify=False):
     :return: response status code
     """
     res = requests.post(url=url, auth=auth, params=params, verify=verify)
+    logger.info(f"Making request: POST {url}")
     return res.status_code
 
 
@@ -1022,6 +1024,7 @@ def request_put(url, auth, headers, json_data, verify=False):
     res = requests.put(
         url=url, auth=auth, headers=headers, json=json_data, verify=verify
     )
+    logger.info(f"Making request: PUT {url}")
     return res.status_code
 
 
@@ -1034,4 +1037,5 @@ def request_delete(url, auth, verify=False):
     :return: response status code
     """
     res = requests.delete(url=url, auth=auth, verify=verify)
+    logger.info(f"Making request: DELETE {url}")
     return res.status_code
