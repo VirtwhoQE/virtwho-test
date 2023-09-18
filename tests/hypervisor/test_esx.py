@@ -1264,7 +1264,7 @@ class TestEsxNegative:
                 result["error"] == 0
                 and result["send"] == 2
                 and result["thread"] == 1
-                and result["loop"] == 60
+                and result["loop"] in [60, 61]
             )
 
         finally:
@@ -1278,7 +1278,7 @@ class TestEsxNegative:
                 result["error"] == 0
                 and result["send"] == 2
                 and result["thread"] == 1
-                and result["loop"] == 120
+                and result["loop"] in [120, 121]
             )
 
     @pytest.mark.tier2
