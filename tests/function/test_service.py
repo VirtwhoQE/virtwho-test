@@ -132,17 +132,17 @@ class TestVirtwhoService:
         port = config.virtwho.port
         ssh_access_no_password(ssh_guest, ssh_host, server, port)
         # stop
-        ssh_guest.runcmd(f"ssh {server} -p {port} 'systemctl stop virt-who'")
+        ssh_guest.runcmd(f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl stop virt-who'")
         _, status = virtwho.operate_service(action="status")
         assert status == "dead"
 
         # start
-        ssh_guest.runcmd(f"ssh {server} -p {port} 'systemctl restart virt-who'")
+        ssh_guest.runcmd(f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl restart virt-who'")
         _, status = virtwho.operate_service(action="status")
         assert status == "running"
 
         # stop
-        ssh_guest.runcmd(f"ssh {server} -p {port} 'systemctl stop virt-who'")
+        ssh_guest.runcmd(f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl stop virt-who'")
         _, status = virtwho.operate_service(action="status")
         assert status == "dead"
 
