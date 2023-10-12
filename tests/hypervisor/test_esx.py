@@ -12,6 +12,8 @@ import random
 import string
 import json
 import uuid
+import subprocess
+import time
 
 from virtwho import logger
 from virtwho import REGISTER
@@ -1432,6 +1434,33 @@ class TestEsxNegative:
         else:
             logger.warning("Failed to post json to satellite")
             logger.warning(output)
+    
+    def test_run_in_FIPS_mode(self, virtwho, ssh_host, hypervisor_data):
+        timeout = 300
+        interval = 5
+        
+        ssh_host.runcmd("fips-mode-setup --enable")
+        ssh_host.runcmd("reboot")
+        start_time = time.time()
+        # 等待几秒，以便服务器开始重启过程
+        time.sleep(interval)
+        while not is_host_responsive(hypervisor_data["host_ip"]):
+            elapsed_time = time.time() - start_time
+            if elapsed_time > timeout:
+                assert False, f"Timeout reached after {timeout} seconds!"
+            print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+            time.sleep(interval)
+        
+        _, stdout = ssh_host.run_cmd("cat /proc/sys/crypto/fips_enabled")
+        assert("1" in stdout)
+        
+        result = virtwho.run_service()
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+        )
+        
 
 
 def json_data_create(hypervisors_num, guests_num):
@@ -1454,3 +1483,14 @@ def json_data_create(hypervisors_num, guests_num):
             )
         virtwho[str(uuid.uuid4()).replace("-", ".")] = guest_list
     return virtwho
+
+def is_host_responsive(host):
+    """
+    Check if the host is responsive
+    :param host: host ip address
+    :return: True or False
+    """
+    cmd = f"ping -c 1 {host}"
+    return subprocess.call(cmd, 
+                           stdout=subprocess.PIPE, 
+                           stderr=subprocess.PIPE) == 0
