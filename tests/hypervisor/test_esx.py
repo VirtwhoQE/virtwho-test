@@ -12,7 +12,6 @@ import random
 import string
 import json
 import uuid
-import subprocess
 import time
 
 from virtwho import logger
@@ -1435,26 +1434,29 @@ class TestEsxNegative:
             logger.warning("Failed to post json to satellite")
             logger.warning(output)
     
-    def test_run_in_FIPS_mode(self, virtwho, ssh_host, hypervisor_data):
+    @pytest.mark.tier2
+    @pytest.mark.notStage
+    def test_run_in_FIPS_mode(self, virtwho, ssh_host):
         timeout = 300
         interval = 5
         
         ssh_host.runcmd("fips-mode-setup --enable")
-        ssh_host.runcmd("reboot")
+        ssh_host.runcmd("sudo reboot")
         start_time = time.time()
         # 等待几秒，以便服务器开始重启过程
         time.sleep(interval)
-        while not is_host_responsive(hypervisor_data["host_ip"]):
+        while not is_host_responsive(ssh_host.host):
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 assert False, f"Timeout reached after {timeout} seconds!"
             print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
             time.sleep(interval)
         
-        _, stdout = ssh_host.run_cmd("cat /proc/sys/crypto/fips_enabled")
+        _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
         assert("1" in stdout)
         
         result = virtwho.run_service()
+        print(result)
         assert (
             result["error"] == 0
             and result["send"] == 1
@@ -1490,7 +1492,6 @@ def is_host_responsive(host):
     :param host: host ip address
     :return: True or False
     """
+    print(host)
     cmd = f"ping -c 1 {host}"
-    return subprocess.call(cmd, 
-                           stdout=subprocess.PIPE, 
-                           stderr=subprocess.PIPE) == 0
+    return os.system(cmd) == 0
