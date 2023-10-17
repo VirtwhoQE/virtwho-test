@@ -32,7 +32,7 @@ class TestMultiHypervisors:
         :expectedresults:
             1. Succeed to run the virt-who, no error messages in the rhsm.log
         """
-        for mode in hypervisors_list:
+        for mode in hypervisors_list():
             hypervisor_create(mode)
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
