@@ -1436,7 +1436,23 @@ class TestEsxNegative:
     
     @pytest.mark.tier2
     @pytest.mark.notStage
-    def test_run_in_FIPS_mode(self, virtwho, ssh_host):
+    def test_run_in_FIPS_mode(self, function_hypervisor, virtwho, ssh_host):
+        """
+        :title: virt-who: esx: test run virt-who in FIPS mode
+        :id: 2a05a366-6b92-456a-89ca-c7576491c0bb
+        :caseimportance: High
+        :tags: hypervisor,esx,tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Enable FIPS mode on the host
+            2. Reboot the host
+            3. Run virt-who service
+            4. Check the virt-who service status
+            5. Disable FIPS mode on the host
+        :expectedresults:
+            1. Succeeded to enable FIPS mode on the host
+        """
         timeout = 300
         interval = 5
         
@@ -1463,6 +1479,8 @@ class TestEsxNegative:
             and result["thread"] == 1
         )
         
+        ssh_host.runcmd("fips-mode-setup --disable")
+        ssh_host.runcmd("sudo reboot")
 
 
 def json_data_create(hypervisors_num, guests_num):
