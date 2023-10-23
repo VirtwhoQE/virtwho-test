@@ -1455,50 +1455,50 @@ class TestEsxNegative:
         """
         timeout = 300
         interval = 5
-        
-        ssh_host.runcmd("fips-mode-setup --enable")
-        ssh_host.runcmd("sudo reboot")
-        start_time = time.time()
-        # Waiting for server to reboot
-        time.sleep(interval)
-        while not is_host_responsive(ssh_host.host):
-            elapsed_time = time.time() - start_time
-            if elapsed_time > timeout:
-                assert False, f"Timeout reached after {timeout} seconds!"
-            print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+        try:
+            ssh_host.runcmd("fips-mode-setup --enable")
+            ssh_host.runcmd("sudo reboot")
+            start_time = time.time()
+            # Waiting for server to reboot
             time.sleep(interval)
-        
-        _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
-        assert("1" in stdout)
-        
-        result = virtwho.run_service()
-        assert (
-            result["error"] == 0
-            and result["send"] == 1
-            and result["thread"] == 1
-        )
-        
-        ssh_host.runcmd("fips-mode-setup --disable")
-        ssh_host.runcmd("sudo reboot")
-        start_time = time.time()
-        # Waiting for server to reboot
-        time.sleep(interval)
-        while not is_host_responsive(ssh_host.host):
-            elapsed_time = time.time() - start_time
-            if elapsed_time > timeout:
-                assert False, f"Timeout reached after {timeout} seconds!"
-            print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+            while not is_host_responsive(ssh_host.host):
+                elapsed_time = time.time() - start_time
+                if elapsed_time > timeout:
+                    assert False, f"Timeout reached after {timeout} seconds!"
+                print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+                time.sleep(interval)
+            
+            _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
+            assert("1" in stdout)
+            
+            result = virtwho.run_service()
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+            )
+        finally:
+            ssh_host.runcmd("fips-mode-setup --disable")
+            ssh_host.runcmd("sudo reboot")
+            start_time = time.time()
+            # Waiting for server to reboot
             time.sleep(interval)
-        
-        _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
-        assert("0" in stdout)
-        
-        result = virtwho.run_service()
-        assert (
-            result["error"] == 0
-            and result["send"] == 1
-            and result["thread"] == 1
-        )
+            while not is_host_responsive(ssh_host.host):
+                elapsed_time = time.time() - start_time
+                if elapsed_time > timeout:
+                    assert False, f"Timeout reached after {timeout} seconds!"
+                print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+                time.sleep(interval)
+            
+            _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
+            assert("0" in stdout)
+            
+            result = virtwho.run_service()
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+            )
 
 def json_data_create(hypervisors_num, guests_num):
     """
