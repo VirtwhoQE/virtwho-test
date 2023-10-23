@@ -1499,10 +1499,6 @@ class TestEsxNegative:
             and result["send"] == 1
             and result["thread"] == 1
         )
-            
-            
-            
-
 
 def json_data_create(hypervisors_num, guests_num):
     """
