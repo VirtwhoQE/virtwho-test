@@ -1465,7 +1465,7 @@ class TestEsxNegative:
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     assert False, f"Timeout reached after {timeout} seconds!"
-                print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+                logger.info(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
                 time.sleep(interval)
             
             _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
@@ -1487,7 +1487,7 @@ class TestEsxNegative:
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     assert False, f"Timeout reached after {timeout} seconds!"
-                print(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+                logger.info(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
                 time.sleep(interval)
             
             _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
