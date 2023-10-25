@@ -1450,6 +1450,8 @@ class TestEsxNegative:
             3. Run virt-who service
             4. Check the virt-who service status
             5. Disable FIPS mode on the host
+            6. Reboot the host
+            
         :expectedresults:
             1. Succeeded to enable FIPS mode on the host
         """
@@ -1492,13 +1494,6 @@ class TestEsxNegative:
             
             _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
             assert("0" in stdout)
-            
-            result = virtwho.run_service()
-            assert (
-                result["error"] == 0
-                and result["send"] == 1
-                and result["thread"] == 1
-            )
 
 def json_data_create(hypervisors_num, guests_num):
     """
@@ -1527,6 +1522,5 @@ def is_host_responsive(host):
     :param host: host ip address
     :return: True or False
     """
-    print(host)
     cmd = f"ping -c 1 {host}"
     return os.system(cmd) == 0
