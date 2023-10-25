@@ -203,9 +203,10 @@ class TestAHVPositive:
         virtwho.run_cli(prt=True, oneshot=False)
         function_hypervisor.destroy()
 
-        fake_config = hypervisor_create("fake", REGISTER, rhsm=False)
+        fake_config = hypervisor_create("fake", REGISTER, rhsm=True)
         fake_config.update("file", PRINT_JSON_FILE)
         fake_config.update("is_hypervisor", "True")
+        sm_host.register()
         result = virtwho.run_service()
         assert (
             result["error"] == 0
