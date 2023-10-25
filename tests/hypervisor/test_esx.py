@@ -1434,8 +1434,7 @@ class TestEsxNegative:
             logger.warning("Failed to post json to satellite")
             logger.warning(output)
     
-    @pytest.mark.tier2
-    @pytest.mark.notStage
+    @pytest.mark.tier3
     def test_run_in_FIPS_mode(self, function_hypervisor, virtwho, ssh_host):
         """
         :title: virt-who: esx: test run virt-who in FIPS mode
