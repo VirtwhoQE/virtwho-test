@@ -312,7 +312,7 @@ class TestEsxPositive:
         virtwho.run_cli(prt=True, oneshot=False)
         function_hypervisor.destroy()
 
-        fake_config = hypervisor_create("fake", REGISTER, rhsm=False)
+        fake_config = hypervisor_create("fake", REGISTER, rhsm=True)
         fake_config.update("file", PRINT_JSON_FILE)
         fake_config.update("is_hypervisor", "True")
         result = virtwho.run_service()
@@ -1433,7 +1433,7 @@ class TestEsxNegative:
         else:
             logger.warning("Failed to post json to satellite")
             logger.warning(output)
-    
+
     @pytest.mark.tier3
     def test_run_in_FIPS_mode(self, function_hypervisor, virtwho, ssh_host):
         """
@@ -1450,7 +1450,7 @@ class TestEsxNegative:
             4. Check the virt-who service status
             5. Disable FIPS mode on the host
             6. Reboot the host
-            
+
         :expectedresults:
             1. Succeeded to enable FIPS mode on the host
         """
@@ -1466,17 +1466,17 @@ class TestEsxNegative:
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     assert False, f"Timeout reached after {timeout} seconds!"
-                logger.info(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+                logger.info(
+                    f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds."
+                )
                 time.sleep(interval)
-            
+
             _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
-            assert("1" in stdout)
-            
+            assert "1" in stdout
+
             result = virtwho.run_service()
             assert (
-                result["error"] == 0
-                and result["send"] == 1
-                and result["thread"] == 1
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
             )
         finally:
             ssh_host.runcmd("fips-mode-setup --disable")
@@ -1488,11 +1488,14 @@ class TestEsxNegative:
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     assert False, f"Timeout reached after {timeout} seconds!"
-                logger.info(f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds.")
+                logger.info(
+                    f"Waiting for server to come back online... Elapsed time: {int(elapsed_time)} seconds."
+                )
                 time.sleep(interval)
-            
+
             _, stdout = ssh_host.runcmd("cat /proc/sys/crypto/fips_enabled")
-            assert("0" in stdout)
+            assert "0" in stdout
+
 
 def json_data_create(hypervisors_num, guests_num):
     """
@@ -1514,6 +1517,7 @@ def json_data_create(hypervisors_num, guests_num):
             )
         virtwho[str(uuid.uuid4()).replace("-", ".")] = guest_list
     return virtwho
+
 
 def is_host_responsive(host):
     """
