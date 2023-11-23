@@ -252,9 +252,9 @@ def kubevirt_monitor():
     guest_ip_sw = config.kubevirt.guest_ip_sw
 
     endpoint = config.kubevirt.endpoint
-    server = re.findall(r"https://(.+?):6443", endpoint)[0]
     kubevirt = KubevirtApi(endpoint, config.kubevirt.token)
     try:
+        server = re.findall(r"https://(.+?):6443", endpoint)[0]
         logger.info(f">>>Kubevirt: Check if the hypervisor is running.")
         if not host_ping(host=server):
             kubevirt_state, endpoint = (state_server_bad, server_broke)
@@ -270,6 +270,10 @@ def kubevirt_monitor():
                 kubevirt_state, guest_ip = (state_guest_bad, guest_none)
                 logger.error(
                     f"Did not find the guest({guest_name}), please install one."
+                )
+            elif not host_ping(host=guest_ip):
+                logger.warning(
+                    f"The rhel guest({guest_name}) is down, please repair it."
                 )
             else:
                 ssh_guest = SSHConnect(
