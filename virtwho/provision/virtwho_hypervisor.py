@@ -271,6 +271,10 @@ def kubevirt_monitor():
                 logger.error(
                     f"Did not find the guest({guest_name}), please install one."
                 )
+            elif not host_ping(host=guest_ip):
+                logger.warning(
+                    f"The rhel guest({guest_name}) is down, please repair it."
+                )
             else:
                 ssh_guest = SSHConnect(
                     host=kubevirt_data["hostname"],
