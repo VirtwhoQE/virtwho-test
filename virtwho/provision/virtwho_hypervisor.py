@@ -252,9 +252,9 @@ def kubevirt_monitor():
     guest_ip_sw = config.kubevirt.guest_ip_sw
 
     endpoint = config.kubevirt.endpoint
-    server = re.findall(r"https://(.+?):6443", endpoint)[0]
     kubevirt = KubevirtApi(endpoint, config.kubevirt.token)
     try:
+        server = re.findall(r"https://(.+?):6443", endpoint)[0]
         logger.info(f">>>Kubevirt: Check if the hypervisor is running.")
         if not host_ping(host=server):
             kubevirt_state, endpoint = (state_server_bad, server_broke)
