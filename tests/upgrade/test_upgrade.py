@@ -22,7 +22,9 @@ vdc_virtual_sku = config.sku.vdc_virtual
 @pytest.mark.usefixtures("class_debug_true")
 @pytest.mark.usefixtures("class_globalconf_clean")
 class TestUpgrade:
-    def test_pre_upgrade(self, virtwho, sm_guest, rhsm, satellite, hypervisor_data, vdc_pool_physical):
+    def test_pre_upgrade(
+        self, virtwho, sm_guest, rhsm, satellite, hypervisor_data, vdc_pool_physical
+    ):
         """Pre-upgrade test cases for virt-who
 
         :title: virt-who: upgrade : pre-upgrade test cases for virt-who
