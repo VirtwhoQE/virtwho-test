@@ -204,6 +204,12 @@ def class_guest_register(sm_guest):
     sm_guest.register()
 
 
+@pytest.fixture(scope="class")
+def class_guest_unregister(sm_guest):
+    """unregister the guest"""
+    sm_guest.unregister()
+
+
 @pytest.fixture(scope="function")
 def function_guest_unattach(sm_guest):
     """remove all subscriptions for guest"""
