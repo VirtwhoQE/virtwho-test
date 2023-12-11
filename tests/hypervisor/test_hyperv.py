@@ -19,6 +19,7 @@ from virtwho import SECOND_HYPERVISOR_SECTION
 from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
 
+from hypervisor.virt.hyperv.hypervcli import HypervCLI
 
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_debug_true")
@@ -634,3 +635,41 @@ class TestHypervNegative:
                 and result["thread"] == 1
                 and hostname not in str(result["mappings"])
             )
+    
+    @pytest.mark.tier2
+    def test_biosguid_null(self, virtwho, function_hypervisor, hypervisor_data):
+        """
+        """
+        hyperv = HypervCLI(
+            server = hypervisor_data["hypervisor_server"],
+            ssh_user = hypervisor_data["hypervisor_username"],
+            ssh_pwd = hypervisor_data["hypervisor_password"],
+        )
+        
+        result = virtwho.run_service()
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+        )
+        
+        get_guid_cmd = r"PowerShell (gwmi -Namespace Root\Virtualization\V2 -ClassName Msvm_VirtualSystemSettingData).BiosGUID"
+        ret, origin_guid = hyperv.ssh.runcmd(get_guid_cmd)
+        assert origin_guid != "" or ret == 0
+
+        import_module_cmd = r"PowerShell Import-Module .\New-VMBIOSGUID.ps1 -Force"
+        ret, _ = hyperv.ssh.runcmd(import_module_cmd)
+        assert ret == 0
+            
+        change_guid_cmd = f"PowerShell New-VMBIOSGUID -VM {hypervisor_data['hypervisor_hostname']} -NewID 00000000-0000-0000-0000-000000000000"
+        ret, _ = hyperv.ssh.runcmd(change_guid_cmd)
+        assert ret == 0
+        
+        ret, new_guid = hyperv.ssh.runcmd(get_guid_cmd)
+        assert new_guid == "" and ret == 0
+        
+        change_guid_cmd = f"PowerShell New-VMBIOSGUID -VM {hypervisor_data['hypervisor_hostname']} -NewID {origin_guid}"
+        
+        ret, origin_guid = hyperv.ssh.runcmd(get_guid_cmd)
+        assert origin_guid != "" or ret == 0
+        
