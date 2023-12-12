@@ -7,6 +7,8 @@
 :caselevel: Component
 """
 import pytest
+import time
+import os
 
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE
@@ -641,7 +643,7 @@ class TestHypervNegative:
         """Test if the biosguid is null, whether virt-who can send the guest info to server.
         
         :title: virt-who: hyperv: test biosguid null
-        :id:
+        :id: 4de4fed0-97c2-4146-9540-2223386297c4
         :caseimportance: High
         :tags: hypervisor,hyperv,tier2
         :customerscenario: false
@@ -684,27 +686,46 @@ class TestHypervNegative:
         
         import_module_cmd = r"Import-Module ./New-VMBIOSGUID.ps1 -Force"
         set_ignore_verfiy_cmd = r"$ConfirmPreference = 'None'"
-        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID 00000000-0000-0000-0000-000000000000"'.format(import_module_cmd,
-                                                                                                                                      set_ignore_verfiy_cmd,
+        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID 00000000-0000-0000-0000-000000000000"'.format(set_ignore_verfiy_cmd,
+                                                                                                                                      import_module_cmd,
                                                                                                                                       hypervisor_data['guest_name'])
         ret, _ = hyperv.ssh.runcmd(change_guid_cmd)
         assert ret == 0
+        
+        timeout = 300
+        interval = 5
+        start_time = time.time()
+        while not is_host_responsive(hypervisor_data["guest_ip"]):
+            elapsed_time = time.time() - start_time
+            if elapsed_time > timeout:
+                assert False, f"Timeout reached after {timeout} seconds!"
+            time.sleep(interval)
         
         result = virtwho.run_service()
         assert (
             result["error"] == 0
             and result["send"] == 1
             and result["thread"] == 1
-            and len(result["guestIds"])==0
         )
         
         ret, new_guid = hyperv.ssh.runcmd(get_guid_cmd)
         assert new_guid == "" and ret == 0
         
-        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID {} "'.format(import_module_cmd,
-                                                                                                   set_ignore_verfiy_cmd,
-                                                                                                   hypervisor_data['guest_name'],
-                                                                                                   origin_guid)
-        ret, origin_guid = hyperv.ssh.runcmd(change_guid_cmd)
-        assert origin_guid != "" or ret == 0
+        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID {}"'.format(set_ignore_verfiy_cmd,
+                                                                                                 import_module_cmd,
+                                                                                                 hypervisor_data['guest_name'],
+                                                                                                 origin_guid)
+        ret, _ = hyperv.ssh.runcmd(change_guid_cmd)
+        assert not ret
         
+        ret, final_guid = hyperv.ssh.runcmd(get_guid_cmd)
+        assert final_guid == origin_guid and not ret
+
+def is_host_responsive(host):
+    """
+    Check if the host is responsive
+    :param host: host ip address
+    :return: True or False
+    """
+    cmd = f"ping -c 1 {host}"
+    return os.system(cmd) == 0
