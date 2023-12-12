@@ -638,8 +638,29 @@ class TestHypervNegative:
     
     @pytest.mark.tier2
     def test_biosguid_null(self, virtwho, function_hypervisor, hypervisor_data):
+        """Test if the biosguid is null, whether virt-who can send the guest info to server.
+        
+        :title: virt-who: hyperv: test biosguid null
+        :id:
+        :caseimportance: High
+        :tags: hypervisor,hyperv,tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Run virt-who with normal guid.
+            2. Download the New-VMBIOSGUID.ps1 script from the server.
+            3. Import the New-VMBIOSGUID.ps1 script.
+            4. Change the biosguid to null.
+            5. Run virt-who again.
+            6. Change the biosguid to the original value.
+        :expectedresults:
+            1. Succeeded to run the virt-who, can find the guest info in the server.
+            2. Succeeded to download the New-VMBIOSGUID.ps1 script.
+            3. Succeeded to import the New-VMBIOSGUID.ps1 script.
+            4. Succeeded to change the biosguid to null.
+            5. Succeeded to run the virt-who, cannot find the guest info in the server.
         """
-        """
+        
         hyperv = HypervCLI(
             server = hypervisor_data["hypervisor_server"],
             ssh_user = hypervisor_data["hypervisor_username"],
@@ -655,21 +676,35 @@ class TestHypervNegative:
         
         get_guid_cmd = r"PowerShell (gwmi -Namespace Root\Virtualization\V2 -ClassName Msvm_VirtualSystemSettingData).BiosGUID"
         ret, origin_guid = hyperv.ssh.runcmd(get_guid_cmd)
-        assert origin_guid != "" or ret == 0
+        assert origin_guid != "" and ret == 0
 
-        import_module_cmd = r"PowerShell Import-Module .\New-VMBIOSGUID.ps1 -Force"
-        ret, _ = hyperv.ssh.runcmd(import_module_cmd)
+        create_function_cmd = r"PowerShell (Invoke-WebRequest http://10.73.131.85/ci/hyperv/New-VMBIOSGUID.ps1 -OutFile ./New-VMBIOSGUID.ps1)"
+        ret, _ = hyperv.ssh.runcmd(create_function_cmd)
         assert ret == 0
-            
-        change_guid_cmd = f"PowerShell New-VMBIOSGUID -VM {hypervisor_data['hypervisor_hostname']} -NewID 00000000-0000-0000-0000-000000000000"
+        
+        import_module_cmd = r"Import-Module ./New-VMBIOSGUID.ps1 -Force"
+        set_ignore_verfiy_cmd = r"$ConfirmPreference = 'None'"
+        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID 00000000-0000-0000-0000-000000000000"'.format(import_module_cmd,
+                                                                                                                                      set_ignore_verfiy_cmd,
+                                                                                                                                      hypervisor_data['guest_name'])
         ret, _ = hyperv.ssh.runcmd(change_guid_cmd)
         assert ret == 0
+        
+        result = virtwho.run_service()
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+            and len(result["guestIds"])==0
+        )
         
         ret, new_guid = hyperv.ssh.runcmd(get_guid_cmd)
         assert new_guid == "" and ret == 0
         
-        change_guid_cmd = f"PowerShell New-VMBIOSGUID -VM {hypervisor_data['hypervisor_hostname']} -NewID {origin_guid}"
-        
-        ret, origin_guid = hyperv.ssh.runcmd(get_guid_cmd)
+        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID {} "'.format(import_module_cmd,
+                                                                                                   set_ignore_verfiy_cmd,
+                                                                                                   hypervisor_data['guest_name'],
+                                                                                                   origin_guid)
+        ret, origin_guid = hyperv.ssh.runcmd(change_guid_cmd)
         assert origin_guid != "" or ret == 0
         
