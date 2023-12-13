@@ -638,14 +638,14 @@ class TestHypervNegative:
                 and hostname not in str(result["mappings"])
             )
     
-    @pytest.mark.tier2
-    def test_biosguid_null(self, virtwho, function_hypervisor, hypervisor_data):
+    @pytest.mark.tier3
+    def test_biosguid_null(self, virtwho, function_hypervisor, hypervisor_data, register_data):
         """Test if the biosguid is null, whether virt-who can send the guest info to server.
         
         :title: virt-who: hyperv: test biosguid null
         :id: 4de4fed0-97c2-4146-9540-2223386297c4
         :caseimportance: High
-        :tags: hypervisor,hyperv,tier2
+        :tags: hypervisor,hyperv,tier3
         :customerscenario: false
         :upstream: no
         :steps:
@@ -706,6 +706,7 @@ class TestHypervNegative:
             result["error"] == 0
             and result["send"] == 1
             and result["thread"] == 1
+            and len(result["mappings"][register_data["default_org"]][hypervisor_data["hypervisor_hostname"]]["guests"])==0
         )
         
         ret, new_guid = hyperv.ssh.runcmd(get_guid_cmd)
