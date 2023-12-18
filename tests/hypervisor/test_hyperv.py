@@ -675,52 +675,38 @@ class TestHypervNegative:
             and result["send"] == 1
             and result["thread"] == 1
         )
-        
-        get_guid_cmd = r"PowerShell (gwmi -Namespace Root\Virtualization\V2 -ClassName Msvm_VirtualSystemSettingData).BiosGUID"
-        ret, origin_guid = hyperv.ssh.runcmd(get_guid_cmd)
-        assert origin_guid != "" and ret == 0
+        try:
+            origin_guid = hyperv.guest_uuid()
+            assert origin_guid != ""
 
-        create_function_cmd = r"PowerShell (Invoke-WebRequest http://10.73.131.85/ci/hyperv/New-VMBIOSGUID.ps1 -OutFile ./New-VMBIOSGUID.ps1)"
-        ret, _ = hyperv.ssh.runcmd(create_function_cmd)
-        assert ret == 0
-        
-        import_module_cmd = r"Import-Module ./New-VMBIOSGUID.ps1 -Force"
-        set_ignore_verfiy_cmd = r"$ConfirmPreference = 'None'"
-        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID 00000000-0000-0000-0000-000000000000"'.format(set_ignore_verfiy_cmd,
-                                                                                                                                      import_module_cmd,
-                                                                                                                                      hypervisor_data['guest_name'])
-        ret, _ = hyperv.ssh.runcmd(change_guid_cmd)
-        assert ret == 0
-        
-        timeout = 300
-        interval = 5
-        start_time = time.time()
-        while not is_host_responsive(hypervisor_data["guest_ip"]):
-            elapsed_time = time.time() - start_time
-            if elapsed_time > timeout:
-                assert False, f"Timeout reached after {timeout} seconds!"
-            time.sleep(interval)
-        
-        result = virtwho.run_service()
-        assert (
-            result["error"] == 0
-            and result["send"] == 1
-            and result["thread"] == 1
-            and len(result["mappings"][register_data["default_org"]][hypervisor_data["hypervisor_hostname"]]["guests"])==0
-        )
-        
-        ret, new_guid = hyperv.ssh.runcmd(get_guid_cmd)
-        assert new_guid == "" and ret == 0
-        
-        change_guid_cmd = 'PowerShell -Command "{}; {}; New-VMBIOSGUID -VM {} -NewID {}"'.format(set_ignore_verfiy_cmd,
-                                                                                                 import_module_cmd,
-                                                                                                 hypervisor_data['guest_name'],
-                                                                                                 origin_guid)
-        ret, _ = hyperv.ssh.runcmd(change_guid_cmd)
-        assert not ret
-        
-        ret, final_guid = hyperv.ssh.runcmd(get_guid_cmd)
-        assert final_guid == origin_guid and not ret
+            result = hyperv.guest_uuid_change("00000000-0000-0000-0000-000000000000", hypervisor_data['guest_name'])
+            assert result is True
+            
+            timeout = 300
+            interval = 5
+            start_time = time.time()
+            while not is_host_responsive(hypervisor_data["guest_ip"]):
+                elapsed_time = time.time() - start_time
+                if elapsed_time > timeout:
+                    assert False, f"Timeout reached after {timeout} seconds!"
+                time.sleep(interval)
+            
+            result = virtwho.run_service()
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and len(result["mappings"][register_data["default_org"]][hypervisor_data["hypervisor_hostname"]]["guests"])==0
+            )
+            
+            new_guid = hyperv.guest_uuid()
+            assert new_guid == ""
+        finally:
+            result = hyperv.guest_uuid_change(origin_guid, hypervisor_data['guest_name'])
+            assert result is True
+            
+            final_guid = hyperv.guest_uuid()
+            assert final_guid == origin_guid
 
 def is_host_responsive(host):
     """
