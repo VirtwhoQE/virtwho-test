@@ -18,7 +18,7 @@ from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
 
 
-from virtwho.base import encrypt_password
+from virtwho.base import encrypt_password, is_host_responsive
 from virtwho.configure import hypervisor_create
 
 from hypervisor.virt.hyperv.hypervcli import HypervCLI
@@ -707,12 +707,3 @@ class TestHypervNegative:
             
             final_guid = hyperv.guest_uuid()
             assert final_guid == origin_guid
-
-def is_host_responsive(host):
-    """
-    Check if the host is responsive
-    :param host: host ip address
-    :return: True or False
-    """
-    cmd = f"ping -c 1 {host}"
-    return os.system(cmd) == 0

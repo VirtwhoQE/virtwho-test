@@ -25,6 +25,7 @@ from virtwho import SECOND_HYPERVISOR_SECTION
 
 from virtwho.base import encrypt_password
 from virtwho.base import get_host_domain_id
+from virtwho.base import is_host_responsive
 from virtwho.configure import hypervisor_create
 from virtwho.settings import TEMP_DIR
 
@@ -1514,12 +1515,3 @@ def json_data_create(hypervisors_num, guests_num):
             )
         virtwho[str(uuid.uuid4()).replace("-", ".")] = guest_list
     return virtwho
-
-def is_host_responsive(host):
-    """
-    Check if the host is responsive
-    :param host: host ip address
-    :return: True or False
-    """
-    cmd = f"ping -c 1 {host}"
-    return os.system(cmd) == 0
