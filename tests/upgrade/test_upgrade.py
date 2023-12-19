@@ -18,7 +18,17 @@ vdc_virtual_sku = config.sku.vdc_virtual
 
 
 class TestUpgrade:
-    def test_pre_upgrade(self, virtwho, sm_guest, rhsm, satellite, hypervisor_data, ssh_host, globalconf, vdc_pool_physical):
+    def test_pre_upgrade(
+        self,
+        virtwho,
+        sm_guest,
+        rhsm,
+        satellite,
+        hypervisor_data,
+        ssh_host,
+        globalconf,
+        vdc_pool_physical,
+    ):
         """Pre-upgrade test cases for virt-who
 
         :title: virt-who: upgrade : pre-upgrade test cases for virt-who
@@ -91,13 +101,20 @@ class TestUpgrade:
             and consumed_data["sku_type"] == "Virtual"
         )
 
-        ssh_host.get_file('/etc/virt-who.conf', '/tmp/virt-who.conf.pre')
-        ssh_host.get_file('/etc/sysconfig/virt-who', '/tmp/virt-who.pre')
+        ssh_host.get_file("/etc/virt-who.conf", "/tmp/virt-who.conf.pre")
+        ssh_host.get_file("/etc/sysconfig/virt-who", "/tmp/virt-who.pre")
         for mode in hypervisors_list():
-            ssh_host.get_file(f'/etc/virt-who.d/{mode}.conf', f'/tmp/{mode}.conf.pre')
+            ssh_host.get_file(f"/etc/virt-who.d/{mode}.conf", f"/tmp/{mode}.conf.pre")
 
-
-    def test_post_upgrade(self, virtwho, sm_guest, hypervisor_data, vdc_pool_physical, globalconf, ssh_host):
+    def test_post_upgrade(
+        self,
+        virtwho,
+        sm_guest,
+        hypervisor_data,
+        vdc_pool_physical,
+        globalconf,
+        ssh_host,
+    ):
         """Post-upgrade test cases for virt-who
 
         :title: virt-who: upgrade : post-upgrade test cases for virt-who
@@ -119,19 +136,18 @@ class TestUpgrade:
         # Check all the configurations in /etc/virt-who.conf
         # and /etc/sysconfig/virt-who still exist
 
-        ssh_host.get_file('/etc/virt-who.conf', '/tmp/virt-who.conf.post')
-        ssh_host.get_file('/etc/sysconfig/virt-who', '/tmp/virt-who.post')
+        ssh_host.get_file("/etc/virt-who.conf", "/tmp/virt-who.conf.post")
+        ssh_host.get_file("/etc/sysconfig/virt-who", "/tmp/virt-who.post")
 
-        assert (
-                local_files_compare('/tmp/virt-who.conf.pre', '/tmp/virt-who.conf.post')
-                and local_files_compare('/tmp/virt-who.pre', '/tmp/virt-who.post')
-        )
+        assert local_files_compare(
+            "/tmp/virt-who.conf.pre", "/tmp/virt-who.conf.post"
+        ) and local_files_compare("/tmp/virt-who.pre", "/tmp/virt-who.post")
 
         # Check the /etc/virt-who.d/virtwho.conf file still exists
         for mode in hypervisors_list():
-            ssh_host.get_file(f'/etc/virt-who.d/{mode}.conf', f'/tmp/{mode}.conf.post')
-            assert (
-                    local_files_compare(f'/tmp/{mode}.conf.pre', f'/tmp/{mode}.conf.post')
+            ssh_host.get_file(f"/etc/virt-who.d/{mode}.conf", f"/tmp/{mode}.conf.post")
+            assert local_files_compare(
+                f"/tmp/{mode}.conf.pre", f"/tmp/{mode}.conf.post"
             )
 
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
