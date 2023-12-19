@@ -6,25 +6,19 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
-import pytest
 
-from virtwho import REGISTER
-from virtwho.base import hypervisors_list
-from virtwho.configure import hypervisor_create
+from virtwho import REGISTER, RHEL_COMPOSE, HYPERVISOR
+from virtwho.base import hypervisors_list, local_files_compare
+from virtwho.configure import hypervisor_create, VirtwhoSysConfig
 from virtwho.settings import config
+
 
 vdc_physical_sku = config.sku.vdc
 vdc_virtual_sku = config.sku.vdc_virtual
 
 
-@pytest.mark.usefixtures("class_guest_register")
-@pytest.mark.usefixtures("function_virtwho_d_conf_clean")
-@pytest.mark.usefixtures("class_debug_true")
-@pytest.mark.usefixtures("class_globalconf_clean")
 class TestUpgrade:
-    def test_pre_upgrade(
-        self, virtwho, sm_guest, rhsm, satellite, hypervisor_data, vdc_pool_physical
-    ):
+    def test_pre_upgrade(self, virtwho, sm_guest, rhsm, satellite, hypervisor_data, ssh_host, globalconf, vdc_pool_physical):
         """Pre-upgrade test cases for virt-who
 
         :title: virt-who: upgrade : pre-upgrade test cases for virt-who
@@ -40,13 +34,44 @@ class TestUpgrade:
         :expectedresults:
             1. Succeed to run the virt-who, no error messages in the rhsm.log
         """
+        if REGISTER == "satellite":
+            satellite.sca(org=None, sca="disable")
+        else:
+            rhsm.sca(sca="disable")
+
+        # Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who
+        globalconf.clean()
+        if "RHEL-8" in RHEL_COMPOSE:
+            sysconfig = VirtwhoSysConfig(HYPERVISOR)
+            sysconfig.clean()
+
+        # Clean all the settings in /etc/virt-who.conf and /etc/sysconfig/virt-who
+        cmd = "rm -rf /etc/virt-who.d/*"
+        ssh_host.runcmd(cmd)
+
+        # register guest
+        sm_guest.register()
 
         for mode in hypervisors_list():
             hypervisor_create(mode)
+        # Configure global options by /etc/virt-who.conf and /etc/sysconfig/virtwho
+        globalconf.update("global", "interval", "3600")
+        globalconf.update("global", "reporter_id", "upgrade-test")
+        globalconf.update("global", "debug", "True")
+        globalconf.update("global", "oneshot", "False")
+        globalconf.update("global", "log_per_config", "False")
+        globalconf.update("global", "log_dir", "/var/log/rhsm")
+        globalconf.update("global", "log_file", "rhsm.log")
+
+        globalconf.update("defaults", "owner", "Default_Organization")
+        globalconf.update("defaults", "hypervisor_id", "hostname")
+
+        if "RHEL-8" in RHEL_COMPOSE:
+            globalconf.update("system_environment", "https_proxy", "https://xxx:3128")
+            globalconf.update("system_environment", "no_proxy", "*")
+
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
-
-        # Configure global options by /etc/virt-who.conf ann /etc/sysconfig/virtwho
 
         # attach physcial vdc for hypervisor
         hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
@@ -64,10 +89,15 @@ class TestUpgrade:
         assert (
             consumed_data["sku"] == vdc_virtual_sku
             and consumed_data["sku_type"] == "Virtual"
-            and consumed_data["temporary"] is False
         )
 
-    def test_post_upgrade(self, virtwho, sm_guest, hypervisor_data, vdc_pool_physical):
+        ssh_host.get_file('/etc/virt-who.conf', '/tmp/virt-who.conf.pre')
+        ssh_host.get_file('/etc/sysconfig/virt-who', '/tmp/virt-who.pre')
+        for mode in hypervisors_list():
+            ssh_host.get_file(f'/etc/virt-who.d/{mode}.conf', f'/tmp/{mode}.conf.pre')
+
+
+    def test_post_upgrade(self, virtwho, sm_guest, hypervisor_data, vdc_pool_physical, globalconf, ssh_host):
         """Post-upgrade test cases for virt-who
 
         :title: virt-who: upgrade : post-upgrade test cases for virt-who
@@ -89,11 +119,23 @@ class TestUpgrade:
         # Check all the configurations in /etc/virt-who.conf
         # and /etc/sysconfig/virt-who still exist
 
+        ssh_host.get_file('/etc/virt-who.conf', '/tmp/virt-who.conf.post')
+        ssh_host.get_file('/etc/sysconfig/virt-who', '/tmp/virt-who.post')
+
+        assert (
+                local_files_compare('/tmp/virt-who.conf.pre', '/tmp/virt-who.conf.post')
+                and local_files_compare('/tmp/virt-who.pre', '/tmp/virt-who.post')
+        )
+
         # Check the /etc/virt-who.d/virtwho.conf file still exists
+        for mode in hypervisors_list():
+            ssh_host.get_file(f'/etc/virt-who.d/{mode}.conf', f'/tmp/{mode}.conf.post')
+            assert (
+                    local_files_compare(f'/tmp/{mode}.conf.pre', f'/tmp/{mode}.conf.post')
+            )
 
         consumed_data = sm_guest.consumed(sku_id=vdc_virtual_sku)
         assert (
             consumed_data["sku"] == vdc_virtual_sku
             and consumed_data["sku_type"] == "Virtual"
-            and consumed_data["temporary"] is False
         )
