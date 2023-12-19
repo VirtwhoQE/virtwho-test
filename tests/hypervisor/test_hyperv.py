@@ -6,9 +6,8 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
-import pytest
 import time
-import os
+import pytest
 
 from virtwho import REGISTER
 from virtwho import RHEL_COMPOSE

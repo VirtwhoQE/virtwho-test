@@ -7,12 +7,12 @@
 :caselevel: Component
 """
 import os
-import pytest
 import random
 import string
 import json
 import uuid
 import time
+import pytest
 
 from virtwho import logger
 from virtwho import REGISTER
