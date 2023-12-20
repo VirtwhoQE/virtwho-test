@@ -6,6 +6,7 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+import time
 import pytest
 
 from virtwho import REGISTER
@@ -16,9 +17,10 @@ from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
 
 
-from virtwho.base import encrypt_password
+from virtwho.base import encrypt_password, is_host_responsive
 from virtwho.configure import hypervisor_create
 
+from hypervisor.virt.hyperv.hypervcli import HypervCLI
 
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_debug_true")
@@ -634,3 +636,73 @@ class TestHypervNegative:
                 and result["thread"] == 1
                 and hostname not in str(result["mappings"])
             )
+    
+    @pytest.mark.tier3
+    def test_biosguid_null(self, virtwho, function_hypervisor, hypervisor_data, register_data):
+        """Test if the biosguid is null, whether virt-who can send the guest info to server.
+        
+        :title: virt-who: hyperv: test biosguid null
+        :id: 4de4fed0-97c2-4146-9540-2223386297c4
+        :caseimportance: High
+        :tags: hypervisor,hyperv,tier3
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Run virt-who with normal guid.
+            2. Download the New-VMBIOSGUID.ps1 script from the server.
+            3. Import the New-VMBIOSGUID.ps1 script.
+            4. Change the biosguid to null.
+            5. Run virt-who again.
+            6. Change the biosguid to the original value.
+        :expectedresults:
+            1. Succeeded to run the virt-who, can find the guest info in the server.
+            2. Succeeded to download the New-VMBIOSGUID.ps1 script.
+            3. Succeeded to import the New-VMBIOSGUID.ps1 script.
+            4. Succeeded to change the biosguid to null.
+            5. Succeeded to run the virt-who, cannot find the guest info in the server.
+        """
+        
+        hyperv = HypervCLI(
+            server = hypervisor_data["hypervisor_server"],
+            ssh_user = hypervisor_data["hypervisor_username"],
+            ssh_pwd = hypervisor_data["hypervisor_password"],
+        )
+        
+        result = virtwho.run_service()
+        assert (
+            result["error"] == 0
+            and result["send"] == 1
+            and result["thread"] == 1
+        )
+        try:
+            origin_guid = hyperv.guest_uuid()
+            assert origin_guid != ""
+
+            result = hyperv.guest_uuid_change("00000000-0000-0000-0000-000000000000", hypervisor_data['guest_name'])
+            assert result is True
+            
+            timeout = 300
+            interval = 5
+            start_time = time.time()
+            while not is_host_responsive(hypervisor_data["guest_ip"]):
+                elapsed_time = time.time() - start_time
+                if elapsed_time > timeout:
+                    assert False, f"Timeout reached after {timeout} seconds!"
+                time.sleep(interval)
+            
+            result = virtwho.run_service()
+            assert (
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
+                and len(result["mappings"][register_data["default_org"]][hypervisor_data["hypervisor_hostname"]]["guests"])==0
+            )
+            
+            new_guid = hyperv.guest_uuid()
+            assert new_guid == ""
+        finally:
+            result = hyperv.guest_uuid_change(origin_guid, hypervisor_data['guest_name'])
+            assert result is True
+            
+            final_guid = hyperv.guest_uuid()
+            assert final_guid == origin_guid

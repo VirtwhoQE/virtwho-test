@@ -644,3 +644,12 @@ def hypervisors_list():
     :return: hypervisors_list
     """
     return config.job.multi_hypervisors.strip("[").strip("]").split(",")
+
+def is_host_responsive(host):
+    """
+    Check if the host is responsive
+    :param host: host ip address
+    :return: True or False
+    """
+    cmd = f"ping -c 1 {host}"
+    return os.system(cmd) == 0
