@@ -645,6 +645,7 @@ def hypervisors_list():
     """
     return config.job.multi_hypervisors.strip("[").strip("]").split(",")
 
+
 def is_host_responsive(host):
     """
     Check if the host is responsive
