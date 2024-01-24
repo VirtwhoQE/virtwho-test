@@ -21,7 +21,7 @@ from virtwho.base import hostname_get
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
-class TestConfiguration:
+class TestConfigurationPositive:
     @pytest.mark.tier1
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
         """Test the debug option in /etc/virtwho.conf
@@ -520,22 +520,22 @@ class TestConfiguration:
             globalconf.update("system_environment", proxy, proxy_data[proxy])
             result = virtwho.run_service()
             if HYPERVISOR == "ahv":
-                logger.info("=== AHV: failed with bz1992619 ===")
+                logger.info("=== AHV: failed with RHEL-1309 ===")
             assert (
                 result["error"] == 0
                 and result["send"] == 1
                 and result["thread"] == 1
-                # Skip the below assertion due to open bz1989354
+                # Skip the below assertion due to open rhel13376
                 # and connection_msg in result["log"]
                 # and proxy_msg in result["log"]
             )
-            bz1989354_test = result["log"]
+            rhel13376_test = result["log"]
 
             # run virt-who with unreachable http_proxy/https_proxy setting
             globalconf.update("system_environment", proxy, proxy_data[f"bad_{proxy}"])
             result = virtwho.run_service()
-            if HYPERVISOR in ("kubvirt", "hyperv", "libvirt"):
-                logger.info("=== Kubevirt/Hyperv/Libvirt: failed with bz2175098 ===")
+            if HYPERVISOR in ("kubevirt", "hyperv", "libvirt"):
+                logger.info("=== Kubevirt/Hyperv/Libvirt: failed with RHEL-12391 ===")
             assert result["error"] in (1, 2)
             assert any(
                 error_msg in result["error_msg"] for error_msg in proxy_data["error"]
@@ -550,8 +550,8 @@ class TestConfiguration:
 
             globalconf.delete("system_environment")
 
-        logger.info("=== All Hypervisors: failed with bz1989354 ===")
-        assert connection_msg in bz1989354_test and proxy_msg in bz1989354_test
+        logger.info("=== All Hypervisors: failed with RHEL-13376 ===")
+        assert connection_msg in rhel13376_test and proxy_msg in rhel13376_test
 
 
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
