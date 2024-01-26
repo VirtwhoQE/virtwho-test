@@ -631,7 +631,7 @@ class TestSatelliteScaDisable:
         _ = virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
 
-        time.sleep(5)
+        time.sleep(30)
         sm_guest.refresh()
         vdc_virt_data = sm_guest.available(vdc_virtual_sku, "Virtual")
         vdc_virt_pool = vdc_virt_data["pool_id"]
