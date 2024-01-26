@@ -607,9 +607,9 @@ class TestSatelliteScaDisable:
 
             1. Register guest to entitlement server
             2. Attach physical vdc pool to hypervisor
-            3. Check the virtual vdc subscription
-            4. Attach virtual vdc pool to sm
-            5. Check the virtual vdc subscription again
+            3. Check the virtual vdc subscription on webui
+            4. Attach virtual vdc pool to the guest
+            5. Check the virtual vdc subscription on webui again
 
         :expectedresults:
 
@@ -630,6 +630,9 @@ class TestSatelliteScaDisable:
             satellite.host_delete(host=hypervisor_hostname)
         _ = virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
+
+        time.sleep(5)
+        sm_guest.refresh()
         vdc_virt_data = sm_guest.available(vdc_virtual_sku, "Virtual")
         vdc_virt_pool = vdc_virt_data["pool_id"]
         subscription = satellite.subscription_on_webui(vdc_virt_pool)
@@ -647,7 +650,6 @@ class TestSatelliteScaDisable:
         )
 
         # check the subscription with virtual vdc pool attached for guest
-        sm_guest.refresh()
         sm_guest.attach(pool=vdc_virt_pool)
         for i in range(3):
             time.sleep(30)
