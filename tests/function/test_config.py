@@ -8,7 +8,7 @@
 """
 import pytest
 
-from virtwho import HYPERVISOR
+from virtwho import HYPERVISOR, RHEL_COMPOSE
 from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
 from virtwho import SYSCONFIG_FILE
@@ -80,9 +80,13 @@ class TestConfigurationPositive:
 
         globalconf.update("global", "interval", "60")
         result = virtwho.run_service(wait=60)
-        assert (
-            result["send"] == 1 and result["error"] == 0 and result["loop"] in [60, 61]
-        )
+        assert result["send"] == 1 and result["error"] == 0
+        # Nutanix bug bz1996923 won't fix
+        if HYPERVISOR == "ahv" and "RHEL-8" in RHEL_COMPOSE:
+            rhsm_log = virtwho.rhsm_log_get()
+            assert "No data to send, waiting for next interval" in rhsm_log
+        else:
+            assert result["loop"] in [60, 61]
 
     @pytest.mark.tier1
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
@@ -659,9 +663,13 @@ class TestSysConfiguration:
         sysconfg_options["VIRTWHO_INTERVAL"] = 60
         function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service(wait=60)
-        assert (
-            result["send"] == 1 and result["error"] == 0 and result["loop"] in [60, 61]
-        )
+        assert result["send"] == 1 and result["error"] == 0
+        # Nutanix bug bz1996923 won't fix
+        if HYPERVISOR == "ahv" and "RHEL-8" in RHEL_COMPOSE:
+            rhsm_log = virtwho.rhsm_log_get()
+            assert "No data to send, waiting for next interval" in rhsm_log
+        else:
+            assert result["loop"] in [60, 61]
 
         function_sysconfig.clean()
 
