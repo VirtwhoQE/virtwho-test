@@ -80,7 +80,7 @@ class TestConfigurationPositive:
 
         globalconf.update("global", "interval", "60")
         result = virtwho.run_service(wait=60)
-        assert (result["send"] == 1 and result["error"] == 0)
+        assert result["send"] == 1 and result["error"] == 0
         # Nutanix bug bz1996923 won't fix
         if HYPERVISOR == "ahv" and "RHEL-8" in RHEL_COMPOSE:
             rhsm_log = virtwho.rhsm_log_get()
@@ -663,7 +663,7 @@ class TestSysConfiguration:
         sysconfg_options["VIRTWHO_INTERVAL"] = 60
         function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service(wait=60)
-        assert (result["send"] == 1 and result["error"] == 0)
+        assert result["send"] == 1 and result["error"] == 0
         # Nutanix bug bz1996923 won't fix
         if HYPERVISOR == "ahv" and "RHEL-8" in RHEL_COMPOSE:
             rhsm_log = virtwho.rhsm_log_get()
