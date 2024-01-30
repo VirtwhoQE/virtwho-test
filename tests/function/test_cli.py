@@ -122,11 +122,13 @@ class TestCli:
         assert result["send"] == 1 and result["interval"] == 3600
 
         result = virtwho.run_cli(oneshot=False, interval=60, wait=60)
-        assert (
-            result["send"] == 1
-            and result["interval"] == 60
-            and (result["loop"] == 60 or result["loop"] == 61)
-        )
+        assert (result["send"] == 1 and result["interval"] == 60)
+        # Nutanix bug bz1996923 won't fix
+        if HYPERVISOR == "ahv":
+            rhsm_log = virtwho.rhsm_log_get()
+            assert "No data to send, waiting for next interval" in rhsm_log
+        else:
+            assert (result["loop"] == 60 or result["loop"] == 61)
 
     @pytest.mark.tier1
     def test_print(self, virtwho, hypervisor_data):
