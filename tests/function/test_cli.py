@@ -10,7 +10,7 @@ import threading
 import time
 import pytest
 
-from virtwho import HYPERVISOR
+from virtwho import HYPERVISOR, RHEL_COMPOSE
 from virtwho import HYPERVISOR_FILE, config
 from virtwho.base import encrypt_password
 
@@ -124,7 +124,7 @@ class TestCli:
         result = virtwho.run_cli(oneshot=False, interval=60, wait=60)
         assert (result["send"] == 1 and result["interval"] == 60)
         # Nutanix bug bz1996923 won't fix
-        if HYPERVISOR == "ahv":
+        if HYPERVISOR == "ahv" and "RHEL-8" in RHEL_COMPOSE:
             rhsm_log = virtwho.rhsm_log_get()
             assert "No data to send, waiting for next interval" in rhsm_log
         else:
