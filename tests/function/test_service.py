@@ -11,7 +11,7 @@ import pytest
 from virtwho.settings import config
 from virtwho.configure import hypervisor_create
 from virtwho.base import msg_search, ssh_access_no_password, expect_run
-from virtwho import HYPERVISOR, REGISTER
+from virtwho import HYPERVISOR, REGISTER, logger
 from virtwho.ssh import SSHConnect
 
 
@@ -46,6 +46,8 @@ class TestVirtwhoService:
 
         virtwho.operate_service(action="stop")
         _, output = virtwho.operate_service(action="status")
+        if HYPERVISOR == "ahv":
+            logger.info("=== AHV: failed with RHEL-12393 ===")
         assert output is "dead"
 
     @pytest.mark.tier1
@@ -136,6 +138,8 @@ class TestVirtwhoService:
             f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl stop virt-who'"
         )
         _, status = virtwho.operate_service(action="status")
+        if HYPERVISOR == "ahv":
+            logger.info("=== AHV: failed with RHEL-12393 ===")
         assert status == "dead"
 
         # start
@@ -287,7 +291,10 @@ class TestVirtwhoService:
             sm_host.unregister()
             rhsm_log = virtwho.rhsm_log_get(wait=15)
             thread_num = virtwho.thread_number()
-            assert msg_search(rhsm_log, "system is not registered") and thread_num == 1
+            assert thread_num == 1
+            if HYPERVISOR == "ahv":
+                logger.info("=== AHV: failed with RHEL-5887 ===")
+            assert msg_search(rhsm_log, "system is not registered")
 
             # register and then run virt-who
             sm_host.register()
