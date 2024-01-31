@@ -11,7 +11,7 @@ import time
 import pytest
 
 from virtwho import HYPERVISOR, RHEL_COMPOSE
-from virtwho import HYPERVISOR_FILE, config
+from virtwho import HYPERVISOR_FILE, config, logger
 from virtwho.base import encrypt_password
 
 
@@ -230,6 +230,8 @@ class TestCli:
             "xargs -I {} kill -2 {}"
         )
         time.sleep(15)
+        if HYPERVISOR == "ahv":
+            logger.info("=== AHV: failed with RHEL-12395 ===")
         assert virtwho.thread_number() == 0
 
     @pytest.mark.tier1
