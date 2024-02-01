@@ -25,6 +25,7 @@ from virtwho.configure import hypervisor_create
 @pytest.mark.notLocal
 class TestSubscriptionPositive:
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_no_rhsm_options(
         self, virtwho, function_hypervisor, sm_host, register_assertion
     ):
@@ -60,6 +61,7 @@ class TestSubscriptionPositive:
         )
 
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_rhsm_encrypted_password(
         self, virtwho, function_hypervisor, ssh_host, register_data
     ):
@@ -87,6 +89,7 @@ class TestSubscriptionPositive:
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_rhsm_proxy(self, virtwho, function_hypervisor, rhsmconf, proxy_data):
         """
 
