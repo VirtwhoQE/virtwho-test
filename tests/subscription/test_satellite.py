@@ -31,7 +31,7 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_globalconf_clean")
 @pytest.mark.usefixtures("function_guest_unattach")
-@pytest.mark.usefixtures("class_guest_register")
+@pytest.mark.usefixtures("function_guest_register")
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("class_satellite_sca_disable")
 class TestSatelliteScaDisable:
@@ -515,6 +515,7 @@ class TestSatelliteScaDisable:
         finally:
             class_hypervisor.update("owner", default_org)
             satellite_second_org.host_delete(host=hypervisor_hostname)
+            sm_guest_second_org.unregister()
 
     @pytest.mark.tier2
     @pytest.mark.notLocal
@@ -590,6 +591,7 @@ class TestSatelliteScaDisable:
         finally:
             function_hypervisor.create(rhsm=True)
             satellite_second_org.host_delete(host=hypervisor_hostname)
+            sm_guest_second_org.unregister()
 
     @pytest.mark.tier2
     def test_vdc_virtual_subscription_on_webui(
