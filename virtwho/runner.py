@@ -209,7 +209,7 @@ class VirtwhoRunner:
         """
         if cli:
             logger.info(f"Start to run virt-who by cli: {cli}")
-            _, output = self.ssh.runcmd(cli)
+            _, output = self.ssh.runcmd(cli, log_print=False)
         else:
             logger.info("Start to run virt-who by service")
             _, output = self.operate_service()

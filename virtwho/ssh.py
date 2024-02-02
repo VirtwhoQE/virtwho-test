@@ -71,10 +71,11 @@ class SSHConnect:
         sftp = paramiko.SFTPClient.from_transport(transport)
         return sftp, transport
 
-    def runcmd(self, cmd, if_stdout=False):
+    def runcmd(self, cmd, if_stdout=False, log_print=True):
         """Executes SSH command on remote hostname.
         :param str cmd: The command to run
         :param str if_stdout: default to return to stderr
+        :param str log_print: default to print the output
         """
         ssh = self._connect()
         logger.info(f"[{self.host}:{self.port}] >>> {cmd}")
@@ -83,10 +84,12 @@ class SSHConnect:
         stdout, stderr = stdout.read(), stderr.read()
         ssh.close()
         if if_stdout or not stderr:
-            logger.info("<<< stdout\n{}".format(stdout.decode()))
+            if log_print:
+                logger.info("<<< stdout\n{}".format(stdout.decode()))
             return code, stdout.decode()
         else:
-            logger.info("<<< stderr\n{}".format(stderr.decode()))
+            if log_print:
+                logger.info("<<< stderr\n{}".format(stderr.decode()))
             return code, stderr.decode()
 
     def get_file(self, remote_file, local_file):
