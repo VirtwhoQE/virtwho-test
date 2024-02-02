@@ -36,6 +36,7 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 @pytest.mark.usefixtures("class_satellite_sca_disable")
 class TestSatelliteScaDisable:
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_vdc_virtual_pool_attach_by_poolId(
         self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
@@ -139,6 +140,7 @@ class TestSatelliteScaDisable:
         assert consumed_data is None
 
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_vdc_temporary_pool_by_poolId(
         self,
         virtwho,
@@ -592,6 +594,7 @@ class TestSatelliteScaDisable:
             satellite_second_org.host_delete(host=hypervisor_hostname)
 
     @pytest.mark.tier2
+    @pytest.mark.satelliteSmoke
     def test_vdc_virtual_subscription_on_webui(
         self, virtwho, sm_guest, satellite, hypervisor_data, vdc_pool_physical
     ):
@@ -703,6 +706,7 @@ class TestSatelliteScaDisable:
 @pytest.mark.usefixtures("class_satellite_sca_enable")
 class TestSatelliteScaEnable:
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_hypervisor_entitlement_status(
         self, virtwho, hypervisor_data, satellite, vdc_pool_physical
     ):
@@ -733,6 +737,7 @@ class TestSatelliteScaEnable:
         assert msg_search(result, msg)
 
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_guest_entitlement_status(
         self,
         virtwho,

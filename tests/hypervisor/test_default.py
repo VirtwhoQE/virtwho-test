@@ -78,6 +78,7 @@ class TestHypervisorPositive:
             assert attr1 in output and guest_hostname in output
 
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_associated_info_by_rhsmlog_and_webui(
         self,
         virtwho,

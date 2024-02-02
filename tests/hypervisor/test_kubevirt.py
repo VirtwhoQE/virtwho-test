@@ -24,6 +24,7 @@ from virtwho.configure import hypervisor_create
 @pytest.mark.usefixtures("class_globalconf_clean")
 class TestKubevirtPositive:
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_hypervisor_id(
         self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite
     ):

@@ -53,6 +53,7 @@ class TestXenPositive:
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier1
+    @pytest.mark.satelliteSmoke
     def test_hypervisor_id(
         self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite
     ):
