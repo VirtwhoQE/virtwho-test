@@ -88,7 +88,7 @@ class TestEsxPositive:
 
             hypervisor id shows uuid/hostname/hwuuid in mapping as the setting.
         """
-        hypervisor_ids = ["hostname", "uuid", "hwuuid"]
+        hypervisor_ids = ["uuid", "hwuuid", "hostname"]
         for hypervisor_id in hypervisor_ids:
             function_hypervisor.update("hypervisor_id", hypervisor_id)
             result = virtwho.run_service()

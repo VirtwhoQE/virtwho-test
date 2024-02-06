@@ -46,7 +46,7 @@ class TestKubevirtPositive:
 
             hypervisor id shows uuid/hostname in mapping as the setting.
         """
-        hypervisor_ids = ["hostname", "uuid"]
+        hypervisor_ids = ["uuid", "hostname"]
         for hypervisor_id in hypervisor_ids:
             function_hypervisor.update("hypervisor_id", hypervisor_id)
             result = virtwho.run_service()

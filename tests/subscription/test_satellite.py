@@ -184,6 +184,7 @@ class TestSatelliteScaDisable:
         hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
 
         virtwho.stop()
+        virtwho.run_cli()
         satellite.host_delete(host=hypervisor_hostname)
 
         sm_guest.refresh()
@@ -198,7 +199,7 @@ class TestSatelliteScaDisable:
 
         if HYPERVISOR == "local":
             sm_host.register()
-        _ = virtwho.run_cli()
+        virtwho.run_cli()
         satellite.attach(host=hypervisor_hostname, pool=vdc_pool_physical)
 
         sm_guest.refresh()
