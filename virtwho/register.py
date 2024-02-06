@@ -96,6 +96,13 @@ class SubscriptionManager:
         """
         ret, output = self.ssh.runcmd("subscription-manager identity")
         if ret == 0 and self.org in output:
+            if self.register_type == "satellite":
+                _, output = self.ssh.runcmd(f"cat {self.rhsm_conf}", log_print=False)
+                if f"hostname = {self.server}" not in output:
+                    logger.warning(
+                        f"The ({self.host}) is not registering in the testing Satellite"
+                    )
+                    return False
             return True
         return False
 
