@@ -20,7 +20,7 @@ from virtwho.configure import get_hypervisor_info
 class TestMultiHypervisors:
     @pytest.mark.fipsEnable
     def test_multi_hypervisors_report_together(
-            self, virtwho, ssh_host, satellite, rhsm
+        self, virtwho, ssh_host, satellite, rhsm
     ):
         """Test virt-who can report multi hypervisors together
 
@@ -43,7 +43,9 @@ class TestMultiHypervisors:
         single_file = "/etc/virt-who.d/virtwho_multi.conf"
         try:
             for typ in file_types:
-                logger.info(f"+++ Start the multi hypervisors testing in ({typ}) file(s) +++")
+                logger.info(
+                    f"+++ Start the multi hypervisors testing in ({typ}) file(s) +++"
+                )
                 hypervisor_hostname_list = []
                 guest_uuid_list = []
                 config_file_list = []
@@ -74,11 +76,17 @@ class TestMultiHypervisors:
                 ssh_host.runcmd("ls /etc/virt-who.d/")
                 result = virtwho.run_service()
                 mappings = result["mappings"]
-                assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+                assert (
+                    result["error"] == 0
+                    and result["send"] == 1
+                    and result["thread"] == 1
+                )
                 assert msg_search(
                     output=str(mappings), msgs=hypervisor_hostname_list, check="and"
                 )
-                assert msg_search(output=str(mappings), msgs=guest_uuid_list, check="and")
+                assert msg_search(
+                    output=str(mappings), msgs=guest_uuid_list, check="and"
+                )
                 for hypervisor in hypervisor_hostname_list:
                     if REGISTER == "rhsm":
                         assert rhsm.consumers(host_name=hypervisor)
