@@ -77,14 +77,16 @@ class TestMultiHypervisors:
                 result = virtwho.run_service()
                 mappings = result["mappings"]
                 assert (
-                        result["error"] == 0
-                        and result["send"] == 1
-                        and result["thread"] == 1
+                    result["error"] == 0
+                    and result["send"] == 1
+                    and result["thread"] == 1
                 )
                 assert msg_search(
                     output=str(mappings), msgs=hypervisor_hostname_list, check="and"
                 )
-                assert msg_search(output=str(mappings), msgs=guest_uuid_list, check="and")
+                assert msg_search(
+                    output=str(mappings), msgs=guest_uuid_list, check="and"
+                )
                 for hypervisor in hypervisor_hostname_list:
                     if REGISTER == "rhsm":
                         assert rhsm.consumers(host_name=hypervisor)
