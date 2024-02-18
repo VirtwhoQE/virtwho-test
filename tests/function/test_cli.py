@@ -20,6 +20,7 @@ from virtwho.base import encrypt_password
 @pytest.mark.usefixtures("class_hypervisor")
 class TestCli:
     @pytest.mark.tier1
+    @pytest.mark.fipsEnable
     def test_debug(self, virtwho):
         """Test the '-d' option in virt-who command line
 
@@ -47,6 +48,7 @@ class TestCli:
         assert result["send"] == 1 and result["error"] == 0 and result["debug"] is True
 
     @pytest.mark.tier1
+    @pytest.mark.fipsEnable
     def test_oneshot(self, virtwho):
         """Test the '-o' option in virt-who command line
 
@@ -93,6 +95,7 @@ class TestCli:
             assert result["oneshot"] is True
 
     @pytest.mark.tier1
+    @pytest.mark.fipsEnable
     def test_interval(self, virtwho):
         """Test the '-i' option in virt-who command line
 

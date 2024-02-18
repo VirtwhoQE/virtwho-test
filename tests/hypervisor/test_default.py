@@ -79,6 +79,7 @@ class TestHypervisorPositive:
 
     @pytest.mark.tier1
     @pytest.mark.satelliteSmoke
+    @pytest.mark.fipsEnable
     def test_associated_info_by_rhsmlog_and_webui(
         self,
         virtwho,

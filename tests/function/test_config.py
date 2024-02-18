@@ -488,6 +488,7 @@ class TestConfigurationPositive:
 
     @pytest.mark.tier1
     @pytest.mark.notLocal
+    @pytest.mark.fipsEnable
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
