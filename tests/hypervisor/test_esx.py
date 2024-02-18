@@ -11,7 +11,6 @@ import random
 import string
 import json
 import uuid
-import time
 import pytest
 
 from virtwho import logger
@@ -25,7 +24,6 @@ from virtwho import SECOND_HYPERVISOR_SECTION
 
 from virtwho.base import encrypt_password
 from virtwho.base import get_host_domain_id
-from virtwho.base import is_host_responsive
 from virtwho.configure import hypervisor_create
 from virtwho.settings import TEMP_DIR
 
