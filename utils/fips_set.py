@@ -30,7 +30,7 @@ def fips_set_for_rhel_host(args):
         system_reboot(ssh_host)
         _, stdout = ssh_host.runcmd(fips_check)
         if fips in stdout:
-            logger.info(f"The host was set to Fips/{args.mode} mode.")
+            logger.info(f"Succeeded to set host to Fips/{args.mode} mode.")
             return True
         raise FailException(f"Failed to set the Fips/{args.mode} mode")
 
