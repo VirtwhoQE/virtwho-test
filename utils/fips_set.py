@@ -43,20 +43,28 @@ def arguments_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--server", default=config.virtwho.server, required=False,
-        help="RHEL host IP address/hostname, default to use the virtwho.ini:virtwho:server"
+        "--server",
+        default=config.virtwho.server,
+        required=False,
+        help="RHEL host IP address/hostname, default to use the virtwho.ini:virtwho:server",
     )
     parser.add_argument(
-        "--username", default=config.virtwho.username, required=False,
-        help="RHEL host access username, default to use the virtwho.ini:virtwho:username."
+        "--username",
+        default=config.virtwho.username,
+        required=False,
+        help="RHEL host access username, default to use the virtwho.ini:virtwho:username.",
     )
     parser.add_argument(
-        "--password", default=config.virtwho.password, required=False,
-        help="RHEL host access password, default to use the virtwho.ini:virtwho:password."
+        "--password",
+        default=config.virtwho.password,
+        required=False,
+        help="RHEL host access password, default to use the virtwho.ini:virtwho:password.",
     )
     parser.add_argument(
-        "--mode", default="enable", required=False,
-        help="enable/disable fips mode, default is enable"
+        "--mode",
+        default="enable",
+        required=False,
+        help="enable/disable fips mode, default is enable",
     )
     return parser.parse_args()
 
