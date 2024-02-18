@@ -618,9 +618,10 @@ def system_reboot(ssh):
     :return: True or raise fail.
     """
     ssh.runcmd("sync;sync;sync;sync;reboot")
-    time.sleep(120)
-    if ssh_connect(ssh):
-        return True
+    for i in range(5):
+        time.sleep(120)
+        if ssh_connect(ssh):
+            return True
     raise FailException("Failed to reboot system")
 
 
