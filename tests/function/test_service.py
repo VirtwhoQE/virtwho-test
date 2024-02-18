@@ -23,7 +23,6 @@ from virtwho.ssh import SSHConnect
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestVirtwhoService:
     @pytest.mark.tier1
-    @pytest.mark.fipsEnable
     def test_virtwho_service_start_and_stop(self, virtwho):
         """
 
@@ -52,7 +51,6 @@ class TestVirtwhoService:
         assert output is "dead"
 
     @pytest.mark.tier1
-    @pytest.mark.fipsEnable
     def test_virtwho_service_restart(self, virtwho):
         """
 
