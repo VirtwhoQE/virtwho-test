@@ -42,9 +42,9 @@ class TestMultiHypervisors:
         file_types = ["separated", "single"]
         single_file = "/etc/virt-who.d/virtwho_multi.conf"
         try:
-            for typ in file_types:
+            for file_type in file_types:
                 logger.info(
-                    f"+++ Start the multi hypervisors testing in ({typ}) file(s) +++"
+                    f"+++ Start the multi hypervisors testing in ({file_type}) file(s) +++"
                 )
                 hypervisor_hostname_list = []
                 guest_uuid_list = []
@@ -69,7 +69,7 @@ class TestMultiHypervisors:
                     hypervisor_hostname_list.append(hypervisor_hostname)
                     guest_uuid_list.append(guest_uuid)
                     config_file_list.append(hypervisor_config_file)
-                if typ == "single":
+                if file_type == "single":
                     multi_files_combine(
                         ssh_host, config_file_list, single_file, delete=True
                     )
@@ -98,7 +98,7 @@ class TestMultiHypervisors:
 
 def multi_files_combine(ssh, multi_files, dest_file, delete=False):
     """
-    Check if the host is responsive
+    Combine multi files content to one file.
     :param ssh: ssh host access
     :param multi_files: a list of all the files' path
     :param dest_file: destination file path
