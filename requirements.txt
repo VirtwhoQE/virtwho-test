@@ -1,11 +1,12 @@
-attrdict
-paramiko
+# The commented packages have been install to the docker slave by Dockerfile
 pytest==7.2.2
-pytest-services
-pytest-mock
-pytest-xdist
-requests
-unittest2
-urllib3
-PyYAML
-pexpect
+# attrdict
+# paramiko
+# pytest-services
+# pytest-mock
+# pytest-xdist
+# requests
+# unittest2
+# urllib3
+# PyYAML
+# pexpect
