@@ -108,6 +108,7 @@ class TestVirtwhoService:
         assert output is "running"
 
     @pytest.mark.tier1
+    @pytest.mark.fipsEnable
     def test_virtwho_service_control_by_ssh_connect(self, virtwho, ssh_guest, ssh_host):
         """
 
