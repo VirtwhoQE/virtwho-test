@@ -43,10 +43,18 @@ class SSHConnect:
 
     def pwd_connect(self):
         """SSH command execution connection by password"""
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
-        return ssh
+        ssh = ""
+        connect = False
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
+            connect = True
+        finally:
+            if connect:
+                return ssh
+            logger.error(f"Failed to ssh connect the {self.host}.")
+            return False
 
     def rsa_connect(self):
         """SSH command execution connection by key file"""

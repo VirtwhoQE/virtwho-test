@@ -127,10 +127,11 @@ def ssh_connect(ssh):
     Test if the host is running and can be accessed by ssh.
     :param ssh: ssh access of host
     """
-    ret, output = ssh.runcmd("rpm -qa filesystem")
-    if ret == 0 and "filesystem" in output:
-        logger.info(f"Suceeded to ssh connect the host")
-        return True
+    if ssh.pwd_connect():
+        ret, output = ssh.runcmd("rpm -qa filesystem")
+        if ret == 0 and "filesystem" in output:
+            logger.info(f"Suceeded to ssh connect the host.")
+            return True
     return False
 
 
