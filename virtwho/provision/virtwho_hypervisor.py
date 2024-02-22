@@ -87,15 +87,13 @@ def esx_monitor():
                     f"please install one."
                 )
             else:
-                if esx_data["guest_state"] == 1 and host_ping(
-                    host=esx_data["guest_ip"]
-                ):
+                ssh_guest = SSHConnect(
+                    host=esx_data["guest_ip"],
+                    user=config.esx.guest_username,
+                    pwd=config.esx.guest_password,
+                )
+                if esx_data["guest_state"] == 1 and ssh_connect(ssh_guest):
                     logger.info(f"The rhel guest({guest_name}) is running well.")
-                    ssh_guest = SSHConnect(
-                        host=esx_data["guest_ip"],
-                        user=config.esx.guest_username,
-                        pwd=config.esx.guest_password,
-                    )
                     esx_data["guest_uuid"] = rhel_host_uuid_get(ssh_guest)
                 else:
                     esx_state, guest_ip = (state_guest_bad, guest_down)
@@ -189,15 +187,13 @@ def hyperv_monitor():
                     f"please install one."
                 )
             else:
-                if hyperv_data["guest_state"] == 2 and host_ping(
-                    host=hyperv_data["guest_ip"]
-                ):
+                ssh_guest = SSHConnect(
+                    host=hyperv_data["guest_ip"],
+                    user=config.esx.guest_username,
+                    pwd=config.esx.guest_password,
+                )
+                if hyperv_data["guest_state"] == 2 and ssh_connect(ssh_guest):
                     logger.info(f"The rhel guest({guest_name}) is running well.")
-                    ssh_guest = SSHConnect(
-                        host=hyperv_data["guest_ip"],
-                        user=config.esx.guest_username,
-                        pwd=config.esx.guest_password,
-                    )
                     hyperv_data["guest_uuid"] = rhel_host_uuid_get(ssh_guest).upper()
                 else:
                     hyperv_state, guest_ip = (state_guest_bad, guest_down)
@@ -271,10 +267,6 @@ def kubevirt_monitor():
                 logger.error(
                     f"Did not find the guest({guest_name}), please install one."
                 )
-            elif not host_ping(host=guest_ip):
-                logger.warning(
-                    f"The rhel guest({guest_name}) is down, please repair it."
-                )
             else:
                 ssh_guest = SSHConnect(
                     host=kubevirt_data["hostname"],
@@ -315,7 +307,7 @@ def kubevirt_monitor():
                     else:
                         kubevirt_state, guest_ip_sw = (state_guest_bad, guest_down)
                         logger.warning(
-                            f"The guest({guest_name}) is unavailable, please repair it."
+                            f"The guest({guest_name_sw}) is unavailable, please repair it."
                         )
 
     finally:
@@ -547,9 +539,12 @@ def libvirt_monitor():
                     f"please install one."
                 )
             else:
-                if libvirt_data["guest_state"] == "running" and host_ping(
-                    host=libvirt_data["guest_ip"]
-                ):
+                ssh_guest = SSHConnect(
+                    host=libvirt_data["guest_ip"],
+                    user=config.libvirt.guest_username,
+                    pwd=config.libvirt.guest_password,
+                )
+                if ssh_connect(ssh_guest):
                     logger.info(f"The rhel guest({guest_name}) is running well.")
                 else:
                     libvirt_state, guest_ip = (state_guest_bad, guest_down)
