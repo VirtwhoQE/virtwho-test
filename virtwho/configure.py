@@ -286,6 +286,16 @@ def get_hypervisor_handler(mode):
     return hypervisor
 
 
+def get_hypervisor_info(mode, option):
+    """Get the hypervisor value from virtwho.ini.
+    :param mode: The hypervisor mode
+    :param option: The hypervisor option
+    :return: hypervisor option value
+    """
+    hypervisor = get_hypervisor_handler(mode)
+    return getattr(hypervisor, option)
+
+
 def hypervisor_create(
     mode=HYPERVISOR, register_type=REGISTER, config_name=None, section=None, rhsm=True
 ):

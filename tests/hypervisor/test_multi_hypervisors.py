@@ -8,15 +8,19 @@
 """
 import pytest
 
-from virtwho.base import hypervisors_list
+from virtwho import REGISTER, logger
+from virtwho.base import hypervisors_list, msg_search
 from virtwho.configure import hypervisor_create
+from virtwho.configure import get_hypervisor_info
 
 
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_debug_true")
 @pytest.mark.usefixtures("class_globalconf_clean")
 class TestMultiHypervisors:
-    def test_multi_hypervisors_report_together(self, virtwho):
+    def test_multi_hypervisors_report_together(
+        self, virtwho, ssh_host, satellite, rhsm
+    ):
         """Test virt-who can report multi hypervisors together
 
         :title: virt-who: multiHypervisors: test multi hypervisors report together
@@ -26,13 +30,82 @@ class TestMultiHypervisors:
         :customerscenario: false
         :upstream: no
         :steps:
-            1. Create the virt-who config files for the multi hypervisors list
-            2. Run the virt-who service
+            1. Create the separated virt-who config file for each hypervisor
+            2. Run the virt-who service and check the register server
+            3. Combine all the hypervisor config files to one
+            4. Run the virt-who service and check the register server
 
         :expectedresults:
             1. Succeed to run the virt-who, no error messages in the rhsm.log
+            2. All the hypervisors could be found in the register server
         """
-        for mode in hypervisors_list():
-            hypervisor_create(mode)
-        result = virtwho.run_service()
-        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+        file_types = ["separated", "single"]
+        single_file = "/etc/virt-who.d/virtwho_multi.conf"
+        try:
+            for file_type in file_types:
+                logger.info(
+                    f"+++ Start the multi hypervisors testing in ({file_type}) file(s) +++"
+                )
+                hypervisor_hostname_list = []
+                guest_uuid_list = []
+                config_file_list = []
+                for mode in hypervisors_list():
+                    hypervisor = hypervisor_create(mode)
+                    hypervisor_config_file = hypervisor.remote_file
+
+                    hostname = "hostname"
+                    if mode == "esx":
+                        hostname = "esx_hostname"
+                    elif mode == "rhevm":
+                        hostname = "vdsm_hostname"
+                    hypervisor_hostname = get_hypervisor_info(mode, hostname)
+                    guest_uuid = get_hypervisor_info(mode, "guest_uuid")
+
+                    if REGISTER == "rhsm":
+                        rhsm.host_delete(hypervisor_hostname)
+                    else:
+                        satellite.host_delete(hypervisor_hostname)
+
+                    hypervisor_hostname_list.append(hypervisor_hostname)
+                    guest_uuid_list.append(guest_uuid)
+                    config_file_list.append(hypervisor_config_file)
+                if file_type == "single":
+                    multi_files_combine(
+                        ssh_host, config_file_list, single_file, delete=True
+                    )
+                ssh_host.runcmd("ls /etc/virt-who.d/")
+                result = virtwho.run_service()
+                mappings = result["mappings"]
+                assert (
+                    result["error"] == 0
+                    and result["send"] == 1
+                    and result["thread"] == 1
+                )
+                assert msg_search(
+                    output=str(mappings), msgs=hypervisor_hostname_list, check="and"
+                )
+                assert msg_search(
+                    output=str(mappings), msgs=guest_uuid_list, check="and"
+                )
+                for hypervisor in hypervisor_hostname_list:
+                    if REGISTER == "rhsm":
+                        assert rhsm.consumers(host_name=hypervisor)
+                    else:
+                        assert satellite.hosts_info_on_webui(host=hypervisor)
+        finally:
+            ssh_host.runcmd(f"rm -f {single_file}")
+
+
+def multi_files_combine(ssh, multi_files, dest_file, delete=False):
+    """
+    Combine multi files content to one file.
+    :param ssh: ssh host access
+    :param multi_files: a list of all the files' path
+    :param dest_file: destination file path
+    :param delete: if need to delete the multi files after the combination
+    """
+    for file in multi_files:
+        ssh.runcmd(f"cat {file} >> {dest_file}", log_print=False)
+        if delete:
+            ssh.runcmd(f"rm -f {file}")
+    ssh.runcmd(f"cat {dest_file}")
