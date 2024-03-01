@@ -2,6 +2,7 @@
 
 :casecomponent: virt-who
 :testtype: nonfunctional
+:subtype1: installability
 :caseautomation: Automated
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component

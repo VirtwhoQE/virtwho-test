@@ -1,7 +1,7 @@
 """Test cases Global fields
 
 :casecomponent: virt-who
-:testtype: nonfunctional
+:testtype: functional
 :caseautomation: Automated
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
