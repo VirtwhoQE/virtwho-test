@@ -29,8 +29,8 @@ def system_init(ssh, keyword):
         host_name = f"{keyword}-{random_str}.redhat.com"
     hostname_set(ssh, host_name)
     etc_hosts_set(ssh, f"{host_ip} {host_name}")
-    # firewall_stop(ssh)
-    # selinux_disable(ssh)
+    firewall_set(ssh, "start")
+    selinux_set(ssh, "enforcing")
     logger.info(f"Finished to init system {host_name}")
 
 
@@ -95,31 +95,36 @@ def etc_hosts_set(ssh, value):
         raise FailException("Failed to set /etc/hosts")
 
 
-def firewall_stop(ssh):
+def firewall_set(ssh, firewall="start"):
     """
     Stop firewall for one host.
     :param ssh: ssh access of host
+    :param firewall: start/stop
     """
-    cmd = "systemctl stop firewalld.service;" "systemctl disable firewalld.service"
-    if rhel_version(ssh) == "6":
-        cmd = "service iptables stop; chkconfig iptables off"
+    cmd = "systemctl stop firewalld.service; systemctl disable firewalld.service"
+    if firewall == "start":
+        cmd = "systemctl start firewalld.service; systemctl enable firewalld.service"
     ret, _ = ssh.runcmd(cmd)
     if ret != 0:
-        raise FailException("Failed to stop firewall")
+        raise FailException(f"Failed to {firewall} firewall")
 
 
-def selinux_disable(ssh):
+def selinux_set(ssh, selinux="enforcing"):
     """
     Disable selinux for one host.
     :param ssh: ssh access of host
+    :param selinux: enforcing/permissive/disabled
     """
+    num = "0"
+    if selinux == "enforcing":
+        num = "1"
     ret, _ = ssh.runcmd(
-        "setenforce 0;"
-        "sed -i -e 's/SELINUX=.*/SELINUX=disabled/g' "
-        "/etc/selinux/config"
+        f"setenforce {num};"
+        f"sed -i -e 's/SELINUX=.*/SELINUX={selinux}/g' "
+        f"/etc/selinux/config"
     )
     if ret != 0:
-        raise FailException("Failed to disable selinux")
+        raise FailException(f"Failed to set selinux={selinux}")
 
 
 def ssh_connect(ssh):
