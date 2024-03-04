@@ -40,6 +40,7 @@ def betelgeuse_xml_file_transform(xml_file, output_xml_file):
         f'--custom-fields component="{args.component}" '
         f'--custom-fields build="{args.build}" '
         f'--custom-fields jenkinsjobs="{args.jenkinsjobs}" '
+        f'--custom-fields logs="{args.jenkinsjobs}artifact/virtwho-test/logs/" '
         f'--custom-fields notes="{args.notes}" '
         f'--test-run-template-id="{args.template_id}" '
         f'--test-run-title="{args.title}" '
