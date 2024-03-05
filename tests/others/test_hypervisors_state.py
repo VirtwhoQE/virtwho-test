@@ -1,11 +1,13 @@
 """Test cases Global fields
 
 :casecomponent: virt-who
-:testtype: nonfunctional
+:testtype: functional
 :caseautomation: Automated
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+# All the test cases have been uploaded to Polarion with Inactive status
+# because the cases are just used to test the test environments.
 
 from virtwho.provision.virtwho_hypervisor import hyperv_monitor
 from virtwho.provision.virtwho_hypervisor import esx_monitor

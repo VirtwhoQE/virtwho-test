@@ -1,11 +1,13 @@
 """Test cases Global fields
 
 :casecomponent: virt-who
-:testtype: nonfunctional
+:testtype: functional
 :caseautomation: Automated
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+# The test case has been uploaded to Polarion with Inactive status because
+# the case is just used to test the environments to support Subscription Watch team.
 
 import pytest
 from virtwho.configure import config, hypervisor_create
