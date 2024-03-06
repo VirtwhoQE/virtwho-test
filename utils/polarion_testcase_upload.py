@@ -33,8 +33,12 @@ def xml_file_generate():
         f"--automation-script-format {args.automation_script_format} "
         f"{args.test_directory} "
         f"{args.project} "
-        f"{args.xml_file}"
+        f"{args.xml_file} "
     )
+    if args.ignore_path:
+        ignore_path = args.ignore_path.split("|")
+        for path in ignore_path:
+            cmd += f"--collect-ignore-path {path} "
     logger.info(f"\n{cmd}\n")
     ret, output = subprocess.getstatusoutput(cmd)
     logger.info(f"\n{output}\n")
@@ -205,6 +209,12 @@ def arguments_parser():
         help="The directory of the test cases",
     )
     parser.add_argument(
+        "--ignore-path",
+        required=False,
+        default="",
+        help="Ignore path during test collection, separated by | for multi paths, such as: 'tests/others/test_hypervisors_state.py|tests/others/test_hypervisors_sw.py'",
+    )
+    parser.add_argument(
         "--xml-file",
         required=False,
         default="temp/polarion_testcase.xml",
@@ -213,7 +223,7 @@ def arguments_parser():
     parser.add_argument(
         "--automation-script-format",
         required=True,
-        help="Example: https://github.com/.../tree/main/tests/{path}#{line_number}",
+        help="Example: https://github.com/VirtwhoQE/virtwho-test/tree/main/tests/{path}",
     )
     parser.add_argument(
         "--log-file",
