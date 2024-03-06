@@ -212,7 +212,7 @@ def arguments_parser():
         "--ignore-path",
         required=False,
         default="",
-        help="Ignore path during test collection, separated by | for multi paths, such as: 'tests/others/test_hypervisors_state.py|tests/others/test_hypervisors_sw.py'",
+        help="Ignore path during test collection, separated by | for multi paths, such as: 'tests/others|tests/subscription/test_rhsm.py'",
     )
     parser.add_argument(
         "--xml-file",
