@@ -1,7 +1,8 @@
 """Test cases Global fields
 
 :casecomponent: virt-who
-:testtype: functional
+:testtype: nonfunctional
+:subtype1: Interoperability
 :caseautomation: Automated
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
@@ -33,7 +34,7 @@ class TestRhsmScaDisable:
 
         :title: virt-who: rhsm: [sca/disable] test guest attach virtual vdc pool by pool id
         :id: 39717357-eadb-4ac7-bf44-2b323cda3717
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
@@ -85,7 +86,7 @@ class TestRhsmScaDisable:
 
         :title: virt-who: rhsm: [sca/disable] test guest attach virtual vdc pool by auto
         :id: d082e0c1-e925-46ea-8ab1-d65355709f55
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
@@ -143,7 +144,7 @@ class TestRhsmScaDisable:
 
         :title: virt-who: rhsm: [sca/disable] test temporary vdc pool in guest
         :id: d1c42adf-dee5-42bf-80b6-017948e77baf
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
@@ -220,7 +221,7 @@ class TestRhsmScaDisable:
 
         :title: virt-who: rhsm: [sca/disable] test physcial vdc pool consumed status in physical host
         :id: cbf0e07b-c51c-4e6d-9c80-07c2c8dd7692
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
@@ -278,7 +279,7 @@ class TestRhsmScaDisable:
 
         :title: virt-who: rhsm: [sca/disable] test vdc virtual pool consumed status in guest
         :id: 93af0dad-21e6-4732-8a06-2fb2e86a05a3
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier2
         :customerscenario: false
         :upstream: no
@@ -332,7 +333,7 @@ class TestRhsmScaDisable:
 
         :title: virt-who: rhsm: [sca/disable] test guest attach virtual vdc pool in fake mode
         :id: f97afcd8-2b23-4754-8c40-a70605009e8f
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier2
         :customerscenario: false
         :upstream: no
@@ -401,7 +402,7 @@ class TestRhsmScaEnable:
 
         :title: virt-who: rhsm: [sca/enable] test hypervisor entitlement status
         :id: c505edb4-9afa-401f-bc3d-f562d8081955
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
@@ -436,7 +437,7 @@ class TestRhsmScaEnable:
 
         :title: virt-who: rhsm: [sca/enable] test guest entitlement status
         :id: 20c09b1b-f23e-4691-b927-ed5262c188da
-        :caseimportance: High
+        :caseimportance: Medium
         :tags: subscription,rhsm,tier1
         :customerscenario: false
         :upstream: no
