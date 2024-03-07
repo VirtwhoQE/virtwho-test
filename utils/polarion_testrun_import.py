@@ -40,7 +40,9 @@ def betelgeuse_xml_file_transform(xml_file, output_xml_file):
         f'--custom-fields component="{args.component}" '
         f'--custom-fields build="{args.build}" '
         f'--custom-fields jenkinsjobs="{args.jenkinsjobs}" '
+        f'--custom-fields logs="{args.jenkinsjobs}artifact/virtwho-test/logs/" '
         f'--custom-fields notes="{args.notes}" '
+        f'--custom-fields fips="{args.fips}" '
         f'--test-run-template-id="{args.template_id}" '
         f'--test-run-title="{args.title}" '
         f'--status="finished" '
@@ -158,6 +160,7 @@ def arguments_parser():
         "--plannedin", required=False, default="", help="The plans of polarion project"
     )
     parser.add_argument("--notes", required=False, default="", help="The custom notes")
+    parser.add_argument("--fips", required=False, default="", help="Yes/No")
     parser.add_argument(
         "--xml-file",
         required=False,
