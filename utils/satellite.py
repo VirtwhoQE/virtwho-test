@@ -24,7 +24,7 @@ def satellite_deploy(args):
     snap_ver = args.snap
     rhel_ver = args.rhel_compose.split("-")[1].split(".")[0]
     ssh = SSHConnect(host=args.server, user=args.ssh_username, pwd=args.ssh_password)
-    system_init(ssh, "satellite")
+    system_init(ssh, "satellite", firewall="stop", selinux="permissive")
 
     # Disable rhsm SCA mode to support the Satellite deployment
     rhsm = RHSM()

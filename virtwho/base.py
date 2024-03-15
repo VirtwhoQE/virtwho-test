@@ -10,12 +10,14 @@ from virtwho import logger, FailException
 from virtwho.settings import config
 
 
-def system_init(ssh, keyword):
+def system_init(ssh, keyword, firewall="start", selinux="enforcing"):
     """
     Initiate the rhel system before testing, including set hostname,
     stop firewall and disable selinux.
     :param ssh: ssh access of host
     :param keyword: keyword to set the hostname
+    :param firewall: start/stop
+    :param selinux: enforcing/permissive/disabled
     """
     host_ip = ipaddr_get(ssh)
     host_name = hostname_get(ssh)
@@ -29,8 +31,8 @@ def system_init(ssh, keyword):
         host_name = f"{keyword}-{random_str}.redhat.com"
     hostname_set(ssh, host_name)
     etc_hosts_set(ssh, f"{host_ip} {host_name}")
-    firewall_set(ssh, "start")
-    selinux_set(ssh, "enforcing")
+    firewall_set(ssh, firewall)
+    selinux_set(ssh, selinux)
     logger.info(f"Finished to init system {host_name}")
 
 
