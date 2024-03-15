@@ -7,7 +7,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
 from virtwho import FailException
-from virtwho.base import system_init, firewall_set
+from virtwho.base import system_init
 from virtwho.ssh import SSHConnect
 from virtwho.register import SubscriptionManager
 from virtwho.settings import config
