@@ -34,6 +34,8 @@ def provision_virtwho_host(args):
         gating_stable_server = config.gating.host_el9
         if "el8" in msg["pkg_nvr"]:
             gating_stable_server = config.gating.host_el8
+        if "el10" in msg["pkg_nvr"]:
+            gating_stable_server = config.gating.host_el10
         ssh_gating_server = SSHConnect(
             host=gating_stable_server,
             user=args.username,
@@ -44,6 +46,7 @@ def provision_virtwho_host(args):
 
         if not args.rhel_compose:
             args.rhel_compose = rhel_latest_compose(msg["rhel_release"])
+            logger.info(f'----{args.rhel_compose}---')
 
         virtwho_ini_props["gating"] = {
             "package_nvr": msg["pkg_nvr"],
@@ -126,13 +129,20 @@ def rhel_latest_compose(rhel_release):
     """
     Use the latest rhel compose for gating test if no rhel_compose provid.
     """
-    version = "9"
+    version = "10"
     if "rhel-8" in rhel_release:
         version = "8"
+    if "rhel-9" in rhel_release:
+        version = "9"
     latest_compose_url = (
         f"{config.virtwho.repo}/rhel-{version}/nightly/"
         f"RHEL-{version}/latest-RHEL-{version}/COMPOSE_ID"
     )
+    if version == "10":
+        latet_compose_url = (
+            f"{config.virtwho.repo}/rhel-{version}/nightly/"
+            f"RHEL-{version}-Public-Beta/latest-RHEL-{version}/COMPOSE_ID"
+        )
     latest_compose_id = os.popen(f"curl -s -k -L {latest_compose_url}").read().strip()
     return latest_compose_id
 
