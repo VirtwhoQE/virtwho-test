@@ -23,6 +23,7 @@ from virtwho.ssh import SSHConnect
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestVirtwhoService:
     @pytest.mark.tier1
+    @pytest.mark.gating
     def test_virtwho_service_start_and_stop(self, virtwho):
         """
 

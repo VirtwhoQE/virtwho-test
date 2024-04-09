@@ -21,6 +21,7 @@ from virtwho.base import encrypt_password
 class TestCli:
     @pytest.mark.tier1
     @pytest.mark.fipsEnable
+    @pytest.mark.gating
     def test_debug(self, virtwho):
         """Test the '-d' option in virt-who command line
 
@@ -49,6 +50,7 @@ class TestCli:
 
     @pytest.mark.tier1
     @pytest.mark.fipsEnable
+    @pytest.mark.gating
     def test_oneshot(self, virtwho):
         """Test the '-o' option in virt-who command line
 
@@ -96,6 +98,7 @@ class TestCli:
 
     @pytest.mark.tier1
     @pytest.mark.fipsEnable
+    @pytest.mark.gating
     def test_interval(self, virtwho):
         """Test the '-i' option in virt-who command line
 
