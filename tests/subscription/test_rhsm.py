@@ -393,6 +393,7 @@ class TestRhsmScaDisable:
 @pytest.mark.usefixtures("function_guest_unattach")
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("class_rhsm_sca_enable")
+@pytest.mark.gating
 class TestRhsmScaEnable:
     @pytest.mark.tier1
     def test_hypervisor_entitlement_status(
@@ -423,6 +424,7 @@ class TestRhsmScaEnable:
         rhsm.attach(host_name=hypervisor_hostname, pool=vdc_pool_physical)
 
     @pytest.mark.tier1
+    @pytest.mark.gating
     def test_guest_entitlement_status(
         self,
         virtwho,

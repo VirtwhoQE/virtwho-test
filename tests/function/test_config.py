@@ -415,6 +415,7 @@ class TestConfigurationPositive:
 
     @pytest.mark.tier1
     @pytest.mark.notLocal
+    @pytest.mark.gating
     def test_hypervisor_id_in_virtwho_conf(
         self,
         virtwho,
