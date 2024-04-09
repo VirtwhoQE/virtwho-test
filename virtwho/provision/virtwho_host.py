@@ -46,7 +46,6 @@ def provision_virtwho_host(args):
 
         if not args.rhel_compose:
             args.rhel_compose = rhel_latest_compose(msg["rhel_release"])
-            logger.info(f'----{args.rhel_compose}---')
 
         virtwho_ini_props["gating"] = {
             "package_nvr": msg["pkg_nvr"],
@@ -139,7 +138,7 @@ def rhel_latest_compose(rhel_release):
         f"RHEL-{version}/latest-RHEL-{version}/COMPOSE_ID"
     )
     if version == "10":
-        latet_compose_url = (
+        latest_compose_url = (
             f"{config.virtwho.repo}/rhel-{version}/nightly/"
             f"RHEL-{version}-Public-Beta/latest-RHEL-{version}/COMPOSE_ID"
         )
@@ -231,7 +230,7 @@ def libvirt_access_no_password(ssh):
         pwd=config.libvirt.password,
     )
     ssh.runcmd('echo -e "\n" | ' 'ssh-keygen -N "" &> /dev/null')
-    ret, output = ssh.runcmd("cat ~/.ssh/id_rsa.pub")
+    ret, output = ssh.runcmd("cat ~/.ssh/*.pub")
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key")
     ssh_libvirt.runcmd(f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys")
