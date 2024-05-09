@@ -166,8 +166,8 @@ def log_analyzer(job_id):
             f"Failed uploading case number: {case_fail_num}\n"
             f"Log URL: {log_url}"
         )
-        virtwho_ini_update('polarion', 'total_case', case_total_num)
-        virtwho_ini_update('polarion', 'faied_case', case_fail_num)
+        virtwho_ini_update("polarion", "total_case", case_total_num)
+        virtwho_ini_update("polarion", "faied_case", case_fail_num)
         if case_fail_num > 0:
             raise FailException("Failed to upload all test cases to polarion")
     else:
