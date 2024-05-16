@@ -523,7 +523,7 @@ class RHSM:
         logger.warning("Hypervisor and Guest are not associated on stage web")
         return False
 
-    def sca(self, sca="disable"):
+    def sca(self, sca="enable"):
         """
         Enable/disable simple content access.
         :param sca: enable/disable.
@@ -960,7 +960,7 @@ class Satellite:
         logger.warning(f"Failed to get host info for {host} on satellite webui")
         return None
 
-    def sca(self, org=None, sca="disable"):
+    def sca(self, org=None, sca="enable"):
         """
         Enable/disable simple content access.
         :param org: org lable, default use the Default_Organization.
