@@ -194,9 +194,7 @@ def satellite_arguments_parser():
     parser.add_argument(
         "--snap", required=False, help="Satellite snap version, such as '5.0', '6.0'"
     )
-    parser.add_argument(
-        "--repo", required=True, help="One of ['cdn', 'repo']"
-    )
+    parser.add_argument("--repo", required=True, help="One of ['cdn', 'repo']")
     parser.add_argument(
         "--rhel-compose",
         required=True,
