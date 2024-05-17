@@ -24,7 +24,10 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 class TestSatellite:
     @pytest.mark.tier1
     @pytest.mark.satelliteSmoke
-    def test_guest_sub_man_status(self, ssh_guest,):
+    def test_guest_sub_man_status(
+        self,
+        ssh_guest,
+    ):
         """
 
         :title: virt-who: satellite: test guest subscription-manager status
