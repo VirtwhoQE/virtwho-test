@@ -18,11 +18,11 @@ hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
 
 
-def pytest_runtest_logstart(nodeid, location):
+def pytest_runtest_logstart(nodeid):
     logger.info(f"Started Test: {nodeid}")
 
 
-def pytest_runtest_logfinish(nodeid, location):
+def pytest_runtest_logfinish(nodeid):
     logger.info(f"Finished Test: {nodeid}")
 
 
@@ -210,12 +210,6 @@ def class_guest_unregister(sm_guest):
     sm_guest.unregister()
 
 
-@pytest.fixture(scope="function")
-def function_guest_unattach(sm_guest):
-    """remove all subscriptions for guest"""
-    sm_guest.unattach()
-
-
 @pytest.fixture(scope="session")
 def satellite():
     """Instantication of class Satellite() with default org"""
@@ -347,23 +341,6 @@ def proxy_data():
         "Unable to connect",
     ]
     return proxy
-
-
-@pytest.fixture(scope="session")
-def sku_data():
-    """SKU data for testing from virtwho.ini file"""
-    data = dict()
-    data["vdc_physical"] = config.sku.vdc
-    data["vdc_virtual"] = config.sku.vdc_virtual
-    return data
-
-
-@pytest.fixture(scope="session")
-def vdc_pool_physical(sm_guest, sku_data):
-    """Get the vdc physical sku pool id"""
-    vdc_sku_id = sku_data["vdc_physical"]
-    vdc_pool_id = sm_guest.pool_id_get(vdc_sku_id, "Physical")
-    return vdc_pool_id
 
 
 @pytest.fixture(scope="session")

@@ -1,5 +1,4 @@
 import json
-import time
 import requests
 
 from virtwho import logger, FailException
@@ -132,130 +131,6 @@ class SubscriptionManager:
             if ret == 0:
                 logger.info("Succeeded to uninstall satellite cert package.")
 
-    def attach(self, pool=None, quantity=None):
-        """
-        Attach subscription by Pool ID or --auto.
-        :param pool: Pool ID, attach by --auto when pool=None
-        :param quantity: subscription number to attach, default is auto.
-        :return: tty output.
-        """
-        cmd = "subscription-manager attach "
-        if pool:
-            cmd += f"--pool={pool} "
-        if quantity:
-            cmd += f"--quantity={quantity}"
-        if not pool:
-            cmd += f"--auto "
-        self.refresh()
-        ret, output = self.ssh.runcmd(cmd)
-        if ret == 0:
-            logger.info(f"Succeeded to attach subscription for {self.host}")
-            return output.strip()
-        if "--auto" in cmd and "Unable to find available" in output:
-            logger.warning(f"Failed to attach subscription by auto for {self.host}.")
-            return output.strip()
-        if "Multi-entitlement not supported" in output:
-            logger.warning(output)
-            return output.strip()
-        else:
-            raise FailException(f"Failed to attach subscription for {self.host}")
-
-    def unattach(self, pool=None):
-        """
-        Remove subscription by Pool ID or remove all.
-        :param pool: Pool ID, remove all when pool=None.
-        """
-        cmd = "subscription-manager remove --all"
-        if pool:
-            cmd = f"subscription-manager remove --pool={pool}"
-        ret, output = self.ssh.runcmd(cmd)
-        if ret == 0:
-            logger.info(f"Succeeded to remove subscription for {self.host}")
-        else:
-            raise FailException(f"Failed to remove subscription for {self.host}")
-
-    def available(self, sku_id, sku_type="Virtual"):
-        """
-        Search and analyze an available subscription by name and type.
-        :param sku_id: sku id, such as RH00001
-        :param sku_type: 'Physical' or 'Virtual'.
-        :return: a dict with sku attributes.
-        """
-        cmd = f"subscription-manager list --av --all --matches={sku_id} |" f"tail -n +4"
-        ret, output = self.ssh.runcmd(cmd)
-        if ret == 0 and "Pool ID:" in output:
-            skus = output.strip().split("\n\n")
-            for sku in skus:
-                sku_attr = self.attr_analyzer(sku)
-                if "system_type" in sku_attr.keys():
-                    sku_attr["sku_type"] = sku_attr["system_type"]
-                else:
-                    sku_attr["sku_type"] = sku_attr["entitlement_type"]
-                if sku_attr["sku_type"] == sku_type:
-                    logger.info(
-                        f"Succeeded to find {sku_type}:{sku_id} " f"in {self.host}"
-                    )
-                    if "(Temporary)" in sku_attr["subscription_type"]:
-                        sku_attr["temporary"] = True
-                    else:
-                        sku_attr["temporary"] = False
-                    return sku_attr
-        logger.warning(f"Failed to find {sku_type}:{sku_id}" in {self.host})
-        return None
-
-    def consumed(self, sku_id, sku_type="Virtual"):
-        """
-        List and analyze the consumed subscription by Pool ID.
-        :param sku_id: sku id, such as RH00049.
-        :param sku_type: 'Physical' or 'Virtual'.
-        :return: a dict with sku attributes.
-        """
-        self.refresh()
-        ret, output = self.ssh.runcmd(f"subscription-manager list --co")
-        if ret == 0:
-            if output is None or "No consumed subscription pools were found" in output:
-                logger.info(f"No consumed subscription found in {self.host}.")
-                return None
-            elif "Pool ID:" in output:
-                skus = output.strip().split("\n\n")
-                for sku in skus:
-                    sku_attr = self.attr_analyzer(sku)
-                    if "system_type" in sku_attr.keys():
-                        sku_attr["sku_type"] = sku_attr["system_type"]
-                    else:
-                        sku_attr["sku_type"] = sku_attr["entitlement_type"]
-                    if sku_attr["sku"] == sku_id and sku_attr["sku_type"] == sku_type:
-                        logger.info(
-                            f"Succeeded to get the consumed "
-                            f"subscription in {self.host}"
-                        )
-                        if "(Temporary)" in sku_attr["subscription_type"]:
-                            sku_attr["temporary"] = True
-                        else:
-                            sku_attr["temporary"] = False
-                        # the below commented lines are used in local debug
-                        # logger.info(
-                        # f'---- sku_data of {sku_id}:\n{sku_attr}\n----'
-                        # )
-                        return sku_attr
-        logger.warning("Failed to get consumed subscriptions.")
-        return None
-
-    def installed(self):
-        """
-        List products which are currently installed on the system and
-        analyse the result.
-        """
-        self.refresh()
-        ret, output = self.ssh.runcmd(
-            "subscription-manager list --installed | tail -n +4"
-        )
-        if ret == 0 and output.strip() != "":
-            install_attr = self.attr_analyzer(output)
-            logger.info(f"Succeeded to list installed subscription for {self.host}")
-            return install_attr
-        raise FailException(f"Failed to list installed subscription for {self.host}")
-
     def repo(self, action, repo):
         """
         Enable/disable one or more repos.
@@ -273,88 +148,12 @@ class SubscriptionManager:
         else:
             raise FailException(f"Failed to {action} repo: {repo}")
 
-    def refresh(self):
-        """
-        Refresh subscription by command 'subscription-manager refresh'.
-        """
-        for i in range(3):
-            ret, output = self.ssh.runcmd("subscription-manager refresh")
-            if ret == 0:
-                logger.info(f"Succeeded to refresh subscription")
-                return True
-            logger.warning("Try again to refresh subscription after 180s...")
-            time.sleep(180)
-        raise FailException(f"Failed to refresh subscription for {self.host}")
-
-    def attr_analyzer(self, attr):
-        """
-        Analyze the output attributes to a dict, like the output from
-        command "subscription-manager list --in/co/av"
-        :param attr: the output including several lines, which lines are
-            {string}:{string} format.
-        :return: a dict
-        """
-        attr_data = dict()
-        attr = attr.strip().split("\n")
-        for line in attr:
-            if ":" not in line:
-                continue
-            line = line.split(":")
-            key = line[0].strip().replace(" ", "_").lower()
-            value = line[1].strip()
-            attr_data[key] = value
-        return attr_data
-
-    def facts_create(self, key, value, wait=10):
-        """
-        Create subscription facts to /etc/rhsm/facts/custom.facts.
-        :param key: fact key
-        :param value: fact value
-        :param wait: wait time after update facts, need 60s for satellite to
-            resolve the tasks conflict issue.
-        """
-        option = f'{{"{key}":"{value}"}}'
-        ret, _ = self.ssh.runcmd(f"echo '{option}' > /etc/rhsm/facts/custom.facts")
-        if ret == 0:
-            ret, output = self.ssh.runcmd("subscription-manager facts --update")
-            time.sleep(wait)
-            if ret == 0 and "Successfully updated" in output:
-                logger.info(f"Succeeded to create custom.facts for {self.host}")
-                return True
-        raise FailException(f"Failed to create custom facts for {self.host}")
-
-    def facts_remove(self, wait=10):
-        """
-        Remove subscription facts.
-        :param wait: wait time after update facts, need 60s for satellite to
-            resolve the tasks conflict issue.
-        """
-        ret, _ = self.ssh.runcmd("rm -f /etc/rhsm/facts/custom.facts")
-        if ret == 0:
-            ret, output = self.ssh.runcmd("subscription-manager facts --update")
-            for i in range(3):
-                time.sleep(wait)
-                if ret == 0 and "Successfully updated" in output:
-                    logger.info(f"Succeeded to remove custom.facts for {self.host}")
-                    return True
-        raise FailException(f"Failed to remove custom.facts for {self.host}")
-
-    def pool_id_get(self, sku_id, sku_type="Physical"):
-        self.register()
-        sku_data = self.available(sku_id, sku_type)
-        if sku_data is not None:
-            sku_pool = sku_data["pool_id"]
-            logger.info(f"Succeeded to get the vdc {sku_type} pool id: " f"{sku_pool}")
-            return sku_pool
-        logger.error("Failed to get the vdc physical sku pool id")
-        return None
-
 
 class RHSM:
     def __init__(self, rhsm="rhsm"):
         """
-        Using rhsm api to check/get/delete consumers,  attach/remove
-        subscription, and check the host-to-guest associations.
+        Using rhsm api to check/get/delete consumers,
+        and check the host-to-guest associations.
         :param rhsm: rhsm org rhsm_sw.
         """
         register = get_register_handler(rhsm)
@@ -428,84 +227,6 @@ class RHSM:
         )
         return True
 
-    def pool(self, sku_id):
-        """
-        Get the pool id by sku id
-        :param sku_id: sku id
-        :return: pool id
-        """
-        status, pools = request_get(
-            url=f"{self.api}/owners/{self.org}/pools", auth=self.auth
-        )
-        if status == 200 and pools:
-            for pool in pools:
-                if sku_id in pool["productId"]:
-                    pool_id = pool["id"]
-                    logger.info(f"Succeeded to get the pool id {sku_id}:{pool_id}")
-                    return pool_id
-        raise FailException(f"Failed to get pool id for {sku_id}")
-
-    def attach(self, host_name, pool=None):
-        """
-        Attach subscription for host by auto or pool_id.
-        :param host_name: host name
-        :param pool: pool id, will attach by auto when pool_id=None
-        """
-        uuid = self.uuid(host_name)
-        if self.entitlements(uuid, pool=pool):
-            self.unattach(host_name, pool=pool)
-        params = ""
-        if pool:
-            params = (("pool", pool),)
-        request_post(
-            url=f"{self.api}/consumers/{uuid}/entitlements",
-            params=params,
-            auth=self.auth,
-        )
-        if self.entitlements(uuid, pool=pool):
-            logger.info(f"Succeeded to attach pool for {host_name}")
-        else:
-            raise FailException(f"Failed to attach pool for {host_name}")
-
-    def unattach(self, host_name, pool=None):
-        """
-        Remove all subscriptions or the specified one for consumer.
-        :param host_name: pool id, remove all subscriptions when pool=None
-        :param pool: pool id
-        """
-        uuid = self.uuid(host_name)
-        url = f"{self.api}/consumers/{uuid}/entitlements"
-        if pool:
-            entitlement_id = self.entitlements(uuid, pool)
-            url = f"{self.api}/consumers/{uuid}/entitlements/{entitlement_id}"
-        request_delete(url=url, auth=self.auth)
-        if not self.entitlements(uuid, pool=pool):
-            logger.info(f"Succeeded to remove pool(s) for {host_name}")
-        else:
-            raise FailException(f"Failed to remove pool(s) for {host_name}")
-
-    def entitlements(self, consumer_uuid, pool=None):
-        """
-        Get entitlement id for each pool or the only one for the defined pool.
-        :param consumer_uuid: consumer uuid in rhsm api
-        :param pool: pool id, get all entitlement id when pool=None
-        :return: entitlement id
-        """
-        status, entitlements = request_get(
-            url=f"{self.api}/consumers/{consumer_uuid}/entitlements", auth=self.auth
-        )
-        if status == 200:
-            entitlement_ids = dict()
-            for item in entitlements:
-                pool_id = item["pool"]["id"]
-                entitlement_ids[pool_id] = item["id"]
-            if pool:
-                if pool in entitlement_ids.keys():
-                    return entitlement_ids[pool]
-                return None
-            return entitlement_ids
-        raise FailException(f"Failed to get entitlement info for {consumer_uuid}")
-
     def associate(self, host_name, guest_uuid):
         """
         Check the host/hypervisor is associated with guest or not.
@@ -548,8 +269,7 @@ class RHSM:
 class Satellite:
     def __init__(self, server=None, org=None, activation_key=None):
         """
-        Using hammer command to set satellite, handle organization and
-        activation key, attach/remove subscription for host.
+        Using hammer command to set satellite, handle organization and activation key.
         Using api to check the host-to-guest associations.
         :param server: satellite server ip/hostname, use the server configured
             in virtwho.ini as default.
@@ -669,79 +389,6 @@ class Satellite:
             logger.info(f"Did not find the {host} in satellite," f"no need to delete.")
             return True
 
-    def subscription_id(self, pool):
-        """
-        Get the subscription id by pool id.
-        :param pool: pool id.
-        :return: subscription id.
-        """
-        ret, output = self.ssh.runcmd(
-            f"{self.hammer} subscription list --organization-id {self.org_id}"
-        )
-        output = json.loads(output)
-        if ret == 0 and output:
-            for item in output:
-                if item["Uuid"] == pool:
-                    subscription_id = item["Id"]
-                    return subscription_id
-        raise FailException(f"Failed to get the subscription id for {pool}")
-
-    def attach(self, host, pool=None, quantity=1):
-        """
-        Attach or auto attach subscription for one host/hypervisor.
-        :param host: host name/uuid/hwuuid
-        :param pool: pool id, run auto attach when pool=None.
-        :param quantity: the subscription quantity to attach.
-        :return: True, output or raise Fail.
-        """
-        host_id = self.host_id(host)
-        cmd = f"hammer host subscription auto-attach --host-id {host_id}"
-        msg = "Auto attached subscriptions to the host successfully"
-        if pool:
-            subscription_id = self.subscription_id(pool=pool)
-            cmd = (
-                f"hammer host subscription attach "
-                f"--host-id {host_id} "
-                f"--subscription-id {subscription_id} "
-                f"--quantity {quantity}"
-            )
-            msg = "Subscription attached to the host successfully"
-        ret, output = self.ssh.runcmd(cmd)
-        if ret == 0 and msg in output:
-            logger.info(f"Succeeded to attach subscription for {host}")
-            return True
-        elif (
-            ret != 0
-            and "This host's organization is in Simple Content " "Access mode" in output
-        ):
-            logger.info(
-                f"The organizaiton is in SCA mode, no need to " f"attach subscription"
-            )
-            return output
-        raise FailException(f"Failed to attach subscription for {host}")
-
-    def unattach(self, host, pool, quantity=1):
-        """
-        Remove subscription from one host/hypervisor by pool id.
-        :param host: host name/uuid/hwuuid
-        :param pool: pool id
-        :param quantity: the subscription quantity to remove.
-        :return:
-        """
-        host_id = self.host_id(host)
-        subscription_id = self.subscription_id(pool=pool)
-        ret, output = self.ssh.runcmd(
-            f"hammer host subscription remove "
-            f"--host-id {host_id} "
-            f"--subscription-id {subscription_id} "
-            f"--quantity {quantity}"
-        )
-        msg = "Subscription removed from the host successfully"
-        if ret == 0 and msg in output:
-            logger.info(f"Succeeded to remove subscription for {host}")
-            return True
-        raise FailException(f"Failed to remove subscription for {host}")
-
     def activation_key_create(
         self, key=None, content_view="Default Organization View", environment="Library"
     ):
@@ -788,82 +435,6 @@ class Satellite:
             return True
         raise FailException(f"Failed to delete activation key:{key}")
 
-    def activation_key_update(self, key=None, auto_attach="yes"):
-        """
-        Update auto attach setting for an activation key.
-        :param key: activation key name, default to use the key when
-            instantiate the class.
-        :param auto_attach: boolean, true/false, yes/no, 1/0.
-        :return: True or raise Fail.
-        """
-        key = key or self.activation_key
-        _, output = self.ssh.runcmd(
-            f"hammer activation-key update "
-            f"--organization-id {self.org_id} "
-            f"--name {key} "
-            f"--auto-attach {auto_attach}"
-        )
-        if "Activation key updated" in output:
-            logger.info(
-                f"Succeeded to update activation key:{key} with "
-                f"auto_attach:{auto_attach}"
-            )
-            return True
-        raise FailException(
-            f"Failed to update auto-attach for " f"activation key:{key}"
-        )
-
-    def activation_key_attach(self, pool, quantity=None, key=None):
-        """
-        Add subscription for activation key.
-        :param pool: pool id.
-        :param quantity: the subscription quantity to add.
-        :param key: activation key name, default to use the key when
-        instantiate the class.
-        :return: True or raise Fail.
-        """
-        key = key or self.activation_key
-        subscription_id = self.subscription_id(pool=pool)
-        cmd = (
-            f"hammer activation-key add-subscription "
-            f"--organization-id {self.org_id} "
-            f"--name {key} "
-            f"--subscription-id {subscription_id}"
-        )
-        if quantity:
-            cmd += f" --quantity {quantity}"
-        ret, output = self.ssh.runcmd(cmd)
-        if "Subscription added to activation key" in output:
-            logger.info(f"Succeeded to attach subscription for activation key:{key}")
-            return True
-        raise FailException(f"Failed to attach subscription for activation key:{key}")
-
-    def activation_key_unattach(self, pool, key=None):
-        """
-        Remove subscription from activation key.
-        :param pool: pool id.
-        :param key: activation key name, default to use the key when
-        instantiate the class.
-        :return: True or raise Fail.
-        """
-        key = key or self.activation_key
-        subscription_id = self.subscription_id(pool=pool)
-        cmd = (
-            f"hammer activation-key remove-subscription "
-            f"--organization-id {self.org_id} "
-            f"--name {key} "
-            f"--subscription-id {subscription_id}"
-        )
-        ret, output = self.ssh.runcmd(cmd)
-        if "Subscription removed from activation key" in output:
-            logger.info(
-                f"Succeeded to remove subscription for " f"activation key:{key}"
-            )
-            return True
-        raise FailException(
-            f"Failed to remove subscription for " f"activation key:{key}"
-        )
-
     def settings(self, name, value):
         """
         Update the settings.
@@ -908,43 +479,6 @@ class Satellite:
                 logger.warning("Failed to find the associated hypervisor in guest page")
                 return False
             return True
-
-    def subscription_on_webui(self, pool):
-        """
-        Check the subscription info on webui.
-        :param pool: sku pool id
-        """
-        katello_id = self.katello_id(pool)
-        _, output = request_get(
-            url=f"{self.api}/katello/api/organizations/{self.org_id}/"
-            f"subscriptions/{katello_id}",
-            auth=self.auth,
-        )
-        if output and output["id"]:
-            return output
-        logger.warning(f"Failed to get the pool subscription info on satellite webui")
-        return None
-
-    def katello_id(self, pool):
-        """
-        Get the pool katello id.
-        :param pool: sku pool id
-        """
-        for i in range(3):
-            ret, output = request_get(
-                url=f"{self.api}/katello/api/organizations/{self.org_id}/"
-                f"subscriptions/?per_page=1000",
-                auth=self.auth,
-            )
-            if output and "results" in output.keys():
-                for item in output["results"]:
-                    if pool in item["cp_id"]:
-                        katello_id = str(item["id"]).strip()
-                        logger.info(f"Get the katello_id: {katello_id}")
-                        return katello_id
-            time.sleep(15)
-        logger.warning(f"Failed to get katello id on satellite webui.")
-        return None
 
     def hosts_info_on_webui(self, host):
         """

@@ -198,8 +198,7 @@ class TestLibvrtPositive:
             and host_uuid in result["log"]
             and guest_uuid in result["log"]
         )
-        # Todo: Need to add the test cases for host-guest association in mapping, web and the test
-        #  cases for the vdc pool's subscription.
+        # Todo: Need to add the test cases for host-guest association in mapping, web
 
 
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
