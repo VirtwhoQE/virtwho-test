@@ -26,11 +26,11 @@ def satellite_deploy(args):
     ssh = SSHConnect(host=args.server, user=args.ssh_username, pwd=args.ssh_password)
     system_init(ssh, "satellite", firewall="stop", selinux="permissive")
 
-    # Disable rhsm SCA mode to support the Satellite deployment
+    # Enable rhsm SCA mode to support the Satellite deployment
     rhsm = RHSM()
-    rhsm.sca(sca="disable")
+    rhsm.sca()
 
-    # Enable repos of cnd or dogfood
+    # Enable repos of cnd or snap
     if "cdn" in sat_repo:
         sm = SubscriptionManager(
             host=args.server,
@@ -39,8 +39,6 @@ def satellite_deploy(args):
             register_type="rhsm",
         )
         satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver)
-    if "dogfood" in sat_repo:
-        satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver)
     if "repo" in sat_repo:
         sm = SubscriptionManager(
             host=args.server,
@@ -48,7 +46,7 @@ def satellite_deploy(args):
             password=args.ssh_password,
             register_type="rhsm",
         )
-        satellite_repo_enable(sm, ssh, rhel_ver, sat_ver, snap_ver)
+        satellite_repo_enable_snap(sm, ssh, rhel_ver, sat_ver, snap_ver)
 
     # Install satellite
     satellite_pkg_install(ssh)
@@ -65,17 +63,13 @@ def satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver):
     """
     sm.unregister()
     sm.register()
-    employee_sku_pool = sm.available(config.sku.employee, "Physical")["pool_id"]
-    satellite_sku_pool = sm.available(config.sku.satellite, "Physical")["pool_id"]
-    sm.attach(pool=employee_sku_pool)
-    sm.attach(pool=satellite_sku_pool)
     sm.repo("disable", "*")
     sm.repo("enable", satellite_repos_cdn(rhel_ver, sat_ver))
     if rhel_ver == "8":
         ssh.runcmd(f"dnf -y module enable satellite:el{rhel_ver}")
 
 
-def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver, snap_ver):
+def satellite_repo_enable_snap(sm, ssh, rhel_ver, sat_ver, snap_ver):
     """
     Enable the required repos for installing satellite that is still
     in development.
@@ -87,8 +81,6 @@ def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver, snap_ver):
     :return: True or raise Fail.
     """
     sm.register()
-    employee_sku_pool = sm.available(config.sku.employee, "Physical")["pool_id"]
-    sm.attach(pool=employee_sku_pool)
     sm.repo("disable", "*")
     if rhel_ver == "8":
         sm.repo("enable", f"rhel-{rhel_ver}-for-x86_64-baseos-rpms")
@@ -115,33 +107,6 @@ def satellite_repo_enable(sm, ssh, rhel_ver, sat_ver, snap_ver):
             ssh.runcmd(f"dnf -y module enable satellite:el{rhel_ver}")
         return True
     raise FailException("Failed to enable repo.")
-
-
-def satellite_repo_enable_dogfood(ssh, rhel_ver, sat_ver, repo_type="satellite"):
-    """
-    Enable the required repos for installing satellite that is still
-    in development.
-    :param ssh: ssh access to satellite host.
-    :param sat_ver: satellite version, such as 6.13, 6.12.
-    :param rhel_ver: rhel version, such as 6, 7, 8.
-    :param repo_type: satellite, capsule or satellite-tools.
-    :return: True or raise Fail.
-    """
-    maintenance_pool = "8a88800f5ca45116015cc807610319ed"
-    dogfood = config.satellite.dogfood
-    org = "Sat6-CI"
-    ssh.runcmd("subscription-manager unregister;" "subscription-manager clean")
-    ssh.runcmd("rpm -qa |" "grep katello-ca-consumer |" "xargs rpm -e |" "sort")
-    ssh.runcmd(f"yum -y localinstall {dogfood}")
-    ret, _ = ssh.runcmd(
-        f"subscription-manager register "
-        f"--org {org} "
-        f'--activationkey "{repo_type}-{sat_ver}-qa-rhel{rhel_ver}"'
-    )
-    if ret == 0:
-        ssh.runcmd(f"subscription-manager attach " f"--pool {maintenance_pool}")
-        return True
-    raise FailException("Failed to enable dogfood repo.")
 
 
 def satellite_repos_cdn(rhel_ver, sat_ver):
@@ -229,9 +194,7 @@ def satellite_arguments_parser():
     parser.add_argument(
         "--snap", required=False, help="Satellite snap version, such as '5.0', '6.0'"
     )
-    parser.add_argument(
-        "--repo", required=True, help="One of ['cdn', 'dogfood', 'repo']"
-    )
+    parser.add_argument("--repo", required=True, help="One of ['cdn', 'repo']")
     parser.add_argument(
         "--rhel-compose",
         required=True,

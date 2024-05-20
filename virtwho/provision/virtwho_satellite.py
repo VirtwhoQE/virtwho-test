@@ -46,7 +46,7 @@ def satellite_deploy_for_virtwho(args):
 
     # Default Org: setup SCA mode and upload manifest as requirement
     satellite = Satellite(server=args.server)
-    satellite.sca(org=None, sca=args.sca)
+    satellite.sca(org=None)
     satellite_manifest_upload(
         org="Default_Organization",
         ssh=ssh_satellite,
@@ -59,7 +59,7 @@ def satellite_deploy_for_virtwho(args):
     second_org = config.satellite.secondary_org
     if second_org:
         satellite.org_create(name=second_org, label=second_org)
-        satellite.sca(org=second_org, sca=args.sca)
+        satellite.sca(org=second_org)
         satellite_manifest_upload(
             org=second_org,
             ssh=ssh_satellite,
@@ -210,12 +210,6 @@ def virtwho_satellite_arguments_parser():
         default="%dell-per740-69-vm%",
         required=False,
         help="Define/filter system as hostrequire. Such as: %hp-dl360g9-08-vm%",
-    )
-    parser.add_argument(
-        "--sca",
-        default="enable",
-        required=False,
-        help="SCA mode, disable/enable",
     )
     parser.add_argument(
         "--snap", required=False, help="Satellite snap version, such as '5.0', '6.0'"

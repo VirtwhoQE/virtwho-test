@@ -51,14 +51,6 @@ default_org=
 secondary_org=
 activation_key=
 
-; The section of [sku] is used to define the sku_name-to-sku_id.
-; for example vdc=RH00001, you can add any name=id you need.
-; vdc is for physical vdc sku
-; vdc_virtual is for virtual vdc sku
-[sku]
-vdc=
-vdc_virtual=
-
 ; The below sections are used to define the different hypervisors information
 ; server, username and password are the required options to access esx/xen/hyperv/rhevm/libvirt/ahv and get mapping
 ; config_file is a required option to access kubevirt and get mapping
