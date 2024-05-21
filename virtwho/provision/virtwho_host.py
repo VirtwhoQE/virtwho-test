@@ -64,6 +64,8 @@ def provision_virtwho_host(args):
     ssh_host = SSHConnect(host=args.server, user=args.username, pwd=args.password)
 
     # Initially setup the virt-who host
+    if "RHEL-10" in args.rhel_compose:
+        ssh_host.runcmd("yum install -y subscription-manager")
     ssh_host.runcmd(cmd="rm -f /etc/yum.repos.d/*.repo")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     rhel_compose_repo(
