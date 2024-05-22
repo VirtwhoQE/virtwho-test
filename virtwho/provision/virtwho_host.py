@@ -301,7 +301,7 @@ def libvirt_pkg_install(ssh):
     Install libvirt related packages.
     :param ssh: ssh access of virt-who host.
     """
-    # virt-manager pakcage is not readly in rhel-10
+    # virt-manager package is not ready in rhel10.0.beta
     package = "nmap iproute rpcbind libvirt* Xorg* gnome*"
     if "RHEL-10" not in args.rhel_compose:
         package += " virt-manager"
