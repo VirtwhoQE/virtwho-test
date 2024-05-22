@@ -64,6 +64,8 @@ def provision_virtwho_host(args):
     ssh_host = SSHConnect(host=args.server, user=args.username, pwd=args.password)
 
     # Initially setup the virt-who host
+    if "RHEL-10" in args.rhel_compose:
+        ssh_host.runcmd("yum install -y subscription-manager")
     ssh_host.runcmd(cmd="rm -f /etc/yum.repos.d/*.repo")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     rhel_compose_repo(
@@ -202,6 +204,9 @@ def virtwho_install_by_url(ssh, url):
     """
     if not url_validation(url):
         raise FailException(f"package {url} is not available")
+    _, output = ssh.runcmd("grep 'sslverify=false' /etc/yum.conf")
+    if not output:
+        ssh.runcmd("echo 'sslverify=false' >> /etc/yum.conf")
     ssh.runcmd("rm -rf /var/cache/yum/;" "yum clean all;" "yum remove -y virt-who")
     ssh.runcmd(f"yum localinstall -y {url}")
 
@@ -296,10 +301,11 @@ def libvirt_pkg_install(ssh):
     Install libvirt related packages.
     :param ssh: ssh access of virt-who host.
     """
-    ssh.runcmd(
-        "yum clean all;"
-        "yum install -y nmap iproute rpcbind libvirt* virt-manager Xorg* gnome*"
-    )
+    # virt-manager package is not ready in rhel10.0.beta
+    package = "nmap iproute rpcbind libvirt* Xorg* gnome*"
+    if "RHEL-10" not in args.rhel_compose:
+        package += " virt-manager"
+    ssh.runcmd(f"yum clean all; yum install -y {package}")
     ret, _ = ssh.runcmd("systemctl restart libvirtd;systemctl enable libvirtd")
     if ret == 0:
         logger.info("Succeeded to start libvirtd service")
