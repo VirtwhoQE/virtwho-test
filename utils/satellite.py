@@ -29,23 +29,16 @@ def satellite_deploy(args):
     # Enable rhsm SCA mode to support the Satellite deployment
     rhsm = RHSM()
     rhsm.sca()
-
+    sm = SubscriptionManager(
+        host=args.server,
+        username=args.ssh_username,
+        password=args.ssh_password,
+        register_type="rhsm_product",
+    )
     # Enable repos of cnd or snap
     if "cdn" in sat_repo:
-        sm = SubscriptionManager(
-            host=args.server,
-            username=args.ssh_username,
-            password=args.ssh_password,
-            register_type="rhsm",
-        )
         satellite_repo_enable_cdn(sm, ssh, rhel_ver, sat_ver)
     if "repo" in sat_repo:
-        sm = SubscriptionManager(
-            host=args.server,
-            username=args.ssh_username,
-            password=args.ssh_password,
-            register_type="rhsm",
-        )
         satellite_repo_enable_snap(sm, ssh, rhel_ver, sat_ver, snap_ver)
 
     # Install satellite
