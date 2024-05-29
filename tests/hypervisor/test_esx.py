@@ -1258,7 +1258,7 @@ class TestEsxNegative:
             globalconf.update("global", "interval", "60")
             virtwho.run_service()
             esx.guest_suspend(hypervisor_data["guest_name"])
-            rhsm_log = virtwho.rhsm_log_get(80)
+            rhsm_log = virtwho.rhsm_log_get(100)
             result = virtwho.analyzer(rhsm_log)
             assert (
                 result["error"] == 0
@@ -1272,7 +1272,7 @@ class TestEsxNegative:
             globalconf.update("global", "interval", "120")
             virtwho.run_service()
             esx.guest_resume(hypervisor_data["guest_name"])
-            rhsm_log = virtwho.rhsm_log_get(150)
+            rhsm_log = virtwho.rhsm_log_get(180)
             result = virtwho.analyzer(rhsm_log)
             assert (
                 result["error"] == 0
