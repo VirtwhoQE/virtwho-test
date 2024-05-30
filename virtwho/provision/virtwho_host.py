@@ -276,7 +276,11 @@ def local_mode_guest_add(ssh):
         )
     else:
         local.guest_start(guest_name)
-    time.sleep(60)
+    for i in range(10):
+        time.sleep(30)
+        guest_ip = local.guest_ip(guest_name)
+        if guest_ip:
+            break
     guest_info = local.guest_search(guest_name)
     ssh_guest = SSHConnect(
         host=guest_info["guest_ip"],
