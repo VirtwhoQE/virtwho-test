@@ -13,12 +13,12 @@ from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 
 
-def install_rhel_by_beaker(args):
+def install_host_by_beaker(args):
     """
-    Install rhel os by submitting job to beaker with required arguments.
+    Install rhel/fedora os by submitting job to beaker with required arguments.
     Please refer to the utils/README for usage.
     """
-    job_name = f"virtwho-{args.rhel_compose}"
+    job_name = f"virtwho-{args.distro}"
     ssh_client = SSHConnect(
         host=config.beaker.client,
         user=config.beaker.client_username,
@@ -28,7 +28,7 @@ def install_rhel_by_beaker(args):
     job_id = beaker_job_submit(
         ssh_client,
         job_name,
-        args.rhel_compose,
+        args.distro,
         args.arch,
         args.variant,
         args.job_group,
@@ -40,9 +40,9 @@ def install_rhel_by_beaker(args):
         time.sleep(60)
     host = beaker_job_result(ssh_client, job_name, job_id)
     if host:
-        logger.info(f"Succeeded to install {args.rhel_compose} by beaker " f"({host})")
+        logger.info(f"Succeeded to install {args.distro} by beaker ({host})")
         return host
-    raise FailException("Failed to install {args.rhel_compose} by beaker")
+    raise FailException(f"Failed to install {args.distro} by beaker")
 
 
 def beaker_job_submit(
@@ -169,15 +169,9 @@ def beaker_arguments_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--rhel-compose",
+        "--distro",
         required=True,
-        help="Such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1",
-    )
-    parser.add_argument(
-        "--arch",
-        required=False,
-        default="x86_64",
-        help="One of [x86_64, s390x, ppc64, ppc64le, aarch64]. " "Default to x86_64.",
+        help="Such as: RHEL-8.0-20181005.1, Fedora-40-20240419.n.0",
     )
     parser.add_argument(
         "--variant",
@@ -185,6 +179,12 @@ def beaker_arguments_parser():
         default=None,
         help="One of [Server, Client, Workstation, BaseOS]. "
         "Unnecessary for RHEL-8 and later, default using BaseOS.",
+    )
+    parser.add_argument(
+        "--arch",
+        required=False,
+        default="x86_64",
+        help="One of [x86_64, s390x, ppc64, ppc64le, aarch64], default is x86_64.",
     )
     parser.add_argument(
         "--job-group",
@@ -217,4 +217,4 @@ def beaker_arguments_parser():
 
 if __name__ == "__main__":
     args = beaker_arguments_parser()
-    install_rhel_by_beaker(args)
+    install_host_by_beaker(args)
