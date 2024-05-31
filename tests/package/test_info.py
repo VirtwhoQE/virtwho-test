@@ -45,6 +45,7 @@ class TestVirtwhoPackageInfo:
             assert base.url_validation(pkg_url)
 
     @pytest.mark.tier1
+    @pytest.mark.fedoraSmoke
     def test_version(self, ssh_host):
         """Check the virt-who version by command #virt-who --version
 
@@ -117,6 +118,7 @@ class TestVirtwhoPackageInfo:
         assert base.local_files_compare(help_page_local, help_page_compare)
 
     @pytest.mark.tier1
+    @pytest.mark.fedoraSmoke
     def test_package_info(self, ssh_host):
         """Test the virt-who package detail info by #rpm -qi virt-who
 
