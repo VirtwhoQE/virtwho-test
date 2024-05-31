@@ -342,7 +342,7 @@ def virtwho_arguments_parser():
     parser.add_argument(
         "--distro",
         required=False,
-        default=config.job.compose,
+        default=config.job.rhel_compose,
         help="Such as: RHEL-8.5.0-20211013.2, optional for gating test.",
     )
     parser.add_argument(
