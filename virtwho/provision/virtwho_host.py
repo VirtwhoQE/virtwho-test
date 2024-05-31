@@ -124,8 +124,7 @@ def provision_virtwho_host(args):
             virtwho_ini_props_update(args)
 
     logger.info(
-        f"+++ Suceeded to deploy the virt-who host "
-        f"{args.distro}/{args.server} +++"
+        f"+++ Suceeded to deploy the virt-who host " f"{args.distro}/{args.server} +++"
     )
 
 
