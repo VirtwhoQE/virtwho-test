@@ -64,6 +64,7 @@ class TestEsxPositive:
 
     @pytest.mark.tier1
     @pytest.mark.satelliteSmoke
+    @pytest.mark.fedoraSmoke
     def test_hypervisor_id(
         self, virtwho, function_hypervisor, hypervisor_data, globalconf, rhsm, satellite
     ):

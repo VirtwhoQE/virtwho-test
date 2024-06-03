@@ -91,6 +91,7 @@ class TestSubscriptionPositive:
     @pytest.mark.tier1
     @pytest.mark.satelliteSmoke
     @pytest.mark.fipsEnable
+    @pytest.mark.fedoraSmoke
     def test_rhsm_proxy(self, virtwho, function_hypervisor, rhsmconf, proxy_data):
         """
 

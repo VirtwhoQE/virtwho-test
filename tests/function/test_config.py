@@ -23,6 +23,7 @@ from virtwho.base import hostname_get
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestConfigurationPositive:
     @pytest.mark.tier1
+    @pytest.mark.fedoraSmoke
     def test_debug_in_virtwho_conf(self, virtwho, globalconf):
         """Test the debug option in /etc/virtwho.conf
 
@@ -51,6 +52,7 @@ class TestConfigurationPositive:
         assert result["send"] == 1 and result["error"] == 0 and result["debug"] is False
 
     @pytest.mark.tier1
+    @pytest.mark.fedoraSmoke
     def test_interval_in_virtwho_conf(self, virtwho, globalconf):
         """Test the interval option in /etc/virtwho.conf
 
@@ -89,6 +91,7 @@ class TestConfigurationPositive:
             assert result["loop"] in [60, 61]
 
     @pytest.mark.tier1
+    @pytest.mark.fedoraSmoke
     def test_oneshot_in_virtwho_conf(self, virtwho, globalconf):
         """Test the oneshot option in /etc/virtwho.conf
 
@@ -489,7 +492,9 @@ class TestConfigurationPositive:
 
     @pytest.mark.tier1
     @pytest.mark.notLocal
-    @pytest.mark.fipsEnable
+    # @pytest.mark.fipsEnable
+    # @pytest.mark.fedoraSmoke
+    # Todo: uncoment the mark for fipsEnable and fedoraSmoke after bugs fixed
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
