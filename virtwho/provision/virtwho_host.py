@@ -73,9 +73,7 @@ def provision_virtwho_host(args):
             compose_path=args.rhel_compose_path,
         )
     ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
-    ssh_host.runcmd(
-        cmd="subscription-manager unregister; subscription-manager clean"
-    )
+    ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
