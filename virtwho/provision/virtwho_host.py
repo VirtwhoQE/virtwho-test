@@ -65,21 +65,19 @@ def provision_virtwho_host(args):
 
     # Initially setup the rhel virt-who host
     if "RHEL" in args.distro:
-        if "RHEL-10" in args.distro:
-            ssh_host.runcmd("yum install -y subscription-manager")
         ssh_host.runcmd(cmd="rm -f /etc/yum.repos.d/*.repo")
-        ssh_host.runcmd(
-            cmd="subscription-manager unregister; subscription-manager clean"
-        )
         rhel_compose_repo(
             ssh=ssh_host,
             repo_file="/etc/yum.repos.d/compose.repo",
             compose_id=args.distro,
             compose_path=args.rhel_compose_path,
         )
+    ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
+    ssh_host.runcmd(
+        cmd="subscription-manager unregister; subscription-manager clean"
+    )
     rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
-    ssh_host.runcmd("yum install -y expect net-tools wget")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
     # Configure the virt-who host for remote libvirt mode
