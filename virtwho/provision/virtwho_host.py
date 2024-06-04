@@ -14,7 +14,7 @@ from virtwho.base import ssh_connect, rhel_compose_repo, system_init, rhel_versi
 from virtwho.base import url_validation, url_file_download, hostname_get
 from virtwho.base import ipaddr_get, random_string
 from utils.parse_ci_message import umb_ci_message_parser
-from utils.beaker import install_rhel_by_beaker
+from utils.beaker import install_host_by_beaker
 from utils.properties_update import virtwho_ini_props_update
 from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 
@@ -44,8 +44,8 @@ def provision_virtwho_host(args):
         if ssh_connect(ssh_gating_server):
             args.server = gating_stable_server
 
-        if not args.rhel_compose:
-            args.rhel_compose = rhel_latest_compose(msg["rhel_release"])
+        if not args.distro:
+            args.distro = rhel_latest_compose(msg["rhel_release"])
 
         virtwho_ini_props["gating"] = {
             "package_nvr": msg["pkg_nvr"],
@@ -58,25 +58,24 @@ def provision_virtwho_host(args):
     # Deploy a new host by beaker if no server provided
     if not args.server:
         beaker_args_define(args)
-        args.server = install_rhel_by_beaker(args)
+        args.server = install_host_by_beaker(args)
         args.username = config.beaker.default_username
         args.password = config.beaker.default_password
     ssh_host = SSHConnect(host=args.server, user=args.username, pwd=args.password)
 
-    # Initially setup the virt-who host
-    if "RHEL-10" in args.rhel_compose:
-        ssh_host.runcmd("yum install -y subscription-manager")
-    ssh_host.runcmd(cmd="rm -f /etc/yum.repos.d/*.repo")
+    # Initially setup the rhel virt-who host
+    if "RHEL" in args.distro:
+        ssh_host.runcmd(cmd="rm -f /etc/yum.repos.d/*.repo")
+        rhel_compose_repo(
+            ssh=ssh_host,
+            repo_file="/etc/yum.repos.d/compose.repo",
+            compose_id=args.distro,
+            compose_path=args.rhel_compose_path,
+        )
+    ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
-    rhel_compose_repo(
-        ssh=ssh_host,
-        repo_file="/etc/yum.repos.d/compose.repo",
-        compose_id=args.rhel_compose,
-        compose_path=args.rhel_compose_path,
-    )
     rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
-    ssh_host.runcmd("yum install -y expect net-tools wget")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
     # Configure the virt-who host for remote libvirt mode
@@ -107,7 +106,7 @@ def provision_virtwho_host(args):
 
     # Update the virtwho.ini properties
     virtwho_ini_props["job"] = {
-        "rhel_compose": args.rhel_compose,
+        "rhel_compose": args.distro,
         "rhel_compose_path": args.rhel_compose_path,
     }
     virtwho_ini_props["virtwho"] = {
@@ -121,8 +120,7 @@ def provision_virtwho_host(args):
             virtwho_ini_props_update(args)
 
     logger.info(
-        f"+++ Suceeded to deploy the virt-who host "
-        f"{args.rhel_compose}/{args.server} +++"
+        f"+++ Suceeded to deploy the virt-who host " f"{args.distro}/{args.server} +++"
     )
 
 
@@ -153,10 +151,10 @@ def beaker_args_define(args):
     Define the necessary args to call the utils/beaker.by
     :param args: arguments to define
     """
-    args.arch = "x86_64"
     args.variant = "BaseOS"
-    if "RHEL-7" in args.rhel_compose:
+    if "RHEL-7" in args.distro or "Fedora" in args.distro:
         args.variant = "Server"
+    args.arch = "x86_64"
     args.job_group = "virt-who-ci-server-group"
     args.host = args.beaker_host
     args.host_type = None
@@ -307,7 +305,7 @@ def libvirt_pkg_install(ssh):
     """
     # virt-manager package is not ready in rhel10.0.beta
     package = "nmap iproute rpcbind libvirt* Xorg* gnome*"
-    if "RHEL-10" not in args.rhel_compose:
+    if "RHEL-10" not in args.distro:
         package += " virt-manager"
     ssh.runcmd(f"yum clean all; yum install -y {package}")
     ret, _ = ssh.runcmd("systemctl restart libvirtd;systemctl enable libvirtd")
@@ -338,7 +336,7 @@ def virtwho_arguments_parser():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--rhel-compose",
+        "--distro",
         required=False,
         default=config.job.rhel_compose,
         help="Such as: RHEL-8.5.0-20211013.2, optional for gating test.",

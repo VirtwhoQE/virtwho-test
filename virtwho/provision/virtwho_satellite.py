@@ -10,7 +10,7 @@ from virtwho import FailException, logger
 from virtwho.register import Satellite
 from virtwho.ssh import SSHConnect
 from virtwho.settings import config
-from utils.beaker import install_rhel_by_beaker
+from utils.beaker import install_host_by_beaker
 from utils.satellite import satellite_deploy
 from utils.properties_update import virtwho_ini_props_update
 
@@ -26,13 +26,13 @@ def satellite_deploy_for_virtwho(args):
     satellite = args.satellite.split("-")
     args.version = satellite[0]
     args.repo = satellite[1]
-    args.rhel_compose = rhel_compose_for_satellite(satellite[2])
+    args.distro = rhel_compose_for_satellite(satellite[2])
     args.manifest = config.satellite.manifest
 
     # Install a new host by beaker to deploy satellite when no server provided.
     if not args.server:
         beaker_args_define(args)
-        args.server = install_rhel_by_beaker(args)
+        args.server = install_host_by_beaker(args)
         args.ssh_username = config.beaker.default_username
         args.ssh_password = config.beaker.default_password
         satellite_deploy(args)
@@ -111,7 +111,7 @@ def beaker_args_define(args):
     """
     args.arch = "x86_64"
     args.variant = "BaseOS"
-    if "RHEL-7" in args.rhel_compose:
+    if "RHEL-7" in args.distro:
         args.variant = "Server"
     args.job_group = "virt-who-ci-server-group"
     args.host = args.beaker_host

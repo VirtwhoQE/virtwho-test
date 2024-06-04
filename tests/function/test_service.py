@@ -24,6 +24,7 @@ from virtwho.ssh import SSHConnect
 class TestVirtwhoService:
     @pytest.mark.tier1
     @pytest.mark.gating
+    @pytest.mark.fedoraSmoke
     def test_virtwho_service_start_and_stop(self, virtwho):
         """
 
