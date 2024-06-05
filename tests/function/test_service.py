@@ -136,6 +136,7 @@ class TestVirtwhoService:
         server = config.virtwho.server
         port = config.virtwho.port
         ssh_access_no_password(ssh_guest, ssh_host, server, port)
+        virtwho.kill_pid("virt-who")
         # stop
         ssh_guest.runcmd(
             f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl stop virt-who'"
