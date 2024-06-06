@@ -22,7 +22,7 @@ def satellite_deploy(args):
     sat_ver = args.version
     sat_repo = args.repo
     snap_ver = args.snap
-    rhel_ver = args.rhel_compose.split("-")[1].split(".")[0]
+    rhel_ver = args.distro.split("-")[1].split(".")[0]
     ssh = SSHConnect(host=args.server, user=args.ssh_username, pwd=args.ssh_password)
     system_init(ssh, "satellite", firewall="stop", selinux="permissive")
 
@@ -189,7 +189,7 @@ def satellite_arguments_parser():
     )
     parser.add_argument("--repo", required=True, help="One of ['cdn', 'repo']")
     parser.add_argument(
-        "--rhel-compose",
+        "--distro",
         required=True,
         help="such as: RHEL-7.9-20200917.0, RHEL-8.0-20181005.1",
     )
