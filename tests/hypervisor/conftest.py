@@ -139,9 +139,9 @@ def hyperv_assertion():
     Collect all the assertion info for rhevm to this fixture
     :return:
     """
-    login_error = "Incorrect domain/username/password"
-    if "RHEL-9" in RHEL_COMPOSE:
-        login_error = "Authentication failed"
+    login_error = "Authentication failed"
+    if "RHEL-8" in RHEL_COMPOSE:
+        login_error = "Incorrect domain/username/password"
     data = {
         "type": {
             "invalid": {
