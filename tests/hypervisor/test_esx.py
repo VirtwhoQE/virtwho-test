@@ -421,10 +421,10 @@ class TestEsxNegative:
         function_hypervisor.update("type", "")
         result = virtwho.run_service()
         assert result["send"] == 1 and result["thread"] == 1
-        if "RHEL-9" in RHEL_COMPOSE:
-            assert result["error"] == 1
-        else:
+        if "RHEL-8" in RHEL_COMPOSE:
             assert result["error"] == 0
+        else:
+            assert result["error"] == 1
 
     @pytest.mark.tier2
     def test_server(self, virtwho, function_hypervisor, esx_assertion):
