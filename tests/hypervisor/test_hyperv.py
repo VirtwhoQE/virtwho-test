@@ -17,7 +17,7 @@ from virtwho import SECOND_HYPERVISOR_FILE
 from virtwho import SECOND_HYPERVISOR_SECTION
 
 
-from virtwho.base import encrypt_password, is_host_responsive
+from virtwho.base import encrypt_password, is_host_responsive, msg_search
 from virtwho.configure import hypervisor_create
 
 from hypervisor.virt.hyperv.hypervcli import HypervCLI
@@ -302,7 +302,7 @@ class TestHypervNegative:
             assert (
                 result["error"] is not 0
                 and result["send"] == 0
-                and assertion["invalid"][f"{value}"] in result["error_msg"]
+                and msg_search(result["error_msg"], assertion["invalid"][f"{value}"])
             )
 
         # server option is disable
