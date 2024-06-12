@@ -3,6 +3,7 @@ from virtwho import RHEL_COMPOSE
 
 server_xxx_error = ["Name or service not known", "No address associated with hostname"]
 
+
 @pytest.fixture(scope="session")
 def esx_assertion():
     """
