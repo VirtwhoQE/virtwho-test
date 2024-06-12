@@ -20,7 +20,7 @@ def register_assertion():
     ]
     rhsm_hostname_error1 = [
         "Name or service not known",
-        "No address associated with hostname"
+        "No address associated with hostname",
     ]
     rhsm_hostname_error2 = [
         "Server error attempting a GET to /rhsm/status/",
