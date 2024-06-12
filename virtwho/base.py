@@ -589,7 +589,9 @@ def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
     ssh_remote.runcmd(f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys")
 
     # creat ~/.ssh/known_hosts for local host
-    ssh_local.runcmd(f"ssh-keyscan -p {remote_port} {remote_host} > ~/.ssh/known_hosts")
+    ssh_local.runcmd(
+        f"ssh-keyscan -p {remote_port} {remote_host} >> ~/.ssh/known_hosts"
+    )
 
 
 def expect_run(ssh, cmd, attrs):
