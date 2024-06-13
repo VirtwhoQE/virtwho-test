@@ -1,7 +1,10 @@
 import pytest
 from virtwho import RHEL_COMPOSE
 
-server_invalid_error = ["Name or service not known", "No address associated with hostname"]
+server_invalid_error = [
+    "Name or service not known",
+    "No address associated with hostname",
+]
 
 
 @pytest.fixture(scope="session")
