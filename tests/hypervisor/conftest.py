@@ -1,6 +1,11 @@
 import pytest
 from virtwho import RHEL_COMPOSE
 
+server_invalid_error = [
+    "Name or service not known",
+    "No address associated with hostname",
+]
+
 
 @pytest.fixture(scope="session")
 def esx_assertion():
@@ -22,7 +27,7 @@ def esx_assertion():
         },
         "server": {
             "invalid": {
-                "xxx": "Name or service not known",
+                "xxx": server_invalid_error,
                 "红帽€467aa": "Option server needs to be ASCII characters only",
                 "": "Option server needs to be set in config",
             },
@@ -137,9 +142,9 @@ def hyperv_assertion():
     Collect all the assertion info for rhevm to this fixture
     :return:
     """
-    login_error = "Incorrect domain/username/password"
-    if "RHEL-9" in RHEL_COMPOSE:
-        login_error = "Authentication failed"
+    login_error = "Authentication failed"
+    if "RHEL-8" in RHEL_COMPOSE:
+        login_error = "Incorrect domain/username/password"
     data = {
         "type": {
             "invalid": {
@@ -153,7 +158,7 @@ def hyperv_assertion():
         },
         "server": {
             "invalid": {
-                "xxx": "Name or service not known",
+                "xxx": server_invalid_error,
                 "红帽€467aa": "Unable to connect to Hyper-V server",
                 "": "Option server needs to be set in config",
             },
@@ -299,7 +304,7 @@ def libvirt_assertion():
         },
         "server": {
             "invalid": {
-                "xxx": "Name or service not known",
+                "xxx": server_invalid_error,
                 "红帽€467aa": "internal error: Unable to parse URI qemu+ssh",
                 "": "Cannot recv data: Host key verification failed.",
             },

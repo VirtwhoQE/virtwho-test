@@ -581,7 +581,7 @@ def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
     """
     # create ssh key for local host
     ssh_local.runcmd('echo -e "\n" | ssh-keygen -N "" &> /dev/null')
-    ret, output = ssh_local.runcmd("cat ~/.ssh/id_rsa.pub")
+    ret, output = ssh_local.runcmd("cat ~/.ssh/id_*.pub")
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key ")
 

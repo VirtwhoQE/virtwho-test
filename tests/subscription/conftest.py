@@ -18,7 +18,11 @@ def register_assertion():
         "virt-who can't be started|"
         "Communication with subscription manager failed"
     ]
-    rhsm_hostname_error = [
+    rhsm_hostname_error1 = [
+        "Name or service not known",
+        "No address associated with hostname",
+    ]
+    rhsm_hostname_error2 = [
         "Server error attempting a GET to /rhsm/status/",
         "Communication with subscription manager failed",
     ]
@@ -46,8 +50,8 @@ def register_assertion():
             "null_with_another_good": owner_error_null,
         },
         "rhsm_hostname": {
-            "invalid": {"xxx": "Name or service not known", "": rhsm_hostname_error},
-            "disable": rhsm_hostname_error,
+            "invalid": {"xxx": rhsm_hostname_error1, "": rhsm_hostname_error2},
+            "disable": rhsm_hostname_error2,
         },
         "rhsm_port": {
             "invalid": {
