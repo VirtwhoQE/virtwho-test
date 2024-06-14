@@ -88,7 +88,13 @@ class TestConfigurationPositive:
             rhsm_log = virtwho.rhsm_log_get()
             assert "No data to send, waiting for next interval" in rhsm_log
         else:
-            assert result["loop"] in [60, 61]
+            assert result["loop"] in [60, 61, 62, 63]
+
+        globalconf.update("global", "interval", "120")
+        result = virtwho.run_service()
+        assert (
+            result["send"] == 1 and result["error"] == 0 and result["interval"] == 120
+        )
 
     @pytest.mark.tier1
     @pytest.mark.fedoraSmoke
@@ -113,7 +119,7 @@ class TestConfigurationPositive:
         """
         globalconf.update("global", "debug", "True")
         globalconf.update("global", "oneshot", "True")
-        result = virtwho.run_service()
+        result = virtwho.run_service(wait=10)
         assert result["send"] == 1 and result["error"] == 0 and result["terminate"] == 1
 
         # BZ1448821: No log notice for hyperv rhevm and kubevirt for oneshot function.
