@@ -90,6 +90,7 @@ class TestHypervisorPositive:
         rhsm,
         satellite,
         register_data,
+        function_guest_register,
     ):
         """
         :title: virt-who: hypervisor: check associated info by rhsm.log and webui
