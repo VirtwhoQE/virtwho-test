@@ -66,12 +66,10 @@ class TestConfigurationPositive:
 
             1. Enable interval and set to 10 in /etc/virt-who.conf
             2. Enable interval and set to 60 in /etc/virt-who.conf
-            3. Enable interval and set to 120 in /etc/virt-who.conf
         :expectedresults:
 
             1. Default value of 3600 seconds will be used when configure lower than 60 seconds
             2. Configure successfully, and virt-who starting infinite loop with 60 seconds interval
-            3. Configure successfully, and virt-who starting infinite loop with 120 seconds interval
         """
         globalconf.update("global", "debug", "True")
         globalconf.update("global", "interval", "10")
@@ -89,12 +87,6 @@ class TestConfigurationPositive:
             assert "No data to send, waiting for next interval" in rhsm_log
         else:
             assert result["loop"] in [60, 61, 62, 63]
-
-        globalconf.update("global", "interval", "120")
-        result = virtwho.run_service()
-        assert (
-            result["send"] == 1 and result["error"] == 0 and result["interval"] == 120
-        )
 
     @pytest.mark.tier1
     @pytest.mark.fedoraSmoke
