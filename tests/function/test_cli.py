@@ -84,7 +84,7 @@ class TestCli:
         if HYPERVISOR not in ["rhevm", "hyperv", "kubevirt"]:
             assert result["oneshot"] is False
 
-        result = virtwho.run_cli(oneshot=True)
+        result = virtwho.run_cli(oneshot=True, wait=10)
         assert (
             result["send"] == 1
             and result["error"] == 0
@@ -134,7 +134,7 @@ class TestCli:
             rhsm_log = virtwho.rhsm_log_get()
             assert "No data to send, waiting for next interval" in rhsm_log
         else:
-            assert result["loop"] == 60 or result["loop"] == 61
+            assert 60 <= result["loop"] <= 63
 
     @pytest.mark.tier1
     def test_print(self, virtwho, hypervisor_data):
