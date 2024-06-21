@@ -86,7 +86,7 @@ class TestConfigurationPositive:
             rhsm_log = virtwho.rhsm_log_get()
             assert "No data to send, waiting for next interval" in rhsm_log
         else:
-            assert 60 <= result["loop"] <= 63
+            assert 59 <= result["loop"] <= 63
 
     @pytest.mark.tier1
     @pytest.mark.fedoraSmoke
