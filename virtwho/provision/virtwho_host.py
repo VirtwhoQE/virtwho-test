@@ -206,7 +206,7 @@ def virtwho_install_by_url(ssh, url):
     if not output:
         ssh.runcmd("echo 'sslverify=false' >> /etc/yum.conf")
     ssh.runcmd("rm -rf /var/cache/yum/;" "yum clean all;" "yum remove -y virt-who")
-    ssh.runcmd(f"yum localinstall -y {url}")
+    ssh.runcmd(f"yum localinstall -y {url} --allowerasing")
 
 
 def rhsm_conf_backup(ssh):
