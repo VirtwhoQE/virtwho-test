@@ -305,7 +305,7 @@ def libvirt_assertion():
         "server": {
             "invalid": {
                 "xxx": server_invalid_error,
-                "红帽€467aa": "internal error: Unable to parse URI qemu+ssh",
+                "红帽€467aa": "internal error: Unable to parse URI.*红帽€467aa",
                 "": "Cannot recv data: Host key verification failed.",
             },
             "disable": server_disable_error,
