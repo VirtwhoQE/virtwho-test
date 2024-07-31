@@ -135,7 +135,7 @@ class TestVirtwhoPackageInfo:
         pkg_info = base.package_info_analyzer(ssh_host, "virt-who")
         virtwho_license = "GPLv2+ and LGPLv3+"
         group = "System Environment/Base"
-        if VIRTWHO_VERSION >= '1.31.28':
+        if VIRTWHO_VERSION >= "1.31.28":
             virtwho_license = "GPL-2.0-or-later AND LGPL-3.0-or-later"
             group = "Unspecified"
         assert (
