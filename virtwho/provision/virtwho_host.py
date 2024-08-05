@@ -303,10 +303,7 @@ def libvirt_pkg_install(ssh):
     Install libvirt related packages.
     :param ssh: ssh access of virt-who host.
     """
-    # virt-manager package is not ready in rhel10.0.beta
-    package = "nmap iproute rpcbind libvirt* Xorg* gnome*"
-    if "RHEL-10" not in args.distro:
-        package += " virt-manager"
+    package = "nmap iproute rpcbind libvirt* gnome* virt-manager"
     ssh.runcmd(f"yum clean all; yum install -y {package}")
     ret, _ = ssh.runcmd("systemctl restart libvirtd;systemctl enable libvirtd")
     if ret == 0:
