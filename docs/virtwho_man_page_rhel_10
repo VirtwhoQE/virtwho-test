@@ -1,0 +1,174 @@
+VIRT-WHO(8)                 System Manager's Manual                VIRT-WHO(8)
+
+NAME
+       virt-who  -  Agent  for  reporting  virtual guest IDs to an entitlement
+       server.
+
+SYNOPSIS
+       virt-who [-d] [-i INTERVAL] [-o] [-s]
+
+OPTIONS
+       -h, --help
+              show this help message and exit
+
+       -d, --debug
+              Enable debugging output
+
+       -o, --one-shot
+              Send the list of guest IDs and exit immediately
+
+       -i INTERVAL, --interval=INTERVAL
+              Acquire and send guest information each  N  seconds;  note  that
+              this option is recommendation only, requested interval might not
+              been honoured and the actual interval might be longer or shorter
+              depending on backend that is used.
+
+       -p, --print
+              Print  the  host/guests  association  in JSON format to standard
+              output
+
+       -c, --config
+              Use configuration file  directly  (will  override  configuration
+              from  other files. 'global', 'default', and 'system_environment'
+              sections are not read in files passed in via  this  option,  and
+              are  only  read  from  /etc/virt-who.conf). Can be used multiple
+              times. See virt-who-config(5) for  details  about  configuration
+              file format.
+
+       -s, --status
+              Confirm  the correctness of the configurations. Test the connec‐
+              tions and build a report on the result. The default display is a
+              short summary of the configurations.
+
+       -j, --json
+              Used with status to return a more detailed report in  json  for‐
+              mat.
+
+USAGE
+   MODE
+       virt-who has four modes how it can run:
+
+       1. one-shot mode
+              # virt-who -o
+
+              In  this  mode virt-who just sends the host to guest association
+              to the server once and then exits.
+
+       2. interval mode
+              # virt-who -i INTERVAL
+
+              This is the default mode. virt-who will listen to change  events
+              (if  available)  or  do  a polling with given interval, and will
+              send the host to guest association when it changes. The  default
+              polling  interval  is  3600 seconds and can be changed using "-i
+              INTERVAL" (in seconds).
+
+       3. print mode
+              # virt-who -p
+
+              This mode is similar to oneshot mode but the host to guest asso‐
+              ciation is not send to server, but printed  to  standard  output
+              instead.
+
+       3. status mode
+              # virt-who -s
+
+              This  mode is for configuration diagnosis. The host to guest as‐
+              sociation is not compiled and is not sent to  the  server.  When
+              executed,  it  will confirm the ability to log into and retrieve
+              data from the source for each configuration. It will  also  con‐
+              firm  the  credentials  and organization for each destination in
+              the configurations.  It will produce results in  two  ways  that
+              can be used to diagnose problems. The first is a summary:
+
+              Configuration Name: esx_config1
+              Source Status: success
+              Destination Status: success
+
+              Configuration Name: hyperv-55
+              Source Status: failure
+              Destination Status: failure
+
+              The second is a machine-readable json output (which is generated
+              when the -j/--json option is used):
+
+              {
+                  "configurations": [
+                      {
+                          "name":"esx-conf1",
+                          "source":{
+                              "connection":"esx_system.example.com",
+                              "status":"success",
+                              "last_successful_retrieve":"2020-02-28  07:25:25
+              UTC",
+                              "hypervisors":20,
+                              "guests":37
+                          },
+                          "destination":{
+                              "connection":"candlepin.example.com",
+                              "status":"success",
+                              "last_successful_send":"2020-02-28      07:25:27
+              UTC",
+                              "last_successful_send_job_status":"FINISHED"
+                          }
+                      },
+                      {
+                          "name":"hyperv-55",
+                          "source":{
+                              "connection":"windows10-3.company.com",
+                              "status":"failure",
+                              "message":"Unable  to connect to server: invalid
+              credentials",
+                              "last_successful_retrieve":"none"
+                          },
+                          "destination":{
+                              "connection":"candlepin.company.com",
+                              "status":"failure",
+                              "message":"ConnectionRefusedError:  [Errno  111]
+              Connection refused",
+                              "last_successful_send":"none",
+                              "last_successful_send_job_status":"none"
+                          }
+                      }
+                  ] }
+
+LOGGING
+       virt-who  always writes error output to file /var/log/rhsm/rhsm.log. It
+       also writes the same output to standard error output when started  from
+       command line.
+
+       virt-who  can  be  started  with  option "-d" in all modes and with all
+       backends. This option will enable verbose output with more information.
+
+SECURITY
+       Virt-who may present security concerns in  some  scenarios  because  it
+       needs  access to every hypervisor in the environment. To minimize secu‐
+       rity risk, virt-who is a network client, not a  server.  It  only  does
+       outbound  connections to find and register new hypervisors and does not
+       need access to any virtual machines. To  further  reduce  risk,  deploy
+       virt-who  in  a  small  virtual machine with a minimal installation and
+       lock it down from any unsolicited inbound network connections.
+
+       Here is a list of ports that need to be open for different hypervisors:
+
+           VMWare ESX/vCenter: 443/tcp
+           Hyper-V: 5985/tcp
+           RHEV-M: 443/tcp or 8443/tcp (depending on version)
+           libvirt: depending on transport type, default (for  remote  connec‐
+       tions) is qemu over ssh on port 22
+           local libvirt uses a local connection and doesn't need an open port
+           kubevirt: 8443/tcp
+           Nutanix AHV: 9440/tcp
+
+       virt-who  also  needs  to have access to an entitlement server. Default
+       port is 443/tcp. All the ports might be changed by  system  administra‐
+       tors.
+
+       Using  the  same network for machine running virt-who as for hypervisor
+       management software instead of production VM networks is suggested.
+
+AUTHORS
+       Radek Novacek <rnovacek at redhat dot com>
+       William Poteat <wpoteat at redhat dot com>
+
+virt-who                          April 2016                       VIRT-WHO(8)

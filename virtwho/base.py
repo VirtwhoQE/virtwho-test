@@ -444,11 +444,11 @@ def wget_download(ssh, url, file_path, file_name=None):
     _, ouput = ssh.runcmd(f"ls {file_path}")
     if "No such file or directory" in ouput:
         ssh.runcmd(f"mkdir -p {file_path}")
-    cmd = f"wget {url} -P {file_path} "
+    cmd = f"wget --no-check-certificate {url} -P {file_path} "
     if file_name:
         cmd += f" -O {file_name}"
-    ret, output = ssh.runcmd(cmd)
-    if ret == 0 and "100%" in output:
+    ret, _ = ssh.runcmd(cmd)
+    if ret == 0:
         return True
     raise FailException(f"Failed to wget download from {url}")
 
