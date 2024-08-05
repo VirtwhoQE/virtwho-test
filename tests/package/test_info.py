@@ -11,7 +11,7 @@ import os
 import re
 import pytest
 
-from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG
+from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG, VIRTWHO_VERSION
 from virtwho.settings import DOCS_DIR, TEMP_DIR
 
 
@@ -134,15 +134,17 @@ class TestVirtwhoPackageInfo:
         """
         pkg_info = base.package_info_analyzer(ssh_host, "virt-who")
         virtwho_license = "GPLv2+ and LGPLv3+"
-        if "RHEL-8" in RHEL_COMPOSE:
-            virtwho_license = "GPLv2+"
+        group = "System Environment/Base"
+        if VIRTWHO_VERSION >= "1.31.28":
+            virtwho_license = "GPL-2.0-or-later AND LGPL-3.0-or-later"
+            group = "Unspecified"
         assert (
             pkg_info["Name"] == "virt-who"
             and pkg_info["Version"] in VIRTWHO_PKG
             and pkg_info["Release"] in VIRTWHO_PKG
             and pkg_info["Architecture"] == "noarch"
             and pkg_info["Install Date"]
-            and pkg_info["Group"] == "System Environment/Base"
+            and pkg_info["Group"] == group
             and pkg_info["Size"]
             and pkg_info["License"] == virtwho_license
             and "RSA/SHA256" in pkg_info["Signature"]

@@ -27,6 +27,8 @@ REGISTER = config.job.register
 
 VIRTWHO_PKG = config.virtwho.package
 
+VIRTWHO_VERSION = VIRTWHO_PKG.split("-")[2]
+
 # Backup file for /etc/virt-who.conf
 VIRTWHO_CONF_BACKUP = "virt-who.conf.save"
 
