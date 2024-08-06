@@ -204,9 +204,6 @@ def kubevirt_assertion():
     Collect all the assertion info for kubevirt to this fixture
     :return:
     """
-    disable_error = "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
-    if "RHEL-9" in RHEL_COMPOSE:
-        disable_error = "Cannot use direct socket mode if no URI is set"
     data = {
         "type": {
             "invalid": {
@@ -215,7 +212,7 @@ def kubevirt_assertion():
                 "": "Unsupported virtual type '' is set",
             },
             "non_rhel9": "virt-who can't be started",
-            "disable": disable_error,
+            "disable": "Cannot use direct socket mode if no URI is set",
             "disable_multi_configs": "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'",
         },
     }
@@ -286,11 +283,6 @@ def libvirt_assertion():
     :return:
     """
     login_error = "fails with error: Cannot recv data"
-    server_disable_error = (
-        "Failed to connect socket to '/var/run/libvirt/libvirt-sock-ro'"
-    )
-    if "RHEL-9" in RHEL_COMPOSE:
-        server_disable_error = "Cannot use direct socket mode if no URI is set"
     data = {
         "type": {
             "invalid": {
@@ -308,7 +300,7 @@ def libvirt_assertion():
                 "红帽€467aa": "internal error: Unable to parse URI.*红帽€467aa",
                 "": "Cannot recv data: Host key verification failed.",
             },
-            "disable": server_disable_error,
+            "disable": "Cannot use direct socket mode if no URI is set",
         },
         "username": {
             "invalid": {
