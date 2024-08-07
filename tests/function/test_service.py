@@ -48,8 +48,6 @@ class TestVirtwhoService:
 
         virtwho.operate_service(action="stop")
         _, output = virtwho.operate_service(action="status")
-        if HYPERVISOR == "ahv":
-            logger.info("=== AHV: failed with RHEL-12393 ===")
         assert output is "dead"
 
     @pytest.mark.tier1
@@ -136,24 +134,19 @@ class TestVirtwhoService:
         server = config.virtwho.server
         port = config.virtwho.port
         ssh_access_no_password(ssh_guest, ssh_host, server, port)
+        virtwho.operate_service(action="stop")
         virtwho.kill_pid("virt-who")
-        # stop
-        ssh_guest.runcmd(
-            f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl stop virt-who'"
-        )
         _, status = virtwho.operate_service(action="status")
-        if HYPERVISOR == "ahv":
-            logger.info("=== AHV: failed with RHEL-12393 ===")
         assert status == "dead"
 
-        # start
+        # start by a remote host
         ssh_guest.runcmd(
-            f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl restart virt-who'"
+            f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl start virt-who'"
         )
         _, status = virtwho.operate_service(action="status")
         assert status == "running"
 
-        # stop
+        # stop by a remote host
         ssh_guest.runcmd(
             f"ssh -o StrictHostKeyChecking=no {server} -p {port} 'systemctl stop virt-who'"
         )
