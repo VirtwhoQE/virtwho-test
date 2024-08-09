@@ -60,7 +60,7 @@ class TestVirtwhoPackageInfo:
             1. the result format should be `virt-who 1.31.23-1`
         """
         version = re.split("virt-who-|.el", VIRTWHO_PKG)[1]
-        # RHEL-50649/RHEL-50650 not fix
+        # RHEL-50649/RHEL-50650 won't fix
         if VIRTWHO_VERSION >= "1.31.28":
             version = re.split("virt-who-|.noarch", VIRTWHO_PKG)[1]
         _, output = ssh_host.runcmd("virt-who --version")
