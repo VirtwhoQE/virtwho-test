@@ -27,7 +27,7 @@ REGISTER = config.job.register
 
 VIRTWHO_PKG = config.virtwho.package
 
-VIRTWHO_VERSION = ''
+VIRTWHO_VERSION = ""
 if VIRTWHO_PKG:
     VIRTWHO_VERSION = VIRTWHO_PKG.split("-")[2]
 
