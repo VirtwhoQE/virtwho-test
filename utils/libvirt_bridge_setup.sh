@@ -35,7 +35,7 @@ if [[ $DEV != $br_name ]]; then
     nmcli c add type bridge autoconnect yes con-name $br_name ifname $br_name
     nmcli c add type bridge-slave autoconnect yes con-name "$DEV_CON" ifname $DEV master $br_name
     nmcli c modify $br_name bridge.stp no
-    nmcli c modify $br_name ipv6.method disabled
+#    nmcli c modify $br_name ipv6.method disabled
     nmcli c modify $br_name ipv4.ignore-auto-dns yes
     nmcli c modify $br_name ipv4.ignore-auto-routes yes
     nmcli c modify $br_name ipv4.method manual ipv4.addresses $IP ipv4.gateway $GW
