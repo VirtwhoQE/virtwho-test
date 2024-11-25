@@ -354,6 +354,7 @@ def owner_data():
         f"Organization with id {bad_owner} could not be found",
         f"Couldn't find Organization '{bad_owner}'",
         f"[Owner] with ID(s) {bad_owner} could not be found",
+        f"Owner with ID(s) {bad_owner} could not be found",
     ]
     # the errors for null are different when virt-who host registered and unreigstered.
     owner["null_error"] = [
