@@ -318,11 +318,11 @@ def rhel_compose_url(compose_id, compose_path=""):
                 repo_extra = f"{base_url}/rhel-9/nightly/RHEL-9/{compose_id}/compose/AppStream/x86_64/os"
         if "RHEL-10" in compose_id:
             if ".d" in compose_id:
-                repo_base = f"{base_url}/rhel-10/development/RHEL-10-Public-Beta/{compose_id}/compose/BaseOS/x86_64/os"
-                repo_extra = f"{base_url}/rhel-10/development/RHEL-10-Public-Beta/{compose_id}/compose/AppStream/x86_64/os"
+                repo_base = f"{base_url}/rhel-10/development/RHEL-10/{compose_id}/compose/BaseOS/x86_64/os"
+                repo_extra = f"{base_url}/rhel-10/development/RHEL-10/{compose_id}/compose/AppStream/x86_64/os"
             else:
-                repo_base = f"{base_url}/rhel-10/nightly/RHEL-10-Public-Beta/{compose_id}/compose/BaseOS/x86_64/os"
-                repo_extra = f"{base_url}/rhel-10/nightly/RHEL-10-Public-Beta/{compose_id}/compose/AppStream/x86_64/os"
+                repo_base = f"{base_url}/rhel-10/nightly/RHEL-10/{compose_id}/compose/BaseOS/x86_64/os"
+                repo_extra = f"{base_url}/rhel-10/nightly/RHEL-10/{compose_id}/compose/AppStream/x86_64/os"
     return repo_base, repo_extra
 
 
