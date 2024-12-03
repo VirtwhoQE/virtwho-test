@@ -7,6 +7,7 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+
 import os
 import re
 import pytest
