@@ -8,6 +8,7 @@
 :caselevel: Component
 
 """
+
 import pytest
 from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
 from virtwho.base import virtwho_package_url

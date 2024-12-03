@@ -6,6 +6,7 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+
 # All the test cases have been uploaded to Polarion with Inactive status
 # because the cases are just used to test the test environments.
 

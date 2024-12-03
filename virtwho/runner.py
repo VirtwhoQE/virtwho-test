@@ -290,7 +290,8 @@ class VirtwhoRunner:
         Clean all log files under /var/log/rhsm/
         Clean the json file created by print function of virt-who
         """
-        self.ssh.runcmd("rm -rf /var/log/rhsm/*")
+        self.ssh.runcmd("truncate -s 0 /var/log/rhsm/*.log")
+        self.ssh.runcmd("rm -f /var/log/rhsm/*.gz")
 
         # comment this line as we need the print json file for fake mode testing
         # self.ssh.runcmd(f"rm -rf {PRINT_JSON_FILE}")
