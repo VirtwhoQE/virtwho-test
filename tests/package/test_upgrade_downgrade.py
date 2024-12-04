@@ -153,7 +153,7 @@ class TestUpgradeDowngrade:
                 package_upgrade(ssh_host, "virt-who")
 
     @pytest.mark.tier1
-    @pytest.mark.notRHEL8
+    @pytest.mark.release(rhel8=False, rhel9=True, rhel10=True)
     def test_global_options_migration_after_upgrade(self, ssh_host, virtwho):
         """Test the global configurations in /etc/sysconfig/virt-who can be
             migrated to /etc/virt-who.conf after upgrade

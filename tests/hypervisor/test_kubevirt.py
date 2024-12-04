@@ -376,7 +376,7 @@ class TestKubevirtNegative:
             )
 
     @pytest.mark.tier2
-    @pytest.mark.notRHEL8
+    @pytest.mark.release(rhel8=False, rhel9=True, rhel10=True)
     def test_insecure(self, virtwho, function_hypervisor, hypervisor_data, ssh_host):
         """Test the insecure option in /etc/virt-who.d/hypervisor.conf
 

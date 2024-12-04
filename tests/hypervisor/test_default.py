@@ -259,7 +259,7 @@ class TestHypervisorPositive:
         assert virt_is_guest == "True"
 
     @pytest.mark.tier1
-    @pytest.mark.notRHEL8
+    @pytest.mark.release(rhel8=False, rhel9=True, rhel10=True)
     @pytest.mark.notLocal
     def test_virtwho_status(
         self,
