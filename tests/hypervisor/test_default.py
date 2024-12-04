@@ -6,6 +6,7 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+
 import pytest
 
 from virtwho import REGISTER
@@ -258,7 +259,7 @@ class TestHypervisorPositive:
         assert virt_is_guest == "True"
 
     @pytest.mark.tier1
-    @pytest.mark.notRHEL8
+    @pytest.mark.release(rhel8=False, rhel9=True, rhel10=True)
     @pytest.mark.notLocal
     def test_virtwho_status(
         self,

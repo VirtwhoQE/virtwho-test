@@ -7,6 +7,7 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+
 import pytest
 from virtwho.base import msg_search
 from virtwho import HYPERVISOR

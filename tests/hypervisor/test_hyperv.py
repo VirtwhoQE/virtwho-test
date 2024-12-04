@@ -6,6 +6,7 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+
 import time
 import pytest
 

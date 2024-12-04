@@ -26,6 +26,30 @@ def pytest_runtest_logfinish(nodeid):
     logger.info(f"Finished Test: {nodeid}")
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--rhelver",
+        action="store",
+        metavar="NAME",
+        help="Only run tests for this RHEL version: rhel8, rhel9, rhel10",
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    rhelver = config.getoption("--rhelver")
+    if not rhelver:
+        return
+    for item in items:
+        release = item.get_closest_marker("release")
+        if not release:
+            return
+        release_conf = release.kwargs
+        if rhelver not in release_conf:
+            return
+        if not release_conf[rhelver]:
+            item.add_marker("skip")
+
+
 @pytest.fixture(scope="class")
 def class_hypervisor():
     """Instantication of class VirtwhoHypervisorConfig()"""

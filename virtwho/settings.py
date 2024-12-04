@@ -1,4 +1,5 @@
 """Define and instantiate the configuration class for virtwho-test."""
+
 import os
 from configparser import ConfigParser
 

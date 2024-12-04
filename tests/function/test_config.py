@@ -6,6 +6,7 @@
 :subsystemteam: sst_subscription_virtwho
 :caselevel: Component
 """
+
 import pytest
 
 from virtwho import HYPERVISOR, RHEL_COMPOSE
@@ -567,7 +568,7 @@ class TestConfigurationPositive:
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
-@pytest.mark.notRHEL9
+@pytest.mark.release(rhel8=True, rhel9=False, rhel10=False)
 class TestSysConfiguration:
     @pytest.mark.tier1
     def test_debug_in_virtwho_sysconfig(self, virtwho, function_sysconfig):
