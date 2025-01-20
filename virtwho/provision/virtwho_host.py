@@ -157,7 +157,7 @@ def beaker_args_define(args):
     args.arch = "x86_64"
     args.job_group = "virt-who-ci-server-group"
     args.host = args.beaker_host
-    args.host_type = None
+    args.host_type = "physical"
     args.host_require = None
 
 
