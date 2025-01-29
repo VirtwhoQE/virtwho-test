@@ -1,6 +1,7 @@
 import json
 import requests
 
+from json.decoder import JSONDecodeError
 from virtwho import logger, FailException
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
@@ -286,7 +287,12 @@ class Satellite:
             host=self.server, user=register.ssh_username, pwd=register.ssh_password
         )
         self.hammer = "hammer --output=json"
-        self.org_id = self.organization_id()
+        try:
+            # import ipdb; ipdb.set_trace()
+            self.org_id = self.organization_id()
+        except FailException: #retry by creating org first
+            self.org_create(name=self.org, label=self.org)
+            self.org_id = self.organization_id()
         self.api = f"https://{self.server}"
         self.auth = (register.username, register.password)
 
@@ -301,7 +307,11 @@ class Satellite:
         ret, output = self.ssh.runcmd(
             f'{self.hammer} organization info --label "{org}" --fields Id'
         )
-        output = json.loads(output)
+        try:
+            output = json.loads(output)
+        except JSONDecodeError:
+            raise FailException(f"Failed to get the organization id for {org}")
+
         if ret == 0 and output:
             return output["Id"]
         raise FailException(f"Failed to get the organization id for {org}")

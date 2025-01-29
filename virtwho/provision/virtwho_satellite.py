@@ -50,10 +50,9 @@ def satellite_deploy_for_virtwho(args):
     default_org = config.satellite.default_org
     if not default_org:
         default_org = "Default_Organization"
-        satellite.sca(org=None)
-    else:
-        satellite.org_create(name=default_org, label=default_org)
-        satellite.sca(org=default_org)
+    #     satellite.sca(org=None)
+    # else:
+    #     satellite.sca(org=default_org)
 
     satellite_manifest_upload(
         org=default_org,
@@ -67,7 +66,7 @@ def satellite_deploy_for_virtwho(args):
     second_org = config.satellite.secondary_org
     if second_org:
         satellite.org_create(name=second_org, label=second_org)
-        satellite.sca(org=second_org)
+        # satellite.sca(org=second_org)
         satellite_manifest_upload(
             org=second_org,
             ssh=ssh_satellite,
