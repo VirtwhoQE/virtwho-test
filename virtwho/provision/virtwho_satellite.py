@@ -46,9 +46,17 @@ def satellite_deploy_for_virtwho(args):
 
     # Default Org: setup SCA mode and upload manifest as requirement
     satellite = Satellite(server=args.server)
-    satellite.sca(org=None)
+
+    default_org = config.satellite.default_org
+    if not default_org:
+        default_org = "Default_Organization"
+        satellite.sca(org=None)
+    else:
+        satellite.org_create(name=default_org, label=default_org)
+        satellite.sca(org=default_org)
+
     satellite_manifest_upload(
-        org="Default_Organization",
+        org=default_org,
         ssh=ssh_satellite,
         url=config.satellite.manifest,
         admin_username=args.admin_username,
@@ -116,7 +124,7 @@ def beaker_args_define(args):
     args.job_group = "virt-who-ci-server-group"
     args.host = args.beaker_host
     args.host_type = None
-    args.host_require = None
+    args.host_require = "cpu>=1,memory>6000"
 
 
 def satellite_settings(ssh, name, value):
