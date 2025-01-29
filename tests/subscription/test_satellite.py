@@ -16,6 +16,7 @@ from virtwho.configure import get_hypervisor_handler
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 
 
+@pytest.mark.skip(reason="SCA mode is no longer available.")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_globalconf_clean")

@@ -11,7 +11,7 @@
 import pytest
 from virtwho.base import msg_search
 
-
+@pytest.mark.skip(reason="SCA mode is no longer available.")
 @pytest.mark.usefixtures("class_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_guest_register")
