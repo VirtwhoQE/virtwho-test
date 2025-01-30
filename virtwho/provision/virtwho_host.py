@@ -303,7 +303,7 @@ def libvirt_pkg_install(ssh):
     Install libvirt related packages.
     :param ssh: ssh access of virt-who host.
     """
-    package = "nmap iproute rpcbind libvirt* gnome* virt-manager"
+    package = "nmap iproute rpcbind libvirt*"
     ssh.runcmd(f"yum clean all; yum install -y {package}")
     ret, _ = ssh.runcmd("systemctl restart libvirtd;systemctl enable libvirtd")
     if ret == 0:
