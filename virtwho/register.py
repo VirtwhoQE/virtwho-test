@@ -290,7 +290,7 @@ class Satellite:
         try:
             # import ipdb; ipdb.set_trace()
             self.org_id = self.organization_id()
-        except FailException: #retry by creating org first
+        except FailException:  # retry by creating org first
             self.org_create(name=self.org, label=self.org)
             self.org_id = self.organization_id()
         self.api = f"https://{self.server}"
