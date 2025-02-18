@@ -28,8 +28,9 @@ def install_host_by_beaker(args):
 
     start_time = time.time()
     current_time = time.time()
-    time_span = (config.beaker.get('timeout') and float(config.beaker.timeout)) \
-        or (2*3600.0) # 2 hours
+    time_span = (config.beaker.get("timeout") and float(config.beaker.timeout)) or (
+        2 * 3600.0
+    )  # 2 hours
 
     job_id = beaker_job_submit(
         ssh_client,
@@ -47,8 +48,10 @@ def install_host_by_beaker(args):
     while beaker_job_status(ssh_client, job_name, job_id):
         time.sleep(60)
         current_time = time.time()
-        if ((current_time - start_time) > time_span):
-            raise FailException(f"Failed to get beaker job result in {time_span/3600.0} hours")
+        if (current_time - start_time) > time_span:
+            raise FailException(
+                f"Failed to get beaker job result in {time_span/3600.0} hours"
+            )
 
     host = beaker_job_result(ssh_client, job_name, job_id)
     if host:
@@ -230,7 +233,7 @@ def beaker_arguments_parser():
     parser.add_argument(
         "--reserve-duration",
         required=False,
-        default=config.beaker.get('reserve_duration',"259200"),
+        default=config.beaker.get("reserve_duration", "259200"),
         help="A time to keep a machine reservered (in seconds). "
         " a default value is 259200 (3days)",
     )
