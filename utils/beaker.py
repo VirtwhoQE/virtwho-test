@@ -25,6 +25,13 @@ def install_host_by_beaker(args):
         pwd=config.beaker.client_password,
     )
     beaker_client_kinit(ssh_client, config.beaker.keytab, config.beaker.principal)
+
+    start_time = time.time()
+    current_time = time.time()
+    time_span = (config.beaker.get("timeout") and float(config.beaker.timeout)) or (
+        2 * 3600.0
+    )  # 2 hours
+
     job_id = beaker_job_submit(
         ssh_client,
         job_name,
@@ -35,13 +42,23 @@ def install_host_by_beaker(args):
         args.host,
         args.host_type,
         args.host_require,
+        args.reserve_duration,
     )
+    logger.info(ssh_client)
     while beaker_job_status(ssh_client, job_name, job_id):
         time.sleep(60)
+        current_time = time.time()
+        if (current_time - start_time) > time_span:
+            raise FailException(
+                f"Failed to get beaker job result in {time_span/3600.0} hours"
+            )
+
     host = beaker_job_result(ssh_client, job_name, job_id)
     if host:
         logger.info(f"Succeeded to install {args.distro} by beaker ({host})")
         return host
+
+    # the right way to exit this function is 'return' statement in the 'while' loop.
     raise FailException(f"Failed to install {args.distro} by beaker")
 
 
@@ -55,6 +72,7 @@ def beaker_job_submit(
     host=None,
     host_type=None,
     host_require=None,
+    reserve_duration=None,
 ):
     """
     Submit beaker job by command and return the job id.
@@ -75,7 +93,7 @@ def beaker_job_submit(
         "--task /distribution/reservesys"
     )
     whiteboard = f'--whiteboard="reserve host for {job_name}"'
-    reserve = "--reserve --reserve-duration 259200 --priority Urgent"
+    reserve = f"--reserve --reserve-duration {reserve_duration} --priority Urgent"
     cmd = (
         f"bkr workflow-simple --prettyxml "
         f"{task} {whiteboard} {reserve} "
@@ -193,17 +211,17 @@ def beaker_arguments_parser():
         help="Associate a group to the job based on the requirement",
     )
     parser.add_argument(
-        "--host",
-        required=False,
-        default=None,
-        help="Define/filter system as hostrequire. "
-        "Such as: %ent-02-vm%, ent-02-vm-20.lab.eng.nay.redhat.com",
-    )
-    parser.add_argument(
         "--host-type",
         required=False,
         default=None,
         help="Define the system type as hostrequire. " "Such as: physical or virtual",
+    )
+    parser.add_argument(
+        "--host",
+        required=False,
+        default=None,
+        help="Define/filter system as hostrequire. "
+        "Such as: %%ent-02-vm%%, ent-02-vm-20.lab.eng.nay.redhat.com",
     )
     parser.add_argument(
         "--host-require",
@@ -211,6 +229,13 @@ def beaker_arguments_parser():
         default=None,
         help="Separate multiple options with commas. "
         "Such as: labcontroller=lab.example.com, memory > 7000",
+    )
+    parser.add_argument(
+        "--reserve-duration",
+        required=False,
+        default=config.beaker.get("reserve_duration", "259200"),
+        help="A time to keep a machine reservered (in seconds). "
+        " a default value is 259200 (3days)",
     )
     return parser.parse_args()
 
