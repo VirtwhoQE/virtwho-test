@@ -159,7 +159,7 @@ def beaker_args_define(args):
     args.host = args.beaker_host
     args.host_type = "physical"
     args.host_require = None
-
+    args.reserve_duration = None
 
 def virtwho_install(ssh, url=None):
     """
