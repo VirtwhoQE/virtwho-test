@@ -10,7 +10,7 @@
 """
 
 import pytest
-from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH, RHEL_VERSION, RHEL_SUBVERSION
+from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH, RHEL_SUBVERSION
 from virtwho.base import virtwho_package_url
 from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string

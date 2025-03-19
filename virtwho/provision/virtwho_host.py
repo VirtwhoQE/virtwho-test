@@ -161,6 +161,7 @@ def beaker_args_define(args):
     args.host_require = None
     args.reserve_duration = None
 
+
 def virtwho_install(ssh, url=None):
     """
     Install virt-who package, default is from repository,
