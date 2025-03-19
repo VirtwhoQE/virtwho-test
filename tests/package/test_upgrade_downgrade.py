@@ -10,19 +10,28 @@
 """
 
 import pytest
-from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
+from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH, RHEL_VERSION, RHEL_SUBVERSION
 from virtwho.base import virtwho_package_url
 from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string
 from virtwho.base import system_reboot
 
-old_pkg = "virt-who-1.31.22-1.el9_0.noarch"
-old_compose = "latest-RHEL-9.0"
-old_compose_path = "http://download.eng.pek2.redhat.com/rhel-9/rel-eng/RHEL-9"
+old_pkg = "virt-who-unspecified.noarch"
+old_compose = "latest-RHEL-unspecified"
+old_compose_path = "http://download.devel.redhat.com/rhel-unspecified/rel-eng/RHEL-unspecified"
+
+if "RHEL-10" in RHEL_COMPOSE:
+    old_pkg = "virt-who-1.32.1-2.el10.noarch"
+    old_compose = "latest-RHEL-10.0"
+    old_compose_path = "http://download.devel.redhat.com/rhel-10/rel-eng/RHEL-10"
+if "RHEL-9" in RHEL_COMPOSE:
+    old_pkg = "virt-who-1.31.22-1.el9_0.noarch"
+    old_compose = "latest-RHEL-9.0"
+    old_compose_path = "http://download.devel.redhat.com/rhel-9/rel-eng/RHEL-9"
 if "RHEL-8" in RHEL_COMPOSE:
     old_pkg = "virt-who-1.30.8-1.el8.noarch"
     old_compose = "latest-RHEL-8.5"
-    old_compose_path = "http://download.eng.pek2.redhat.com/rhel-8/rel-eng/RHEL-8"
+    old_compose_path = "http://download.devel.redhat.com/rhel-8/rel-eng/RHEL-8"
 
 
 @pytest.mark.usefixtures("function_globalconf_clean")
@@ -53,6 +62,13 @@ class TestUpgradeDowngrade:
             2. all configurations will not be changed after virt-who downgrade,
                 upgrade and host reboot.
         """
+
+        """ If it is the first release of RHEL (aka 9.0, 10.0, ...) there is no reason to try downgrade/upgdare
+            Since no old package is available for downgrading.
+        """
+        if RHEL_SUBVERSION == 0:
+            pytest.skip(f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible ")
+
         old_repo_file = "/etc/yum.repos.d/oldCompose.repo"
         try:
             globalconf.update("global", "debug", "True")
