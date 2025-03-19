@@ -18,7 +18,9 @@ from virtwho.base import system_reboot
 
 old_pkg = "virt-who-unspecified.noarch"
 old_compose = "latest-RHEL-unspecified"
-old_compose_path = "http://download.devel.redhat.com/rhel-unspecified/rel-eng/RHEL-unspecified"
+old_compose_path = (
+    "http://download.devel.redhat.com/rhel-unspecified/rel-eng/RHEL-unspecified"
+)
 
 if "RHEL-10" in RHEL_COMPOSE:
     old_pkg = "virt-who-1.32.1-2.el10.noarch"
@@ -67,7 +69,9 @@ class TestUpgradeDowngrade:
             Since no old package is available for downgrading.
         """
         if RHEL_SUBVERSION == 0:
-            pytest.skip(f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible ")
+            pytest.skip(
+                f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible "
+            )
 
         old_repo_file = "/etc/yum.repos.d/oldCompose.repo"
         try:

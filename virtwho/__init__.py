@@ -12,7 +12,9 @@ RHEL_COMPOSE_PATH = config.job.rhel_compose_path
 
 def version_subversion(compose):
     rhel_regexp = re.compile(r"^RHEL-([\d]+)\.([\d]+)", re.IGNORECASE)
-    (rhel_version, rhel_subversion) = map(int, rhel_regexp.search(RHEL_COMPOSE).groups())
+    (rhel_version, rhel_subversion) = map(
+        int, rhel_regexp.search(RHEL_COMPOSE).groups()
+    )
     return (rhel_version, rhel_subversion)
 
 

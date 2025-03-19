@@ -93,9 +93,14 @@ def beaker_job_submit(
         "--task /distribution/reservesys"
     )
     whiteboard = f'--whiteboard="reserve host for {job_name}"'
-    reserve = "--reserve  --priority Urgent" + \
-        ((reserve_duration and f" --reserve-duration {reserve_duration}") or \
-        (config.beaker.get("reserve_duration") and f" --reserve-duration {config.beaker.get('reserve_duration')}") or "")
+    reserve = "--reserve  --priority Urgent" + (
+        (reserve_duration and f" --reserve-duration {reserve_duration}")
+        or (
+            config.beaker.get("reserve_duration")
+            and f" --reserve-duration {config.beaker.get('reserve_duration')}"
+        )
+        or ""
+    )
     cmd = (
         f"bkr workflow-simple --prettyxml "
         f"{task} {whiteboard} {reserve} "
