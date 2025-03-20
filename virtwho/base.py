@@ -642,7 +642,7 @@ def system_reboot(ssh):
 
 def virtwho_package_url(pkg, rhel_compose_id, rhel_compose_path=""):
     """
-    Get the virt-who package url from http://download.eng.pek2.redhat.com/
+    Get the virt-who package url from http://download.devel.redhat.com/
     for downloading.
     :param pkg: virt-who package, such as virt-who-1.31.26-1.el9.noarch
     :param rhel_compose_id: rhel compose id
