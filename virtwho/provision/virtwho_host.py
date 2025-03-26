@@ -61,8 +61,8 @@ def provision_virtwho_host(args):
         args.server = install_host_by_beaker(args)
         args.username = config.beaker.default_username
         args.password = config.beaker.default_password
-    ssh_host = SSHConnect(host=args.server, user=args.username, pwd=args.password)
 
+    ssh_host = SSHConnect(host=args.server, user=args.username, pwd=args.password)
     # Initially setup the rhel virt-who host
     if "RHEL" in args.distro:
         ssh_host.runcmd(cmd="rm -f /etc/yum.repos.d/*.repo")
@@ -332,6 +332,12 @@ def virtwho_arguments_parser():
     for function using, and generate help and usage messages for
     each arguments.
     """
+    def value_to_boolean(value):
+        return (
+            (value is not None) and \
+            value.lower() in ['yes','y','1','true','t','ok','enabled','enable']
+        ) or False
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--distro",
@@ -346,6 +352,14 @@ def virtwho_arguments_parser():
         help="Such as http://download.devel.redhat.com/rhel-9/nightly/RHEL-9. "
         "If leave it None, will use the specified path in code.",
     )
+    parser.add_argument(
+        "--fips",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+        default=value_to_boolean(config.job.fips),
+        help="--fips/--no-fips: a machine about to create should complain FIPS standard.",
+    )
+
     parser.add_argument(
         "--server",
         required=False,

@@ -6,14 +6,14 @@ from virtwho import logger
 class SSHConnect:
     """Extended SSHClient allowing custom methods"""
 
-    def __init__(self, host, user, pwd=None, rsafile=None, port=22, timeout=1800):
+    def __init__(self, host, user, pwd=None, rsafile=None, port=22, timeout=3000):
         """
         :param str host: The hostname or ip of the server to establish connection.
         :param str user: The username to use when connecting.
         :param str pwd: The password to use when connecting.
         :param str rsafile: The path of the ssh private key to use when connecting to the server
         :param int port: The server port to connect to, the default port is 22.
-        :param int timeout: Time to wait for the ssh command to finish.
+        :param int timeout: Time (seconds) to wait for the ssh command to finish.
         """
         self.host = host
         self.user = user
@@ -44,17 +44,13 @@ class SSHConnect:
     def pwd_connect(self):
         """SSH command execution connection by password"""
         ssh = ""
-        connect = False
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
-            connect = True
-        finally:
-            if connect:
-                return ssh
-            logger.error(f"Failed to ssh connect the {self.host}.")
-            return False
+            return ssh
+        except Exception:
+            raise ConnectionError(f"Failed to ssh connect the {self.host}.")
 
     def rsa_connect(self):
         """SSH command execution connection by key file"""

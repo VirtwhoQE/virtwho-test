@@ -38,13 +38,13 @@ def install_host_by_beaker(args):
         args.distro,
         args.arch,
         args.variant,
+        args.fips,
         args.job_group,
         args.host,
         args.host_type,
         args.host_require,
         args.reserve_duration,
     )
-    logger.info(ssh_client)
     while beaker_job_status(ssh_client, job_name, job_id):
         time.sleep(60)
         current_time = time.time()
@@ -68,6 +68,7 @@ def beaker_job_submit(
     distro,
     arch,
     variant=None,
+    fips=False,
     job_group=None,
     host=None,
     host_type=None,
@@ -87,11 +88,12 @@ def beaker_job_submit(
     :param host_require: optional, additional <hostRequires/> for job
     :return: beaker job id
     """
-    task = (
-        "--suppress-install-task "
-        "--task /distribution/dummy "
-        "--task /distribution/reservesys"
-    )
+    task = "--task /distribution/check-install " + \
+        "--task /tools/beaker-rhsm/Install/rhsm-qe-keys " + \
+        ("--task /distribution/fips/setup-fips-enabled " if fips else "") + \
+        "--task /distribution/reservesys "
+    install_pkg = "beakerlib"
+    ks_meta="method=nfs harness='restraint-rhts beakerlib beakerlib-redhat'"
     whiteboard = f'--whiteboard="reserve host for {job_name}"'
     reserve = "--reserve  --priority Urgent" + (
         (reserve_duration and f" --reserve-duration {reserve_duration}")
@@ -106,6 +108,8 @@ def beaker_job_submit(
         f"{task} {whiteboard} {reserve} "
         f"--distro={distro} "
         f"--arch={arch} "
+        f"--install={install_pkg} "
+        f"--ks-meta=\"{ks_meta}\" "
     )
     if variant:
         cmd += f"--variant={variant} "
