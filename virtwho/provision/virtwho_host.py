@@ -332,10 +332,12 @@ def virtwho_arguments_parser():
     for function using, and generate help and usage messages for
     each arguments.
     """
+
     def value_to_boolean(value):
         return (
-            (value is not None) and \
-            value.lower() in ['yes','y','1','true','t','ok','enabled','enable']
+            (value is not None)
+            and value.lower()
+            in ["yes", "y", "1", "true", "t", "ok", "enabled", "enable"]
         ) or False
 
     parser = argparse.ArgumentParser()
