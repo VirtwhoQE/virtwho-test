@@ -1,11 +1,12 @@
 from virtwho.logger import getLogger
 from virtwho.settings import config
 import re
+import os
 
 
 logger = getLogger(__name__)
 
-RHEL_COMPOSE = config.job.rhel_compose
+RHEL_COMPOSE = config.job.rhel_compose or os.environ.get('RHEL_COMPOSE')
 
 RHEL_COMPOSE_PATH = config.job.rhel_compose_path
 
