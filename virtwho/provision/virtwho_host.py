@@ -358,7 +358,7 @@ def virtwho_arguments_parser():
         "--fips",
         required=False,
         action=argparse.BooleanOptionalAction,
-        default=value_to_boolean(config.job.fips),
+        default=False,
         help="--fips/--no-fips: a machine about to create should complain FIPS standard.",
     )
 
