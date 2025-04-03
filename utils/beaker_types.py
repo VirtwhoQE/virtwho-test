@@ -13,13 +13,11 @@ class Job:
 
     @property
     def is_reserved(self):
-        return self.status == "Reserved" \
-            and self.result == "Pass"
+        return self.status == "Reserved" and self.result == "Pass"
 
     @property
     def is_running(self):
-        return self.status == "Running" \
-            and self.result == "Pass"
+        return self.status == "Running" and self.result == "Pass"
 
 
 @dataclass(frozen=True)
@@ -30,8 +28,7 @@ class Task:
 
     @property
     def is_completed(self):
-        return self.status == "Completed" \
-            and self.result in ("Pass", "New")
+        return self.status == "Completed" and self.result in ("Pass", "New")
 
 
 @dataclass(frozen=True)
@@ -45,15 +42,19 @@ class Report:
         element = first(root.xpath("/job"))
         whiteboard = first(root.xpath("/job/whiteboard")).text
         hostname = first(root.xpath("/job/recipeSet/recipe/@system"))
-        report = cls(Job(element.attrib['id'],
-                         element.attrib['status'],
-                         element.attrib['result'],
-                         whiteboard,
-                         hostname),
-                     list(Task(el.attrib['name'],
-                               el.attrib['status'],
-                               el.attrib['result'])
-                          for el in root.xpath("/job/recipeSet/recipe/task")))
+        report = cls(
+            Job(
+                element.attrib["id"],
+                element.attrib["status"],
+                element.attrib["result"],
+                whiteboard,
+                hostname,
+            ),
+            list(
+                Task(el.attrib["name"], el.attrib["status"], el.attrib["result"])
+                for el in root.xpath("/job/recipeSet/recipe/task")
+            ),
+        )
         return report
 
     @property
@@ -62,8 +63,10 @@ class Report:
 
     @property
     def is_completed_except_reservesysTask(self):
-        runningReservesysTask = Task(name='/distribution/reservesys',
-                                     status='Running',
-                                     result='New')
-        return self.job.is_running \
-            and all(task.is_completed for task in (set(self.tasks) - set((runningReservesysTask,))))
+        runningReservesysTask = Task(
+            name="/distribution/reservesys", status="Running", result="New"
+        )
+        return self.job.is_running and all(
+            task.is_completed
+            for task in (set(self.tasks) - set((runningReservesysTask,)))
+        )

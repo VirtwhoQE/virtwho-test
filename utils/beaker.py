@@ -31,7 +31,7 @@ def run_cmd(cmd):
     # #beaker_client_kinit(ssh_client, config.beaker.keytab, config.beaker.principal)
     # ssh.runcmd(cmd)
     logger.info(f"subprocess cmd >>> {cmd}")
-    process = subprocess.run(cmd, shell=True, capture_output=True, encoding='UTF-8')
+    process = subprocess.run(cmd, shell=True, capture_output=True, encoding="UTF-8")
     logger.info("<<< stdout\n{}".format(process.stdout))
     return (process.returncode, process.stdout)
 
@@ -169,14 +169,14 @@ def beaker_job_status(job_name, job_id):
     :param job_id: beaker job id
     :return: True/False
     """
+
     def status_from_xml(xml):
         root = etree.XML(xml)
         elements = root.xpath("/job/@status")
         return first(elements)
 
     auth_args = (
-        f"--username {config.beaker.username} "
-        f"--password {config.beaker.password} "
+        f"--username {config.beaker.username} " f"--password {config.beaker.password} "
     )
     _, output = run_cmd(f"bkr job-results {job_id} {auth_args} --no-logs")
     status = status_from_xml(output)
@@ -192,15 +192,16 @@ def beaker_job_result(job_name, job_id):
     :return: the completed host (hostname)
     """
     auth_args = (
-        f"--username {config.beaker.username} "
-        f"--password {config.beaker.password} "
+        f"--username {config.beaker.username} " f"--password {config.beaker.password} "
     )
     ret, output = run_cmd(f"bkr job-results {job_id} {auth_args} --no-logs")
     if ret == 0:
+
         def hostname_from_xml(xml):
             root = etree.XML(xml)
             elements = root.xpath("/job/recipeSet/recipe/@system")
             return first(elements)
+
         host = hostname_from_xml(output)
         logger.info(f"Succeeded to install {host} for {job_name}")
         return host
@@ -216,8 +217,7 @@ def beaker_job_report(job_id):
     :return: Report
     """
     auth_args = (
-        f"--username {config.beaker.username} "
-        f"--password {config.beaker.password} "
+        f"--username {config.beaker.username} " f"--password {config.beaker.password} "
     )
     _, output = run_cmd(f"bkr job-results {job_id} {auth_args} --no-logs")
     report = Report.from_beaker_results(output)
