@@ -2,6 +2,7 @@ from lxml import etree
 from dataclasses import dataclass
 from funcy import first, all
 
+
 @dataclass
 class Job:
     job_id: str
@@ -9,28 +10,29 @@ class Job:
     result: str
     whiteboard: str
     hostname: str
-    
+
     @property
     def is_reserved(self):
         return self.status == "Reserved" \
             and self.result == "Pass"
+
     @property
     def is_running(self):
         return self.status == "Running" \
             and self.result == "Pass"
-    
-    
+
+
 @dataclass(frozen=True)
 class Task:
     name: str
     status: str
     result: str
-    
+
     @property
     def is_completed(self):
         return self.status == "Completed" \
-            and self.result in ("Pass","New")
-    
+            and self.result in ("Pass", "New")
+
 
 @dataclass(frozen=True)
 class Report:
@@ -38,7 +40,7 @@ class Report:
     tasks: list[Task]
 
     @classmethod
-    def from_beaker_results(cls,xml:str):
+    def from_beaker_results(cls, xml: str):
         root = etree.XML(xml)
         element = first(root.xpath("/job"))
         whiteboard = first(root.xpath("/job/whiteboard")).text
@@ -50,7 +52,7 @@ class Report:
                          hostname),
                      list(Task(el.attrib['name'],
                                el.attrib['status'],
-                               el.attrib['result']) \
+                               el.attrib['result'])
                           for el in root.xpath("/job/recipeSet/recipe/task")))
         return report
 

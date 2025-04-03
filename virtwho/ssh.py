@@ -32,7 +32,6 @@ class SSHConnect:
         else:
             # it will try to use keys from SSH AutoAgent
             return self.pwd_connect()
-        #raise ConnectionError(self.err)
 
     def _transfer(self):
         """Sftp download/upload execution connection"""

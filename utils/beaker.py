@@ -6,6 +6,7 @@ import sys
 import subprocess
 from lxml import etree
 from funcy import first
+from .beaker_types import Report
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -13,15 +14,14 @@ sys.path.append(rootPath)
 
 from virtwho import logger, FailException
 from virtwho.settings import config
-from virtwho.ssh import SSHConnect
-from virtwho import logger
-from .beaker_types import Job, Task, Report
 
 """
 The function is wrapper to unify a way to call a command.
    - using a remote machine (by ssh)
    - using localhost (by subprocess)
 """
+
+
 def run_cmd(cmd):
     # ssh_client = SSHConnect(
     #     host=config.beaker.client,
@@ -70,9 +70,9 @@ def install_host_by_beaker(args):
         current_time = time.time()
         if (current_time - start_time) > time_span:
             raise FailException(
-                f"Failed to get beaker job ready in {time_span/3600.0} hours"
+                f"Failed to get beaker job ready in {time_span / 3600.0} hours"
             )
-    if report.job.status in ("Aborted","Cancelled"):
+    if report.job.status in ("Aborted", "Cancelled"):
         raise FailException(f"Failed to submit beaker job {job_name}")
 
     host = report.job.hostname
@@ -173,8 +173,8 @@ def beaker_job_status(job_name, job_id):
         root = etree.XML(xml)
         elements = root.xpath("/job/@status")
         return first(elements)
-    
-    auth_args=(
+
+    auth_args = (
         f"--username {config.beaker.username} "
         f"--password {config.beaker.password} "
     )
@@ -191,7 +191,7 @@ def beaker_job_result(job_name, job_id):
     :param job_id: beaker job id
     :return: the completed host (hostname)
     """
-    auth_args=(
+    auth_args = (
         f"--username {config.beaker.username} "
         f"--password {config.beaker.password} "
     )
@@ -207,6 +207,7 @@ def beaker_job_result(job_name, job_id):
     logger.error(f"No available machine found for job {job_name}")
     return None
 
+
 def beaker_job_report(job_id):
     """
     Check the beaker job status.
@@ -214,13 +215,14 @@ def beaker_job_report(job_id):
     :param job_id: beaker job id
     :return: Report
     """
-    auth_args=(
+    auth_args = (
         f"--username {config.beaker.username} "
         f"--password {config.beaker.password} "
     )
     _, output = run_cmd(f"bkr job-results {job_id} {auth_args} --no-logs")
     report = Report.from_beaker_results(output)
     return report
+
 
 def beaker_client_kinit(keytab, principal):
     """
