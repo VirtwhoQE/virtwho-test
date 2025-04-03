@@ -155,7 +155,7 @@ def beaker_args_define(args):
     if "RHEL-7" in args.distro or "Fedora" in args.distro:
         args.variant = "Server"
     args.arch = "x86_64"
-    args.job_group = "virt-who-ci-server-group"
+    args.job_group = None # "virt-who-ci-server-group"
     args.host = args.beaker_host
     args.host_type = "physical"
     args.host_require = None
