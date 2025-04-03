@@ -72,6 +72,10 @@ def provision_virtwho_host(args):
             compose_id=args.distro,
             compose_path=args.rhel_compose_path,
         )
+    # temporary hack
+    ssh_host.runcmd(
+        "rm -rf /var/lib/rpm/.rpm.lock; rm -rf /usr/lib/sysimage/rpm/.rpm.lock; pkill yum"
+    )
     ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     rhsm_conf_backup(ssh_host)
@@ -155,7 +159,7 @@ def beaker_args_define(args):
     if "RHEL-7" in args.distro or "Fedora" in args.distro:
         args.variant = "Server"
     args.arch = "x86_64"
-    args.job_group = "virt-who-ci-server-group"
+    args.job_group = None  # "virt-who-ci-server-group"
     args.host = args.beaker_host
     args.host_type = "physical"
     args.host_require = None
@@ -175,6 +179,7 @@ def virtwho_install(ssh, url=None):
         "mv /var/lib/rpm /var/lib/rpm.old;"
         "rpm --initdb;"
         "rm -rf /var/lib/rpm;"
+        "rm -rf /usr/lib/sysimage/rpm/.rpm.lock;"
         "mv /var/lib/rpm.old /var/lib/rpm;"
         "rm -rf /var/lib/yum/history/*.sqlite;"
         "rpm -v --rebuilddb"
@@ -378,7 +383,7 @@ def virtwho_arguments_parser():
     parser.add_argument(
         "--password",
         required=False,
-        default=config.virtwho.password,
+        default=None,  # config.virtwho.password,
         help="Password to access the server, "
         "default to the [virtwho]:password in virtwho.ini",
     )

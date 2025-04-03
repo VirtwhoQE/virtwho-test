@@ -120,10 +120,11 @@ def beaker_args_define(args):
     args.variant = "BaseOS"
     if "RHEL-7" in args.distro:
         args.variant = "Server"
-    args.job_group = "virt-who-ci-server-group"
+    args.job_group = None  # "virt-who-ci-server-group"
     args.host = args.beaker_host
     args.host_type = None
     args.host_require = "cpu>=1,memory>6000"
+    args.reserve_duration = None
 
 
 def satellite_settings(ssh, name, value):
@@ -220,6 +221,13 @@ def virtwho_satellite_arguments_parser():
     )
     parser.add_argument(
         "--snap", required=False, help="Satellite snap version, such as '5.0', '6.0'"
+    )
+    parser.add_argument(
+        "--fips",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="--fips/--no-fips: a machine about to create should complain FIPS standard.",
     )
     return parser.parse_args()
 
