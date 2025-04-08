@@ -73,7 +73,9 @@ def provision_virtwho_host(args):
             compose_path=args.rhel_compose_path,
         )
     # temporary hack
-    ssh_host.runcmd("rm -rf /var/lib/rpm/.rpm.lock; rm -rf /usr/lib/sysimage/rpm/.rpm.lock; pkill yum")
+    ssh_host.runcmd(
+        "rm -rf /var/lib/rpm/.rpm.lock; rm -rf /usr/lib/sysimage/rpm/.rpm.lock; pkill yum"
+    )
     ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     rhsm_conf_backup(ssh_host)
