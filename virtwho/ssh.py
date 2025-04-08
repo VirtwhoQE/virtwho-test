@@ -72,7 +72,7 @@ class SSHConnect:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
-            return ssh.open_sftp(),ssh.get_transport()
+            return ssh.open_sftp(), ssh.get_transport()
         except Exception:
             raise ConnectionError(f"Failed to ssh connect the {self.host}.")
 
