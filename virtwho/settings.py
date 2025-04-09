@@ -1,5 +1,4 @@
 """Define and instantiate the configuration class for virtwho-test."""
-
 import os
 from configparser import ConfigParser
 
@@ -54,7 +53,7 @@ class Configure:
         """
         if not self.config.has_section(section):
             self.config.add_section(section)
-        self.config.set(section, option, value)
+        self.config.set(section, option, value if value is not None else "")
         self.save()
 
     def delete(self, section, option=None):

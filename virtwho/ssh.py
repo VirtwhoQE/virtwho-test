@@ -30,7 +30,8 @@ class SSHConnect:
         elif self.rsa:
             return self.rsa_connect()
         else:
-            raise ConnectionError(self.err)
+            # it will try to use keys from SSH AutoAgent
+            return self.pwd_connect()
 
     def _transfer(self):
         """Sftp download/upload execution connection"""
@@ -39,7 +40,8 @@ class SSHConnect:
         elif self.rsa:
             return self.rsa_transfer()
         else:
-            raise ConnectionError(self.err)
+            # it will try to use keys from SSH AutoAgent
+            return self.pwd_transfer()
 
     def pwd_connect(self):
         """SSH command execution connection by password"""
@@ -62,10 +64,17 @@ class SSHConnect:
 
     def pwd_transfer(self):
         """Sftp download/upload execution connection by password"""
-        transport = paramiko.Transport((self.host, self.port))
-        transport.connect(username=self.user, password=self.pwd)
-        sftp = paramiko.SFTPClient.from_transport(transport)
-        return sftp, transport
+        # transport = paramiko.Transport((self.host, self.port))
+        # transport.connect(username=self.user, password=self.pwd)
+        # sftp = paramiko.SFTPClient.from_transport(transport)
+        # return sftp, transport
+        try:
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
+            return ssh.open_sftp(), ssh.get_transport()
+        except Exception:
+            raise ConnectionError(f"Failed to ssh connect the {self.host}.")
 
     def rsa_transfer(self):
         """Sftp download/upload execution connection by key file"""
