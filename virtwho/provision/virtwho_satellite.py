@@ -221,6 +221,13 @@ def virtwho_satellite_arguments_parser():
     parser.add_argument(
         "--snap", required=False, help="Satellite snap version, such as '5.0', '6.0'"
     )
+    parser.add_argument(
+        "--fips",
+        required=False,
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help="--fips/--no-fips: a machine about to create should complain FIPS standard.",
+    )
     return parser.parse_args()
 
 
