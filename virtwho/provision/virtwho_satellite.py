@@ -120,11 +120,11 @@ def beaker_args_define(args):
     args.variant = "BaseOS"
     if "RHEL-7" in args.distro:
         args.variant = "Server"
-    args.job_group = "virt-who-ci-server-group"
+    args.job_group = None #"virt-who-ci-server-group"
     args.host = args.beaker_host
     args.host_type = None
     args.host_require = "cpu>=1,memory>6000"
-
+    args.reserve_duration = None
 
 def satellite_settings(ssh, name, value):
     """
