@@ -47,7 +47,8 @@ def pytest_collection_modifyitems(config, items):
         if rhelver not in release_conf:
             return
         if not release_conf[rhelver]:
-            item.add_marker("skip")
+            item.add_marker(pytest.mark.skip(reason=f"skipped due to required rhel (should be {rhelver})"))
+
 
 
 @pytest.fixture(scope="class")
