@@ -12,7 +12,7 @@ import os
 import re
 import pytest
 
-from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG, VIRTWHO_VERSION
+from virtwho import base, RHEL_COMPOSE, RHEL_COMPOSE_PATH, VIRTWHO_PKG, VIRTWHO_VERSION
 from virtwho.settings import DOCS_DIR, TEMP_DIR
 
 
@@ -38,7 +38,7 @@ class TestVirtwhoPackageInfo:
         :expectedresults:
             1. virt-who package are shipped in each supported arch
         """
-        _, repo_extra = base.rhel_compose_url(RHEL_COMPOSE)
+        _, repo_extra = base.rhel_compose_url(RHEL_COMPOSE, RHEL_COMPOSE_PATH)
         base_url = repo_extra.split("/x86_64/")[0]
         archs = ["x86_64", "ppc64le", "aarch64", "s390x"]
         for arch in archs:

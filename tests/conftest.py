@@ -35,10 +35,13 @@ def pytest_addoption(parser):
     )
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(session, config, items):
+    logger.info(f"collection modifyitems is run, {session}, {config}, {items}")
     rhelver = config.getoption("--rhelver")
     if not rhelver:
         return
+    deselected_items = []
+    selected_items = []
     for item in items:
         release = item.get_closest_marker("release")
         if not release:
@@ -47,11 +50,21 @@ def pytest_collection_modifyitems(config, items):
         if rhelver not in release_conf:
             return
         if not release_conf[rhelver]:
+            deselected_items += [item]
             item.add_marker(
                 pytest.mark.skip(
                     reason=f"skipped due to required rhel (should be {rhelver})"
                 )
             )
+        else:
+            selected_items += [item]
+
+    logger.info("pytest_collection_modifyitems was run")
+    if deselected_items:
+        logger.info(f"a few items to deselect: {deselected_items}")
+        logger.info(f"remaining tests to run {selected_items}")
+        config.hook.pytest_deselected(deselected_items)
+        items[:] = selected_items
 
 
 @pytest.fixture(scope="class")

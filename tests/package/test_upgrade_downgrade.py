@@ -139,6 +139,10 @@ class TestUpgradeDowngrade:
             2. all configurations will not be changed after downgrade and
                 upgrade.
         """
+        if RHEL_SUBVERSION == 0:
+            pytest.skip(
+                f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible "
+            )
         try:
             globalconf.update("global", "debug", "True")
             globalconf.update("system_environment", "http_proxy", "xxx")
@@ -194,6 +198,11 @@ class TestUpgradeDowngrade:
             2. all configurations will not be changed after downgrade and
                 upgrade.
         """
+        if RHEL_SUBVERSION == 0:
+            pytest.skip(
+                f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible "
+            )
+
         sysconfig_file = "/etc/sysconfig/virt-who"
         virtwho_conf_file = "/etc/virt-who.conf"
 
