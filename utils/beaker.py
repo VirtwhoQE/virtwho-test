@@ -72,8 +72,8 @@ def install_host_by_beaker(args):
             raise FailException(
                 f"Failed to get beaker job ready in {time_span / 3600.0} hours"
             )
-    if report.job.status in ("Aborted", "Cancelled"):
-        raise FailException(f"Failed to submit beaker job {job_name}")
+        if report.job.status in ("Aborted", "Cancelled"):
+            raise FailException(f"Failed to submit beaker job {job_name}")
 
     host = report.job.hostname
     logger.info(f"Succeeded to install {host} for {job_name}")
