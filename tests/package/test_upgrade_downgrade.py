@@ -79,7 +79,7 @@ class TestUpgradeDowngrade:
             pytest.skip(
                 f"Newer version of virt-who has not been released for ({RHEL_COMPOSE}) yet - no downgrade posible"
             )
-            
+
         old_repo_file = "/etc/yum.repos.d/oldCompose.repo"
         try:
             globalconf.update("global", "debug", "True")

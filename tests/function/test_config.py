@@ -14,7 +14,7 @@ from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
 from virtwho import SYSCONFIG_FILE
 from virtwho import logger
-
+from virtwho import RHEL_VERSION
 from virtwho.base import hostname_get
 
 
@@ -590,6 +590,9 @@ class TestSysConfiguration:
             1. no [DEBUG] log printed
             2. [DEBUG] logs are printed with the configuration
         """
+        if RHEL_VERSION >= 9:
+            pytest.skip("sysconfig is deprecated for RHEL 9+")
+
         function_sysconfig.update(**{"VIRTWHO_DEBUG": "1"})
         result = virtwho.run_service()
         assert result["send"] == 1 and result["error"] == 0 and result["debug"] is True
@@ -620,6 +623,9 @@ class TestSysConfiguration:
             1. Can see 'Thread X stopped after running once' log in rhsm.log
             2. Cannot see 'Thread X stopped after running once' log in rhsm.log
         """
+        if RHEL_VERSION >= 9:
+            pytest.skip("sysconfig is deprecated for RHEL 9+")
+
         sysconfg_options = {"VIRTWHO_DEBUG": "1", "VIRTWHO_ONE_SHOT": "1"}
         function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service()
@@ -659,6 +665,9 @@ class TestSysConfiguration:
             1. Default value of 3600 seconds will be used when configure lower than 60 seconds
             2. Configure successfully, and virt-who starting infinite loop with 60 seconds interval
         """
+        if RHEL_VERSION >= 9:
+            pytest.skip("sysconfig is deprecated for RHEL 9+")
+
         sysconfg_options = {"VIRTWHO_DEBUG": "1", "VIRTWHO_INTERVAL": "10"}
         function_sysconfig.update(**sysconfg_options)
         result = virtwho.run_service()
@@ -699,6 +708,9 @@ class TestSysConfiguration:
             1. the permission of /etc/sysoncifg/virt-who file should be -rw-------
             2. the permission of /var/run/virt-who.pid file should be  -rw-------
         """
+        if RHEL_VERSION >= 9:
+            pytest.skip("sysconfig is deprecated for RHEL 9+")
+
         # check virt-who sysconfig file permission
         virtwho.stop()
         cmd = f"ls -l '{SYSCONFIG_FILE}'"
