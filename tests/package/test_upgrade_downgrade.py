@@ -16,6 +16,7 @@ from virtwho.base import package_check, package_upgrade, package_downgrade
 from virtwho.base import wget_download, rhel_compose_repo, random_string
 from virtwho.base import system_reboot
 
+
 old_pkg = "virt-who-unspecified.noarch"
 old_compose = "latest-RHEL-unspecified"
 old_compose_path = (
@@ -73,6 +74,12 @@ class TestUpgradeDowngrade:
                 f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible "
             )
 
+        current_package_version = package_check(ssh_host, "virt-who")
+        if current_package_version == old_pkg:
+            pytest.skip(
+                f"Newer version of virt-who has not been released for ({RHEL_COMPOSE}) yet - no downgrade posible"
+            )
+            
         old_repo_file = "/etc/yum.repos.d/oldCompose.repo"
         try:
             globalconf.update("global", "debug", "True")
@@ -143,6 +150,11 @@ class TestUpgradeDowngrade:
             pytest.skip(
                 f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible "
             )
+        current_package_version = package_check(ssh_host, "virt-who")
+        if current_package_version == old_pkg:
+            pytest.skip(
+                f"Newer version of virt-who has not been released for ({RHEL_COMPOSE}) yet - no downgrade posible"
+            )
         try:
             globalconf.update("global", "debug", "True")
             globalconf.update("system_environment", "http_proxy", "xxx")
@@ -201,6 +213,11 @@ class TestUpgradeDowngrade:
         if RHEL_SUBVERSION == 0:
             pytest.skip(
                 f"The first release of a distribution ({RHEL_COMPOSE}) - no downgrade posible "
+            )
+        current_package_version = package_check(ssh_host, "virt-who")
+        if current_package_version == old_pkg:
+            pytest.skip(
+                f"Newer version of virt-who has not been released for ({RHEL_COMPOSE}) yet - no downgrade posible"
             )
 
         sysconfig_file = "/etc/sysconfig/virt-who"
