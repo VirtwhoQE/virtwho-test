@@ -592,7 +592,7 @@ class TestSysConfiguration:
         """
         if RHEL_VERSION >= 9:
             pytest.skip("sysconfig is deprecated for RHEL 9+")
-            
+
         function_sysconfig.update(**{"VIRTWHO_DEBUG": "1"})
         result = virtwho.run_service()
         assert result["send"] == 1 and result["error"] == 0 and result["debug"] is True
