@@ -238,12 +238,16 @@ class TestConfigurationPositive:
         globalconf.update("global", "log_per_config", "False")
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
-        ret, output = ssh_host.runcmd("find /var/log/rhsm/ -type f -size +100c -name 'virtwho*'")
+        ret, output = ssh_host.runcmd(
+            "find /var/log/rhsm/ -type f -size +100c -name 'virtwho*'"
+        )
 
         globalconf.update("global", "log_per_config", "True")
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
-        ret, files = ssh_host.runcmd("find /var/log/rhsm/ -type f -size +100c -name 'virtwho*'")
+        ret, files = ssh_host.runcmd(
+            "find /var/log/rhsm/ -type f -size +100c -name 'virtwho*'"
+        )
         assert "virtwho.destination" in files
         assert "virtwho.main.log" in files
         assert "virtwho.rhsm_log.log" in files
