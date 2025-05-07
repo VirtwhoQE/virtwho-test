@@ -544,11 +544,14 @@ class TestConfigurationPositive:
             globalconf.update("system_environment", proxy, proxy_data[f"bad_{proxy}"])
             result = virtwho.run_service()
             if HYPERVISOR in ("kubevirt", "hyperv", "libvirt"):
-                logger.info("=== Kubevirt/Hyperv/Libvirt: should fail due to RHEL-12391 ===")
+                logger.info(
+                    "=== Kubevirt/Hyperv/Libvirt: should fail due to RHEL-12391 ==="
+                )
             else:
                 assert result["error"] in (1, 2)
                 assert any(
-                    error_msg in result["error_msg"] for error_msg in proxy_data["error"]
+                    error_msg in result["error_msg"]
+                    for error_msg in proxy_data["error"]
                 )
 
             # run virt-who with unreachable http_proxy/https and no_proxy setting
