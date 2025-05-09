@@ -383,7 +383,7 @@ def virtwho_arguments_parser():
     parser.add_argument(
         "--password",
         required=False,
-        default=None,  # config.virtwho.password,
+        default=config.virtwho.password,
         help="Password to access the server, "
         "default to the [virtwho]:password in virtwho.ini",
     )
