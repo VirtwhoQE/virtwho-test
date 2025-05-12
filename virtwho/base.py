@@ -367,7 +367,7 @@ def package_install(ssh, pkg_name, rpm=None):
     :param pkg_name: package name, such as virt-who
     :param rpm: rpm path, such as /root/virt-who-1.31.23-1.el9.noarch.rpm
     """
-    cmd = f"yum install -y {pkg_name}"
+    cmd = f"yum install -y {pkg_name} --disablerepo '*beta*'"
     if rpm:
         cmd = f"rpm -ivh {rpm}"
     ssh.runcmd(cmd)
