@@ -63,7 +63,7 @@ class TestHypervisorPositive:
 
         if REGISTER == "rhsm":
             consumer_info = sm_host.identity()
-            registered_id = consumer_info.get('system identity')
+            registered_id = consumer_info.get("system identity")
             cmd = (
                 f"curl -s -k -u "
                 f"{register_data['username']}:{register_data['password']} "

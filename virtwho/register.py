@@ -163,8 +163,8 @@ class SubscriptionManager:
         cmd = "subscription-manager identity"
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0:
-            lines = [line.strip() for line in output.split('\n')]
-            pairs = [re.split(r'[\ \t]*:[\ \t]*', line) for line in lines if line]
+            lines = [line.strip() for line in output.split("\n")]
+            pairs = [re.split(r"[\ \t]*:[\ \t]*", line) for line in lines if line]
             return dict(pairs)
         return dict()
 
