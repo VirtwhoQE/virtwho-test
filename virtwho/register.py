@@ -5,6 +5,7 @@ from json.decoder import JSONDecodeError
 from virtwho import logger, FailException
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
+import re
 
 
 class SubscriptionManager:
@@ -148,6 +149,24 @@ class SubscriptionManager:
             logger.info(f"Succeeded to {action} repo: {repo}")
         else:
             raise FailException(f"Failed to {action} repo: {repo}")
+
+    def identity(self):
+        """
+        subscription-manager identity
+        ... returns dict
+        aka
+        {'system identity': '29dadce5-0d6b-44ed-bf35-71e1943e4129',
+         'name': 'kvm-06.redhat.com',
+         'org name': '18939614',
+         'org ID': '18939614'}
+        """
+        cmd = "subscription-manager identity"
+        ret, output = self.ssh.runcmd(cmd)
+        if ret == 0:
+            lines = [line.strip() for line in output.split("\n")]
+            pairs = [re.split(r"[\ \t]*:[\ \t]*", line) for line in lines if line]
+            return dict(pairs)
+        return dict()
 
 
 class RHSM:
