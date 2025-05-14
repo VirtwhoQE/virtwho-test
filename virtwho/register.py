@@ -7,6 +7,7 @@ from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
 import re
 
+
 class SubscriptionManager:
     def __init__(
         self,
@@ -149,7 +150,6 @@ class SubscriptionManager:
         else:
             raise FailException(f"Failed to {action} repo: {repo}")
 
-
     def identity(self):
         """
         subscription-manager identity
@@ -164,10 +164,11 @@ class SubscriptionManager:
         ret, output = self.ssh.runcmd(cmd)
         if ret == 0:
             lines = [line.strip() for line in output.split('\n')]
-            pairs = [re.split(r'[\ \t]*:[\ \t]*',line) for line in lines if line]
+            pairs = [re.split(r'[\ \t]*:[\ \t]*', line) for line in lines if line]
             return dict(pairs)
         return dict()
-    
+
+
 class RHSM:
     def __init__(self, rhsm="rhsm"):
         """

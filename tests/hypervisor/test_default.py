@@ -50,20 +50,18 @@ class TestHypervisorPositive:
             1. Succeed to run the virt-who service, no error messages in the rhsm.log file
             2. Succeed to find the guest uuid in from the output of the curl command
         """
-        host_name = hypervisor_data["hypervisor_hostname"]
         guest_uuid = hypervisor_data["guest_uuid"]
         guest_hostname = hypervisor_data["guest_hostname"]
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
-        
+
         """
         a note about local libvirt guest being found
         2025-05-14 03:43:26,026 [virtwho.main DEBUG] MainProcess(599130):Thread-2 @libvirtd.py:_listDomains:400 - Libvirt domains found: 538fa355-a1ea-48dd-a1c4-76a0e2ca3698
         2025-05-14 03:43:26,027 [virtwho.main INFO] MainProcess(599130):Thread-2 @virt.py:_send_data:1191 - Report for config "virtwho-local" gathered, placing in datastore
         """
-        
+
         if REGISTER == "rhsm":
-            #registered_id = rhsm.uuid(host_name)
             consumer_info = sm_host.identity()
             registered_id = consumer_info.get('system identity')
             cmd = (
