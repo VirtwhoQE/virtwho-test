@@ -117,7 +117,7 @@ class TestHypervisorPositive:
         """
         host_name = hypervisor_data["hypervisor_hostname"]
         guest_uuid = hypervisor_data["guest_uuid"]
-        guest_hostname = hypervisor_data["guest_hostname"]
+        # guest_hostname = hypervisor_data["guest_hostname"]
         default_org = register_data["default_org"]
 
         result = virtwho.run_service()
