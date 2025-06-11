@@ -284,6 +284,7 @@ def local_mode_guest_add(ssh):
         time.sleep(30)
         guest_ip = local.guest_ip(guest_name)
         if guest_ip:
+            logger.error(f"timeout to get guest_ip for guest_name {guest_name}")
             break
     guest_info = local.guest_search(guest_name)
     ssh_guest = SSHConnect(

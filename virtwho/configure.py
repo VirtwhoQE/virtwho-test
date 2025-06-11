@@ -1,4 +1,5 @@
 import os
+import pytest
 from virtwho.settings import Configure
 from virtwho.settings import config
 from virtwho.settings import TEMP_DIR
@@ -6,6 +7,7 @@ from virtwho.ssh import SSHConnect
 from virtwho.base import hostname_get
 from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP, SYSCONFIG_FILE
 from virtwho import PRINT_JSON_FILE, HYPERVISOR, REGISTER
+from virtwho import RHEL_VERSION
 
 
 class VirtwhoHypervisorConfig:
@@ -160,6 +162,9 @@ class VirtwhoSysConfig:
             the local libvirt host, othervise will manage the host for
             all other remote modes.
         """
+        if RHEL_VERSION >= 9:
+            pytest.skip("sysconfig is deprecated for RHEL 9+")
+
         self.mode = mode
         self.remote_ssh = virtwho_ssh_connect(self.mode)
         if not os.path.exists(TEMP_DIR):
