@@ -62,18 +62,22 @@ class TestHypervisorPositive:
         """
 
         if REGISTER == "rhsm":
-            consumer_info = sm_host.identity()
-            registered_id = consumer_info.get("system identity")
+            hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+            hypervisor_detail = rhsm.consumers(hypervisor_hostname)
+            hypervisor_uuid = hypervisor_detail['uuid']
             cmd = (
                 f"curl -s -k -u "
                 f"{register_data['username']}:{register_data['password']} "
                 f"https://{register_data['server']}/subscription/"
-                f"consumers/{registered_id}/guestids/{guest_uuid}"
+                f"consumers/{hypervisor_uuid}/guestids/{guest_uuid}"
             )
             ret, output = ssh_host.runcmd(cmd)
-            assert (
-                guest_uuid in output and "guestId" in output and "attributes" in output
-            )
+            logger.debug(f"hypervisor data: {hypervisor_data}")
+            logger.debug(f"hypervisor uuid: {hypervisor_uuid}")
+            # asserts are separated to see what assert went wrong in failure
+            assert guest_uuid in output
+            assert "guestId" in output
+            assert "attributes" in output
         else:
             guest_registered_id = satellite.host_id(guest_hostname)
             cmd = (
