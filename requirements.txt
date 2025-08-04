@@ -16,4 +16,5 @@ PyYAML
 pexpect
 lxml
 funcy
+passlib
 git+https://github.com/VirtwhoQE/hypervisor-builder.git

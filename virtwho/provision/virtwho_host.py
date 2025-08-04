@@ -238,7 +238,7 @@ def libvirt_access_no_password(ssh):
         user=config.libvirt.username,
         pwd=config.libvirt.password,
     )
-    ssh.runcmd('echo -e "\n" | ' 'ssh-keygen -N "" &> /dev/null')
+    ssh.runcmd('echo -e "\n" | ' 'ssh-keygen -N "" -f ~/.ssh/virtwho-qe &> /dev/null')
     ret, output = ssh.runcmd("cat ~/.ssh/*.pub")
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key")

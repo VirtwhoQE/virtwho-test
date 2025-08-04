@@ -1,7 +1,9 @@
 """Define and instantiate the configuration class for virtwho-test."""
 import os
 from configparser import ConfigParser
+from logging import getLogger
 
+logger = getLogger(__name__)
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
@@ -41,6 +43,7 @@ class Configure:
             setattr(self, key, getattr(self.config._sections, key))
         with open(self.local_file, "w") as f:
             self.config.write(f, space_around_delimiters=False)
+
         if self.remote_ssh and self.remote_file:
             self.remote_ssh.put_file(self.local_file, self.remote_file)
 
