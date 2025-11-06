@@ -56,7 +56,9 @@ class SSHConnect:
                 ssh.connect(hostname=self.host,
                             port=self.port,
                             username=self.user,
-                            timeout=self.timeout)
+                            timeout=self.timeout,
+                            allow_agent=True
+                            )
             return ssh
         except Exception:
             raise ConnectionError(f"Failed to ssh connect the {self.host}.")
