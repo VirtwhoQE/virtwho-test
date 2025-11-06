@@ -80,6 +80,11 @@ class VirtwhoHypervisorConfig:
             self.update("rhsm_password", self.register.password)
             self.update("rhsm_prefix", self.register.prefix)
             self.update("rhsm_port", self.register.port)
+            # proxy related settings to use
+            for property_name in ["proxy_hostname", "proxy_port", "proxy_scheme"]:
+                if hasattr(self.register, property_name):
+                    self.update(f"rhsm_{property_name}", getattr(self.register,property_name))
+
 
     def update(self, option, value):
         """Add or update an option
