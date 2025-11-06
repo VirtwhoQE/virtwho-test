@@ -191,8 +191,8 @@ def virtwho_install(ssh, url=None):
     ssh.runcmd(cmd)
     if url:
         virtwho_install_by_url(ssh, url)
-    else:
-        ssh.runcmd("yum remove -y virt-who;" "yum install -y virt-who")
+    # else:
+    #     ssh.runcmd("yum remove -y virt-who;" "yum install -y virt-who")
     _, output = ssh.runcmd("rpm -qa virt-who")
     if "virt-who" not in output:
         raise FailException("Failed to install virt-who package")

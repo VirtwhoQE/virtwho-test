@@ -17,4 +17,5 @@ pexpect
 lxml
 funcy
 passlib
+rpdb
 git+https://github.com/VirtwhoQE/hypervisor-builder.git

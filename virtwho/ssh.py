@@ -49,7 +49,14 @@ class SSHConnect:
         try:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
+            if self.pwd:
+                ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
+            else:
+                logger.info("ssh connect will try to use ssh-agent")
+                ssh.connect(hostname=self.host,
+                            port=self.port,
+                            username=self.user,
+                            timeout=self.timeout)
             return ssh
         except Exception:
             raise ConnectionError(f"Failed to ssh connect the {self.host}.")
