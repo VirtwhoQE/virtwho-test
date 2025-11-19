@@ -201,7 +201,7 @@ class TestSubscriptionNegative:
             function_hypervisor.update("owner", key)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["error_msg"], value)
@@ -211,7 +211,7 @@ class TestSubscriptionNegative:
         function_hypervisor.delete("owner")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 0
             and msg_search(result["error_msg"], assertion["disable"])
@@ -223,7 +223,7 @@ class TestSubscriptionNegative:
         )
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
             and msg_search(result["error_msg"], assertion["disable_with_another_good"])
@@ -233,7 +233,7 @@ class TestSubscriptionNegative:
         function_hypervisor.update("owner", "")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
             and msg_search(result["error_msg"], assertion["null_with_another_good"])
@@ -268,7 +268,7 @@ class TestSubscriptionNegative:
             function_hypervisor.update("rhsm_hostname", key)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["log"], value)
@@ -278,7 +278,7 @@ class TestSubscriptionNegative:
         function_hypervisor.delete("rhsm_hostname")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 1
             and msg_search(result["error_msg"], assertion["disable"])
@@ -321,7 +321,7 @@ class TestSubscriptionNegative:
 
             result = virtwho.run_service(wait=120)
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["log"], value)
@@ -376,7 +376,7 @@ class TestSubscriptionNegative:
             function_hypervisor.update("rhsm_prefix", key)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["error_msg"], value)
@@ -387,7 +387,7 @@ class TestSubscriptionNegative:
             function_hypervisor.update("rhsm_prefix", "")
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["error_msg"], assertion["null"])
@@ -397,7 +397,7 @@ class TestSubscriptionNegative:
             function_hypervisor.delete("rhsm_prefix")
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["error_msg"], assertion["disable"])
@@ -448,7 +448,7 @@ class TestSubscriptionNegative:
             function_hypervisor.update("rhsm_username", key)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["log"], value)
@@ -458,7 +458,7 @@ class TestSubscriptionNegative:
         function_hypervisor.delete("rhsm_username")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 1
             and msg_search(result["log"], assertion["disable"])
@@ -495,7 +495,7 @@ class TestSubscriptionNegative:
             function_hypervisor.update("rhsm_password", key)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["log"], value)
@@ -505,7 +505,7 @@ class TestSubscriptionNegative:
         function_hypervisor.delete("rhsm_password")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 1
             and msg_search(result["log"], assertion["disable"])
@@ -544,7 +544,7 @@ class TestSubscriptionNegative:
             function_hypervisor.update("rhsm_encrypted_password", key)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["log"], value)

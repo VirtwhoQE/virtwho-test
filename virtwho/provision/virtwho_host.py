@@ -76,9 +76,9 @@ def provision_virtwho_host(args):
     # ssh_host.runcmd(
     #     "rm -rf /var/lib/rpm/.rpm.lock; rm -rf /usr/lib/sysimage/rpm/.rpm.lock; pkill yum"
     # )
-    #ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
+    # ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
-    #rhsm_conf_backup(ssh_host)
+    # rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
@@ -124,7 +124,7 @@ def provision_virtwho_host(args):
             virtwho_ini_props_update(args)
 
     logger.info(
-        f"+++ Suceeded to deploy the virt-who host " f"{args.distro}/{args.server} +++"
+        f"+++ Suceeded to deploy the virt-who host {args.distro}/{args.server} +++"
     )
 
 
@@ -192,7 +192,7 @@ def virtwho_install(ssh, url=None):
     if url:
         virtwho_install_by_url(ssh, url)
     else:
-        ssh.runcmd("yum remove -y virt-who;" "yum install -y virt-who")
+        ssh.runcmd("yum remove -y virt-who;yum install -y virt-who")
     _, output = ssh.runcmd("rpm -qa virt-who")
     if "virt-who" not in output:
         raise FailException("Failed to install virt-who package")
@@ -211,7 +211,7 @@ def virtwho_install_by_url(ssh, url):
     _, output = ssh.runcmd("grep 'sslverify=false' /etc/yum.conf")
     if not output:
         ssh.runcmd("echo 'sslverify=false' >> /etc/yum.conf")
-    ssh.runcmd("rm -rf /var/cache/yum/;" "yum clean all;" "yum remove -y virt-who")
+    ssh.runcmd("rm -rf /var/cache/yum/;yum clean all;yum remove -y virt-who")
     ssh.runcmd(f"yum localinstall -y {url} --allowerasing")
 
 
@@ -222,9 +222,7 @@ def rhsm_conf_backup(ssh):
     """
     ret, output = ssh.runcmd("ls /backup/rhsm.conf")
     if ret != 0 or "No such file or directory" in output:
-        ssh.runcmd(
-            "rm -rf /backup/;" "mkdir -p /backup/;" "cp /etc/rhsm/rhsm.conf /backup/"
-        )
+        ssh.runcmd("rm -rf /backup/;mkdir -p /backup/;cp /etc/rhsm/rhsm.conf /backup/")
 
 
 def libvirt_access_no_password(ssh):
@@ -238,7 +236,7 @@ def libvirt_access_no_password(ssh):
         user=config.libvirt.username,
         pwd=config.libvirt.password,
     )
-    ssh.runcmd('echo -e "\n" | ' 'ssh-keygen -N "" -f ~/.ssh/virtwho-qe &> /dev/null')
+    ssh.runcmd('echo -e "\n" | ssh-keygen -N "" -f ~/.ssh/virtwho-qe &> /dev/null')
     ret, output = ssh.runcmd("cat ~/.ssh/*.pub")
     if ret != 0 or output is None:
         raise FailException("Failed to create ssh key")

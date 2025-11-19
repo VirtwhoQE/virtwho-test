@@ -96,7 +96,7 @@ def ks_file_create(ssh, ks_path, repo_base, repo_extra):
         if ret == 0:
             return
         time.sleep(10)
-    raise FailException(f"Failed to create ks file")
+    raise FailException("Failed to create ks file")
 
 
 def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
@@ -123,14 +123,10 @@ def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
     vmlinuz_name = "vmlinuz-reinstall"
     initrd_name = "initrd-reinstall.img"
     ssh.runcmd(
-        f"rm -f /boot/{vmlinuz_name};"
-        f"curl -L {vmlinuz_url} -o /boot/{vmlinuz_name};"
-        f"sync"
+        f"rm -f /boot/{vmlinuz_name};curl -L {vmlinuz_url} -o /boot/{vmlinuz_name};sync"
     )
     ssh.runcmd(
-        f"rm -f /boot/{initrd_name};"
-        f"curl -L {initrd_url} -o /boot/{initrd_name};"
-        f"sync"
+        f"rm -f /boot/{initrd_name};curl -L {initrd_url} -o /boot/{initrd_name};sync"
     )
     cmd = (
         "cat <<EOF > /etc/grub.d/40_custom\n"
@@ -161,7 +157,7 @@ def grub_reboot(ssh):
     Reboot the host to reinstall os by grub
     :param ssh: ssh access to the host
     """
-    ssh.runcmd("sync; sync; sync; sync;" "reboot -f > /dev/null 2>&1 &")
+    ssh.runcmd("sync; sync; sync; sync;reboot -f > /dev/null 2>&1 &")
     time.sleep(20)
 
 

@@ -235,9 +235,7 @@ class TestLibvirtNegative:
             function_hypervisor.update("type", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
-                and result["send"] == 0
-                and result["thread"] == 0
+                result["error"] != 0 and result["send"] == 0 and result["thread"] == 0
             )
             if "RHEL-9" in RHEL_COMPOSE:
                 assert assertion["invalid"][f"{value}"] in result["error_msg"]
@@ -248,7 +246,7 @@ class TestLibvirtNegative:
         function_hypervisor.delete("type")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 1
             and assertion["disable"] in result["error_msg"]
@@ -296,7 +294,7 @@ class TestLibvirtNegative:
             function_hypervisor.update("server", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and msg_search(result["error_msg"], assertion["invalid"][f"{value}"])
@@ -340,7 +338,7 @@ class TestLibvirtNegative:
             result = virtwho.run_service()
             if value != "":
                 assert (
-                    result["error"] is not 0
+                    result["error"] != 0
                     and result["send"] == 0
                     and result["thread"] == 1
                     and assertion["invalid"][f"{value}"] in result["error_msg"]
@@ -348,7 +346,7 @@ class TestLibvirtNegative:
             elif value == "":
                 #  libvirt-remote can use ssh-key to connect, username is not necessary
                 assert (
-                    result["error"] is 0
+                    result["error"] == 0
                     and result["send"] == 1
                     and result["thread"] == 1
                 )
@@ -357,7 +355,7 @@ class TestLibvirtNegative:
         function_hypervisor.delete("username")
         result = virtwho.run_service()
         # libvirt-remote can use ssh-key to connect, username is not necessary
-        assert result["error"] is 0 and result["send"] == 1 and result["thread"] == 1
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier2
     def test_password(self, virtwho, function_hypervisor, libvirt_assertion):
@@ -385,14 +383,14 @@ class TestLibvirtNegative:
             result = virtwho.run_service()
             #  libvirt-remote can use ssh-key to connect, password is not necessary
             assert (
-                result["error"] is 0 and result["send"] == 1 and result["thread"] == 1
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
             )
 
         # password option is disable
         #  libvirt-remote can use ssh-key to connect, password is not necessary
         function_hypervisor.delete("password")
         result = virtwho.run_service()
-        assert result["error"] is 0 and result["send"] == 1 and result["thread"] == 1
+        assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
     @pytest.mark.tier2
     def test_encrypted_password(
@@ -420,7 +418,7 @@ class TestLibvirtNegative:
             function_hypervisor.update("encrypted_password", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is 0 and result["send"] == 1 and result["thread"] == 1
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
             )
 
     @pytest.mark.tier2

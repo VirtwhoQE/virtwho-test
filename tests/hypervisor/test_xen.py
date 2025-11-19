@@ -237,9 +237,7 @@ class TestXenNegative:
             function_hypervisor.update("type", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
-                and result["send"] == 0
-                and result["thread"] == 0
+                result["error"] != 0 and result["send"] == 0 and result["thread"] == 0
             )
             if "RHEL-9" in RHEL_COMPOSE:
                 assert assertion["invalid"][f"{value}"] in result["error_msg"]
@@ -250,7 +248,7 @@ class TestXenNegative:
         function_hypervisor.delete("type")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 1
             and assertion["disable"] in result["error_msg"]
@@ -298,7 +296,7 @@ class TestXenNegative:
             function_hypervisor.update("server", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and assertion["invalid"][f"{value}"] in result["error_msg"]
             )
@@ -307,7 +305,7 @@ class TestXenNegative:
         function_hypervisor.delete("server")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 0
             and assertion["disable"] in result["error_msg"]
@@ -319,7 +317,7 @@ class TestXenNegative:
         )
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
             and assertion["disable_multi_configs"] in result["error_msg"]
@@ -329,7 +327,7 @@ class TestXenNegative:
         function_hypervisor.update("server", "")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
             and assertion["null_multi_configs"] in result["error_msg"]
@@ -365,7 +363,7 @@ class TestXenNegative:
             function_hypervisor.update("username", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and assertion["invalid"][f"{value}"] in result["error_msg"]
@@ -375,7 +373,7 @@ class TestXenNegative:
         function_hypervisor.delete("username")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 0
             and assertion["disable"] in result["error_msg"]
@@ -387,7 +385,7 @@ class TestXenNegative:
         )
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
             and assertion["disable_multi_configs"] in result["error_msg"]
@@ -423,7 +421,7 @@ class TestXenNegative:
             function_hypervisor.update("password", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 1
                 and assertion["invalid"][f"{value}"] in result["error_msg"]
@@ -433,7 +431,7 @@ class TestXenNegative:
         function_hypervisor.delete("password")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 0
             and assertion["disable"] in result["error_msg"]
@@ -445,7 +443,7 @@ class TestXenNegative:
         )
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
             and assertion["disable_multi_configs"] in result["error_msg"]
@@ -480,7 +478,7 @@ class TestXenNegative:
             function_hypervisor.update("encrypted_password", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
+                result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 0
                 and assertion["invalid"][f"{value}"] in result["error_msg"]
@@ -492,7 +490,7 @@ class TestXenNegative:
         )
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
             and assertion["valid_multi_configs"] in result["error_msg"]

@@ -147,9 +147,9 @@ def beaker_job_submit(
         )
     if host_type:
         if host_type.lower() == "virtual":
-            cmd += f'--hostrequire "hypervisor!=" '
+            cmd += '--hostrequire "hypervisor!=" '
         else:
-            cmd += f'--hostrequire "hypervisor=" '
+            cmd += '--hostrequire "hypervisor=" '
     if host_require:
         require_list = host_require.split(",")
         for item in require_list:
@@ -176,7 +176,7 @@ def beaker_job_status(job_name, job_id):
         return first(elements)
 
     auth_args = (
-        f"--username {config.beaker.username} " f"--password {config.beaker.password} "
+        f"--username {config.beaker.username} --password {config.beaker.password} "
     )
     _, output = run_cmd(f"bkr job-results {job_id} {auth_args} --no-logs")
     status = status_from_xml(output)
@@ -192,7 +192,7 @@ def beaker_job_result(job_name, job_id):
     :return: the completed host (hostname)
     """
     auth_args = (
-        f"--username {config.beaker.username} " f"--password {config.beaker.password} "
+        f"--username {config.beaker.username} --password {config.beaker.password} "
     )
     ret, output = run_cmd(f"bkr job-results {job_id} {auth_args} --no-logs")
     if ret == 0:
@@ -217,7 +217,7 @@ def beaker_job_report(job_id):
     :return: Report
     """
     auth_args = (
-        f"--username {config.beaker.username} " f"--password {config.beaker.password} "
+        f"--username {config.beaker.username} --password {config.beaker.password} "
     )
     _, output = run_cmd(f"bkr job-results {job_id} {auth_args} --no-logs")
     report = Report.from_beaker_results(output)
@@ -233,9 +233,9 @@ def beaker_client_kinit(keytab, principal):
     """
     ret, output = run_cmd(f"kinit -k -t {keytab} {principal}")
     if ret == 0:
-        logger.info(f"Succeeded to initiate beaker client")
+        logger.info("Succeeded to initiate beaker client")
         return True
-    logger.error(f"Failed to initiate beaker client")
+    logger.error("Failed to initiate beaker client")
     return False
 
 
@@ -274,7 +274,7 @@ def beaker_arguments_parser():
         "--host-type",
         required=False,
         default=None,
-        help="Define the system type as hostrequire. " "Such as: physical or virtual",
+        help="Define the system type as hostrequire. Such as: physical or virtual",
     )
     parser.add_argument(
         "--host",

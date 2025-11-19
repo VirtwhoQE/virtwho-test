@@ -260,24 +260,24 @@ class TestConfigurationPositive:
                     "ERROR" not in file_content
                     and guest_uuid in file_content
                     and "virtwho.destination" in file_content
-                    and not ("virtwho.rhsm_log" in file_content)
-                    and not ("virtwho.main" in file_content)
+                    and "virtwho.rhsm_log" not in file_content
+                    and "virtwho.main" not in file_content
                 )
             if "virtwho.main.log" in filename:
                 assert (
                     "ERROR" not in file_content
                     and "Report for config" in file_content
                     and "virtwho.main" in file_content
-                    and not ("virtwho.destination" in file_content)
-                    and not ("virtwho.rhsm_log" in file_content)
+                    and "virtwho.destination" not in file_content
+                    and "virtwho.rhsm_log" not in file_content
                 )
             if "virtwho.rhsm_log.log" in filename:
                 assert (
                     "ERROR" not in file_content
                     and "Using reporter_id=" in file_content
                     and "virtwho.rhsm_log" in file_content
-                    and not ("virtwho.destination" in file_content)
-                    and not ("virtwho.main" in file_content)
+                    and "virtwho.destination" not in file_content
+                    and "virtwho.main" not in file_content
                 )
 
     @pytest.mark.tier1
@@ -399,7 +399,7 @@ class TestConfigurationPositive:
         globalconf.update("defaults", "owner", owner_data["bad_owner"])
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 1
             and any(error in result["error_msg"] for error in owner_data["error"])
@@ -531,9 +531,7 @@ class TestConfigurationPositive:
             if HYPERVISOR == "ahv":
                 logger.info("=== AHV: failed with RHEL-1309 ===")
             assert (
-                result["error"] == 0
-                and result["send"] == 1
-                and result["thread"] == 1
+                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
                 # Skip the below assertion due to open rhel13376
                 # and connection_msg in result["log"]
                 # and proxy_msg in result["log"]
@@ -900,7 +898,7 @@ class TestConfigurationNegative:
         globalconf.update("global", "configs", configs_data["wrong_configs"])
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 0
             and (error in result["log"] for error in configs_data["error"])
@@ -935,7 +933,7 @@ class TestConfigurationNegative:
         globalconf.update("defaults", "owner", "")
         result = virtwho.run_service()
         assert (
-            result["error"] is not 0
+            result["error"] != 0
             and result["send"] == 0
             and result["thread"] == 1
             and any(error in result["error_msg"] for error in owner_data["null_error"])

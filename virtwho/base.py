@@ -31,8 +31,8 @@ def system_init(ssh, keyword, firewall="start", selinux="enforcing"):
         host_name = f"{keyword}-{random_str}.redhat.com"
     hostname_set(ssh, host_name)
     etc_hosts_set(ssh, f"{host_ip} {host_name}")
-    #firewall_set(ssh, firewall)
-    #selinux_set(ssh, selinux)
+    # firewall_set(ssh, firewall)
+    # selinux_set(ssh, selinux)
     logger.info(f"Finished to init system {host_name}")
 
 
@@ -41,11 +41,11 @@ def ipaddr_get(ssh):
     Get the host ip address.
     :param ssh: ssh access of host
     """
-    ret, output = ssh.runcmd("ip route get 8.8.8.8 |" "awk '/src/ { print $7 }'")
+    ret, output = ssh.runcmd("ip route get 8.8.8.8 |awk '/src/ { print $7 }'")
     if ret == 0 and output:
         return output.strip()
     else:
-        logger.error(f"Failed to get ip address.")
+        logger.error("Failed to get ip address.")
         return None
 
 
@@ -91,7 +91,7 @@ def etc_hosts_set(ssh, value):
     :param value: should be the format of '{ip} {hostname}'
     """
     ret, _ = ssh.runcmd(
-        f"sed -i '/localhost/!d' /etc/hosts;" f"echo '{value}' >> /etc/hosts"
+        f"sed -i '/localhost/!d' /etc/hosts;echo '{value}' >> /etc/hosts"
     )
     if ret != 0:
         raise FailException("Failed to set /etc/hosts")
@@ -137,7 +137,7 @@ def ssh_connect(ssh):
     if ssh.pwd_connect():
         ret, output = ssh.runcmd("rpm -qa filesystem")
         if ret == 0 and "filesystem" in output:
-            logger.info(f"Suceeded to ssh connect the host.")
+            logger.info("Suceeded to ssh connect the host.")
             return True
     return False
 
@@ -175,10 +175,7 @@ def url_validation(url):
     :return: True or False
     """
     output = os.popen(
-        f"if ( curl -o/dev/null -sfI '{url}' );"
-        f"then echo 'true';"
-        f"else echo 'false';"
-        f"fi"
+        f"if ( curl -o/dev/null -sfI '{url}' );then echo 'true';else echo 'false';fi"
     ).read()
     if output.strip() == "true":
         return True
@@ -236,7 +233,7 @@ def url_file_download(ssh, local_file, url):
     :param local_file: local file path and name
     :param url: url link of remote file
     """
-    ssh.runcmd(f"rm -f {local_file};" f"curl -L {url} -o {local_file};" f"sync")
+    ssh.runcmd(f"rm -f {local_file};curl -L {url} -o {local_file};sync")
     ret, output = ssh.runcmd(f"cat {local_file}")
     if ret != 0 or "Not Found" in output:
         raise FailException(f"Failed to download {url}")
@@ -477,8 +474,7 @@ def encrypt_password(ssh, password, option=None):
         if ret == 0 and output:
             encrypted_value = output.split("\r\n")[-2].strip()
             logger.info(
-                f"Succeeded to get encrypted_password without option: "
-                f"{encrypted_value}"
+                f"Succeeded to get encrypted_password without option: {encrypted_value}"
             )
             return encrypted_value
         raise FailException("Failed to get encrypted password without option")
@@ -516,7 +512,7 @@ def rhel_host_uuid_get(ssh):
     :param ssh: ssh access of testing host
     :return: rhel host uuid
     """
-    ret, output = ssh.runcmd(f"dmidecode -t system |grep UUID")
+    ret, output = ssh.runcmd("dmidecode -t system |grep UUID")
     if ret == 0 and "UUID" in output:
         uuid = output.split(":")[1].strip()
         return uuid

@@ -1,0 +1,9 @@
+# Ruff configuration file
+# Ignore E402 (module level import not at top of file) for files that need
+# to modify sys.path before importing project modules
+
+[lint.per-file-ignores]
+# Files in utils/ directory that modify sys.path
+"utils/*.py" = ["E402"]
+# Files in virtwho/provision/ directory that modify sys.path  
+"virtwho/provision/*.py" = ["E402"]

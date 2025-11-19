@@ -84,8 +84,9 @@ class VirtwhoHypervisorConfig:
             # due to CCT-1772 a property 'proxy_scheme' is not used
             for property_name in ["proxy_hostname", "proxy_port"]:
                 if hasattr(self.register, property_name):
-                    self.update(f"rhsm_{property_name}", getattr(self.register,property_name))
-
+                    self.update(
+                        f"rhsm_{property_name}", getattr(self.register, property_name)
+                    )
 
     def update(self, option, value):
         """Add or update an option
@@ -155,7 +156,7 @@ class VirtwhoGlobalConfig:
         os.system(f"echo '' > {self.local_file}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
-        logger.info(f"*** Clean /etc/virt-who.conf")
+        logger.info("*** Clean /etc/virt-who.conf")
 
 
 class VirtwhoSysConfig:
@@ -205,7 +206,7 @@ class VirtwhoSysConfig:
         """
         os.system(f"echo '' > {self.local_file}")
         self.remote_ssh.put_file(self.local_file, self.remote_file)
-        logger.info(f"*** Clean /etc/sysconfig/virt-who")
+        logger.info("*** Clean /etc/sysconfig/virt-who")
 
 
 class RHSMConf:
@@ -255,7 +256,7 @@ class RHSMConf:
         self.remote_ssh.get_file("/backup/rhsm.conf", self.save_file)
         os.system(f"\\cp -f {self.save_file} {self.local_file}")
         self.cfg = Configure(self.local_file, self.remote_ssh, self.remote_file)
-        logger.info(f"*** Recover /etc/rhsm/rhsm.conf")
+        logger.info("*** Recover /etc/rhsm/rhsm.conf")
 
 
 def virtwho_ssh_connect(mode=None):

@@ -35,7 +35,7 @@ def create_rhel_container_by_docker(args):
 
     # copy docker files to docker server
     ssh_docker.runcmd(
-        "rm -rf /tmp/docker/;" "rm -rf /tmp/mkimage*;" "rm -f /etc/yum.repos.d/*.repo"
+        "rm -rf /tmp/docker/;rm -rf /tmp/mkimage*;rm -f /etc/yum.repos.d/*.repo"
     )
     local_dir = os.path.join(curPath, "docker/")
     remote_dir = "/tmp/docker/"
@@ -52,8 +52,7 @@ def create_rhel_container_by_docker(args):
         args.container_password,
     )
     logger.info(
-        f"Succeeded to create docker container:{container_name}, "
-        f"port:{container_port}"
+        f"Succeeded to create docker container:{container_name}, port:{container_port}"
     )
     return container_name, container_port
 
@@ -66,7 +65,7 @@ def docker_image_create(ssh, image_name, compose_id):
     :param compose_id: rhel compose id
     """
     if not docker_image_exist(ssh, image_name):
-        ssh.runcmd("subscription-manager unregister;" "subscription-manager clean")
+        ssh.runcmd("subscription-manager unregister;subscription-manager clean")
         repo_file = "/tmp/docker/compose.repo"
         rhel_compose_repo(ssh, compose_id, repo_file)
         ret, _ = ssh.runcmd(f"sh /tmp/docker/mk_image.sh -y {repo_file} {image_name}")
@@ -179,7 +178,7 @@ def docker_arguments_parser():
         "--container-name",
         required=False,
         default=None,
-        help="[Optional] Default to make by the rhel compose id and " "container port",
+        help="[Optional] Default to make by the rhel compose id and container port",
     )
     parser.add_argument(
         "--container-port",

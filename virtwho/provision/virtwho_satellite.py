@@ -93,7 +93,7 @@ def satellite_deploy_for_virtwho(args):
         virtwho_ini_props_update(args)
 
     logger.info(
-        f"+++ Succeeded to deploy the Satellite " f"{args.satellite}/{args.server} +++"
+        f"+++ Succeeded to deploy the Satellite {args.satellite}/{args.server} +++"
     )
 
 
@@ -160,9 +160,7 @@ def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
         raise FailException("No manifest file found")
     ssh.runcmd(f"hammer subscription delete-manifest --organization-label {org}")
     ret, _ = ssh.runcmd(
-        f"hammer subscription upload "
-        f"--organization-label {org} "
-        f"--file {filename}"
+        f"hammer subscription upload --organization-label {org} --file {filename}"
     )
     if ret != 0:
         raise FailException("Failed to upload manifest for satellite")

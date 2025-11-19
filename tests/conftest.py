@@ -373,7 +373,7 @@ def proxy_data():
     proxy["https_proxy"] = f"https://{good_proxy}"
     proxy["bad_http_proxy"] = f"http://{bad_proxy}"
     proxy["bad_https_proxy"] = f"https://{bad_proxy}"
-    proxy["connection_log"] = f"Connection built: " f"http_proxy={good_proxy}"
+    proxy["connection_log"] = f"Connection built: http_proxy={good_proxy}"
     proxy["proxy_log"] = f"Using proxy: {good_proxy}"
     proxy["error"] = [
         "Connection refused",

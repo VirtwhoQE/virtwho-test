@@ -44,11 +44,11 @@ class TestVirtwhoService:
         virtwho.operate_service(action="stop")
         virtwho.operate_service(action="start")
         _, output = virtwho.operate_service(action="status")
-        assert output is "running"
+        assert output == "running"
 
         virtwho.operate_service(action="stop")
         _, output = virtwho.operate_service(action="status")
-        assert output is "dead"
+        assert output == "dead"
 
     @pytest.mark.tier1
     def test_virtwho_service_restart(self, virtwho):
@@ -67,7 +67,7 @@ class TestVirtwhoService:
         """
         virtwho.operate_service(action="restart")
         _, output = virtwho.operate_service(action="status")
-        assert output is "running"
+        assert output == "running"
 
     @pytest.mark.tier1
     def test_virtwho_service_try_restart(self, virtwho):
@@ -86,7 +86,7 @@ class TestVirtwhoService:
         """
         virtwho.operate_service(action="try-restart")
         _, output = virtwho.operate_service(action="status")
-        assert output is "running"
+        assert output == "running"
 
     @pytest.mark.tier1
     def test_virtwho_service_force_reload(self, virtwho):
@@ -105,7 +105,7 @@ class TestVirtwhoService:
         """
         virtwho.operate_service(action="force-reload")
         _, output = virtwho.operate_service(action="status")
-        assert output is "running"
+        assert output == "running"
 
     @pytest.mark.tier1
     @pytest.mark.fipsEnable
@@ -174,7 +174,7 @@ class TestVirtwhoService:
         _, output = virtwho.operate_service(action="status")
         assert output == "running" and virtwho.thread_number() == 1
 
-        ret, _ = ssh_host.runcmd(f"systemctl restart rhsmcertd")
+        ret, _ = ssh_host.runcmd("systemctl restart rhsmcertd")
         assert ret == 0
         _, output = virtwho.operate_service(action="status")
         assert output == "running" and virtwho.thread_number() == 1
@@ -209,7 +209,7 @@ class TestVirtwhoService:
 
         try:
             swp.update("type", "test")
-            ssh_host.runcmd(f"cat /etc/virt-who.d/.test.conf.swp")
+            ssh_host.runcmd("cat /etc/virt-who.d/.test.conf.swp")
             result = virtwho.run_service()
             assert result["send"] == 1 and result["error"] == 0
 
