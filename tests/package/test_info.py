@@ -86,10 +86,10 @@ class TestVirtwhoPackageInfo:
             2. no changes by comparing with the previous build
         """
         man_page_remote = "/root/man_page"
-        man_page_local = os.path.join(TEMP_DIR, f"virtwho_man_page")
-        man_page_compare = os.path.join(DOCS_DIR, f"virtwho_man_page_rhel_9")
+        man_page_local = os.path.join(TEMP_DIR, "virtwho_man_page")
+        man_page_compare = os.path.join(DOCS_DIR, "virtwho_man_page_rhel_9")
         if "RHEL-10" in RHEL_COMPOSE:
-            man_page_compare = os.path.join(DOCS_DIR, f"virtwho_man_page_rhel_10")
+            man_page_compare = os.path.join(DOCS_DIR, "virtwho_man_page_rhel_10")
         ssh_host.runcmd(f"man virt-who > {man_page_remote}")
         ssh_host.get_file(man_page_remote, man_page_local)
         assert base.local_files_compare(man_page_local, man_page_compare)
@@ -112,10 +112,10 @@ class TestVirtwhoPackageInfo:
             2. no changes by comparing with the previous build
         """
         help_page_remote = "/root/help_page"
-        help_page_local = os.path.join(TEMP_DIR, f"virtwho_help_page")
-        help_page_compare = os.path.join(DOCS_DIR, f"virtwho_help_page_rhel_9")
+        help_page_local = os.path.join(TEMP_DIR, "virtwho_help_page")
+        help_page_compare = os.path.join(DOCS_DIR, "virtwho_help_page_rhel_9")
         if "RHEL-10" in RHEL_COMPOSE:
-            help_page_compare = os.path.join(DOCS_DIR, f"virtwho_help_page_rhel_10")
+            help_page_compare = os.path.join(DOCS_DIR, "virtwho_help_page_rhel_10")
         ssh_host.runcmd(f"virt-who --help > {help_page_remote}")
         ssh_host.get_file(help_page_remote, help_page_local)
         assert base.local_files_compare(help_page_local, help_page_compare)
@@ -156,12 +156,12 @@ class TestVirtwhoPackageInfo:
             and pkg_info["Source RPM"] == VIRTWHO_PKG.split("noarch")[0] + "src.rpm"
             and pkg_info["Build Date"]
             and pkg_info["Build Host"]
-            and pkg_info["Packager"] == "Red Hat, Inc. <http://bugzilla.redhat."
-            "com/bugzilla>"
+            and pkg_info["Packager"]
+            == "Red Hat, Inc. <http://bugzilla.redhat.com/bugzilla>"
             and pkg_info["Vendor"] == "Red Hat, Inc."
             and pkg_info["URL"] == "https://github.com/candlepin/virt-who"
-            and pkg_info["Summary"] == "Agent for reporting virtual guest IDs "
-            "to subscription-manager"
+            and pkg_info["Summary"]
+            == "Agent for reporting virtual guest IDs to subscription-manager"
         )
 
     @pytest.mark.tier1

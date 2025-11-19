@@ -45,9 +45,9 @@ def xml_file_generate():
     logger.info(f"\n{output}\n")
     _, output = subprocess.getstatusoutput(f"ls {args.xml_file}")
     if ret == 0 and args.xml_file in output:
-        logger.info(f"Succeeded to generate test case xml file")
+        logger.info("Succeeded to generate test case xml file")
     else:
-        raise FailException(f"Failed to generate test case xml file")
+        raise FailException("Failed to generate test case xml file")
     xml_file_upstream_remove()
     xml_file_hyperlink_add()
     if args.subsystemteam:
@@ -114,9 +114,9 @@ def xml_file_upload():
     ret, output = subprocess.getstatusoutput(cmd)
     time.sleep(60)
     if ret == 0:
-        logger.info(f"Finished the upload step")
+        logger.info("Finished the upload step")
     else:
-        raise FailException(f"Failed the upload step")
+        raise FailException("Failed the upload step")
 
 
 def job_id_get():

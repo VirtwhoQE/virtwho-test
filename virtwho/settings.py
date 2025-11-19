@@ -1,9 +1,11 @@
 """Define and instantiate the configuration class for virtwho-test."""
+
 import os
 from configparser import ConfigParser
 from logging import getLogger
 
 logger = getLogger(__name__)
+
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):

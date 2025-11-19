@@ -206,9 +206,7 @@ class TestKubevirtNegative:
             function_hypervisor.update("type", value)
             result = virtwho.run_service()
             assert (
-                result["error"] is not 0
-                and result["send"] == 0
-                and result["thread"] == 0
+                result["error"] != 0 and result["send"] == 0 and result["thread"] == 0
             )
             if "RHEL-9" in RHEL_COMPOSE:
                 assert assertion["invalid"][f"{value}"] in result["error_msg"]

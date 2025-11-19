@@ -55,36 +55,35 @@ def esx_monitor():
         pwd=config.esx.esx_password,
     )
     try:
-        logger.info(f">>>vCenter: Check if the vCenter server is running well.")
+        logger.info(">>>vCenter: Check if the vCenter server is running well.")
         ret1 = host_ping(host=server)
         if not ret1:
             esx_state, server = (state_server_bad, server_broke)
-            logger.error(f"The vCenter Server has broken, please repaire it.")
+            logger.error("The vCenter Server has broken, please repaire it.")
 
-        logger.info(f">>>vCenter: Check if the esxi host is running well.")
+        logger.info(">>>vCenter: Check if the esxi host is running well.")
         ret2 = host_ping(host=esx_ip)
         if not ret2:
             esx_ip = "Broke"
-            logger.error(f"The esxi host has broken, please repaire it.")
+            logger.error("The esxi host has broken, please repaire it.")
 
-        logger.info(f">>>vCenter: Check if the windows client is running well.")
+        logger.info(">>>vCenter: Check if the windows client is running well.")
         ret3 = host_ping(host=client_server)
         if not ret3:
             client_server = "Broke"
-            logger.error(f"The windows Client has broken, please repaire it.")
+            logger.error("The windows Client has broken, please repaire it.")
 
         if ret1 and ret2 and ret3:
-            logger.info(f">>>vCenter: Get the Hypervisor data.")
+            logger.info(">>>vCenter: Get the Hypervisor data.")
             esx_data = esx.guest_search(guest_name, uuid_info=True)
             esx_data["esx_hostname"] = hostname_get(ssh_esx)
             logger.info(f"=== vCenter Data:\n{esx_data}\n===")
 
-            logger.info(f">>>vCenter: Check if the rhel guest is running.")
+            logger.info(">>>vCenter: Check if the rhel guest is running.")
             if not esx_data["guest_name"]:
                 esx_state, guest_ip = (state_guest_bad, guest_none)
                 logger.error(
-                    f"Did not find the rhel guest({guest_name}), "
-                    f"please install one."
+                    f"Did not find the rhel guest({guest_name}), please install one."
                 )
             else:
                 ssh_guest = SSHConnect(
@@ -102,7 +101,7 @@ def esx_monitor():
                     )
 
     finally:
-        logger.info(f">>>vCenter: Update the data of virtwho.ini.")
+        logger.info(">>>vCenter: Update the data of virtwho.ini.")
         esx_dict = {
             "server": server,
             "esx_ip": esx_ip,
@@ -151,17 +150,17 @@ def hyperv_monitor():
         server=server, ssh_user=config.hyperv.username, ssh_pwd=config.hyperv.password
     )
     try:
-        logger.info(f">>>Hyperv: Check if the hypervisor is running.")
+        logger.info(">>>Hyperv: Check if the hypervisor is running.")
         if not host_ping(host=server):
             hyperv_state, server, guest_ip = (
                 state_server_bad,
                 server_broke,
                 guest_none,
             )
-            logger.error(f"The hyperv host has broken, please repaire it.")
+            logger.error("The hyperv host has broken, please repaire it.")
 
         else:
-            logger.info(f">>>Hyperv: Get the hypervisor data.")
+            logger.info(">>>Hyperv: Get the hypervisor data.")
             hyperv_data = hyperv.guest_search(guest_name)
             uuid = hyperv_data["hyperv_uuid"]
             hyperv_data["hyperv_uuid"] = (
@@ -179,12 +178,11 @@ def hyperv_monitor():
             )
             logger.info(f"=== Hyperv Data:\n{hyperv_data}\n===")
 
-            logger.info(f">>>Hyperv: Check if the rhel guest if running.")
+            logger.info(">>>Hyperv: Check if the rhel guest if running.")
             if not hyperv_data["guest_name"]:
                 hyperv_state, guest_ip = (state_guest_bad, guest_none)
                 logger.error(
-                    f"Did not find the rhel guest ({guest_name}), "
-                    f"please install one."
+                    f"Did not find the rhel guest ({guest_name}), please install one."
                 )
             else:
                 ssh_guest = SSHConnect(
@@ -202,7 +200,7 @@ def hyperv_monitor():
                     )
 
     finally:
-        logger.info(f">>>Hyperv: Compare and update the data in virtwho.ini.")
+        logger.info(">>>Hyperv: Compare and update the data in virtwho.ini.")
         hyperv_dict = {
             "server": server,
             "guest_ip": guest_ip,
@@ -251,10 +249,10 @@ def kubevirt_monitor():
     kubevirt = KubevirtApi(endpoint, config.kubevirt.token)
     try:
         server = re.findall(r"https://(.+?):6443", endpoint)[0]
-        logger.info(f">>>Kubevirt: Check if the hypervisor is running.")
+        logger.info(">>>Kubevirt: Check if the hypervisor is running.")
         if not host_ping(host=server):
             kubevirt_state, endpoint = (state_server_bad, server_broke)
-            logger.error(f"The kubevirt host has broken, please repaire it.")
+            logger.error("The kubevirt host has broken, please repaire it.")
 
         else:
             logger.info(f">>>Kubevirt: Test the guest {guest_name}.")
@@ -311,7 +309,7 @@ def kubevirt_monitor():
                         )
 
     finally:
-        logger.info(f">>>Kubevirt: Compare and update the data in virtwho.ini.")
+        logger.info(">>>Kubevirt: Compare and update the data in virtwho.ini.")
         kubevirt_dict = {
             "endpoint": endpoint,
             "guest_ip": guest_ip,
@@ -396,10 +394,10 @@ def ahv_monitor():
     )
 
     try:
-        logger.info(f">>>Nutanix: Check if the hypervisor is running well.")
+        logger.info(">>>Nutanix: Check if the hypervisor is running well.")
         if not host_ping(host=server):
             ahv_state, server = (state_server_bad, server_broke)
-            logger.error(f"The Nutanix host has broken, please repaire it.")
+            logger.error("The Nutanix host has broken, please repaire it.")
 
         else:
             logger.info(f">>>Nutanix: Test the guest {guest_name}.")
@@ -446,7 +444,7 @@ def ahv_monitor():
                         )
 
     finally:
-        logger.info(f">>>Nutanix: Compare and update the data in virtwho.ini.")
+        logger.info(">>>Nutanix: Compare and update the data in virtwho.ini.")
         ahv_dict = {
             "server": server,
             "guest_ip": guest_ip,
@@ -518,25 +516,24 @@ def libvirt_monitor():
         host=server, user=config.libvirt.username, pwd=config.libvirt.password
     )
     try:
-        logger.info(f">>>Libvirt: Check if the libvirt host is running.")
+        logger.info(">>>Libvirt: Check if the libvirt host is running.")
         if not host_ping(host=server):
             libvirt_state, server, guest_ip = (
                 state_server_bad,
                 server_broke,
                 guest_none,
             )
-            logger.error(f"The libvirt host has broken, please repaire it.")
+            logger.error("The libvirt host has broken, please repaire it.")
         else:
-            logger.info(f">>>Libvirt: Get the hypervisor env data.")
+            logger.info(">>>Libvirt: Get the hypervisor env data.")
             libvirt_data = libvirt.guest_search(guest_name)
             logger.info(f"=== Libvirt Data\n{libvirt_data}\n ===")
 
-            logger.info(f">>>Libvirt: Check if the rhel guest is running.")
+            logger.info(">>>Libvirt: Check if the rhel guest is running.")
             if not libvirt.guest_exist(guest_name):
                 libvirt_state, guest_ip = (state_guest_bad, guest_none)
                 logger.error(
-                    f"Did not find the rhel guest ({guest_name}), "
-                    f"please install one."
+                    f"Did not find the rhel guest ({guest_name}), please install one."
                 )
             else:
                 ssh_guest = SSHConnect(
@@ -552,7 +549,7 @@ def libvirt_monitor():
                         f"The rhel guest({guest_name}) is down, please repair it."
                     )
     finally:
-        logger.info(f">>>Libvirt: Compare and update the data in virtwho.ini.")
+        logger.info(">>>Libvirt: Compare and update the data in virtwho.ini.")
         libvirt_dict = {
             "server": server,
             "guest_ip": guest_ip,

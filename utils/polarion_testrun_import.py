@@ -92,7 +92,7 @@ def polarion_xml_file_import(polarion_xml_file):
     logger.info(output)
     if "error-message" not in output:
         # testrun = f"{testrun_url}/testrun?id={testrun_id}"
-        logger.info(f"Successed to import xml to polarion")
+        logger.info("Successed to import xml to polarion")
     else:
         raise FailException("Failed to import xml to polarion")
 

@@ -72,8 +72,7 @@ class SubscriptionManager:
                 raise FailException(f"Failed to register host({self.host})")
         else:
             logger.info(
-                f"The host({self.host}) has been registered, "
-                f"no need to register again."
+                f"The host({self.host}) has been registered, no need to register again."
             )
             return None
 
@@ -87,7 +86,7 @@ class SubscriptionManager:
         if ret == 0:
             # if self.register_type == 'satellite':
             #     self.satellite_cert_uninstall()
-            logger.info(f"Succeeded to unregister host")
+            logger.info("Succeeded to unregister host")
         else:
             raise FailException(f"Failed to unregister {self.host}.")
 
@@ -112,10 +111,7 @@ class SubscriptionManager:
         Install certificate when registering to satellite.
         """
         self.satellite_cert_uninstall()
-        cmd = (
-            f"rpm -ihv http://{self.server}"
-            f"/pub/katello-ca-consumer-latest.noarch.rpm"
-        )
+        cmd = f"rpm -ihv http://{self.server}/pub/katello-ca-consumer-latest.noarch.rpm"
         ret, output = self.ssh.runcmd(cmd)
         if ret != 0 and "is already installed" not in output:
             raise FailException(
@@ -208,7 +204,7 @@ class RHSM:
         consumer = self.consumers(host_name)
         if consumer:
             uuid = consumer["uuid"]
-            logger.info(f"Succeeded to get stage consumer uuid: " f"{host_name}:{uuid}")
+            logger.info(f"Succeeded to get stage consumer uuid: {host_name}:{uuid}")
             return uuid
         raise FailException(f"Failed to get stage consumer uuid for {host_name}")
 
@@ -243,7 +239,7 @@ class RHSM:
                 return True
             raise FailException("Failed to delete consumer(s) on stage")
         logger.info(
-            "Succeeded to delete consumer(s) on stage " "because no consumer found"
+            "Succeeded to delete consumer(s) on stage because no consumer found"
         )
         return True
 
@@ -367,7 +363,7 @@ class Satellite:
         :param label: organization label
         :return: True or raise Fail
         """
-        _, output = self.ssh.runcmd(f"hammer organization delete " f'--label "{label}"')
+        _, output = self.ssh.runcmd(f'hammer organization delete --label "{label}"')
         if "100%" in output:
             logger.info(f"Succeeded to delete organization:{label}")
             return True
@@ -383,9 +379,7 @@ class Satellite:
         :return: host id or None
         """
         ret, output = self.ssh.runcmd(
-            f"{self.hammer} host list "
-            f"--organization-id {self.org_id} "
-            f"--search {host}"
+            f"{self.hammer} host list --organization-id {self.org_id} --search {host}"
         )
         output = json.loads(output)
         if ret == 0 and len(output) >= 1:
@@ -406,16 +400,14 @@ class Satellite:
         host_id = self.host_id(host)
         if host_id:
             self.ssh.runcmd(
-                f"hammer host delete "
-                f"--organization-id {self.org_id} "
-                f"--id {host_id}"
+                f"hammer host delete --organization-id {self.org_id} --id {host_id}"
             )
             if self.host_id(host) is None:
                 logger.info(f"Succeeded to delete {host} from satellite")
                 return True
             raise FailException(f"Failed to Delete {host} from satellite")
         else:
-            logger.info(f"Did not find the {host} in satellite," f"no need to delete.")
+            logger.info(f"Did not find the {host} in satellite,no need to delete.")
             return True
 
     def activation_key_create(
@@ -452,9 +444,7 @@ class Satellite:
         """
         key = key or self.activation_key
         _, output = self.ssh.runcmd(
-            f"hammer activation-key delete "
-            f"--organization-id {self.org_id} "
-            f"--name {key}"
+            f"hammer activation-key delete --organization-id {self.org_id} --name {key}"
         )
         if "Activation key deleted" in output:
             logger.info(f"Succeeded to delete activation key:{key}")
