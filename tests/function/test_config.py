@@ -531,7 +531,9 @@ class TestConfigurationPositive:
             if HYPERVISOR == "ahv":
                 logger.info("=== AHV: failed with RHEL-1309 ===")
             assert (
-                result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
+                result["error"] == 0
+                and result["send"] == 1
+                and result["thread"] == 1
                 # Skip the below assertion due to open rhel13376
                 # and connection_msg in result["log"]
                 # and proxy_msg in result["log"]
