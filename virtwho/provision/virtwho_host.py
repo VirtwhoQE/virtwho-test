@@ -268,7 +268,11 @@ def local_mode_guest_add(ssh):
     Return the guest data dic.
     """
     server_ip = ipaddr_get(ssh)
-    local = LibvirtCLI(server_ip, args.username, args.password)
+    local = LibvirtCLI(
+        server=server_ip,
+        ssh_user=config.local.username,
+        ssh_passwd=config.local.password,
+    )
     guest_name = config.local.guest_name
     if not local.guest_exist(guest_name):
         local.guest_add(
