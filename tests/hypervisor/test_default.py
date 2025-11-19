@@ -17,6 +17,7 @@ from virtwho.base import hostname_get
 from virtwho.configure import hypervisor_create
 from virtwho.settings import config
 
+
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("function_debug_true")
@@ -61,13 +62,14 @@ class TestHypervisorPositive:
         """
 
         if REGISTER == "rhsm":
-            hypervisor_hostname = hypervisor_data['hypervisor_hostname']
+            hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
             hypervisor_detail = rhsm.consumers(hypervisor_hostname)
-            hypervisor_uuid = hypervisor_detail['uuid']
+            hypervisor_uuid = hypervisor_detail["uuid"]
 
             proxy_env_statement = ""
-            if hasattr(config.rhsm, "proxy_hostname") \
-               and hasattr(config.rhsm, "proxy_port"):
+            if hasattr(config.rhsm, "proxy_hostname") and hasattr(
+                config.rhsm, "proxy_port"
+            ):
                 proxy_env_statement = f"https_proxy=https://{config.rhsm.proxy_hostname}:{config.rhsm.proxy_port}"
 
             cmd = (

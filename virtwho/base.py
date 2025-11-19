@@ -31,8 +31,8 @@ def system_init(ssh, keyword, firewall="start", selinux="enforcing"):
         host_name = f"{keyword}-{random_str}.redhat.com"
     hostname_set(ssh, host_name)
     etc_hosts_set(ssh, f"{host_ip} {host_name}")
-    #firewall_set(ssh, firewall)
-    #selinux_set(ssh, selinux)
+    # firewall_set(ssh, firewall)
+    # selinux_set(ssh, selinux)
     logger.info(f"Finished to init system {host_name}")
 
 

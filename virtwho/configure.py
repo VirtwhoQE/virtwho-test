@@ -84,8 +84,9 @@ class VirtwhoHypervisorConfig:
             # due to CCT-1772 a property 'proxy_scheme' is not used
             for property_name in ["proxy_hostname", "proxy_port"]:
                 if hasattr(self.register, property_name):
-                    self.update(f"rhsm_{property_name}", getattr(self.register,property_name))
-
+                    self.update(
+                        f"rhsm_{property_name}", getattr(self.register, property_name)
+                    )
 
     def update(self, option, value):
         """Add or update an option
