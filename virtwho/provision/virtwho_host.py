@@ -266,7 +266,11 @@ def local_mode_guest_add(ssh):
     Return the guest data dic.
     """
     server_ip = ipaddr_get(ssh)
-    local = LibvirtCLI(server_ip, args.username, args.password)
+    local = LibvirtCLI(
+        server=server_ip,
+        ssh_user=ssh.user,
+        ssh_passwd=ssh.pwd,
+    )
     guest_name = config.local.guest_name
     if not local.guest_exist(guest_name):
         local.guest_add(
@@ -282,8 +286,11 @@ def local_mode_guest_add(ssh):
         time.sleep(30)
         guest_ip = local.guest_ip(guest_name)
         if guest_ip:
-            logger.error(f"timeout to get guest_ip for guest_name {guest_name}")
+            logger.info(f"Succeeded to get guest_ip {guest_ip} for guest_name {guest_name}")
             break
+    else:
+        # Loop completed without finding guest_ip
+        logger.error(f"timeout to get guest_ip for guest_name {guest_name}")
     guest_info = local.guest_search(guest_name)
     ssh_guest = SSHConnect(
         host=guest_info["guest_ip"],
