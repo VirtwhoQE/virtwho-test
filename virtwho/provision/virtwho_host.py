@@ -286,7 +286,9 @@ def local_mode_guest_add(ssh):
         time.sleep(30)
         guest_ip = local.guest_ip(guest_name)
         if guest_ip:
-            logger.info(f"Succeeded to get guest_ip {guest_ip} for guest_name {guest_name}")
+            logger.info(
+                f"Succeeded to get guest_ip {guest_ip} for guest_name {guest_name}"
+            )
             break
     else:
         # Loop completed without finding guest_ip
