@@ -466,6 +466,7 @@ def curl_download(ssh, url, file_path, file_name=None):
     else:
         # Extract filename from URL and save to file_path
         import os
+
         output_path = f"{file_path}/{os.path.basename(url)}"
     cmd = f"curl -k -L -o {output_path} {url}"
     ret, _ = ssh.runcmd(cmd)
