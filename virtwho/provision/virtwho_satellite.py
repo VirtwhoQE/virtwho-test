@@ -152,7 +152,7 @@ def satellite_manifest_upload(ssh, org, url, admin_username, admin_password):
     """
     path = "/tmp/manifest"
     ssh.runcmd(f"rm -rf {path}; mkdir -p {path}")
-    ssh.runcmd(f"wget {url} -P {path}")
+    ssh.runcmd(f"curl -k -L -o {path}/$(basename {url}) {url}")
     ret, output = ssh.runcmd(f"ls {path}")
     if output:
         filename = f"{path}/{output.strip()}"
