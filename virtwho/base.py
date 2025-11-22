@@ -450,6 +450,30 @@ def wget_download(ssh, url, file_path, file_name=None):
     raise FailException(f"Failed to wget download from {url}")
 
 
+def curl_download(ssh, url, file_path, file_name=None):
+    """
+    Download from url by curl
+    :param ssh: ssh access of testing host
+    :param url: download resource
+    :param file_path: the save path
+    :param file_name: the save name
+    """
+    _, ouput = ssh.runcmd(f"ls {file_path}")
+    if "No such file or directory" in ouput:
+        ssh.runcmd(f"mkdir -p {file_path}")
+    if file_name:
+        output_path = f"{file_path}/{file_name}"
+    else:
+        # Extract filename from URL and save to file_path
+        import os
+        output_path = f"{file_path}/{os.path.basename(url)}"
+    cmd = f"curl -k -L -o {output_path} {url}"
+    ret, _ = ssh.runcmd(cmd)
+    if ret == 0:
+        return True
+    raise FailException(f"Failed to curl download from {url}")
+
+
 def random_string(num=8):
     """
     Create a random string with ascii and digit, such as 'Ca9KGqlY'

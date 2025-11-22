@@ -13,7 +13,7 @@ import pytest
 from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH, RHEL_SUBVERSION
 from virtwho.base import virtwho_package_url
 from virtwho.base import package_check, package_upgrade, package_downgrade
-from virtwho.base import wget_download, rhel_compose_repo, random_string
+from virtwho.base import curl_download, rhel_compose_repo, random_string
 from virtwho.base import system_reboot
 
 
@@ -162,10 +162,10 @@ class TestUpgradeDowngrade:
             # download the current virt-who package
             file_path = "/tmp/packageUpgradeDowngrade-" + random_string()
             pkg_url = virtwho_package_url(VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH)
-            wget_download(ssh_host, pkg_url, file_path)
+            curl_download(ssh_host, pkg_url, file_path)
             # download the old virt-who package
             old_pkg_url = virtwho_package_url(old_pkg, old_compose, old_compose_path)
-            wget_download(ssh_host, old_pkg_url, file_path)
+            curl_download(ssh_host, old_pkg_url, file_path)
             # downgrade virt-who to check the configurations not change.
             package_downgrade(ssh_host, "virt-who", rpm=f"{file_path}/{old_pkg}.rpm")
             result = virtwho.run_service()
