@@ -79,7 +79,7 @@ def provision_virtwho_host(args):
     # Install required packages first (curl replaces wget for package downloads)
     ssh_host.runcmd(cmd="dnf install -y subscription-manager expect net-tools curl")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
-    # rhsm_conf_backup(ssh_host)
+    rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
