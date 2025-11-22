@@ -432,12 +432,24 @@ def package_check(ssh, pkg_name):
 
 def wget_download(ssh, url, file_path, file_name=None):
     """
+    .. deprecated::
+        Use curl_download() instead. This function is deprecated because wget
+        is not available by default in RHEL minimal installations.
+
     Download from url by wget
     :param ssh: ssh access of testing host
     :param url: download resource
     :param file_path: the save path
     :param file_name: the save name
     """
+    import warnings
+
+    warnings.warn(
+        "wget_download() is deprecated, use curl_download() instead. "
+        "wget is not available by default in RHEL minimal installations.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     _, ouput = ssh.runcmd(f"ls {file_path}")
     if "No such file or directory" in ouput:
         ssh.runcmd(f"mkdir -p {file_path}")
