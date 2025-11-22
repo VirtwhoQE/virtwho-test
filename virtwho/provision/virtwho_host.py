@@ -81,6 +81,7 @@ def provision_virtwho_host(args):
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
+    ssh_host.runcmd(cmd="dnf install -y expect")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
     # Configure the virt-who host for remote libvirt mode
