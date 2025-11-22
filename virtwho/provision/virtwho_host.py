@@ -76,7 +76,8 @@ def provision_virtwho_host(args):
     # ssh_host.runcmd(
     #     "rm -rf /var/lib/rpm/.rpm.lock; rm -rf /usr/lib/sysimage/rpm/.rpm.lock; pkill yum"
     # )
-    # ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
+    # Install required packages first (curl replaces wget for package downloads)
+    ssh_host.runcmd(cmd="dnf install -y subscription-manager expect net-tools curl")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
     # rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
