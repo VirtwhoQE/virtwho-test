@@ -2,6 +2,7 @@ import json
 import os
 import random
 import re
+import shlex
 import string
 import operator
 import time
@@ -516,7 +517,7 @@ def encrypt_password(ssh, password, option=None):
             return encrypted_value
         raise FailException("Failed to get encrypted password without option")
     else:
-        cmd = f"virt-who-password -p {password} > {log_file}"
+        cmd = f"virt-who-password -p {shlex.quote(password)} > {log_file}"
         ret, output = ssh.runcmd(cmd)
         if ret == 0:
             ret, output = ssh.runcmd(f"cat {log_file}")
