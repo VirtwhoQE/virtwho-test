@@ -265,6 +265,7 @@ class TestCli:
         _, output = ssh_host.runcmd("virt-who")
         assert "already running" in output
 
+    @pytest.mark.timeout(180)
     @pytest.mark.tier1
     def test_virtwho_encrypted_password(self, ssh_host):
         """
@@ -289,6 +290,9 @@ class TestCli:
             2. get the same encrypted password for ad\"min and '"ad\"min"'
         """
         password = config.virtwho.password
+        if not password:
+            pytest.skip("Skipping password encryption test: virtwho.password is empty")
+
         encrypt_1 = encrypt_password(ssh_host, password)
         encrypt_2 = encrypt_password(ssh_host, password, option="-p")
         encrypt_3 = encrypt_password(ssh_host, password, option="--password")

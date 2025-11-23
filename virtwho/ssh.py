@@ -1,6 +1,7 @@
 import os
+import socket
 import paramiko
-from virtwho import logger
+from virtwho import logger, FailException
 
 
 class SSHConnect:
@@ -96,17 +97,29 @@ class SSHConnect:
         sftp = paramiko.SFTPClient.from_transport(transport)
         return sftp, transport
 
-    def runcmd(self, cmd, if_stdout=False, log_print=True):
+    def runcmd(self, cmd, if_stdout=False, log_print=True, timeout=None):
         """Executes SSH command on remote hostname.
         :param str cmd: The command to run
         :param str if_stdout: default to return to stderr
         :param str log_print: default to print the output
+        :param int timeout: timeout in seconds for command execution (default: None for no timeout)
         """
         ssh = self._connect()
         logger.info(f"[{self.host}:{self.port}] >>> {cmd}")
         stdin, stdout, stderr = ssh.exec_command(cmd)
-        code = stdout.channel.recv_exit_status()
-        stdout, stderr = stdout.read(), stderr.read()
+
+        # Set timeout on the channel if specified
+        if timeout is not None:
+            stdout.channel.settimeout(timeout)
+
+        try:
+            code = stdout.channel.recv_exit_status()
+            stdout, stderr = stdout.read(), stderr.read()
+        except socket.timeout:
+            logger.error(f"Command execution timed out after {timeout} seconds: {cmd}")
+            ssh.close()
+            raise FailException(f"Command timed out after {timeout} seconds: {cmd}")
+
         ssh.close()
         if if_stdout or not stderr:
             if log_print:
