@@ -238,16 +238,47 @@ def libvirt_access_no_password(ssh):
         user=config.libvirt.username,
         pwd=config.libvirt.password,
     )
-    ssh.runcmd('echo -e "\n" | ssh-keygen -N "" -f ~/.ssh/virtwho-qe &> /dev/null')
-    ret, output = ssh.runcmd("cat ~/.ssh/*.pub")
-    if ret != 0 or output is None:
-        raise FailException("Failed to create ssh key")
-    ssh_libvirt.runcmd(f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys")
+
+    # Ensure .ssh directory exists with proper permissions
+    ssh.runcmd("mkdir -p ~/.ssh && chmod 700 ~/.ssh")
+
+    # Create SSH key if it doesn't exist
+    ssh.runcmd(
+        'test -f ~/.ssh/virtwho-qe || ssh-keygen -t rsa -N "" -f ~/.ssh/virtwho-qe -C "virtwho-qe"'
+    )
+
+    # Read the specific public key file
+    ret, output = ssh.runcmd("cat ~/.ssh/virtwho-qe.pub")
+    if ret != 0 or not output or not output.strip():
+        raise FailException("Failed to read ssh public key")
+
+    # Set up authorized_keys on libvirt host with proper permissions
+    ssh_libvirt.runcmd("mkdir -p ~/.ssh && chmod 700 ~/.ssh")
+    ssh_libvirt.runcmd(
+        "touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+    )
+
+    # Add key to authorized_keys if not already present
+    ssh_libvirt.runcmd(
+        f"grep -qxF '{output.strip()}' ~/.ssh/authorized_keys || echo '{output.strip()}' >> ~/.ssh/authorized_keys"
+    )
+
+    # Add libvirt host to known_hosts
     ret, _ = ssh.runcmd(
-        f"ssh-keyscan -p 22 {config.libvirt.server} >> ~/.ssh/known_hosts"
+        f"ssh-keyscan -p 22 {config.libvirt.server} >> ~/.ssh/known_hosts 2>/dev/null"
     )
     if ret != 0:
-        raise FailException("Failed to configure access libvirt without passwd")
+        raise FailException("Failed to add libvirt host to known_hosts")
+
+    # Create SSH config to use the virtwho-qe key for libvirt connections
+    ssh_config = f"""
+Host {config.libvirt.server}
+    IdentityFile ~/.ssh/virtwho-qe
+    StrictHostKeyChecking no
+    UserKnownHostsFile ~/.ssh/known_hosts
+"""
+    ssh.runcmd(f"cat >> ~/.ssh/config <<'EOF'{ssh_config}EOF")
+    ssh.runcmd("chmod 600 ~/.ssh/config")
 
 
 def kubevirt_config_file(ssh):
