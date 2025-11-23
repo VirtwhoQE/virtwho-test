@@ -505,7 +505,7 @@ def encrypt_password(ssh, password, option=None):
     :param option: -p, --password
     :return: the encrypted password
     """
-    log_file = "/tmp/virtwho_encry_password"
+    log_file = "/tmp/virtwho_encrypt_password"
     if not option:
         attrs = [f"Password:|{password}"]
         ret, output = expect_run(ssh, "virt-who-password", attrs)
@@ -515,7 +515,10 @@ def encrypt_password(ssh, password, option=None):
                 f"Succeeded to get encrypted_password without option: {encrypted_value}"
             )
             return encrypted_value
-        raise FailException("Failed to get encrypted password without option")
+        logger.error(f"virt-who-password failed with exit code {ret}, output: {output}")
+        raise FailException(
+            f"Failed to get encrypted password without option (exit code: {ret})"
+        )
     else:
         cmd = f"virt-who-password -p {shlex.quote(password)} > {log_file}"
         ret, output = ssh.runcmd(cmd)
@@ -528,7 +531,12 @@ def encrypt_password(ssh, password, option=None):
                     f'"{option}": {encrypted_value}'
                 )
                 return encrypted_value
-        raise FailException(f'Failed to get encrypted password with "{option}"')
+        logger.error(
+            f"virt-who-password {option} failed with exit code {ret}, output: {output}"
+        )
+        raise FailException(
+            f'Failed to get encrypted password with "{option}" (exit code: {ret})'
+        )
 
 
 def get_host_domain_id(host_hwuuid, log_info):
@@ -628,13 +636,14 @@ def ssh_access_no_password(ssh_local, ssh_remote, remote_host, remote_port=22):
     )
 
 
-def expect_run(ssh, cmd, attrs):
+def expect_run(ssh, cmd, attrs, timeout=60):
     """
     Run command in terminal with interactive mode
     without password.
     :param ssh: ssh access of testing host
     :param cmd: the command
     :param attrs: such as ['Password:|password']
+    :param timeout: timeout in seconds for expect operations (default: 60)
     """
     options = list()
     random_str = random_string()
@@ -649,6 +658,7 @@ def expect_run(ssh, cmd, attrs):
     cmd = (
         f"cat <<EOF > {filename}\n"
         f"#!/usr/bin/expect\n"
+        f"set timeout {timeout}\n"
         f"spawn {cmd}\n"
         f"{options}\n"
         f"expect eof\n"
@@ -656,7 +666,7 @@ def expect_run(ssh, cmd, attrs):
         f"EOF"
     )
     ssh.runcmd(cmd)
-    ret, output = ssh.runcmd(f"chmod +x {filename}; {filename}")
+    ret, output = ssh.runcmd(f"chmod +x {filename}; {filename}", timeout=timeout + 10)
     return ret, output
 
 
