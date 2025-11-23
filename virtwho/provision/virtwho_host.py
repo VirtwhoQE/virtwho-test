@@ -76,9 +76,10 @@ def provision_virtwho_host(args):
     # ssh_host.runcmd(
     #     "rm -rf /var/lib/rpm/.rpm.lock; rm -rf /usr/lib/sysimage/rpm/.rpm.lock; pkill yum"
     # )
-    # ssh_host.runcmd("yum install -y subscription-manager expect net-tools wget")
+    # Install required packages first (curl replaces wget for package downloads)
+    ssh_host.runcmd(cmd="dnf install -y subscription-manager expect net-tools curl")
     ssh_host.runcmd(cmd="subscription-manager unregister; subscription-manager clean")
-    # rhsm_conf_backup(ssh_host)
+    rhsm_conf_backup(ssh_host)
     system_init(ssh_host, "virtwho")
     virtwho_pkg = virtwho_install(ssh_host, args.virtwho_pkg_url)
 
@@ -236,16 +237,47 @@ def libvirt_access_no_password(ssh):
         user=config.libvirt.username,
         pwd=config.libvirt.password,
     )
-    ssh.runcmd('echo -e "\n" | ssh-keygen -N "" -f ~/.ssh/virtwho-qe &> /dev/null')
-    ret, output = ssh.runcmd("cat ~/.ssh/*.pub")
-    if ret != 0 or output is None:
-        raise FailException("Failed to create ssh key")
-    ssh_libvirt.runcmd(f"mkdir ~/.ssh/;echo '{output}' >> ~/.ssh/authorized_keys")
+
+    # Ensure .ssh directory exists with proper permissions
+    ssh.runcmd("mkdir -p ~/.ssh && chmod 700 ~/.ssh")
+
+    # Create SSH key if it doesn't exist
+    ssh.runcmd(
+        'test -f ~/.ssh/virtwho-qe || ssh-keygen -t rsa -N "" -f ~/.ssh/virtwho-qe -C "virtwho-qe"'
+    )
+
+    # Read the specific public key file
+    ret, output = ssh.runcmd("cat ~/.ssh/virtwho-qe.pub")
+    if ret != 0 or not output or not output.strip():
+        raise FailException("Failed to read ssh public key")
+
+    # Set up authorized_keys on libvirt host with proper permissions
+    ssh_libvirt.runcmd("mkdir -p ~/.ssh && chmod 700 ~/.ssh")
+    ssh_libvirt.runcmd(
+        "touch ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+    )
+
+    # Add key to authorized_keys if not already present
+    ssh_libvirt.runcmd(
+        f"grep -qxF '{output.strip()}' ~/.ssh/authorized_keys || echo '{output.strip()}' >> ~/.ssh/authorized_keys"
+    )
+
+    # Add libvirt host to known_hosts
     ret, _ = ssh.runcmd(
-        f"ssh-keyscan -p 22 {config.libvirt.server} >> ~/.ssh/known_hosts"
+        f"ssh-keyscan -p 22 {config.libvirt.server} >> ~/.ssh/known_hosts 2>/dev/null"
     )
     if ret != 0:
-        raise FailException("Failed to configure access libvirt without passwd")
+        raise FailException("Failed to add libvirt host to known_hosts")
+
+    # Create SSH config to use the virtwho-qe key for libvirt connections
+    ssh_config = f"""
+Host {config.libvirt.server}
+    IdentityFile ~/.ssh/virtwho-qe
+    StrictHostKeyChecking no
+    UserKnownHostsFile ~/.ssh/known_hosts
+"""
+    ssh.runcmd(f"cat >> ~/.ssh/config <<'EOF'{ssh_config}EOF")
+    ssh.runcmd("chmod 600 ~/.ssh/config")
 
 
 def kubevirt_config_file(ssh):
@@ -266,7 +298,11 @@ def local_mode_guest_add(ssh):
     Return the guest data dic.
     """
     server_ip = ipaddr_get(ssh)
-    local = LibvirtCLI(server_ip, args.username, args.password)
+    local = LibvirtCLI(
+        server=server_ip,
+        ssh_user=ssh.user,
+        ssh_passwd=ssh.pwd,
+    )
     guest_name = config.local.guest_name
     if not local.guest_exist(guest_name):
         local.guest_add(
@@ -282,8 +318,13 @@ def local_mode_guest_add(ssh):
         time.sleep(30)
         guest_ip = local.guest_ip(guest_name)
         if guest_ip:
-            logger.error(f"timeout to get guest_ip for guest_name {guest_name}")
+            logger.info(
+                f"Succeeded to get guest_ip {guest_ip} for guest_name {guest_name}"
+            )
             break
+    else:
+        # Loop completed without finding guest_ip
+        logger.error(f"timeout to get guest_ip for guest_name {guest_name}")
     guest_info = local.guest_search(guest_name)
     ssh_guest = SSHConnect(
         host=guest_info["guest_ip"],
