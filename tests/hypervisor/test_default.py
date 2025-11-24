@@ -7,6 +7,8 @@
 :caselevel: Component
 """
 
+import time
+
 import pytest
 
 from virtwho import REGISTER
@@ -16,6 +18,37 @@ from virtwho import logger
 from virtwho.base import hostname_get
 from virtwho.configure import hypervisor_create
 from virtwho.settings import config
+
+
+def retry_until_success(
+    operation, validation_fn, max_retries=10, retry_interval=3, context=""
+):
+    """
+    Retry an operation until validation succeeds or max retries is reached.
+
+    :param operation: Callable that performs the operation and returns result
+    :param validation_fn: Callable that takes operation result and returns True if valid
+    :param max_retries: Maximum number of retry attempts
+    :param retry_interval: Seconds to wait between retries
+    :param context: Description of the operation for logging
+    :return: The operation result
+    """
+    result = None
+    for attempt in range(max_retries):
+        result = operation()
+        if validation_fn(result):
+            logger.info(f"{context} succeeded after {attempt + 1} attempt(s)")
+            return result
+
+        if attempt < max_retries - 1:
+            logger.debug(
+                f"{context} validation failed, retrying in {retry_interval}s "
+                f"(attempt {attempt + 1}/{max_retries})"
+            )
+            time.sleep(retry_interval)
+
+    logger.error(f"{context} failed after {max_retries} attempts")
+    return result
 
 
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
@@ -78,9 +111,17 @@ class TestHypervisorPositive:
                 f"https://{register_data['server']}/subscription/"
                 f"consumers/{hypervisor_uuid}/guestids/{guest_uuid}"
             )
-            ret, output = ssh_host.runcmd(cmd)
+
+            # Retry until RHSM API reflects virt-who reported data
+            _, output = retry_until_success(
+                operation=lambda: ssh_host.runcmd(cmd),
+                validation_fn=lambda result: guest_uuid in result[1],
+                context=f"RHSM API query for guest {guest_uuid}",
+            )
+
             logger.debug(f"hypervisor data: {hypervisor_data}")
             logger.debug(f"hypervisor uuid: {hypervisor_uuid}")
+            logger.debug(f"API response: {output}")
             # asserts are separated to see what assert went wrong in failure
             assert guest_uuid in output
             assert "guestId" in output
@@ -92,8 +133,17 @@ class TestHypervisorPositive:
                 f"{register_data['username']}:{register_data['password']} "
                 f"https://{register_data['server']}/api/v2/hosts/{guest_registered_id}"
             )
-            ret, output = ssh_host.runcmd(cmd)
+
+            # Retry until Satellite API reflects virt-who reported data
             attr1 = f'"id":{guest_registered_id}'
+            _, output = retry_until_success(
+                operation=lambda: ssh_host.runcmd(cmd),
+                validation_fn=lambda result: attr1 in result[1]
+                and guest_hostname in result[1],
+                context=f"Satellite API query for guest {guest_hostname}",
+            )
+
+            logger.debug(f"API response: {output}")
             assert attr1 in output and guest_hostname in output
 
     @pytest.mark.tier1
