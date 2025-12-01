@@ -343,6 +343,7 @@ def local_files_compare(file1, file2):
 def package_info_analyzer(ssh, pkg):
     """
     Analyze the package information after '#rpm -qi {pkg}'.
+    Handles multi-line fields like Signature in RHEL 10.
     :param ssh: ssh access of testing host
     :param pkg: package to test
     :reture: a dict
@@ -350,11 +351,23 @@ def package_info_analyzer(ssh, pkg):
     _, output = ssh.runcmd(f"rpm -qi {pkg}")
     data = dict()
     info = output.strip().split("\n")
+    current_field = None
+
     for line in info:
-        if ": " not in line:
-            continue
-        line = line.split(": ")
-        data[line[0].strip()] = line[1].strip()
+        if ": " in line:
+            # New field: split key and value
+            parts = line.split(": ", 1)
+            current_field = parts[0].strip()
+            value = parts[1].strip() if len(parts) > 1 else ""
+            data[current_field] = value
+        elif current_field and line.strip():
+            # Continuation line: append to current field
+            continuation_value = line.strip()
+            if data[current_field]:
+                data[current_field] += "\n" + continuation_value
+            else:
+                data[current_field] = continuation_value
+
     return data
 
 
