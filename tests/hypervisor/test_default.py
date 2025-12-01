@@ -139,7 +139,7 @@ class TestHypervisorPositive:
             if hasattr(config.rhsm, "proxy_hostname") and hasattr(
                 config.rhsm, "proxy_port"
             ):
-                proxy_env_statement = f"https_proxy=https://{config.rhsm.proxy_hostname}:{config.rhsm.proxy_port}"
+                proxy_env_statement = f"https_proxy=http://{config.rhsm.proxy_hostname}:{config.rhsm.proxy_port}"
 
             cmd = (
                 f"{proxy_env_statement} curl -s -k -u "
