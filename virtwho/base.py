@@ -354,12 +354,24 @@ def package_info_analyzer(ssh, pkg):
     current_field = None
 
     for line in info:
-        if ": " in line:
-            # New field: split key and value
-            parts = line.split(": ", 1)
-            current_field = parts[0].strip()
-            value = parts[1].strip() if len(parts) > 1 else ""
-            data[current_field] = value
+        if ":" in line:
+            # Split on first colon to check if this is a field name
+            parts = line.split(":", 1)
+            potential_field = parts[0].strip()
+
+            # Check if this looks like a field name (alphabetic + spaces only)
+            if potential_field and all(c.isalpha() or c.isspace() for c in potential_field):
+                # This is a new field
+                current_field = potential_field
+                value = parts[1].strip() if len(parts) > 1 else ""
+                data[current_field] = value
+            elif current_field and line.strip():
+                # Not a field name, treat as continuation line
+                continuation_value = line.strip()
+                if data[current_field]:
+                    data[current_field] += "\n" + continuation_value
+                else:
+                    data[current_field] = continuation_value
         elif current_field and line.strip():
             # Continuation line: append to current field
             continuation_value = line.strip()
