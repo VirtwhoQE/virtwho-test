@@ -7,6 +7,8 @@
 :caselevel: Component
 """
 
+import time
+
 import pytest
 
 from virtwho import REGISTER
@@ -16,6 +18,73 @@ from virtwho import logger
 from virtwho.base import hostname_get
 from virtwho.configure import hypervisor_create
 from virtwho.settings import config
+
+
+def retry_until_success(
+    operation,
+    validation_fn,
+    max_retries=10,
+    retry_interval=3,
+    context="",
+    backoff_factor=1,
+    max_interval=None,
+    max_time=None,
+):
+    """
+    Retry an operation until validation succeeds or limits are reached.
+
+    :param operation: Callable that performs the operation and returns result
+    :param validation_fn: Callable that takes operation result and returns True if valid
+    :param max_retries: Maximum number of retry attempts (None for unlimited)
+    :param retry_interval: Initial seconds to wait between retries
+    :param context: Description of the operation for logging
+    :param backoff_factor: Multiplier for exponential backoff (1 = fixed interval, 2 = double)
+    :param max_interval: Maximum interval cap for exponential backoff
+    :param max_time: Maximum total time in seconds (stops when exceeded)
+    :return: The operation result
+    """
+    result = None
+    attempt = 0
+    start_time = time.time()
+    current_interval = retry_interval
+
+    while True:
+        result = operation()
+        if validation_fn(result):
+            elapsed = time.time() - start_time
+            logger.info(
+                f"{context} succeeded after {attempt + 1} attempt(s) in {elapsed:.1f}s"
+            )
+            return result
+
+        attempt += 1
+        elapsed = time.time() - start_time
+
+        # Check stopping conditions
+        if max_retries is not None and attempt >= max_retries:
+            logger.error(
+                f"{context} failed after {max_retries} attempts in {elapsed:.1f}s"
+            )
+            return result
+
+        if max_time is not None and elapsed >= max_time:
+            logger.error(
+                f"{context} failed after {elapsed:.1f}s (max_time={max_time}s)"
+            )
+            return result
+
+        # Calculate next interval with exponential backoff
+        if max_interval is not None:
+            current_interval = min(current_interval, max_interval)
+
+        logger.debug(
+            f"{context} validation failed, retrying in {current_interval}s "
+            f"(attempt {attempt}, elapsed {elapsed:.1f}s)"
+        )
+        time.sleep(current_interval)
+
+        # Apply backoff for next iteration
+        current_interval *= backoff_factor
 
 
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
@@ -78,9 +147,22 @@ class TestHypervisorPositive:
                 f"https://{register_data['server']}/subscription/"
                 f"consumers/{hypervisor_uuid}/guestids/{guest_uuid}"
             )
-            ret, output = ssh_host.runcmd(cmd)
+
+            # Retry until RHSM API reflects virt-who reported data
+            # Using exponential backoff: 5s, 10s, 20s, 30s, 30s... (max 3 minutes)
+            _, output = retry_until_success(
+                operation=lambda: ssh_host.runcmd(cmd),
+                validation_fn=lambda result: guest_uuid in result[1],
+                retry_interval=5,
+                backoff_factor=2,
+                max_interval=30,
+                max_time=180,
+                context=f"RHSM API query for guest {guest_uuid}",
+            )
+
             logger.debug(f"hypervisor data: {hypervisor_data}")
             logger.debug(f"hypervisor uuid: {hypervisor_uuid}")
+            logger.debug(f"API response: {output}")
             # asserts are separated to see what assert went wrong in failure
             assert guest_uuid in output
             assert "guestId" in output
@@ -92,8 +174,22 @@ class TestHypervisorPositive:
                 f"{register_data['username']}:{register_data['password']} "
                 f"https://{register_data['server']}/api/v2/hosts/{guest_registered_id}"
             )
-            ret, output = ssh_host.runcmd(cmd)
+
+            # Retry until Satellite API reflects virt-who reported data
+            # Using exponential backoff: 5s, 10s, 20s, 30s, 30s... (max 3 minutes)
             attr1 = f'"id":{guest_registered_id}'
+            _, output = retry_until_success(
+                operation=lambda: ssh_host.runcmd(cmd),
+                validation_fn=lambda result: attr1 in result[1]
+                and guest_hostname in result[1],
+                retry_interval=5,
+                backoff_factor=2,
+                max_interval=30,
+                max_time=180,
+                context=f"Satellite API query for guest {guest_hostname}",
+            )
+
+            logger.debug(f"API response: {output}")
             assert attr1 in output and guest_hostname in output
 
     @pytest.mark.tier1
