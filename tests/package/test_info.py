@@ -142,6 +142,11 @@ class TestVirtwhoPackageInfo:
         if VIRTWHO_VERSION >= "1.31.28":
             virtwho_license = "GPL-2.0-or-later AND LGPL-3.0-or-later"
             group = "Unspecified"
+
+        # Expected values for long strings
+        expected_packager = "Red Hat, Inc. <http://bugzilla.redhat.com/bugzilla>"
+        expected_summary = "Agent for reporting virtual guest IDs to subscription-manager"
+
         assert (
             pkg_info["Name"] == "virt-who"
             and pkg_info["Version"] in VIRTWHO_PKG
@@ -156,12 +161,10 @@ class TestVirtwhoPackageInfo:
             and pkg_info["Source RPM"] == VIRTWHO_PKG.split("noarch")[0] + "src.rpm"
             and pkg_info["Build Date"]
             and pkg_info["Build Host"]
-            and pkg_info["Packager"]
-            == "Red Hat, Inc. <http://bugzilla.redhat.com/bugzilla>"
+            and pkg_info["Packager"] == expected_packager
             and pkg_info["Vendor"] == "Red Hat, Inc."
             and pkg_info["URL"] == "https://github.com/candlepin/virt-who"
-            and pkg_info["Summary"]
-            == "Agent for reporting virtual guest IDs to subscription-manager"
+            and pkg_info["Summary"] == expected_summary
         )
 
     @pytest.mark.tier1
