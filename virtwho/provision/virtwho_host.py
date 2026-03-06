@@ -292,6 +292,26 @@ def kubevirt_config_file(ssh):
     )
 
 
+def _local_libvirt_diagnostics(local, guest_name):
+    """
+    Gather virsh diagnostics on the virt-who host for clearer failure messages.
+    :param local: LibvirtCLI instance connected to the virt-who host.
+    :param guest_name: name of the guest domain.
+    :return: multi-line string with virsh list --all, domstate, and dominfo.
+    """
+    lines = ["virsh diagnostics on virt-who host:"]
+    ret, out = local.ssh.runcmd("virsh list --all")
+    lines.append("--- virsh list --all ---")
+    lines.append(out.strip() if out else "(no output)")
+    state = local.guest_status(guest_name)
+    lines.append(f"--- virsh domstate {guest_name} ---")
+    lines.append(state or "(unknown)")
+    ret2, dominfo = local.ssh.runcmd(f"virsh dominfo {guest_name}")
+    lines.append(f"--- virsh dominfo {guest_name} ---")
+    lines.append(dominfo.strip() if dominfo else "(no output)")
+    return "\n".join(lines)
+
+
 def local_mode_guest_add(ssh):
     """
     Add rhel guest for the local mode.
@@ -314,10 +334,24 @@ def local_mode_guest_add(ssh):
             xml_path=config.local.guest_xml_path,
         )
     else:
-        if not local.guest_start(guest_name):
+        # Retry guest_start: virsh start can succeed but status may lag
+        start_attempts = 3
+        start_ok = False
+        for attempt in range(start_attempts):
+            if local.guest_start(guest_name):
+                start_ok = True
+                break
+            if attempt < start_attempts - 1:
+                time.sleep(10)
+                logger.warning(
+                    f"guest_start attempt {attempt + 1}/{start_attempts} failed, retrying..."
+                )
+        if not start_ok:
+            diag = _local_libvirt_diagnostics(local, guest_name)
+            logger.error(diag)
             raise FailException(
-                f"Failed to start libvirt guest {guest_name} on {server_ip}. "
-                "Check virsh start and guest state on the virt-who host."
+                f"Failed to start libvirt guest {guest_name} on {server_ip} after "
+                f"{start_attempts} attempts.\n{diag}"
             )
     guest_ip = None
     for i in range(10):
@@ -330,15 +364,17 @@ def local_mode_guest_add(ssh):
         # Loop completed without finding guest_ip
         logger.error(f"timeout to get guest_ip for guest_name {guest_name}")
     if not guest_ip:
+        diag = _local_libvirt_diagnostics(local, guest_name)
+        logger.error(diag)
         raise FailException(
-            f"Could not get IP for libvirt guest {guest_name} after 5 minutes. "
-            "Guest may have failed to start or boot; check guest state and network on the virt-who host."
+            f"Could not get IP for libvirt guest {guest_name} after 5 minutes.\n{diag}"
         )
     guest_info = local.guest_search(guest_name)
     if not guest_info.get("guest_ip"):
+        diag = _local_libvirt_diagnostics(local, guest_name)
+        logger.error(diag)
         raise FailException(
-            f"Libvirt guest {guest_name} has no IP in guest_search result. "
-            "Cannot connect to guest for local mode setup."
+            f"Libvirt guest {guest_name} has no IP in guest_search result.\n{diag}"
         )
     ssh_guest = SSHConnect(
         host=guest_info["guest_ip"],
