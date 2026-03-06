@@ -314,7 +314,12 @@ def local_mode_guest_add(ssh):
             xml_path=config.local.guest_xml_path,
         )
     else:
-        local.guest_start(guest_name)
+        if not local.guest_start(guest_name):
+            raise FailException(
+                f"Failed to start libvirt guest {guest_name} on {server_ip}. "
+                "Check virsh start and guest state on the virt-who host."
+            )
+    guest_ip = None
     for i in range(10):
         time.sleep(30)
         guest_ip = local.guest_ip(guest_name)
@@ -324,7 +329,17 @@ def local_mode_guest_add(ssh):
     else:
         # Loop completed without finding guest_ip
         logger.error(f"timeout to get guest_ip for guest_name {guest_name}")
+    if not guest_ip:
+        raise FailException(
+            f"Could not get IP for libvirt guest {guest_name} after 5 minutes. "
+            "Guest may have failed to start or boot; check guest state and network on the virt-who host."
+        )
     guest_info = local.guest_search(guest_name)
+    if not guest_info.get("guest_ip"):
+        raise FailException(
+            f"Libvirt guest {guest_name} has no IP in guest_search result. "
+            "Cannot connect to guest for local mode setup."
+        )
     ssh_guest = SSHConnect(
         host=guest_info["guest_ip"],
         user=config.local.guest_username,
