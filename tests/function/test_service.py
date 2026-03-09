@@ -7,7 +7,13 @@
 :caselevel: Component
 """
 
+import os
+import secrets
+import tempfile
+
+import paramiko
 import pytest
+
 from virtwho.settings import config
 from virtwho.configure import hypervisor_create
 from virtwho.base import msg_search, ssh_access_no_password, expect_run
@@ -228,27 +234,50 @@ class TestVirtwhoService:
         :upstream: no
         :steps:
             1. create a new non_root user account for virt-who host
-            2. start virt-who service by the new account
+            2. generate SSH key pair and install public key for the new user
+            3. start virt-who service by the new account
         :expectedresults:
             1. virt-who service can start and report normally by the non_root
                 account.
         """
         host = config.virtwho.server
         username_new = "tester"
-        password = config.virtwho.password
-        ssh_host.runcmd(f"useradd {username_new}")
-        cmd = rf'echo -e "{username_new}:{password}" | chpasswd'
-        ssh_host.runcmd(cmd)
+        # Use a random password for the tester user (for systemctl/sudo prompt).
+        # SSH access uses a test-generated key, not Jenkins credentials.
+        password = secrets.token_hex(8)
 
-        ssh_new = SSHConnect(host=host, user=username_new, pwd=password)
-        virtwho.stop()
-        virtwho.log_clean()
-        expect_run(
-            ssh=ssh_new, cmd="systemctl start virt-who", attrs=[f"Password:|{password}"]
-        )
-        rhsm_log = virtwho.rhsm_log_get()
-        result = virtwho.analyzer(rhsm_log)
-        assert result["send"] == 1 and result["error"] == 0 and result["thread"] == 1
+        ssh_host.runcmd(f"useradd {username_new}")
+        ssh_host.runcmd(rf'echo -e "{username_new}:{password}" | chpasswd')
+
+        # Create SSH key pair for this test and install public key for tester
+        key = paramiko.RSAKey.generate(2048)
+        key_path = tempfile.mktemp(suffix="_virtwho_tester_rsa")
+        try:
+            key.write_private_key_file(key_path)
+            pubkey_line = f"{key.get_name()} {key.get_base64()} virtwho-test-nonroot"
+            ssh_host.runcmd("mkdir -p /home/tester/.ssh")
+            ssh_host.runcmd(f"chown tester:tester /home/tester/.ssh")
+            # Single-quote the key so the shell does not expand it
+            ssh_host.runcmd(
+                f"echo '{pubkey_line}' >> /home/tester/.ssh/authorized_keys"
+            )
+            ssh_host.runcmd("chown tester:tester /home/tester/.ssh/authorized_keys")
+            ssh_host.runcmd("chmod 600 /home/tester/.ssh/authorized_keys")
+
+            ssh_new = SSHConnect(host=host, user=username_new, rsafile=key_path)
+            virtwho.stop()
+            virtwho.log_clean()
+            expect_run(
+                ssh=ssh_new,
+                cmd="systemctl start virt-who",
+                attrs=[f"Password:|{password}"],
+            )
+            rhsm_log = virtwho.rhsm_log_get()
+            result = virtwho.analyzer(rhsm_log)
+            assert result["send"] == 1 and result["error"] == 0 and result["thread"] == 1
+        finally:
+            if os.path.exists(key_path):
+                os.unlink(key_path)
 
     @pytest.mark.tier1
     def test_virtwho_service_after_host_reregister(self, virtwho, sm_host, ssh_host):

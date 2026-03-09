@@ -123,6 +123,14 @@ class TestCli:
             3. the interval uses the setting value when run with "-i" >= 60
         """
         result = virtwho.run_cli(oneshot=False, interval=None)
+        if result["send"] != 1 or result.get("interval") != 3600:
+            logger.error(
+                "test_interval: assertion failed; result: send=%s interval=%s error=%s error_msg=%s",
+                result.get("send"),
+                result.get("interval"),
+                result.get("error"),
+                result.get("error_msg", [])[:3],
+            )
         assert result["send"] == 1 and result["interval"] == 3600
 
         result = virtwho.run_cli(oneshot=False, interval=10)
