@@ -481,8 +481,10 @@ class TestConfigurationPositive:
                 == hypervisor_data[f"hypervisor_{hypervisor_id}"]
             )
             if REGISTER == "rhsm":
-                assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
-                rhsm.host_delete(hypervisor_data["hypervisor_hostname"])
+                # Look up and delete by the id we sent (hostname, uuid, or hwuuid)
+                sent_id = hypervisor_data[f"hypervisor_{hypervisor_id}"]
+                assert rhsm.consumers(sent_id)
+                rhsm.host_delete(sent_id)
             else:
                 if hypervisor_id == "hostname":
                     assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
