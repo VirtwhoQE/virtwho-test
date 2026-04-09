@@ -225,7 +225,7 @@ class TestCli:
         """
         t1 = threading.Thread(target=virtwho.run_cli(oneshot=False))
         t1.start()
-        time.sleep(15)
+        time.sleep(5)
         assert virtwho.thread_number() == 1
 
         # kill virt-who by 'kill -2'
@@ -236,7 +236,7 @@ class TestCli:
             "awk '{print $2}' |"
             "xargs -I {} kill -2 {}"
         )
-        time.sleep(15)
+        time.sleep(5)
         if HYPERVISOR == "ahv":
             logger.info("=== AHV: failed with RHEL-12395 ===")
         assert virtwho.thread_number() == 0
