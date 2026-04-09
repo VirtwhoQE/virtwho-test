@@ -1,0 +1,161 @@
+summary: Virt-who regression test suite
+description: |
+    Unified CTC regression plan for virt-who.
+    Executes pytest suites against a provisioned RHEL guest with
+    the hypervisor and subscription server configured via environment variables.
+
+environment:
+    HYPERVISOR: esx
+    REGISTER: rhsm
+    ENV_FOR_DYNACONF: stage
+    HTTPS_PROXY: http://squid.corp.redhat.com:3128
+    HTTP_PROXY: http://squid.corp.redhat.com:3128
+    NO_PROXY: localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+
+discover:
+    how: shell
+    tests:
+      - name: /tests/regression
+        test: >-
+            cd /opt/virtwho-test &&
+            pytest tests/
+                --tb=short
+                --junit-xml=$TMT_TEST_DATA/junit.xml
+                --html=$TMT_TEST_DATA/report.html
+                --self-contained-html
+                -v
+                $PYTEST_ADDOPTS
+        duration: 4h
+
+prepare:
+  - how: shell
+    script: |
+        dnf -y install python3-pip git gcc python3-devel openssh-clients \
+            libvirt-client python3-libvirt virt-who openssh-server expect
+
+        # Enable password-based SSH to localhost (the TF guest IS the virt-who host)
+        echo "redhat" | passwd --stdin root
+        sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+        sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+        systemctl restart sshd
+
+        # Host init: set a proper hostname and /etc/hosts (mirrors system_init())
+        GUEST_IP=$(hostname -I | awk '{print $1}')
+        GUEST_HOSTNAME=$(hostname -f 2>/dev/null || hostname)
+        if echo "$GUEST_HOSTNAME" | grep -qE 'localhost|unused|openshift'; then
+            GUEST_HOSTNAME="virtwho-$(head /dev/urandom | tr -dc a-z0-9 | head -c8).redhat.com"
+            hostnamectl set-hostname "$GUEST_HOSTNAME"
+        fi
+        grep -q "$GUEST_IP" /etc/hosts || echo "$GUEST_IP $GUEST_HOSTNAME" >> /etc/hosts
+
+        # Configure proxy for Stage Candlepin access from Testing Farm.
+        # TF guests cannot reach stage directly; squid.corp proxies the traffic.
+        # This must happen BEFORE the rhsm.conf backup so that tests which
+        # restore rhsm.conf (e.g. RHSMConf.recovery()) retain proxy access.
+        if [ "${REGISTER:-rhsm}" = "rhsm" ]; then
+            subscription-manager config \
+                --server.proxy_hostname=squid.corp.redhat.com \
+                --server.proxy_port=3128
+            echo "Configured rhsm.conf proxy: squid.corp.redhat.com:3128"
+            # HTTPS_PROXY / NO_PROXY are set in the TMT environment block
+            # so they're available during both prepare and execute phases.
+        fi
+
+        # Backup rhsm.conf (with proxy already configured) and clean sub-man state
+        mkdir -p /backup && cp /etc/rhsm/rhsm.conf /backup/ 2>/dev/null || true
+        subscription-manager unregister 2>/dev/null || true
+        subscription-manager clean 2>/dev/null || true
+
+        git clone ${VIRTWHO_TEST_REPO:-https://github.com/VirtwhoQE/virtwho-test.git} \
+            --branch ${VIRTWHO_TEST_BRANCH:-main} --depth 1 /opt/virtwho-test
+        cd /opt/virtwho-test
+        pip install -r requirements.txt
+
+        # Fetch virtwho.ini from virtwho-jobs GitLab (URL passed by pipeline)
+        INI_URL=${VIRTWHO_INI_URL:-https://gitlab.cee.redhat.com/virtwho/virtwho-jobs/-/raw/main/src/resources/config/virtwho.ini}
+        echo "Fetching virtwho.ini from: $INI_URL"
+        curl -sSfL "$INI_URL" -o /opt/virtwho-test/virtwho.ini
+
+        # Remove hypervisor test files that don't match the configured hypervisor.
+        # This avoids wasting time on tests that will error out (e.g. AHV unreachable).
+        HYP=${HYPERVISOR:-esx}
+        for f in /opt/virtwho-test/tests/hypervisor/test_*.py; do
+            htype=$(basename "$f" .py | sed 's/^test_//')
+            if [ "$htype" != "$HYP" ] && [ "$htype" != "default" ]; then
+                rm -f "$f"
+                echo "Removed non-matching test file: $f"
+            fi
+        done
+
+        # Resolve compose: if RHEL_COMPOSE is a TF alias (e.g. RHEL-10-Nightly)
+        # rather than a full compose ID (e.g. RHEL-10.3.0-20260407.n.0), resolve
+        # the actual latest nightly compose ID from download.devel.
+        RESOLVED_COMPOSE=${RHEL_COMPOSE:-}
+        if ! echo "$RESOLVED_COMPOSE" | grep -qP '^RHEL-\d+\.\d+\.\d+-\d+'; then
+            RELEASE_MAJOR=$(grep -oP 'release \K\d+' /etc/redhat-release 2>/dev/null || echo "10")
+            REPO_BASE=${VIRTWHO_REPO:-http://download.devel.redhat.com}
+            COMPOSE_ID_URL="${REPO_BASE}/rhel-${RELEASE_MAJOR}/nightly/RHEL-${RELEASE_MAJOR}/latest-RHEL-${RELEASE_MAJOR}/COMPOSE_ID"
+            echo "Resolving latest compose from: $COMPOSE_ID_URL"
+            RESOLVED_COMPOSE=$(curl -sSfL "$COMPOSE_ID_URL" 2>/dev/null || echo "")
+            if [ -z "$RESOLVED_COMPOSE" ]; then
+                RELEASE_VER=$(grep -oP 'release \K[\d.]+' /etc/redhat-release 2>/dev/null || echo "10.0")
+                RESOLVED_COMPOSE="RHEL-${RELEASE_VER}"
+                echo "WARNING: Could not resolve latest compose, falling back to ${RESOLVED_COMPOSE}"
+            else
+                echo "Resolved latest compose: ${RESOLVED_COMPOSE}"
+            fi
+        fi
+
+        # Set up SSH key trust for remote hypervisors (libvirt, rhevm, etc.)
+        # virt-who connects via qemu+ssh:// which uses libssh (not the ssh
+        # binary), so ~/.ssh/config is NOT read. We must:
+        #   1) populate ~/.ssh/known_hosts with the server host key
+        #   2) install the client key as ~/.ssh/id_rsa (the default libssh key)
+        mkdir -p ~/.ssh && chmod 700 ~/.ssh
+        printf 'Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile ~/.ssh/known_hosts\n\n' > ~/.ssh/config
+        chmod 600 ~/.ssh/config
+
+        if [ "$HYP" = "libvirt" ] || [ "$HYP" = "rhevm" ]; then
+            dnf -y install sshpass
+            HYP_SERVER=$(awk -F= "/^\[${HYP}\]/{f=1;next} /^\[/{f=0} f&&/^server=/{print \$2}" /opt/virtwho-test/virtwho.ini | tr -d ' ')
+            HYP_USER=$(awk -F= "/^\[${HYP}\]/{f=1;next} /^\[/{f=0} f&&/^username=/{print \$2}" /opt/virtwho-test/virtwho.ini | tr -d ' ')
+            HYP_PASS=$(awk -F= "/^\[${HYP}\]/{f=1;next} /^\[/{f=0} f&&/^password=/{print \$2}" /opt/virtwho-test/virtwho.ini | tr -d ' ')
+            if [ -n "$HYP_SERVER" ]; then
+                echo "Setting up SSH trust to $HYP hypervisor at $HYP_SERVER"
+                rm -f ~/.ssh/id_rsa ~/.ssh/id_rsa.pub
+                ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa -C "virtwho-qe" -q
+                cp ~/.ssh/id_rsa ~/.ssh/virtwho-qe
+                cp ~/.ssh/id_rsa.pub ~/.ssh/virtwho-qe.pub
+
+                echo "Scanning host keys from $HYP_SERVER..."
+                ssh-keyscan -p 22 "$HYP_SERVER" >> ~/.ssh/known_hosts 2>&1
+                echo "known_hosts entries: $(wc -l < ~/.ssh/known_hosts)"
+
+                if [ -n "$HYP_PASS" ]; then
+                    sshpass -p "$HYP_PASS" ssh-copy-id -i ~/.ssh/id_rsa.pub \
+                        -o StrictHostKeyChecking=no "${HYP_USER:-root}@${HYP_SERVER}"
+                fi
+
+                echo "Verifying SSH connectivity to $HYP_SERVER..."
+                ssh -o StrictHostKeyChecking=no -o BatchMode=yes \
+                    "${HYP_USER:-root}@${HYP_SERVER}" hostname \
+                    && echo "SSH to $HYP_SERVER: OK" \
+                    || echo "WARNING: SSH to $HYP_SERVER failed"
+                echo "Final known_hosts entries: $(wc -l < ~/.ssh/known_hosts)"
+            fi
+        fi
+
+        # Patch dynamic fields that differ per TF run
+        VIRTWHO_NEVRA=$(rpm -qa virt-who 2>/dev/null | head -1)
+        VIRTWHO_NEVRA=${VIRTWHO_NEVRA:-virt-who}
+
+        cd /opt/virtwho-test
+        sed -i "s|^hypervisor=.*|hypervisor=${HYP}|" virtwho.ini
+        sed -i "s|^register=.*|register=${REGISTER:-rhsm}|" virtwho.ini
+        sed -i "/^\[job\]/,/^\[/ s|^rhel_compose=.*|rhel_compose=${RESOLVED_COMPOSE}|" virtwho.ini
+        sed -i "/^\[virtwho\]/,/^\[/ s|^package=.*|package=${VIRTWHO_NEVRA}|" virtwho.ini
+        sed -i "/^\[virtwho\]/,/^\[/ s|^server=.*|server=localhost|" virtwho.ini
+        sed -i "/^\[virtwho\]/,/^\[/ s|^password=.*|password=redhat|" virtwho.ini
+
+execute:
+    how: tmt
