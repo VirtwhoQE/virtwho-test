@@ -19,8 +19,6 @@ from virtwho.ssh import SSHConnect
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_globalconf_clean")
-@pytest.mark.usefixtures("class_hypervisor")
-@pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestVirtwhoService:
     @pytest.mark.tier1
     @pytest.mark.gating

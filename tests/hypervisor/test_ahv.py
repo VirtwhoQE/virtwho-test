@@ -177,7 +177,7 @@ class TestAHVPositive:
         :expectedresults:
 
         """
-        assert True
+        pytest.skip("test_prism_central not yet implemented")
 
     @pytest.mark.tier1
     def test_fake_type(self, virtwho, function_hypervisor, hypervisor_data):

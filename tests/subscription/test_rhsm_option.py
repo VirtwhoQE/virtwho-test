@@ -153,8 +153,7 @@ class TestSubscriptionPositive:
         function_hypervisor.update("rhsm_proxy_port", proxy_data["bad_port"])
         result = virtwho.run_service()
         assert (
-            result["error"] == 1
-            or 2
+            result["error"] in (1, 2)
             and msg_search(result["error_msg"], proxy_data["error"])
         )
 
@@ -595,8 +594,7 @@ class TestSubscriptionNegative:
             rhsmconf.update("server", "proxy_scheme", scheme)
             result = virtwho.run_service()
             assert (
-                result["error"] == 1
-                or 2
+                result["error"] in (1, 2)
                 and result["mappings"]
                 and msg_search(result["error_msg"], error_msg)
             )
@@ -682,8 +680,7 @@ class TestSubscriptionNegative:
         function_hypervisor.update("rhsm_proxy_port", proxy_data["bad_port"])
         result = virtwho.run_service()
         assert (
-            result["error"] == 1
-            or 2
+            result["error"] in (1, 2)
             and result["mappings"]
             and msg_search(result["error_msg"], error_msg)
         )

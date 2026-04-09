@@ -45,10 +45,10 @@ def pytest_collection_modifyitems(session, config, items):
     for item in items:
         release = item.get_closest_marker("release")
         if not release:
-            return
+            continue
         release_conf = release.kwargs
         if rhelver not in release_conf:
-            return
+            continue
         if not release_conf[rhelver]:
             deselected_items += [item]
             item.add_marker(
