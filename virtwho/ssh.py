@@ -23,16 +23,36 @@ class SSHConnect:
         self.port = int(port)
         self.timeout = timeout
         self.err = "passwd or rsafile can not be None"
+        self._ssh = None
 
     def _connect(self):
-        """SSH command execution connection"""
+        """SSH command execution connection with pooling.
+        Reuses an existing connection when the transport is still active,
+        avoiding the overhead of a new TCP+SSH handshake per command.
+        Paramiko channels are thread-safe so concurrent exec_command
+        calls share the same transport safely.
+        """
+        if self._ssh is not None:
+            transport = self._ssh.get_transport()
+            if transport is not None and transport.is_active():
+                return self._ssh
+            self._ssh = None
         if self.pwd:
-            return self.pwd_connect()
+            self._ssh = self.pwd_connect()
         elif self.rsa:
-            return self.rsa_connect()
+            self._ssh = self.rsa_connect()
         else:
-            # it will try to use keys from SSH AutoAgent
-            return self.pwd_connect()
+            self._ssh = self.pwd_connect()
+        return self._ssh
+
+    def close(self):
+        """Explicitly close the cached connection."""
+        if self._ssh is not None:
+            try:
+                self._ssh.close()
+            except Exception:
+                pass
+            self._ssh = None
 
     def _transfer(self):
         """Sftp download/upload execution connection"""
@@ -64,8 +84,8 @@ class SSHConnect:
                     allow_agent=True,
                 )
             return ssh
-        except Exception:
-            raise ConnectionError(f"Failed to ssh connect the {self.host}.")
+        except Exception as exc:
+            raise ConnectionError(f"Failed to ssh connect the {self.host}.") from exc
 
     def rsa_connect(self):
         """SSH command execution connection by key file"""
@@ -86,8 +106,8 @@ class SSHConnect:
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(self.host, self.port, self.user, self.pwd, timeout=self.timeout)
             return ssh.open_sftp(), ssh.get_transport()
-        except Exception:
-            raise ConnectionError(f"Failed to ssh connect the {self.host}.")
+        except Exception as exc:
+            raise ConnectionError(f"Failed to ssh connect the {self.host}.") from exc
 
     def rsa_transfer(self):
         """Sftp download/upload execution connection by key file"""
@@ -106,9 +126,13 @@ class SSHConnect:
         """
         ssh = self._connect()
         logger.info(f"[{self.host}:{self.port}] >>> {cmd}")
-        stdin, stdout, stderr = ssh.exec_command(cmd)
+        try:
+            stdin, stdout, stderr = ssh.exec_command(cmd)
+        except Exception:
+            self._ssh = None
+            ssh = self._connect()
+            stdin, stdout, stderr = ssh.exec_command(cmd)
 
-        # Set timeout on the channel if specified
         if timeout is not None:
             stdout.channel.settimeout(timeout)
 
@@ -117,10 +141,9 @@ class SSHConnect:
             stdout, stderr = stdout.read(), stderr.read()
         except socket.timeout:
             logger.error(f"Command execution timed out after {timeout} seconds: {cmd}")
-            ssh.close()
+            self.close()
             raise FailException(f"Command timed out after {timeout} seconds: {cmd}")
 
-        ssh.close()
         if if_stdout or not stderr:
             if log_print:
                 logger.info("<<< stdout\n{}".format(stdout.decode()))
