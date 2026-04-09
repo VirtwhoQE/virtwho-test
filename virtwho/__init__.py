@@ -12,11 +12,17 @@ RHEL_COMPOSE_PATH = config.job.rhel_compose_path
 
 
 def version_subversion(compose):
-    rhel_regexp = re.compile(r"^RHEL-([\d]+)\.([\d]+)", re.IGNORECASE)
-    (rhel_version, rhel_subversion) = map(
-        int, rhel_regexp.search(RHEL_COMPOSE).groups()
-    )
-    return (rhel_version, rhel_subversion)
+    if not compose:
+        compose = ""
+    full_re = re.compile(r"^RHEL-(\d+)\.(\d+)", re.IGNORECASE)
+    major_re = re.compile(r"^RHEL-(\d+)", re.IGNORECASE)
+    match = full_re.search(compose)
+    if match:
+        return (int(match.group(1)), int(match.group(2)))
+    match = major_re.search(compose)
+    if match:
+        return (int(match.group(1)), 0)
+    return (0, 0)
 
 
 (RHEL_VERSION, RHEL_SUBVERSION) = version_subversion(RHEL_COMPOSE)
@@ -43,7 +49,9 @@ VIRTWHO_PKG = config.virtwho.package
 
 VIRTWHO_VERSION = ""
 if VIRTWHO_PKG:
-    VIRTWHO_VERSION = VIRTWHO_PKG.split("-")[2]
+    parts = VIRTWHO_PKG.split("-")
+    if len(parts) >= 3:
+        VIRTWHO_VERSION = parts[2]
 
 # Backup file for /etc/virt-who.conf
 VIRTWHO_CONF_BACKUP = "virt-who.conf.save"
@@ -52,6 +60,6 @@ VIRTWHO_CONF_BACKUP = "virt-who.conf.save"
 RHSM_CONF_BACKUP = "rhsm.conf.save"
 
 
-class FailException(BaseException):
+class FailException(Exception):
     def __init__(self, error_message):
         logger.error(error_message)

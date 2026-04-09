@@ -94,7 +94,8 @@ class VirtwhoHypervisorConfig:
         :param value: Value to update for the option.
         """
         self.cfg.update(self.section, option, value)
-        logger.info(f"*** Update [{self.section}]:{option}={value}")
+        display = "******" if "password" in option.lower() else value
+        logger.info(f"*** Update [{self.section}]:{option}={display}")
 
     def delete(self, option):
         """Delete an option
@@ -139,7 +140,8 @@ class VirtwhoGlobalConfig:
         :param value: Value to update for the option.
         """
         self.cfg.update(section, option, value)
-        logger.info(f"*** Update [{section}]:{option}={value}")
+        display = "******" if "password" in option.lower() else value
+        logger.info(f"*** Update [{section}]:{option}={display}")
 
     def delete(self, section, option=None):
         """Remove a section or option
@@ -239,7 +241,8 @@ class RHSMConf:
         :param value: Value to update for the option.
         """
         self.cfg.update(section, option, value)
-        logger.info(f"*** Update [{section}]:{option}={value}")
+        display = "******" if "password" in option.lower() else value
+        logger.info(f"*** Update [{section}]:{option}={display}")
 
     def delete(self, section, option=None):
         """Remove a section or option

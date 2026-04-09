@@ -1,5 +1,4 @@
 import json
-import queue
 import re
 import threading
 import time
@@ -173,9 +172,9 @@ class VirtwhoRunner:
             ):
                 logger.warning(
                     "RemoteServerException return 500 code, restart "
-                    "virt-who again after 60s"
+                    "virt-who again after 30s"
                 )
-                time.sleep(60)
+                time.sleep(30)
             else:
                 result_data = self.analyzer(rhsm_output, cli)
                 return result_data
@@ -191,19 +190,16 @@ class VirtwhoRunner:
         :param wait: wait time after run virt-who
         :return: output of rhsm log
         """
-        q = queue.Queue()
         self.stop()
         self.log_clean()
-        t1 = threading.Thread(target=self.start, args=(q, cli))
-        t1.setDaemon(True)
+        t1 = threading.Thread(target=self.start, args=(None, cli), daemon=True)
         t1.start()
         rhsm_ouput = self.rhsm_log_get(wait)
         return rhsm_ouput
 
-    def start(self, q=None, cli=None):
+    def start(self, _unused=None, cli=None):
         """
         Start virt-who by command line or service.
-        :param q: queue
         :param cli: the command to run virt-who, such as "virt-who -d -o",
             will start virt-who by service when no cli configured.
         """
@@ -265,8 +261,8 @@ class VirtwhoRunner:
         rhsm_output = ""
         if wait:
             time.sleep(wait)
-        for i in range(30):
-            time.sleep(15)
+        for i in range(90):
+            time.sleep(5)
             _, rhsm_output = self.ssh.runcmd(f"cat {self.rhsm_log_file}")
             if msg_search(rhsm_output, "status=429") is True:
                 logger.warning("429 code found when run virt-who")
@@ -280,7 +276,7 @@ class VirtwhoRunner:
             if self.send_number(rhsm_output) > 0:
                 logger.info("Succeed to send mapping after run virt-who")
                 break
-            if i == 29:
+            if i == 89:
                 logger.info("Timeout when run virt-who")
                 break
         return rhsm_output
