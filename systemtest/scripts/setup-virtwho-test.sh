@@ -6,7 +6,12 @@ set -euo pipefail
 git clone ${VIRTWHO_TEST_REPO:-https://github.com/VirtwhoQE/virtwho-test.git} \
     --branch ${VIRTWHO_TEST_BRANCH:-main} --depth 1 /opt/virtwho-test
 cd /opt/virtwho-test
-pip install --root-user-action=ignore -r requirements.txt
+
+PIP_EXTRA_ARGS=()
+if pip install --help 2>&1 | grep -q -- '--root-user-action'; then
+    PIP_EXTRA_ARGS+=(--root-user-action=ignore)
+fi
+pip install "${PIP_EXTRA_ARGS[@]}" -r requirements.txt
 
 INI_URL=${VIRTWHO_INI_URL:-https://gitlab.cee.redhat.com/RHSM-QE/rhsm-jobs/-/raw/main/src/resources/config/virtwho.ini}
 echo "Fetching virtwho.ini from: $INI_URL"
