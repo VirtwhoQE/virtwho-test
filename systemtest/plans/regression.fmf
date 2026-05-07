@@ -5,7 +5,7 @@ description: |
     the hypervisor and subscription server configured via environment variables.
 
 environment:
-    HYPERVISOR: esx
+    HYPERVISOR: libvirt
     REGISTER: rhsm
     ENV_FOR_DYNACONF: stage
     HTTPS_PROXY: http://squid.corp.redhat.com:3128
