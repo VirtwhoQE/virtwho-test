@@ -228,14 +228,8 @@ class TestCli:
         time.sleep(5)
         assert virtwho.thread_number() == 1
 
-        # kill virt-who by 'kill -2'
-        ssh_host.runcmd(
-            "ps -ef |"
-            "grep virt-who -i |"
-            "grep -v grep |"
-            "awk '{print $2}' |"
-            "xargs -I {} kill -2 {}"
-        )
+        # kill virt-who by 'kill -2' (SIGINT)
+        ssh_host.runcmd("pkill -2 -x virt-who || true")
         time.sleep(5)
         if HYPERVISOR == "ahv":
             logger.info("=== AHV: failed with RHEL-12395 ===")

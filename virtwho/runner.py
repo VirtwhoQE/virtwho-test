@@ -566,7 +566,7 @@ class VirtwhoRunner:
         :return: virt-who thread number
         """
         thread_num = 0
-        cmd = "ps -ef | grep virt-who -i | grep -v grep |wc -l"
+        cmd = "pgrep -c -x virt-who || echo 0"
         ret, output = self.ssh.runcmd(cmd)
         if output is not None and output != "":
             thread_num = int(output.strip())
@@ -595,20 +595,15 @@ class VirtwhoRunner:
         :param process_name: process name
         :return: True or False
         """
-        cmd = (
-            """ps -ef |
-                grep %s -i |
-                grep -v grep |
-                awk '{print $2}' |
-                xargs -I {} kill -9 {}"""
-            % process_name
-        )
-        self.ssh.runcmd(cmd)
-        cmd = f"rm -f /var/run/{process_name}.pid"
-        self.ssh.runcmd(cmd)
-        cmd = f"ps -ef | grep {process_name} -i | grep -v grep |sort"
-        ret, output = self.ssh.runcmd(cmd)
-        if output.strip() == "" or output.strip() is None:
+        # Use pkill -x to match only the process executable name, not the
+        # full command line.  The old ``ps -ef | grep <name>`` approach
+        # matched SSH sessions whose env vars contained the process name
+        # (e.g. TEST_RPMS=...virt-who...), killing the test runner's own
+        # SSH connection and causing exit-code 255 on Testing Farm.
+        self.ssh.runcmd(f"pkill -9 -x {process_name} || true")
+        self.ssh.runcmd(f"rm -f /var/run/{process_name}.pid")
+        ret, output = self.ssh.runcmd(f"pgrep -x {process_name}")
+        if not output or not output.strip():
             return True
         else:
             return False
