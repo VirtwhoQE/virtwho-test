@@ -15,7 +15,7 @@ class VirtwhoRunner:
             print function.
 
         :param mode: the hypervisor mode.
-            (esx, xen, hyperv, rhevm, libvirt, kubevirt, local, fake)
+            (esx, hyperv, rhevm, libvirt, kubevirt, local, fake)
         :param register_type: the subscription server. (rhsm, satellite)
         """
         self.mode = mode
@@ -295,15 +295,35 @@ class VirtwhoRunner:
     def error_warning(self, msg="error"):
         """
         Analyze the rhsm log to calculate the error/warning number and
-        collect all lines to a list.
+        collect all lines including any trailing context (e.g. Python
+        tracebacks) that follow each marker line.
+
+        Uses ``grep -c`` for the count (only lines with the marker) and
+        ``grep -A`` for the text (marker lines plus context) so that
+        multiline exceptions are captured.  Existing callers that do
+        ``string in result["error_msg"]`` will continue to match because
+        the extra context lines are appended, never removed.
+
         :param msg: 'error' or 'warning'
-        :return: error/warning number and all error/warning lines
+        :return: (count_of_marker_lines, all_marker_lines_with_context)
         """
-        msg_number = 0
-        cmd = f"grep '\\[.*{msg.upper()}.*\\]' {self.rhsm_log_file} |sort"
-        _, output = self.ssh.runcmd(cmd)
-        if output is not None and output != "":
-            msg_number = len(output.strip().split("\n"))
+        tag = msg.upper()
+        marker = f"\\[.*{tag}.*\\]"
+
+        # Count: only lines that carry the [ERROR]/[WARNING] tag
+        cmd_count = f"grep -c '{marker}' {self.rhsm_log_file}"
+        _, count_out = self.ssh.runcmd(cmd_count)
+        msg_number = (
+            int(count_out.strip()) if count_out and count_out.strip().isdigit() else 0
+        )
+
+        # Text: include up to 20 context lines after each marker so
+        # multiline Python tracebacks are captured.
+        cmd_text = f"grep -A 20 '{marker}' {self.rhsm_log_file}"
+        _, output = self.ssh.runcmd(cmd_text)
+        if output is None:
+            output = ""
+
         return msg_number, output
 
     def send_number(self, rhsm_log):

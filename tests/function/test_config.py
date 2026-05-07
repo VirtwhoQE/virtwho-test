@@ -493,6 +493,12 @@ class TestConfigurationPositive:
     # @pytest.mark.fipsEnable
     # @pytest.mark.fedoraSmoke
     # Todo: uncoment the mark for fipsEnable and fedoraSmoke after bugs fixed
+    @pytest.mark.xfail(
+        HYPERVISOR in ("kubevirt", "hyperv", "libvirt", "ahv"),
+        reason="RHEL-75641 / RHEL-12391: virt-who ignores proxy env vars "
+        "from [system_environment] for kubevirt, hyperv, libvirt, and ahv",
+        strict=False,
+    )
     def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 

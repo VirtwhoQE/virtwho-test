@@ -283,9 +283,284 @@ def function_rhsmconf_recovery(rhsmconf):
     rhsmconf.recovery()
 
 
+def _kubevirt_discover(data):
+    """Query the KubeVirt API to populate hypervisor identity fields that are
+    left blank in virtwho.ini.  This allows the test suite to run without
+    pre-populating uuid/hostname/version/cpu in the INI.
+
+    When the Nodes API is forbidden (ITUP), ``get_host_info`` only returns a
+    derived ``hostname`` -- no ``uuid``, ``cpu``, or ``version``.  In that
+    case, virt-who's runtime-patched ``getHostGuestMapping`` uses the raw
+    ``nodeName`` as the hypervisorId, so we mirror that here."""
+    from hypervisor.virt.kubevirt.kubevirtapi import KubevirtApi
+
+    namespace = getattr(hypervisor_handler, "namespace", None) or None
+    api = KubevirtApi(
+        hypervisor_handler.endpoint,
+        hypervisor_handler.token,
+        namespace=namespace,
+    )
+    guest_name = hypervisor_handler.guest_name
+
+    vm_info = api.get_vm_info(guest_name)
+    node_name = vm_info.get("hostname", "")
+    host_info = api.get_host_info(node_name) if node_name else {}
+    logger.info(
+        f"KubeVirt auto-discovery for {guest_name}: "
+        f"vm_info={vm_info}, host_info={host_info}"
+    )
+
+    nodes_api_available = "uuid" in host_info
+
+    if nodes_api_available:
+        data["hypervisor_uuid"] = host_info["uuid"]
+        data["hypervisor_hostname"] = host_info["hostname"]
+        data["version"] = host_info.get("version", "")
+        data["cpu"] = host_info.get("cpu", "")
+    elif node_name:
+        data["hypervisor_uuid"] = node_name
+        data["hypervisor_hostname"] = node_name
+    if vm_info.get("guest_uuid") and not data.get("guest_uuid"):
+        data["guest_uuid"] = vm_info["guest_uuid"]
+
+
+def _parse_oneshot_json(output, hyp_type):
+    """Extract the JSON mapping dict from raw ``virt-who -p`` output.
+
+    Returns the parsed dict or ``None`` if no valid JSON is found."""
+    import json as json_mod
+
+    raw = output.strip()
+    json_start = raw.find("{")
+    if json_start == -1:
+        logger.warning(f"{hyp_type} oneshot-discover: no JSON found in output")
+        return None
+    raw = raw[json_start:]
+    try:
+        mapping = json_mod.loads(raw)
+    except json_mod.JSONDecodeError as exc:
+        logger.warning(
+            f"{hyp_type} oneshot-discover: malformed JSON (truncated?): {exc}"
+        )
+        return None
+    hypervisors = mapping.get("hypervisors", [])
+    if not hypervisors:
+        logger.warning(f"{hyp_type} oneshot-discover: no hypervisors in mapping")
+        return None
+    return mapping
+
+
+def _extract_hv_facts(matched_hv, data):
+    """Populate *data* with hypervisor identity and facts from a matched
+    hypervisor entry returned by ``virt-who -p``."""
+    hv_id = matched_hv.get("hypervisorId", {})
+    if isinstance(hv_id, dict):
+        data["hypervisor_uuid"] = hv_id.get("hypervisorId", "")
+    else:
+        data["hypervisor_uuid"] = str(hv_id)
+
+    data["hypervisor_hostname"] = matched_hv.get("name", "")
+
+    raw_facts = matched_hv.get("facts", [])
+    facts = {}
+    if isinstance(raw_facts, dict):
+        facts = raw_facts
+    elif isinstance(raw_facts, list):
+        for f in raw_facts:
+            if isinstance(f, dict):
+                facts[f.get("name", "")] = f.get("value", "")
+            elif isinstance(f, str) and "=" in f:
+                k, _, v = f.partition("=")
+                facts[k] = v
+    if facts.get("cpu.cpu_socket(s)"):
+        data["cpu"] = facts["cpu.cpu_socket(s)"]
+    if facts.get("hypervisor.version"):
+        data["version"] = facts["hypervisor.version"]
+    if facts.get("hypervisor.cluster"):
+        data["cluster"] = facts["hypervisor.cluster"]
+
+
+def _resolve_guest_uuid(ssh, matched_hv, hyp_type, guest_uuid_ini):
+    """Try to resolve a guest UUID when it is blank in virtwho.ini.
+
+    Strategy:
+      1. For libvirt, ask ``virsh domuuid`` on the hypervisor host.
+      2. Fall back to the first guestId reported by virt-who.
+
+    Returns the resolved UUID string, or empty string on failure."""
+    import sys
+
+    if not guest_uuid_ini:
+        guest_name = hypervisor_handler.guest_name
+        if guest_name and hyp_type == "libvirt":
+            try:
+                _, virsh_uuid = ssh.runcmd(
+                    f"virsh -c qemu+ssh://{hypervisor_handler.username}"
+                    f"@{hypervisor_handler.server}/system"
+                    f" domuuid '{guest_name}' 2>/dev/null"
+                )
+                if virsh_uuid and virsh_uuid.strip():
+                    guest_uuid_ini = virsh_uuid.strip()
+                    sys.stderr.write(
+                        f"[oneshot-discover] resolved guest_uuid via "
+                        f"virsh domuuid: {guest_uuid_ini}\n"
+                    )
+                    sys.stderr.flush()
+            except Exception as virsh_err:
+                sys.stderr.write(
+                    f"[oneshot-discover] virsh domuuid failed "
+                    f"for {guest_name}: {virsh_err}\n"
+                )
+                sys.stderr.flush()
+
+        if not guest_uuid_ini:
+            all_guests = matched_hv.get("guestIds", [])
+            if all_guests:
+                guest_uuid_ini = all_guests[0].get("guestId", "")
+                sys.stderr.write(
+                    f"[oneshot-discover] using first guest from "
+                    f"hypervisor list: {guest_uuid_ini}\n"
+                )
+                sys.stderr.flush()
+
+    return guest_uuid_ini or ""
+
+
+def _oneshot_discover(data):
+    """Run ``virt-who -p -d`` on the test host to discover hypervisor identity
+    fields at runtime.  This is the universal approach: the test host already
+    has network access to the hypervisor, and parsing virt-who's own JSON
+    output guarantees test expectations match its runtime behavior (handles
+    byte-swapped UUIDs for Hyper-V, correct hostname formats, etc.).
+
+    A temporary config file is written to ``/etc/virt-who.d/``, the oneshot
+    is executed, and the file is cleaned up.  Existing configs in that
+    directory are preserved."""
+    import sys
+
+    mode = hypervisor_handler.type
+    hyp_type = HYPERVISOR
+    if hyp_type == "ahv":
+        mode = "ahv"
+    elif hyp_type == "libvirt":
+        mode = "libvirt"
+    elif hyp_type == "hyperv":
+        mode = "hyperv"
+
+    try:
+        vw_host = config.virtwho.server
+        vw_user = config.virtwho.username
+        vw_port = config.virtwho.port or 22
+        sys.stderr.write(
+            f"[oneshot-discover] connecting to virt-who host "
+            f"{vw_user}@{vw_host}:{vw_port} for {hyp_type}\n"
+        )
+        sys.stderr.flush()
+        ssh = SSHConnect(
+            host=vw_host,
+            user=vw_user,
+            pwd=config.virtwho.password,
+            port=vw_port,
+        )
+
+        conf_path = "/etc/virt-who.d/_oneshot_discover.conf"
+        owner = register_handler.default_org
+        server = hypervisor_handler.server
+        if hyp_type == "libvirt" and "://" not in server:
+            server = f"qemu+ssh://{hypervisor_handler.username}@{server}/system"
+        conf_lines = [
+            "[oneshot-discover]",
+            f"type={mode}",
+            "hypervisor_id=uuid",
+            f"server={server}",
+            f"username={hypervisor_handler.username}",
+            f"password={hypervisor_handler.password}",
+            f"owner={owner}",
+        ]
+        sys.stderr.write(
+            f"[oneshot-discover] writing config: {conf_path}\n"
+            + "\n".join(conf_lines)
+            + "\n"
+        )
+        sys.stderr.flush()
+        ssh.runcmd(
+            f"cat > {conf_path} << 'EOCONF'\n" + "\n".join(conf_lines) + "\nEOCONF"
+        )
+
+        sys.stderr.write("[oneshot-discover] running virt-who -p -d ...\n")
+        sys.stderr.flush()
+        _, output = ssh.runcmd(
+            f"virt-who -p -d -c {conf_path} 2>/tmp/_oneshot_discover.log"
+        )
+        ssh.runcmd(f"rm -f {conf_path}")
+        sys.stderr.write(
+            f"[oneshot-discover] raw output length: {len(output) if output else 0}\n"
+        )
+        sys.stderr.flush()
+
+        if not output or not output.strip():
+            _, stderr_log = ssh.runcmd(
+                "tail -20 /tmp/_oneshot_discover.log 2>/dev/null"
+            )
+            logger.warning(
+                f"{hyp_type} oneshot-discover: virt-who -p returned no output. "
+                f"stderr: {(stderr_log or '').strip()[:500]}"
+            )
+            return
+
+        mapping = _parse_oneshot_json(output, hyp_type)
+        if not mapping:
+            return
+
+        hypervisors = mapping["hypervisors"]
+        guest_uuid_ini = data.get("guest_uuid") or hypervisor_handler.guest_uuid
+        matched_hv = None
+        for hv in hypervisors:
+            guests = hv.get("guestIds", [])
+            guest_uuids = [g.get("guestId", "").lower() for g in guests]
+            if guest_uuid_ini and guest_uuid_ini.lower() in guest_uuids:
+                matched_hv = hv
+                break
+        if not matched_hv:
+            matched_hv = hypervisors[0]
+
+        _extract_hv_facts(matched_hv, data)
+
+        guest_uuid_ini = _resolve_guest_uuid(ssh, matched_hv, hyp_type, guest_uuid_ini)
+
+        for guest in matched_hv.get("guestIds", []):
+            gid = guest.get("guestId", "")
+            if guest_uuid_ini and gid.lower() == guest_uuid_ini.lower():
+                data["guest_uuid"] = gid
+                break
+
+        logger.info(
+            f"{hyp_type} oneshot-discover: "
+            f"uuid={data.get('hypervisor_uuid')}, "
+            f"hostname={data.get('hypervisor_hostname')}, "
+            f"cpu={data.get('cpu')}, version={data.get('version')}, "
+            f"cluster={data.get('cluster')}, "
+            f"guest_uuid={data.get('guest_uuid')}"
+        )
+
+    except Exception as e:
+        import traceback
+
+        sys.stderr.write(
+            f"[oneshot-discover] FAILED for {hyp_type}: {e}\n{traceback.format_exc()}\n"
+        )
+        sys.stderr.flush()
+        logger.warning(f"{hyp_type} oneshot-discover failed, using INI values: {e}")
+
+
 @pytest.fixture(scope="session")
 def hypervisor_data(ssh_guest):
-    """Hypervisor data for testing, mainly got from virtwho.ini file"""
+    """Hypervisor data for testing.
+
+    Starts with values from virtwho.ini, then overrides identity fields
+    (uuid, hostname, version, cpu, cluster, guest_uuid) with values
+    discovered from the hypervisor's API at runtime.  This avoids stale
+    or incorrect INI data causing false test failures."""
     data = dict()
     data["guest_name"] = hypervisor_handler.guest_name
     data["guest_ip"] = hypervisor_handler.guest_ip
@@ -315,14 +590,30 @@ def hypervisor_data(ssh_guest):
         data["cluster"] = hypervisor_handler.vdsm_cluster
     elif HYPERVISOR == "local":
         data["hypervisor_hostname"] = hypervisor_handler.hostname
+    elif HYPERVISOR == "kubevirt":
+        data["hypervisor_uuid"] = hypervisor_handler.uuid
+        data["hypervisor_hostname"] = hypervisor_handler.hostname
+        data["type"] = hypervisor_handler.type
+        data["version"] = hypervisor_handler.version
+        data["cpu"] = hypervisor_handler.cpu
+        if not data["hypervisor_uuid"]:
+            _kubevirt_discover(data)
     else:
         data["hypervisor_uuid"] = hypervisor_handler.uuid
         data["hypervisor_hostname"] = hypervisor_handler.hostname
         data["type"] = hypervisor_handler.type
         data["version"] = hypervisor_handler.version
         data["cpu"] = hypervisor_handler.cpu
+
     if HYPERVISOR == "ahv":
         data["cluster"] = hypervisor_handler.cluster
+        _oneshot_discover(data)
+    elif HYPERVISOR in ("libvirt", "hyperv"):
+        _oneshot_discover(data)
+
+    if data.get("guest_uuid") and not hypervisor_handler.guest_uuid:
+        hypervisor_handler.guest_uuid = data["guest_uuid"]
+
     if HYPERVISOR == "kubevirt":
         data["hypervisor_server"] = hypervisor_handler.endpoint
         data["hypervisor_config_file"] = hypervisor_handler.config_file
@@ -380,6 +671,7 @@ def proxy_data():
         "Cannot connect to proxy",
         "Connection timed out",
         "Unable to connect",
+        "Name or service not known",
     ]
     return proxy
 

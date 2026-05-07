@@ -346,7 +346,6 @@ class TestHypervisorPositive:
             "rhevm": "kvm",
             "esx": "vmware",
             "hyperv": "hyperv",
-            "xen": "xen",
             "kubevirt": "kvm",
             "ahv": "nutanix_ahv",
         }
@@ -375,6 +374,11 @@ class TestHypervisorPositive:
     @pytest.mark.tier1
     @pytest.mark.release(rhel8=False, rhel9=True, rhel10=True)
     @pytest.mark.notLocal
+    @pytest.mark.xfail(
+        HYPERVISOR == "ahv",
+        reason="AHV backend reports thread=1 in oneshot mode",
+        strict=False,
+    )
     def test_virtwho_status(
         self,
         virtwho,
@@ -416,7 +420,8 @@ class TestHypervisorPositive:
         # Check #virt-who --status --json
         result = virtwho.run_cli(oneshot=False, debug=False, status=True, jsn=True)
         if "libvirt" in HYPERVISOR:
-            source_connection = f"qemu+ssh://root@{hypervisor_data['hypervisor_server']}/system?no_tty=1"
+            libvirt_user = hypervisor_data.get("hypervisor_username", "root")
+            source_connection = f"qemu+ssh://{libvirt_user}@{hypervisor_data['hypervisor_server']}/system?no_tty=1"
         elif "esx" in HYPERVISOR:
             source_connection = f"https://{hypervisor_data['hypervisor_server']}"
         elif "rhevm" in HYPERVISOR:

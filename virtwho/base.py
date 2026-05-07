@@ -360,7 +360,9 @@ def package_info_analyzer(ssh, pkg):
             potential_field = parts[0].strip()
 
             # Check if this looks like a field name (alphabetic + spaces only)
-            if potential_field and all(c.isalpha() or c.isspace() for c in potential_field):
+            if potential_field and all(
+                c.isalpha() or c.isspace() for c in potential_field
+            ):
                 # This is a new field
                 current_field = potential_field
                 value = parts[1].strip() if len(parts) > 1 else ""
@@ -504,6 +506,7 @@ def curl_download(ssh, url, file_path, file_name=None):
     else:
         # Extract filename from URL and save to file_path
         import os
+
         output_path = f"{file_path}/{os.path.basename(url)}"
     cmd = f"curl -k -L -o {output_path} {url}"
     ret, _ = ssh.runcmd(cmd)
@@ -522,14 +525,18 @@ def random_string(num=8):
 
 
 def encrypt_password(ssh, password, option=None):
-    """
-    Encrypt password by virt-who-password command
+    """Encrypt password by virt-who-password command.
+
+    All paths write the raw password to a temporary file on the remote host
+    and feed it to ``virt-who-password`` from there.  This avoids every
+    flavour of shell/Tcl quoting issue for special characters like
+    backslash, double-quote, dollar, etc.
+
     :param ssh: ssh access of testing host
-    :param password: the password would like to Encrypt
-    :param option: -p, --password
-    :return: the encrypted password
+    :param password: the password to encrypt
+    :param option: None (interactive), ``-p``, or ``--password``
+    :return: the encrypted password string
     """
-    log_file = "/tmp/virtwho_encrypt_password"
     if not option:
         attrs = [f"Password:|{password}"]
         ret, output = expect_run(ssh, "virt-who-password", attrs)
@@ -544,8 +551,28 @@ def encrypt_password(ssh, password, option=None):
             f"Failed to get encrypted password without option (exit code: {ret})"
         )
     else:
-        cmd = f"virt-who-password -p {shlex.quote(password)} > {log_file}"
-        ret, output = ssh.runcmd(cmd)
+        pw_file = f"/tmp/virtwho-pw-{random_string()}"
+        log_file = "/tmp/virtwho_encrypt_password"
+        wrapper = f"/tmp/virtwho-enc-{random_string()}.py"
+        ssh.runcmd(f"printf '%s' {shlex.quote(password)} > {pw_file}")
+        # Write a small Python helper to read the password from the file
+        # and call virt-who-password via subprocess.  This completely
+        # avoids bash quoting/expansion of special chars (\, ", $, etc.)
+        # because the password never passes through shell expansion.
+        ssh.runcmd(
+            f"cat > {wrapper} << 'PYEOF'\n"
+            f"import subprocess, sys\n"
+            f"pw = open(sys.argv[1]).read()\n"
+            f"r = subprocess.run(\n"
+            f'    ["virt-who-password", "-p", pw],\n'
+            f"    capture_output=True, text=True,\n"
+            f")\n"
+            f"open(sys.argv[2], 'w').write(r.stdout)\n"
+            f"sys.exit(r.returncode)\n"
+            f"PYEOF"
+        )
+        ret, output = ssh.runcmd(f"python3 {wrapper} {pw_file} {log_file}")
+        ssh.runcmd(f"rm -f {pw_file} {wrapper}")
         if ret == 0:
             ret, output = ssh.runcmd(f"cat {log_file}")
             if output:
@@ -672,25 +699,38 @@ def expect_run(ssh, cmd, attrs, timeout=60):
     options = list()
     random_str = random_string()
     filename = f"/tmp/virtwho-{random_str}.sh"
-    for attr in attrs:
+    pw_files = []
+    for idx, attr in enumerate(attrs):
         expect_value = attr.split("|")[0]
         send_value = attr.split("|")[1]
+        # Write the raw send value to a temp file and read it in Tcl.
+        # This avoids all Tcl/shell double-quote escaping issues with
+        # special characters like backslash, double-quote, dollar, etc.
+        pw_file = f"/tmp/virtwho-pw-{random_str}-{idx}"
+        pw_files.append(pw_file)
+        ssh.runcmd(f"printf '%s' {shlex.quote(send_value)} > {pw_file}")
         expect = rf'expect "{expect_value}"'
-        send = rf'send "{send_value}\r"'
+        send = (
+            f'set f [open "{pw_file}" r]; '
+            f"set v [read $f]; close $f\n"
+            rf'send "$v\r"'
+        )
         options.append(expect + "\n" + send)
     options = "\n".join(options)
     cmd = (
-        f"cat <<EOF > {filename}\n"
+        f"cat <<'EXPECTEOF' > {filename}\n"
         f"#!/usr/bin/expect\n"
         f"set timeout {timeout}\n"
         f"spawn {cmd}\n"
         f"{options}\n"
         f"expect eof\n"
         f"exit\n"
-        f"EOF"
+        f"EXPECTEOF"
     )
     ssh.runcmd(cmd)
     ret, output = ssh.runcmd(f"chmod +x {filename}; {filename}", timeout=timeout + 10)
+    for pf in pw_files:
+        ssh.runcmd(f"rm -f {pf}")
     return ret, output
 
 
