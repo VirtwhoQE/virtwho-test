@@ -318,10 +318,16 @@ def kubevirt_monitor():
         if kubevirt_data:
             compare_dict.update(
                 {
-                    "uuid": [config.kubevirt.uuid, kubevirt_data["uuid"]],
+                    "uuid": [
+                        config.kubevirt.uuid,
+                        kubevirt_data.get("uuid", ""),
+                    ],
                     "hostname": [config.kubevirt.hostname, kubevirt_data["hostname"]],
-                    "version": [config.kubevirt.version, kubevirt_data["version"]],
-                    "cpu": [config.kubevirt.cpu, kubevirt_data["cpu"]],
+                    "version": [
+                        config.kubevirt.version,
+                        kubevirt_data.get("version", ""),
+                    ],
+                    "cpu": [config.kubevirt.cpu, kubevirt_data.get("cpu", "")],
                     "guest_ip": [config.kubevirt.guest_ip, kubevirt_data["hostname"]],
                     "guest_uuid": [
                         config.kubevirt.guest_uuid,
@@ -334,16 +340,22 @@ def kubevirt_monitor():
             if kubevirt_data_sw:
                 compare_dict.update(
                     {
-                        "uuid_sw": [config.kubevirt.uuid_sw, kubevirt_data_sw["uuid"]],
+                        "uuid_sw": [
+                            config.kubevirt.uuid_sw,
+                            kubevirt_data_sw.get("uuid", ""),
+                        ],
                         "hostname_sw": [
                             config.kubevirt.hostname_sw,
                             kubevirt_data_sw["hostname"],
                         ],
                         "version_sw": [
                             config.kubevirt.version_sw,
-                            kubevirt_data_sw["version"],
+                            kubevirt_data_sw.get("version", ""),
                         ],
-                        "cpu_sw": [config.kubevirt.cpu_sw, kubevirt_data_sw["cpu"]],
+                        "cpu_sw": [
+                            config.kubevirt.cpu_sw,
+                            kubevirt_data_sw.get("cpu", ""),
+                        ],
                         "guest_ip_sw": [
                             config.kubevirt.guest_ip_sw,
                             kubevirt_data_sw["hostname"],
@@ -582,10 +594,6 @@ def rhevm_monitor():
     return "SKIP"
 
 
-def xen_monitor():
-    return "SKIP"
-
-
 def arguments_parser():
     """
     Parse and convert the arguments from command line to parameters
@@ -606,8 +614,6 @@ def arguments_parser():
     subparsers.add_parser("libvirt", help="Test the libvirt environment")
     # rhevm
     subparsers.add_parser("rhevm", help="Test the RHEVM environment")
-    # xen
-    subparsers.add_parser("xen", help="Test the Xen environment")
     return parser.parse_args()
 
 
@@ -625,5 +631,3 @@ if __name__ == "__main__":
         libvirt_monitor()
     if args.command == "rhevm":
         rhevm_monitor()
-    if args.command == "xen":
-        xen_monitor()

@@ -16,7 +16,6 @@ from virtwho.provision.virtwho_hypervisor import kubevirt_monitor
 from virtwho.provision.virtwho_hypervisor import libvirt_monitor
 from virtwho.provision.virtwho_hypervisor import ahv_monitor
 from virtwho.provision.virtwho_hypervisor import rhevm_monitor
-from virtwho.provision.virtwho_hypervisor import xen_monitor
 
 
 class TestHypervisorsState:
@@ -45,7 +44,3 @@ class TestHypervisorsState:
     def test_state_rhevm(self):
         """Test the rhevm state"""
         assert rhevm_monitor() == "GOOD"
-
-    def test_state_xen(self):
-        """Test the xen state"""
-        assert xen_monitor() == "GOOD"

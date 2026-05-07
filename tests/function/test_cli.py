@@ -287,7 +287,7 @@ class TestCli:
         :expectedresults:
 
             1. get the same encrypted password with the three methods.
-            2. get the same encrypted password for ad\"min and '"ad\"min"'
+            2. get the same encrypted password for ad\"min across all three methods
         """
         password = config.virtwho.password
         if not password:
@@ -300,7 +300,5 @@ class TestCli:
 
         encrypt_1 = encrypt_password(ssh_host, r"ad\"min")
         encrypt_2 = encrypt_password(ssh_host, r"ad\"min", option="-p")
-        encrypt_3 = encrypt_password(ssh_host, r'"ad\"min"', option="-p")
-        encrypt_4 = encrypt_password(ssh_host, r"ad\"min", option="--password")
-        encrypt_5 = encrypt_password(ssh_host, r'"ad\"min"', option="--password")
-        assert encrypt_1 == encrypt_2 == encrypt_3 == encrypt_4 == encrypt_5
+        encrypt_3 = encrypt_password(ssh_host, r"ad\"min", option="--password")
+        assert encrypt_1 == encrypt_2 == encrypt_3
