@@ -565,12 +565,12 @@ class VirtwhoRunner:
         Get the alive virt-who thread number.
         :return: virt-who thread number
         """
-        thread_num = 0
-        cmd = "pgrep -c -x virt-who || echo 0"
+        cmd = "pgrep -c -x virt-who"
         ret, output = self.ssh.runcmd(cmd)
-        if output is not None and output != "":
-            thread_num = int(output.strip())
-        return thread_num
+        if ret == 0 and output is not None:
+            first_line = output.strip().splitlines()[0]
+            return int(first_line)
+        return 0
 
     def operate_service(self, name="virt-who", action="restart", wait=10):
         """
