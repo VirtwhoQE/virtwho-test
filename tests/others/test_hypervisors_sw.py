@@ -3,7 +3,7 @@
 :casecomponent: virt-who
 :testtype: functional
 :caseautomation: Automated
-:subsystemteam: sst_subscription_virtwho
+:subsystemteam: rhel-sst-csi-client-tools
 :caselevel: Component
 """
 
@@ -23,9 +23,25 @@ from utils.properties_update import virtwho_ini_update
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestHypervisorsSW:
     def test_report_hypervisor_for_sw(self):
-        """
-        Report hypervisors mapping and register guest to stage candlepin for
-        the con-work with Subscription Watch team.
+        """Report hypervisors mapping and register guest for Subscription Watch
+
+        :title: virt-who: sw: report hypervisors mapping for Subscription Watch
+        :id: ccfac7b8-7279-4423-af20-95d8d2a232c0
+        :caseimportance: High
+        :tags: others,subscription-watch,tier2
+        :customerscenario: false
+        :upstream: no
+        :steps:
+            1. Remove all existing systems from the stage RHSM account
+            2. Register the virt-who host to the stage
+            3. Configure each hypervisor (AHV, KubeVirt) and register their guest VMs
+            4. Run virt-who to report host-to-guest mappings to RHSM
+        :expectedresults:
+            1. Stage account is clean
+            2. Virt-who host registered successfully
+            3. Hypervisor configs created and guest VMs registered
+            4. Mappings sent without errors; all hypervisor hosts and guests
+                are visible in RHSM
         """
         hypervisors = config.job.multi_hypervisors
         hosts = []

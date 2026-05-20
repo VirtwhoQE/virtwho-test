@@ -4,7 +4,7 @@
 :testtype: nonfunctional
 :subtype1: Interoperability
 :caseautomation: Automated
-:subsystemteam: sst_subscription_virtwho
+:subsystemteam: rhel-sst-csi-client-tools
 :caselevel: Component
 """
 

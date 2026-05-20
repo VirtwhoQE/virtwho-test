@@ -20,3 +20,4 @@ funcy
 passlib
 rpdb
 git+https://github.com/VirtwhoQE/hypervisor-builder.git@master
+betelgeuse>=1.12,<2.0
