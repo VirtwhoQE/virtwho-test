@@ -3,7 +3,7 @@
 set -euo pipefail
 
 dnf -y install python3-pip git gcc python3-devel openssh-clients \
-    libvirt-client python3-libvirt openssh-server expect sshpass
+    libvirt-client python3-libvirt openssh-server expect sshpass podman
 
 # TEST_RPMS is set by the cct-gate pipeline after parsing Brew UMB messages.
 # When present, install the specific gated build; otherwise fall back to the
@@ -16,3 +16,5 @@ if [[ -n "${TEST_RPMS:-}" ]]; then
 else
     dnf -y install virt-who
 fi
+
+podman pull images.paas.redhat.com/rhsmqe/rhsm-squid:latest 2>/dev/null || true

@@ -11,28 +11,27 @@
 import re
 
 import pytest
-from virtwho import VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH
-from virtwho.base import virtwho_package_url
+from virtwho import VIRTWHO_PKG, RHEL_COMPOSE
 from virtwho.base import package_check, package_install, package_uninstall
-from virtwho.base import curl_download, random_string
+from virtwho.base import dnf_download_pkg, random_string
 
 
 class TestInstallUninstall:
     @pytest.mark.tier1
-    def test_install_uninstall_by_yum(self, ssh_host):
-        """Test virt-who install/uninstall by yum
+    def test_install_uninstall_by_dnf(self, ssh_host):
+        """Test virt-who install/uninstall by dnf
 
-        :title: virt-who: package: install/uninstall by yum
+        :title: virt-who: package: install/uninstall by dnf
         :id: 7b32612a-11eb-437e-92c9-b7d501d2e8a0
         :caseimportance: High
         :tags: package,tier1
         :customerscenario: false
         :steps:
-            1. uninstall virt-who by #yum remove virt-who
-            2. install virt-who by #yum install virt-who
+            1. uninstall virt-who by #dnf remove virt-who
+            2. install virt-who by #dnf install virt-who
             3. check the /etc/virt-who.d/template.conf
         :expectedresults:
-            1. virt-who can be remove and reinstall successfully.
+            1. virt-who can be removed and reinstalled from repos successfully.
             2.
         """
         package_uninstall(ssh_host, "virt-who")
@@ -40,7 +39,6 @@ class TestInstallUninstall:
         package_install(ssh_host, "virt-who")
         assert package_check(ssh_host, "virt-who") == VIRTWHO_PKG
 
-        # check the template.conf
         options = [
             "#[config name]",
             "#type=",
@@ -81,19 +79,21 @@ class TestInstallUninstall:
         :customerscenario: false
         :steps:
             1. uninstall virt-who by #rpm -e
-            2. install virt-who by #rpm -ivh
+            2. download virt-who RPM from system repos using dnf download
+            3. install virt-who by #rpm -ivh
         :expectedresults:
-            1. virt-who can be remove and reinstall successfully.
+            1. virt-who can be removed and reinstalled successfully.
         """
         try:
+            file_path = "/tmp/packageInstallUninstall-" + random_string()
+            rpm_path = dnf_download_pkg(ssh_host, "virt-who", file_path)
+
             package_uninstall(ssh_host, "virt-who", rpm=VIRTWHO_PKG)
             assert package_check(ssh_host, "virt-who") is False
 
-            pkg_url = virtwho_package_url(VIRTWHO_PKG, RHEL_COMPOSE, RHEL_COMPOSE_PATH)
-            file_path = "/tmp/packageInstallUninstall-" + random_string()
-            curl_download(ssh_host, url=pkg_url, file_path=file_path)
-            package_install(ssh_host, "virt-who", rpm=f"{file_path}/{VIRTWHO_PKG}.rpm")
+            package_install(ssh_host, "virt-who", rpm=rpm_path)
             assert package_check(ssh_host, "virt-who") == VIRTWHO_PKG
         finally:
             if package_check(ssh_host, "virt-who") is False:
                 package_install(ssh_host, "virt-who")
+            ssh_host.runcmd(f"rm -rf {file_path}")

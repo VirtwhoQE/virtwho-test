@@ -1,4 +1,5 @@
 import json
+import time
 import requests
 
 from json.decoder import JSONDecodeError
@@ -222,10 +223,12 @@ class RHSM:
             return info
         raise FailException(f"Failed to get consumer info for {host_name}")
 
-    def host_delete(self, host_name=None):
+    def host_delete(self, host_name=None, verify=True):
         """
         Delete only one consumer or clean all consumers.
         :param host_name: host name, will clean all consumers if host_name=None.
+        :param verify: wait for consumer to disappear from listing (stage has
+            eventual consistency; set False when delete is just cleanup).
         :return: True or Fail
         """
         consumers = self.consumers()
@@ -233,10 +236,36 @@ class RHSM:
             for consumer in consumers:
                 uuid = consumer["uuid"]
                 if not host_name or (host_name and host_name in consumer["name"]):
-                    request_delete(url=f"{self.api}/consumers/{uuid}", auth=self.auth)
-            if not self.consumers(host_name=host_name):
-                logger.info("Succeeded to delete consumer(s) on stage")
+                    for attempt in range(3):
+                        status = request_delete(
+                            url=f"{self.api}/consumers/{uuid}", auth=self.auth
+                        )
+                        if status in (200, 204, 404, 410):
+                            break
+                        logger.warning(
+                            f"DELETE consumer {uuid} returned {status}, "
+                            f"retry {attempt + 1}/3"
+                        )
+                        time.sleep(5)
+                    else:
+                        raise FailException(
+                            f"Failed to delete consumer {uuid} on stage "
+                            f"(last status={status})"
+                        )
+            if not verify:
+                logger.info(
+                    "DELETE request(s) succeeded; skipping verification"
+                )
                 return True
+            for attempt in range(10):
+                time.sleep(5)
+                if not self.consumers(host_name=host_name):
+                    logger.info("Succeeded to delete consumer(s) on stage")
+                    return True
+                logger.warning(
+                    f"Consumer(s) still visible after delete, "
+                    f"retry {attempt + 1}/10"
+                )
             raise FailException("Failed to delete consumer(s) on stage")
         logger.info(
             "Succeeded to delete consumer(s) on stage because no consumer found"

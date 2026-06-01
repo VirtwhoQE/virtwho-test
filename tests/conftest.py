@@ -14,8 +14,20 @@ from virtwho.register import SubscriptionManager, Satellite, RHSM
 from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, logger
 from virtwho.base import hostname_get
 
+import time
+
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
+
+
+def wait_for_consumer(rhsm, hostname, retries=5, delay=3):
+    """Poll stage until the consumer appears (eventual consistency)."""
+    for _ in range(retries):
+        detail = rhsm.consumers(hostname)
+        if detail:
+            return detail
+        time.sleep(delay)
+    return None
 
 
 def pytest_runtest_logstart(nodeid):
@@ -646,24 +658,78 @@ def register_data():
     return data
 
 
+SQUID_IMAGE = "images.paas.redhat.com/rhsmqe/rhsm-squid:latest"
+SQUID_CONTAINER = "squid-bad"
+SQUID_PROXY_MODES = {
+    "unauth": {
+        "port": 3130,
+        "description": "always returns 401 Unauthorized",
+        "log_marker": "TCP_DENIED",
+    },
+    "blocklist": {
+        "port": 3132,
+        "description": "blocks target server domain",
+        "log_marker": "TCP_DENIED",
+    },
+}
+
+
+@pytest.fixture(scope="function")
+def bad_proxy_container(ssh_host):
+    """Start a local rhsm-squid container in 'all' mode (unauth + blocklist).
+    Yields a dict with server, container name, and per-mode port details.
+    Tears down the container on completion regardless of test outcome."""
+    target_domain = register_handler.server
+    ssh_host.runcmd(f"podman rm -f {SQUID_CONTAINER} 2>/dev/null || true")
+    port_args = " ".join(
+        f"-p {m['port']}:{m['port']}" for m in SQUID_PROXY_MODES.values()
+    )
+    ret, output = ssh_host.runcmd(
+        f"podman run -d --name {SQUID_CONTAINER} "
+        f"{port_args} "
+        f"-e BLOCKLIST_DOMAINS={target_domain} "
+        f"{SQUID_IMAGE} all"
+    )
+    if ret != 0:
+        pytest.skip(f"Could not start rhsm-squid container: {output}")
+    ssh_host.runcmd("sleep 3")
+
+    yield {
+        "server": "localhost",
+        "container": SQUID_CONTAINER,
+        "modes": {
+            name: {"port": str(m["port"]), "log_marker": m["log_marker"]}
+            for name, m in SQUID_PROXY_MODES.items()
+        },
+    }
+
+    ssh_host.runcmd(f"podman rm -f {SQUID_CONTAINER} 2>/dev/null || true")
+
+
+def bad_proxy_was_used(ssh_host, container_name):
+    """Check squid container access logs for denied requests.
+    Squid writes access logs to files under /var/log/squid/ inside the
+    container, not to stdout, so we read them via podman exec."""
+    _, logs = ssh_host.runcmd(
+        f"podman exec {container_name} "
+        f"cat /var/log/squid/unauth-access.log "
+        f"/var/log/squid/blocklist-access.log 2>/dev/null"
+    )
+    return "TCP_DENIED" in logs or "403" in logs or "407" in logs
+
+
 @pytest.fixture(scope="session")
 def proxy_data():
-    """Proxy data for testing"""
+    """Proxy data for testing (good proxy only; bad proxy comes from
+    the bad_proxy_container fixture)."""
     proxy = dict()
     proxy_server = config.virtwho.proxy_server
     proxy_port = config.virtwho.proxy_port
-    bad_proxy_server = "bad.proxy.redhat.com"
-    bad_proxy_port = "9999"
     good_proxy = f"{proxy_server}:{proxy_port}"
-    bad_proxy = f"{bad_proxy_server}:{bad_proxy_port}"
     proxy["server"] = proxy_server
     proxy["port"] = proxy_port
-    proxy["bad_server"] = bad_proxy_server
-    proxy["bad_port"] = bad_proxy_port
     proxy["http_proxy"] = f"http://{good_proxy}"
     proxy["https_proxy"] = f"https://{good_proxy}"
-    proxy["bad_http_proxy"] = f"http://{bad_proxy}"
-    proxy["bad_https_proxy"] = f"https://{bad_proxy}"
     proxy["connection_log"] = f"Connection built: http_proxy={good_proxy}"
     proxy["proxy_log"] = f"Using proxy: {good_proxy}"
     proxy["error"] = [
@@ -672,6 +738,11 @@ def proxy_data():
         "Connection timed out",
         "Unable to connect",
         "Name or service not known",
+        "Proxy error at",
+        "ProxyError",
+        "Tunnel connection failed",
+        "407 Proxy Authentication Required",
+        "403 Forbidden",
     ]
     return proxy
 
