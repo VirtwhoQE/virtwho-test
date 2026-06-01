@@ -30,6 +30,19 @@ def wait_for_consumer(rhsm, hostname, retries=5, delay=3):
     return None
 
 
+@pytest.fixture(scope="session", autouse=True)
+def log_virtwho_version(ssh_host):
+    """Log the installed virt-who RPM version at the start of each session."""
+    _, nvr = ssh_host.runcmd("rpm -q virt-who 2>/dev/null || echo 'not installed'")
+    nvr = nvr.strip()
+    logger.info(f"========== virt-who RPM: {nvr} ==========")
+    logger.info(f"========== Compose: {RHEL_COMPOSE} ==========")
+    print(f"\n{'=' * 60}")
+    print(f"  virt-who RPM : {nvr}")
+    print(f"  RHEL Compose : {RHEL_COMPOSE}")
+    print(f"{'=' * 60}\n", flush=True)
+
+
 def pytest_runtest_logstart(nodeid):
     logger.info(f"Started Test: {nodeid}")
 
