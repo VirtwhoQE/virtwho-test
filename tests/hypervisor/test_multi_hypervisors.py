@@ -63,7 +63,7 @@ class TestMultiHypervisors:
                     guest_uuid = get_hypervisor_info(mode, "guest_uuid")
 
                     if REGISTER == "rhsm":
-                        rhsm.host_delete(hypervisor_hostname)
+                        rhsm.host_delete(hypervisor_hostname, verify=False)
                     else:
                         satellite.host_delete(hypervisor_hostname)
 

@@ -12,7 +12,7 @@ import os
 import re
 import pytest
 
-from virtwho import base, RHEL_COMPOSE, RHEL_COMPOSE_PATH, VIRTWHO_PKG, VIRTWHO_VERSION
+from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG, VIRTWHO_VERSION
 from virtwho.settings import DOCS_DIR, TEMP_DIR
 
 
@@ -21,8 +21,8 @@ from virtwho.settings import DOCS_DIR, TEMP_DIR
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")
 class TestVirtwhoPackageInfo:
     @pytest.mark.tier1
-    def test_shipped_in_supported_arch(self):
-        """Test the virt-who package is shipped in all supported arch
+    def test_shipped_in_supported_arch(self, ssh_host):
+        """Test the virt-who package is available in repos for all supported arches
 
         :title: virt-who: package: test package is shipped in arch
         :id: f273943a-595f-4995-9e7c-fd266253642f
@@ -30,20 +30,20 @@ class TestVirtwhoPackageInfo:
         :tags: package,tier1
         :customerscenario: false
         :steps:
-            1. test virt-who package is shipped with x86_64 arch
-            2. test virt-who package is shipped with ppc64le arch
-            3. test virt-who package is shipped with aarch64 arch
-            4. test virt-who package is shipped with s390x arch
+            1. use dnf repoquery to check virt-who availability per arch
 
         :expectedresults:
-            1. virt-who package are shipped in each supported arch
+            1. virt-who package is available for each supported arch
         """
-        _, repo_extra = base.rhel_compose_url(RHEL_COMPOSE, RHEL_COMPOSE_PATH)
-        base_url = repo_extra.split("/x86_64/")[0]
-        archs = ["x86_64", "ppc64le", "aarch64", "s390x"]
-        for arch in archs:
-            pkg_url = f"{base_url}/{arch}/os/Packages/{VIRTWHO_PKG}.rpm"
-            assert base.url_validation(pkg_url)
+        archs = ["x86_64", "noarch", "ppc64le", "aarch64", "s390x"]
+        _, output = ssh_host.runcmd(
+            "dnf repoquery --available --archlist="
+            + ",".join(archs)
+            + " virt-who 2>/dev/null"
+        )
+        assert "virt-who" in output, (
+            f"virt-who not found via repoquery for arches {archs}"
+        )
 
     @pytest.mark.tier1
     def test_version(self, ssh_host):

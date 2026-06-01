@@ -385,6 +385,60 @@ def package_info_analyzer(ssh, pkg):
     return data
 
 
+def dnf_download_pkg(ssh, pkg_name, dest_dir):
+    """
+    Download a package RPM from configured repos using dnf download.
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name, such as virt-who
+    :param dest_dir: directory to save the downloaded RPM
+    :return: full path to the downloaded RPM file
+    """
+    ssh.runcmd(f"mkdir -p {dest_dir}")
+    ret, output = ssh.runcmd(
+        f"dnf download -y --destdir={dest_dir} {pkg_name} 2>&1"
+    )
+    if ret != 0:
+        raise FailException(f"Failed to dnf download {pkg_name}: {output}")
+    _, listing = ssh.runcmd(f"ls {dest_dir}/{pkg_name}*.rpm")
+    rpm_path = listing.strip().split("\n")[0].strip()
+    if not rpm_path:
+        raise FailException(f"No RPM found in {dest_dir} after dnf download")
+    return rpm_path
+
+
+def dnf_available_versions(ssh, pkg_name):
+    """
+    List all available versions of a package from configured repos.
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name, such as virt-who
+    :return: list of NEVRA strings available in repos (excluding installed)
+    """
+    _, output = ssh.runcmd(
+        f"dnf --showduplicates list available {pkg_name} 2>/dev/null"
+    )
+    versions = []
+    for line in output.strip().split("\n"):
+        parts = line.split()
+        if len(parts) >= 3 and parts[0].startswith(pkg_name):
+            nevra = f"{parts[0].split('.')[0]}-{parts[1]}.{parts[0].split('.')[-1]}"
+            versions.append(nevra)
+    return versions
+
+
+def dnf_can_downgrade(ssh, pkg_name):
+    """
+    Check if a package can be downgraded (older version available in repos).
+    :param ssh: ssh access of testing host
+    :param pkg_name: package name
+    :return: True if downgrade is possible
+    """
+    installed = package_check(ssh, pkg_name)
+    if not installed:
+        return False
+    versions = dnf_available_versions(ssh, pkg_name)
+    return any(v != installed for v in versions)
+
+
 def package_install(ssh, pkg_name, rpm=None):
     """
     Install a package by yum or rpm

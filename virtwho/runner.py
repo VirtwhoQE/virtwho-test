@@ -338,40 +338,27 @@ class VirtwhoRunner:
             msg = "0 hypervisors and 0 guests found"
         elif "virtwho.main DEBUG" in rhsm_log or "rhsm.connection DEBUG" in rhsm_log:
             if "satellite" in self.register_type:
-                if self.mode == "local":
-                    msg = r'Response: status=200, request="PUT /rhsm/consumers'
-                    return len(re.findall(msg, rhsm_log, re.I))
-                else:
-                    # mode is other hypervisor but also have local mode on virt-who host
-                    msg = r'Response: status=200, request="PUT /rhsm/consumers'
-                    if re.findall(msg, rhsm_log, re.I):
-                        return len(re.findall(msg, rhsm_log, re.I))
-                    # mode is other hypervisor but don't have local mode on virt-who host
-                    msg = r'Response: status=200, request="POST /rhsm/hypervisors'
-                    if re.findall(msg, rhsm_log, re.I):
-                        return len(re.findall(msg, rhsm_log, re.I))
-            if "rhsm" in self.register_type:
+                prefix = "/rhsm"
+            elif "rhsm" in self.register_type:
+                prefix = "/subscription"
+            else:
+                prefix = ""
+            if prefix:
                 if self.mode == "local":
                     msg = (
                         r"Response: status=20.*requestUuid.*request="
-                        r'"PUT /subscription/consumers'
+                        rf'"PUT {prefix}/consumers'
                     )
                     return len(re.findall(msg, rhsm_log, re.I))
                 else:
-                    # mode is other hypervisor but also have local mode on virt-who host
-                    msg = (
-                        r"Response: status=20.*requestUuid.*request="
-                        r'"PUT /subscription/consumers'
-                    )
-                    if re.findall(msg, rhsm_log, re.I):
-                        return len(re.findall(msg, rhsm_log, re.I))
-                    # mode is other hypervisor but don't have local mode on virt-who host
-                    msg = (
-                        r"Response: status=20.*requestUuid.*request="
-                        r'"POST /subscription/hypervisors'
-                    )
-                    if re.findall(msg, rhsm_log, re.I):
-                        return len(re.findall(msg, rhsm_log, re.I))
+                    for pattern in [
+                        rf'"PUT {prefix}/consumers',
+                        rf'"POST {prefix}/hypervisors',
+                    ]:
+                        msg = r"Response: status=20.*requestUuid.*request=" + pattern
+                        hits = re.findall(msg, rhsm_log, re.I)
+                        if hits:
+                            return len(hits)
         else:
             if self.mode == "local":
                 msg = r"Sending update in guests lists for config"
@@ -541,12 +528,12 @@ class VirtwhoRunner:
         Get the hypervisor id by mapping
         :param mapping: the host-to-guest mapping
         """
-        if mapping and self.mode:
+        if mapping and self.mode and "orgs" in mapping:
             guest_uuid = get_hypervisor_handler(self.mode).guest_uuid
             for org in mapping["orgs"]:
-                org_dict = mapping[org]
-                if guest_uuid in org_dict.keys():
-                    return mapping[org][guest_uuid]["guest_hypervisor"]
+                org_dict = mapping.get(org)
+                if org_dict and guest_uuid in org_dict.keys():
+                    return org_dict[guest_uuid]["guest_hypervisor"]
         return ""
 
     def print_json(self, cli):

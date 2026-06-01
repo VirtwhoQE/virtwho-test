@@ -92,7 +92,9 @@ class TestHypervPositive:
             )
             if REGISTER == "rhsm":
                 assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
-                rhsm.host_delete(hypervisor_data["hypervisor_hostname"])
+                rhsm.host_delete(
+                    hypervisor_data["hypervisor_hostname"], verify=False
+                )
             else:
                 if hypervisor_id == "hostname":
                     assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
@@ -484,10 +486,18 @@ class TestHypervNegative:
                 result["error"] != 0
                 and result["send"] == 0
                 and result["thread"] == 0
-                and assertion["invalid"][f"{value}"] in result["error_msg"]
+                and (
+                    assertion["invalid"][f"{value}"] in result["error_msg"]
+                    or assertion["invalid"][f"{value}"] in result["warning_msg"]
+                )
             )
 
         # encrypted_password option is valid but another config is ok
+        # Point bad config to unreachable server to prevent WinRM auth
+        # lockout — virt-who treats invalid encrypted_password as a WARNING
+        # (not ERROR), so the section stays VALID and it attempts real auth
+        # with the raw garbage password, which can lock the Windows account.
+        function_hypervisor.update("server", "unreachable.invalid")
         hypervisor_create(
             HYPERVISOR, REGISTER, SECOND_HYPERVISOR_FILE, SECOND_HYPERVISOR_SECTION
         )
@@ -496,7 +506,10 @@ class TestHypervNegative:
             result["error"] != 0
             and result["send"] == 1
             and result["thread"] == 1
-            and assertion["valid_multi_configs"] in result["error_msg"]
+            and (
+                assertion["valid_multi_configs"] in result["error_msg"]
+                or assertion["valid_multi_configs"] in result["warning_msg"]
+            )
         )
 
     @pytest.mark.tier2

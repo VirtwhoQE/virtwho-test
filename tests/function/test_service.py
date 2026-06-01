@@ -226,7 +226,9 @@ class TestVirtwhoService:
         :upstream: no
         :steps:
             1. create a new non_root user account for virt-who host
-            2. start virt-who service by the new account
+            2. add the account to the wheel group (polkit requires it
+               for systemctl service management on RHEL 9+)
+            3. start virt-who service by the new account
         :expectedresults:
             1. virt-who service can start and report normally by the non_root
                 account.
@@ -234,19 +236,32 @@ class TestVirtwhoService:
         host = config.virtwho.server
         username_new = "tester"
         password = config.virtwho.password
-        ssh_host.runcmd(f"useradd {username_new}")
-        cmd = rf'echo -e "{username_new}:{password}" | chpasswd'
-        ssh_host.runcmd(cmd)
+        try:
+            ssh_host.runcmd(f"userdel -rf {username_new} 2>/dev/null || true")
+            ssh_host.runcmd(f"useradd {username_new}")
+            cmd = rf'echo -e "{username_new}:{password}" | chpasswd'
+            ssh_host.runcmd(cmd)
+            ssh_host.runcmd(f"usermod -aG wheel {username_new}")
 
-        ssh_new = SSHConnect(host=host, user=username_new, pwd=password)
-        virtwho.stop()
-        virtwho.log_clean()
-        expect_run(
-            ssh=ssh_new, cmd="systemctl start virt-who", attrs=[f"Password:|{password}"]
-        )
-        rhsm_log = virtwho.rhsm_log_get()
-        result = virtwho.analyzer(rhsm_log)
-        assert result["send"] == 1 and result["error"] == 0 and result["thread"] == 1
+            ssh_new = SSHConnect(host=host, user=username_new, pwd=password)
+            virtwho.stop()
+            virtwho.log_clean()
+            ret, output = expect_run(
+                ssh=ssh_new,
+                cmd="sudo systemctl start virt-who",
+                attrs=[f"assword:|{password}"],
+            )
+            assert ret == 0, f"systemctl start failed (ret={ret}): {output}"
+            rhsm_log = virtwho.rhsm_log_get()
+            result = virtwho.analyzer(rhsm_log)
+            assert (
+                result["send"] == 1
+                and result["error"] == 0
+                and result["thread"] == 1
+            )
+        finally:
+            virtwho.stop()
+            ssh_host.runcmd(f"userdel -rf {username_new} 2>/dev/null || true")
 
     @pytest.mark.tier1
     def test_virtwho_service_after_host_reregister(self, virtwho, sm_host, ssh_host):

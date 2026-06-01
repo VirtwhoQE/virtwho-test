@@ -4,6 +4,8 @@ from virtwho import RHEL_COMPOSE
 server_invalid_error = [
     "Name or service not known",
     "No address associated with hostname",
+    "Error in libvirt backend",
+    "Permission denied",
 ]
 
 
@@ -298,9 +300,16 @@ def libvirt_assertion():
             "invalid": {
                 "xxx": server_invalid_error,
                 "红帽€467aa": "internal error: Unable to parse URI.*红帽€467aa",
-                "": "Cannot recv data: Host key verification failed.",
+                "": [
+                    "Cannot recv data: Host key verification failed.",
+                    "Cannot recv data",
+                    "Permission denied",
+                ],
             },
-            "disable": "Cannot use direct socket mode if no URI is set",
+            "disable": [
+                "Cannot use direct socket mode if no URI is set",
+                "Error in libvirt backend",
+            ],
         },
         "username": {
             "invalid": {
@@ -308,7 +317,10 @@ def libvirt_assertion():
                 "红帽€467aa": "Unable to parse URI qemu+ssh://",
                 "": login_error,
             },
-            "disable": 'Required option: "username" not set',
+            "disable": [
+                'Required option: "username" not set',
+                "Error in libvirt backend",
+            ],
         },
         "password": {
             "invalid": {

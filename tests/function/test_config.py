@@ -9,6 +9,8 @@
 
 import pytest
 
+from tests.conftest import wait_for_consumer
+
 from virtwho import HYPERVISOR, RHEL_COMPOSE
 from virtwho import HYPERVISOR_FILE
 from virtwho import REGISTER
@@ -466,8 +468,11 @@ class TestConfigurationPositive:
                 == hypervisor_data[f"hypervisor_{hypervisor_id}"]
             )
             if REGISTER == "rhsm":
-                assert rhsm.consumers(hypervisor_data["hypervisor_hostname"])
-                rhsm.host_delete(hypervisor_data["hypervisor_hostname"])
+                hypervisor_host = hypervisor_data["hypervisor_hostname"]
+                assert wait_for_consumer(rhsm, hypervisor_host), (
+                    f"Consumer {hypervisor_host} not found on stage"
+                )
+                rhsm.host_delete(hypervisor_host, verify=False)
             else:
                 if hypervisor_id == "hostname":
                     assert satellite.host_id(hypervisor_data["hypervisor_hostname"])
@@ -499,7 +504,9 @@ class TestConfigurationPositive:
         "from [system_environment] for kubevirt, hyperv, libvirt, and ahv",
         strict=False,
     )
-    def test_http_proxy_in_virtwho_conf(self, virtwho, globalconf, proxy_data):
+    def test_http_proxy_in_virtwho_conf(
+        self, virtwho, globalconf, ssh_host, proxy_data, bad_proxy_container
+    ):
         """Test the http_proxy, https_proxy and no_proxy options in /etc/virtwho.conf
 
         :title: virt-who: config: test http_proxy, https_proxy and no_proxy options (positive)
@@ -546,8 +553,9 @@ class TestConfigurationPositive:
             )
             # rhel13376_test = result["log"]
 
-            # run virt-who with unreachable http_proxy/https_proxy setting
-            globalconf.update("system_environment", proxy, proxy_data[f"bad_{proxy}"])
+            bad_port = bad_proxy_container["modes"]["unauth"]["port"]
+            bad_proxy_url = f"{proxy.split('_')[0]}://localhost:{bad_port}"
+            globalconf.update("system_environment", proxy, bad_proxy_url)
             result = virtwho.run_service()
             if HYPERVISOR in ("kubevirt", "hyperv", "libvirt"):
                 logger.info(

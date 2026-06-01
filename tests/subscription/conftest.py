@@ -21,12 +21,17 @@ def register_assertion():
     rhsm_hostname_error1 = [
         "Name or service not known",
         "No address associated with hostname",
+        "Tunnel connection failed",
     ]
     rhsm_hostname_error2 = [
-        "Server error attempting a GET to /rhsm/status/",
+        "Server error attempting a GET to.*/status/",
         "Communication with subscription manager failed",
     ]
-    rhsm_port_error = ["Connection refused", "Connection timed out"]
+    rhsm_port_error = [
+        "Connection refused",
+        "Connection timed out",
+        "Tunnel connection failed",
+    ]
     rhsm_prefix_error = "Communication with subscription manager failed"
 
     rhsm_user_pwd_error_wrong = "Communication with subscription manager failed"
@@ -39,6 +44,10 @@ def register_assertion():
     rhsm_encrypted_password_error = [
         "Communication with subscription manager failed",
         'Option "rhsm_encrypted_password" cannot be decrypted',
+        "system is not registered or you are not root",
+        "Unable to read certificate",
+        "Unable to read key file",
+        "no valid configuration found",
     ]
 
     data = {

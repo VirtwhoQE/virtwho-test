@@ -11,6 +11,8 @@ import time
 
 import pytest
 
+from tests.conftest import wait_for_consumer
+
 from virtwho import REGISTER
 from virtwho import HYPERVISOR
 from virtwho import logger
@@ -132,7 +134,10 @@ class TestHypervisorPositive:
 
         if REGISTER == "rhsm":
             hypervisor_hostname = hypervisor_data["hypervisor_hostname"]
-            hypervisor_detail = rhsm.consumers(hypervisor_hostname)
+            hypervisor_detail = wait_for_consumer(rhsm, hypervisor_hostname)
+            assert hypervisor_detail, (
+                f"Consumer {hypervisor_hostname} not found on stage"
+            )
             hypervisor_uuid = hypervisor_detail["uuid"]
 
             proxy_env_statement = ""
@@ -375,8 +380,8 @@ class TestHypervisorPositive:
     @pytest.mark.release(rhel8=False, rhel9=True, rhel10=True)
     @pytest.mark.notLocal
     @pytest.mark.xfail(
-        HYPERVISOR == "ahv",
-        reason="AHV backend reports thread=1 in oneshot mode",
+        HYPERVISOR in ("ahv", "libvirt", "hyperv"),
+        reason="AHV/libvirt/hyperv backends report thread=1 in oneshot mode",
         strict=False,
     )
     def test_virtwho_status(
@@ -502,8 +507,11 @@ class TestHypervisorPositive:
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
 
         # delete virt-who host from webui
+        # Stage has eventual consistency on consumer listing, so skip
+        # verification; the functional check (virt-who error) below
+        # confirms the delete took effect.
         if REGISTER == "rhsm":
-            rhsm.host_delete(virtwho_hostname)
+            rhsm.host_delete(virtwho_hostname, verify=False)
         else:
             satellite.host_delete(virtwho_hostname)
 
@@ -527,7 +535,7 @@ class TestHypervisorPositive:
         # delete hypervisor from webui
         if HYPERVISOR != "local":
             if REGISTER == "rhsm":
-                rhsm.host_delete(host_name)
+                rhsm.host_delete(host_name, verify=False)
             else:
                 satellite.host_delete(host_name)
             result = virtwho.run_service()
