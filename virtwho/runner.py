@@ -572,7 +572,7 @@ class VirtwhoRunner:
         if action == "status":
             if "Active: active (running)" in output:
                 output = "running"
-            if "Active: inactive (dead)" in output:
+            if "Active: inactive (dead)" in output or "Active: failed" in output:
                 output = "dead"
         return ret, output
 

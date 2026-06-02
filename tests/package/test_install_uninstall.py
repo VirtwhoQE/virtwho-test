@@ -16,6 +16,9 @@ from virtwho.base import package_check, package_install, package_uninstall
 from virtwho.base import dnf_download_pkg, random_string
 
 
+pytestmark = pytest.mark.notImageMode
+
+
 class TestInstallUninstall:
     @pytest.mark.tier1
     def test_install_uninstall_by_dnf(self, ssh_host):

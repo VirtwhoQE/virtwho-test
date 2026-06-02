@@ -25,6 +25,9 @@ def _skip_if_no_downgrade(ssh_host):
         )
 
 
+pytestmark = pytest.mark.notImageMode
+
+
 @pytest.mark.usefixtures("function_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")

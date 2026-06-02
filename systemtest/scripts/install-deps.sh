@@ -17,4 +17,8 @@ else
     dnf -y install virt-who
 fi
 
-podman pull images.paas.redhat.com/rhsmqe/rhsm-squid:latest 2>/dev/null || true
+# On image-mode container builds, nested podman is unavailable; the pull
+# is deferred to run-tests.sh which executes after the guest boots.
+if systemctl is-system-running &>/dev/null; then
+  podman pull images.paas.redhat.com/rhsmqe/rhsm-squid:latest 2>/dev/null || true
+fi

@@ -1,0 +1,4 @@
+summary: bootc container lint for virt-who
+test: ./test-bootc-lint.sh
+duration: 15m
+tag: [imagemode]

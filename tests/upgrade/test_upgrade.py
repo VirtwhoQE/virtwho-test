@@ -8,9 +8,14 @@
 :caselevel: Component
 """
 
+import pytest
+
 from virtwho import RHEL_COMPOSE, HYPERVISOR
 from virtwho.base import hypervisors_list, local_files_compare
 from virtwho.configure import hypervisor_create, VirtwhoSysConfig
+
+
+pytestmark = pytest.mark.notImageMode
 
 
 class TestUpgrade:
