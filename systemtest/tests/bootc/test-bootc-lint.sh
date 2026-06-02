@@ -3,12 +3,16 @@
 # base image and passes bootc container lint (no writes to /run or /tmp,
 # no duplicate kernels, all boot deps present, etc.).
 #
-# Gated by RUN_BOOTC_LINT=1 or IMAGE_MODE=1 — skips on standard regression
-# runs to avoid the ~15m podman build overhead.
+# Gated by RUN_BOOTC_LINT or IMAGE_MODE — skips on standard regression
+# runs to avoid the ~15m podman build overhead. Accepts common truthy
+# values (1, true, yes) to match both Jenkins (IMAGE_MODE=true) and
+# manual invocation (IMAGE_MODE=1).
 set -euo pipefail
 
-if [ "${RUN_BOOTC_LINT:-}" != "1" ] && [ "${IMAGE_MODE:-}" != "1" ]; then
-  echo "SKIP: bootc-lint only runs when RUN_BOOTC_LINT=1 or IMAGE_MODE=1"
+_is_truthy() { case "${1:-}" in 1|true|yes|on|TRUE|True|YES) return 0 ;; *) return 1 ;; esac; }
+
+if ! _is_truthy "${RUN_BOOTC_LINT:-}" && ! _is_truthy "${IMAGE_MODE:-}"; then
+  echo "SKIP: bootc-lint only runs when RUN_BOOTC_LINT or IMAGE_MODE is set"
   exit 0
 fi
 
@@ -28,7 +32,8 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 # When TEST_RPMS is set (gating pipeline), install those instead of repo default.
 if [ -n "${TEST_RPMS:-}" ]; then
-  INSTALL_CMD="dnf install -y ${TEST_RPMS} && dnf clean all"
+  # shellcheck disable=SC2086
+  INSTALL_CMD="dnf install -y --allowerasing ${TEST_RPMS} && dnf clean all"
 else
   INSTALL_CMD="dnf install -y virt-who && dnf clean all"
 fi
