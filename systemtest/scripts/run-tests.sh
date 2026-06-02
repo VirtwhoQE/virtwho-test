@@ -101,12 +101,15 @@ if is_bootc; then
   # and pass the result as a separate quoted -m argument to pytest.
   # NOTE: The -m extraction below only handles a single unquoted token
   # (e.g. "-m gating"). Compound expressions like '-m "tier1 and gating"'
-  # are not supported — use IMAGEMODE_PYTEST_MARKER env var to override.
-  IMAGEMODE_MARKER="not notImageMode"
-  if echo "${PYTEST_ADDOPTS:-}" | grep -qE '\-m[[:space:]]'; then
+  # are not supported — set IMAGEMODE_PYTEST_MARKER to override.
+  if [ -n "${IMAGEMODE_PYTEST_MARKER:-}" ]; then
+    IMAGEMODE_MARKER="${IMAGEMODE_PYTEST_MARKER}"
+  elif echo "${PYTEST_ADDOPTS:-}" | grep -qE '\-m[[:space:]]'; then
     EXISTING_MARKER=$(echo "$PYTEST_ADDOPTS" | sed -E 's/.*-m[[:space:]]+([^[:space:]]+).*/\1/')
     IMAGEMODE_MARKER="(${EXISTING_MARKER}) and not notImageMode"
     PYTEST_ADDOPTS=$(echo "${PYTEST_ADDOPTS}" | sed -E 's/[[:space:]]*-m[[:space:]]+[^[:space:]]+//')
+  else
+    IMAGEMODE_MARKER="not notImageMode"
   fi
   export PYTEST_ADDOPTS
   export IMAGEMODE_MARKER
