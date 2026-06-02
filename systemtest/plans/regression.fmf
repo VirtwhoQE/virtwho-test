@@ -7,7 +7,6 @@ description: |
 environment:
     HYPERVISOR: libvirt
     REGISTER: rhsm
-    ENV_FOR_DYNACONF: stage
     HTTPS_PROXY: http://squid.corp.redhat.com:3128
     HTTP_PROXY: http://squid.corp.redhat.com:3128
     NO_PROXY: localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
@@ -35,6 +34,9 @@ discover:
       - name: /tests/regression
         test: ./systemtest/scripts/run-tests.sh
         duration: 4h
+      - name: /tests/bootc-lint
+        test: ./systemtest/tests/bootc/test-bootc-lint.sh
+        duration: 15m
 
 execute:
     how: tmt

@@ -16,6 +16,9 @@ from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG, VIRTWHO_VERSION
 from virtwho.settings import DOCS_DIR, TEMP_DIR
 
 
+pytestmark = pytest.mark.notImageMode
+
+
 @pytest.mark.usefixtures("class_globalconf_clean")
 @pytest.mark.usefixtures("class_hypervisor")
 @pytest.mark.usefixtures("class_virtwho_d_conf_clean")

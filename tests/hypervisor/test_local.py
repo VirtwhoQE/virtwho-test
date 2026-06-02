@@ -14,6 +14,9 @@ from hypervisor import logger
 from virtwho import RHEL_COMPOSE
 
 
+pytestmark = pytest.mark.notImageMode
+
+
 @pytest.mark.usefixtures("function_host_register_for_local_mode")
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")
 @pytest.mark.usefixtures("class_debug_true")
