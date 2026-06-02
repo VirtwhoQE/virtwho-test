@@ -13,8 +13,12 @@ is_bootc() {
 if is_bootc && [ -d /opt/virtwho-test ]; then
   WRITABLE_DIR="${TMT_PLAN_DATA:-/var/tmp}/virtwho-test"
   echo "Image-mode: copying /opt/virtwho-test to writable ${WRITABLE_DIR}"
+  rm -rf "$WRITABLE_DIR"
   cp -a /opt/virtwho-test "$WRITABLE_DIR"
   VIRTWHO_TEST_DIR="$WRITABLE_DIR"
+elif is_bootc; then
+  echo "ERROR: bootc detected but /opt/virtwho-test not found (prepare phase may have failed)"
+  exit 1
 else
   VIRTWHO_TEST_DIR="/opt/virtwho-test"
 fi
@@ -29,19 +33,12 @@ printf 'Host *\n  StrictHostKeyChecking no\n  UserKnownHostsFile /root/.ssh/know
 chmod 600 /root/.ssh/config
 
 # Ensure password auth is enabled (RHEL 10+ drop-in configs may override sshd_config)
-mkdir -p /etc/ssh/sshd_config.d
-cat > /etc/ssh/sshd_config.d/99-virtwho-test.conf <<SSHEOF
-PasswordAuthentication yes
-PermitRootLogin yes
-SSHEOF
-for f in /etc/ssh/sshd_config.d/*.conf; do
-  [ -f "$f" ] && [ "$f" != "/etc/ssh/sshd_config.d/99-virtwho-test.conf" ] && {
-    sed -i 's/^PasswordAuthentication no/# &/' "$f" 2>/dev/null
-    sed -i 's/^PermitRootLogin \(no\|prohibit-password\|without-password\)/# &/' "$f" 2>/dev/null
-  } || true
-done
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=sshd-dropin.sh
+source "${SCRIPT_DIR}/sshd-dropin.sh"
 
 echo "redhat" | passwd --stdin root
+ssh-keygen -A 2>/dev/null || true
 systemctl restart sshd
 
 GUEST_IP=$(hostname -I | awk '{print $1}')
@@ -102,6 +99,9 @@ if is_bootc; then
   # Auto-exclude image-mode-incompatible tests. Extract any existing -m
   # expression from PYTEST_ADDOPTS, combine it with "not notImageMode",
   # and pass the result as a separate quoted -m argument to pytest.
+  # NOTE: The -m extraction below only handles a single unquoted token
+  # (e.g. "-m gating"). Compound expressions like '-m "tier1 and gating"'
+  # are not supported — use IMAGEMODE_PYTEST_MARKER env var to override.
   IMAGEMODE_MARKER="not notImageMode"
   if echo "${PYTEST_ADDOPTS:-}" | grep -qE '\-m[[:space:]]'; then
     EXISTING_MARKER=$(echo "$PYTEST_ADDOPTS" | sed -E 's/.*-m[[:space:]]+([^[:space:]]+).*/\1/')
