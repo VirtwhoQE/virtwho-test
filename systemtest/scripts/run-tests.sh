@@ -8,17 +8,31 @@ is_bootc() {
   bootc status --format=humanreadable 2>/dev/null | grep -q 'image'
 }
 
-# On bootc guests /opt is immutable at runtime. Copy the test directory
-# to a writable location so we can modify virtwho.ini and write artifacts.
-if is_bootc && [ -d /opt/virtwho-test ]; then
+# On bootc guests the filesystem is immutable. The prepare phase clones the
+# test repo into /usr/share/virtwho-test (ostree-safe) or /opt/virtwho-test
+# (standard). For bootc, copy to a writable location so we can modify
+# virtwho.ini, write artifacts, and create SSH keys.
+if is_bootc; then
+  # Locate the test directory — /usr/share/virtwho-test is the ostree-safe
+  # path used by setup-virtwho-test.sh on bootc; /opt/virtwho-test is the
+  # legacy fallback.
+  BOOTC_SOURCE=""
+  for candidate in /usr/share/virtwho-test /opt/virtwho-test; do
+    if [ -d "$candidate" ]; then
+      BOOTC_SOURCE="$candidate"
+      break
+    fi
+  done
+  if [ -z "$BOOTC_SOURCE" ]; then
+    echo "ERROR: bootc detected but virtwho-test not found at /usr/share/virtwho-test or /opt/virtwho-test"
+    echo "The prepare phase may have failed. Check the TMT container build logs."
+    exit 1
+  fi
   WRITABLE_DIR="${TMT_PLAN_DATA:-/var/tmp}/virtwho-test"
-  echo "Image-mode: copying /opt/virtwho-test to writable ${WRITABLE_DIR}"
+  echo "Image-mode: copying ${BOOTC_SOURCE} to writable ${WRITABLE_DIR}"
   rm -rf "$WRITABLE_DIR"
-  cp -a /opt/virtwho-test "$WRITABLE_DIR"
+  cp -a "$BOOTC_SOURCE" "$WRITABLE_DIR"
   VIRTWHO_TEST_DIR="$WRITABLE_DIR"
-elif is_bootc; then
-  echo "ERROR: bootc detected but /opt/virtwho-test not found (prepare phase may have failed)"
-  exit 1
 else
   VIRTWHO_TEST_DIR="/opt/virtwho-test"
 fi
