@@ -4,6 +4,12 @@
 set -euo pipefail
 
 is_bootc() {
+  # Check IMAGE_MODE env var first (set by the TMT plan / Jenkins job),
+  # then fall back to probing bootc. The env var is the most reliable
+  # signal because bootc status output format varies across versions.
+  case "${IMAGE_MODE:-}" in
+    1|true|yes|on|TRUE|True|YES) return 0 ;;
+  esac
   command -v bootc > /dev/null && \
   bootc status --format=humanreadable 2>/dev/null | grep -q 'image'
 }
