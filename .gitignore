@@ -133,3 +133,4 @@ megalinter-reports/
 # IDE files
 .idea/
 virtwho.ini
+tmp

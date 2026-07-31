@@ -83,7 +83,13 @@ if [ "$HYP" = "libvirt" ]; then
         echo "Setting up SSH trust to $HYP hypervisor at $HYP_SERVER"
         ssh-keyscan -p 22 "$HYP_SERVER" >> /root/.ssh/known_hosts 2>&1 || true
 
-        if [ -n "${CCT_SSH_KEY_B64:-}" ]; then
+        if [ -n "${CCT_SSH_KEY_URL:-}" ]; then
+            echo "Fetching SSH key from CCT_SSH_KEY_URL"
+            curl -fsSL --retry 3 --retry-delay 10 --connect-timeout 5 \
+                -o /root/.ssh/id_rsa "$CCT_SSH_KEY_URL"
+            chmod 600 /root/.ssh/id_rsa
+            ssh-keygen -y -f /root/.ssh/id_rsa > /root/.ssh/id_rsa.pub
+        elif [ -n "${CCT_SSH_KEY_B64:-}" ]; then
             echo "Using injected SSH key (CCT_SSH_KEY_B64)"
             echo "$CCT_SSH_KEY_B64" | base64 -d > /root/.ssh/id_rsa
             chmod 600 /root/.ssh/id_rsa
