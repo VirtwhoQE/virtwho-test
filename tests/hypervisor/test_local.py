@@ -7,12 +7,12 @@
 :caselevel: Component
 """
 
-import pytest
 import time
 
+import pytest
 from hypervisor import logger
-from virtwho import RHEL_COMPOSE
 
+from virtwho import RHEL_COMPOSE
 
 pytestmark = pytest.mark.notImageMode
 
@@ -97,7 +97,7 @@ def operate_option(action, option, file, ssh_host):
         cmd = f'sed -i "s|^#{option}|{option}|g" {file}'
     elif action == "disable":
         cmd = f'sed -i "s|^{option}|#{option}|g" {file}'
-    ret, output = ssh_host.runcmd(cmd)
+    ret, _output = ssh_host.runcmd(cmd)
     if ret == 0:
         logger.info(f"Succeeded to {action} option {option}")
         return True

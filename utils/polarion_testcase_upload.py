@@ -1,17 +1,18 @@
+import argparse
 import json
 import os
 import subprocess
-import argparse
-import time
 import sys
+import time
 import xml.etree.ElementTree as ET
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import logger, FailException, config
 from properties_update import virtwho_ini_update
+
+from virtwho import FailException, config, logger
 
 
 def polarion_test_case_upload(args):
@@ -111,7 +112,7 @@ def xml_file_upload():
         f"{args.url} > {args.log_file}"
     )
     logger.info(cmd)
-    ret, output = subprocess.getstatusoutput(cmd)
+    ret, _output = subprocess.getstatusoutput(cmd)
     time.sleep(60)
     if ret == 0:
         logger.info("Finished the upload step")
@@ -124,7 +125,7 @@ def job_id_get():
     Get the job id of polarion upload
     """
     ret, output = subprocess.getstatusoutput(
-        "cat %s | awk '{print $4}' | awk '$1=$1'" % args.log_file
+        f"cat {args.log_file} | awk '{{print $4}}' | awk '$1=$1'"
     )
     if ret == 0:
         logger.info(f"Succeeded to get the polarion job id: {output}")

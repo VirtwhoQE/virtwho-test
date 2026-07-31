@@ -1,18 +1,20 @@
+import argparse
 import os
 import re
-import time
-import argparse
-import sys
 import subprocess
-from lxml import etree
+import sys
+import time
+
 from funcy import first
+from lxml import etree
+
 from .beaker_types import Report
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import logger, FailException
+from virtwho import FailException, logger
 from virtwho.settings import config
 
 """
@@ -31,8 +33,8 @@ def run_cmd(cmd):
     # #beaker_client_kinit(ssh_client, config.beaker.keytab, config.beaker.principal)
     # ssh.runcmd(cmd)
     logger.info(f"subprocess cmd >>> {cmd}")
-    process = subprocess.run(cmd, shell=True, capture_output=True, encoding="UTF-8")
-    logger.info("<<< stdout\n{}".format(process.stdout))
+    process = subprocess.run(cmd, shell=True, capture_output=True, encoding="UTF-8", check=False)
+    logger.info(f"<<< stdout\n{process.stdout}")
     return (process.returncode, process.stdout)
 
 
@@ -231,7 +233,7 @@ def beaker_client_kinit(keytab, principal):
     :param principal: jenkins principal
     :return: True/False
     """
-    ret, output = run_cmd(f"kinit -k -t {keytab} {principal}")
+    ret, _output = run_cmd(f"kinit -k -t {keytab} {principal}")
     if ret == 0:
         logger.info("Succeeded to initiate beaker client")
         return True

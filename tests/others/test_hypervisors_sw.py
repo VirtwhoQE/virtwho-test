@@ -11,12 +11,13 @@
 # the case is just used to test the environments to support Subscription Watch team.
 
 import pytest
-from virtwho.configure import config, hypervisor_create
-from virtwho.register import SubscriptionManager, RHSM
-from virtwho.runner import VirtwhoRunner
-from virtwho.base import hostname_get
-from virtwho.ssh import SSHConnect
+
 from utils.properties_update import virtwho_ini_update
+from virtwho.base import hostname_get
+from virtwho.configure import config, hypervisor_create
+from virtwho.register import RHSM, SubscriptionManager
+from virtwho.runner import VirtwhoRunner
+from virtwho.ssh import SSHConnect
 
 
 @pytest.mark.usefixtures("class_globalconf_clean")

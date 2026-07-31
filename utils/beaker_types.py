@@ -1,6 +1,7 @@
-from lxml import etree
 from dataclasses import dataclass
-from funcy import first, all
+
+from funcy import all, first
+from lxml import etree
 
 
 @dataclass
@@ -50,10 +51,10 @@ class Report:
                 whiteboard,
                 hostname,
             ),
-            list(
+            [
                 Task(el.attrib["name"], el.attrib["status"], el.attrib["result"])
                 for el in root.xpath("/job/recipeSet/recipe/task")
-            ),
+            ],
         )
         return report
 
@@ -68,5 +69,5 @@ class Report:
         )
         return self.job.is_running and all(
             task.is_completed
-            for task in (set(self.tasks) - set((runningReservesysTask,)))
+            for task in (set(self.tasks) - {runningReservesysTask})
         )

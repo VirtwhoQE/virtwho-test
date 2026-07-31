@@ -13,10 +13,10 @@ def register_assertion():
     ]
     owner_error_null = "system is not registered or you are not root"
     owner_error_disable = [
-        "owner not in|"
+        ("owner not in|"
         "owner.* not set|"
         "virt-who can't be started|"
-        "Communication with subscription manager failed"
+        "Communication with subscription manager failed")
     ]
     rhsm_hostname_error1 = [
         "Name or service not known",

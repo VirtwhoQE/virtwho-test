@@ -9,6 +9,7 @@
 """
 
 import pytest
+
 from virtwho.base import msg_search
 
 
@@ -42,7 +43,7 @@ class TestRHSM:
             This host has access to content, regardless of subscription status'
 
         """
-        ret, output = ssh_guest.runcmd("subscription-manager status")
+        _ret, output = ssh_guest.runcmd("subscription-manager status")
         msg = (
             "Content Access Mode is set to Simple Content Access. "
             "This host has access to content, regardless of subscription status."

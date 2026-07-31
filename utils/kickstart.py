@@ -1,15 +1,15 @@
+import argparse
 import os
 import random
-import argparse
 import string
-import time
 import sys
+import time
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import base, logger, FailException
+from virtwho import FailException, base, logger
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 
@@ -36,7 +36,7 @@ def install_rhel_by_grup(args):
                     ssh_host, args.rhel_compose, "/etc/yum.repos.d/compose.repo"
                 )
             time.sleep(30)
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         logger.error(e)
     finally:
         ssh_host.runcmd(f"rm -rf {ks_path}")
@@ -86,7 +86,7 @@ def ks_file_create(ssh, ks_path, repo_base, repo_extra):
         f"%end\n"
         f"%post\n"
         f'sed -i "s/#*PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config\n'
-        f'sed -i "s@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g" /etc/pam.d/sshd\n'
+        f'sed -i "s@session\\s*required\\s*pam_loginuid.so@session optional pam_loginuid.so@g" /etc/pam.d/sshd\n'
         f"%end\n"
         f"EOF"
     )
@@ -131,19 +131,19 @@ def grub_update(ssh, ks_url, vmlinuz_url, initrd_url, repo_url):
     cmd = (
         "cat <<EOF > /etc/grub.d/40_custom\n"
         "#!/bin/sh\n"
-        "exec tail -n +3 \$0\n"
-        "menuentry '%s' --class red --class gnu-linux --class gnu --class os {\n"
+        "exec tail -n +3 \\$0\n"
+        f"menuentry '{menu_title}' --class red --class gnu-linux --class gnu --class os {{\n"
         "load_video\n"
         "set gfxpayload=keep\n"
         "insmod gzio\n"
         "insmod part_msdos\n"
         "insmod xfs\n"
         'set root="hd0,msdos1"\n'
-        "linux16 /%s ksdevice=bootif ip=dhcp ks=%s repo=%s quiet LANG=en_US.UTF-8 acpi=off\n"
-        "initrd16 /%s\n"
+        f"linux16 /{vmlinuz_name} ksdevice=bootif ip=dhcp ks={ks_url} repo={repo_url} quiet LANG=en_US.UTF-8 acpi=off\n"
+        f"initrd16 /{initrd_name}\n"
         "}\n"
         "EOF"
-    ) % (menu_title, vmlinuz_name, ks_url, repo_url, initrd_name)
+    )
     ret1, _ = ssh.runcmd(cmd)
     ret2, _ = ssh.runcmd("grub2-mkconfig -o /boot/grub2/grub.cfg")
     ret3, _ = ssh.runcmd(f'grub2-set-default "{menu_title}"; grub2-editenv list')

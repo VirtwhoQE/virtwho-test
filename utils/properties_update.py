@@ -1,12 +1,12 @@
-import os
 import argparse
+import os
 import sys
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho.settings import Configure, TEST_DATA
+from virtwho.settings import TEST_DATA, Configure
 
 
 def virtwho_ini_props_update(args):

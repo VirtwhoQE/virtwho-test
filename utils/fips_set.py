@@ -1,15 +1,14 @@
-import os
 import argparse
+import os
 import sys
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho.ssh import SSHConnect
-from virtwho import config, logger
+from virtwho import FailException, config, logger
 from virtwho.base import system_reboot
-from virtwho import FailException
+from virtwho.ssh import SSHConnect
 
 
 def fips_set_for_rhel_host(args):

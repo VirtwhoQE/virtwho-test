@@ -1,5 +1,5 @@
-import os
 import argparse
+import os
 import sys
 import time
 
@@ -7,16 +7,25 @@ curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
-from virtwho import logger, FailException
+from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
+
+from utils.beaker import install_host_by_beaker
+from utils.parse_ci_message import umb_ci_message_parser
+from utils.properties_update import virtwho_ini_props_update
+from virtwho import FailException, logger
+from virtwho.base import (
+    hostname_get,
+    ipaddr_get,
+    random_string,
+    rhel_compose_repo,
+    rhel_version,
+    ssh_connect,
+    system_init,
+    url_file_download,
+    url_validation,
+)
 from virtwho.settings import config
 from virtwho.ssh import SSHConnect
-from virtwho.base import ssh_connect, rhel_compose_repo, system_init, rhel_version
-from virtwho.base import url_validation, url_file_download, hostname_get
-from virtwho.base import ipaddr_get, random_string
-from utils.parse_ci_message import umb_ci_message_parser
-from utils.beaker import install_host_by_beaker
-from utils.properties_update import virtwho_ini_props_update
-from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
 
 
 def provision_virtwho_host(args):
@@ -26,7 +35,7 @@ def provision_virtwho_host(args):
     """
     logger.info("+++ Start to deploy the virt-who host +++")
 
-    virtwho_ini_props = dict()
+    virtwho_ini_props = {}
     # Parse CI_MESSAGE for gating test
     if args.gating_msg:
         msg = umb_ci_message_parser(args)

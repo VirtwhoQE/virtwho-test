@@ -1,7 +1,8 @@
 import os
-import socket
+
 import paramiko
-from virtwho import logger, FailException
+
+from virtwho import FailException, logger
 
 
 class SSHConnect:
@@ -50,7 +51,7 @@ class SSHConnect:
         if self._ssh is not None:
             try:
                 self._ssh.close()
-            except Exception:
+            except OSError:
                 pass
             self._ssh = None
 
@@ -127,11 +128,11 @@ class SSHConnect:
         ssh = self._connect()
         logger.info(f"[{self.host}:{self.port}] >>> {cmd}")
         try:
-            stdin, stdout, stderr = ssh.exec_command(cmd)
-        except Exception:
+            _stdin, stdout, stderr = ssh.exec_command(cmd)
+        except (OSError, paramiko.SSHException):
             self._ssh = None
             ssh = self._connect()
-            stdin, stdout, stderr = ssh.exec_command(cmd)
+            _stdin, stdout, stderr = ssh.exec_command(cmd)
 
         if timeout is not None:
             stdout.channel.settimeout(timeout)
@@ -139,18 +140,18 @@ class SSHConnect:
         try:
             code = stdout.channel.recv_exit_status()
             stdout, stderr = stdout.read(), stderr.read()
-        except socket.timeout:
+        except TimeoutError:
             logger.error(f"Command execution timed out after {timeout} seconds: {cmd}")
             self.close()
             raise FailException(f"Command timed out after {timeout} seconds: {cmd}")
 
         if if_stdout or not stderr:
             if log_print:
-                logger.info("<<< stdout\n{}".format(stdout.decode()))
+                logger.info(f"<<< stdout\n{stdout.decode()}")
             return code, stdout.decode()
         else:
             if log_print:
-                logger.info("<<< stderr\n{}".format(stderr.decode()))
+                logger.info(f"<<< stderr\n{stderr.decode()}")
             return code, stderr.decode()
 
     def get_file(self, remote_file, local_file):
@@ -189,7 +190,7 @@ class SSHConnect:
                 remote_file = os.path.join(remote_dir, a)
                 try:
                     sftp.put(local_file, remote_file)
-                except Exception:
+                except OSError:
                     sftp.mkdir(os.path.split(remote_file)[0])
                     sftp.put(local_file, remote_file)
             for name in dirs:
@@ -198,6 +199,6 @@ class SSHConnect:
                 remote_path = os.path.join(remote_dir, a)
                 try:
                     sftp.mkdir(remote_path)
-                except Exception as e:
+                except OSError as e:
                     logger.info(e)
         conn.close()

@@ -8,10 +8,11 @@
 """
 
 import pytest
-from virtwho.settings import config
-from virtwho.configure import hypervisor_create
-from virtwho.base import msg_search, ssh_access_no_password, expect_run
+
 from virtwho import HYPERVISOR, REGISTER, logger
+from virtwho.base import expect_run, msg_search, ssh_access_no_password
+from virtwho.configure import hypervisor_create
+from virtwho.settings import config
 from virtwho.ssh import SSHConnect
 
 
@@ -314,8 +315,8 @@ class TestVirtwhoService:
             )
 
             # firstly unregister and then clean
-            ret_1, _ = ssh_host.runcmd("subscription-manager unregister")
-            ret_2, _ = ssh_host.runcmd("subscription-manager clean")
+            _ret_1, _ = ssh_host.runcmd("subscription-manager unregister")
+            _ret_2, _ = ssh_host.runcmd("subscription-manager clean")
             rhsm_log = virtwho.rhsm_log_get(wait=15)
             thread_num = virtwho.thread_number()
             assert msg_search(rhsm_log, "system is not registered") and thread_num == 1

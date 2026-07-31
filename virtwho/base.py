@@ -4,10 +4,9 @@ import random
 import re
 import shlex
 import string
-import operator
 import time
 
-from virtwho import logger, FailException
+from virtwho import FailException, logger
 from virtwho.settings import config
 
 
@@ -150,9 +149,7 @@ def host_ping(host, port=22):
     :param port: host port
     """
     ret = os.system(f"ping -c 5 {host} -p {port}")
-    if ret == 0:
-        return True
-    return False
+    return ret == 0
 
 
 def rhel_version(ssh):
@@ -178,9 +175,7 @@ def url_validation(url):
     output = os.popen(
         f"if ( curl -o/dev/null -sfI '{url}' );then echo 'true';else echo 'false';fi"
     ).read()
-    if output.strip() == "true":
-        return True
-    return False
+    return output.strip() == "true"
 
 
 def gating_msg_parser(json_msg):
@@ -189,9 +184,9 @@ def gating_msg_parser(json_msg):
     :param json_msg: gating msg got from UMB, which should be a Json
     :return: a dict
     """
-    env = dict()
+    env = {}
     msg = json.loads(json_msg)
-    if "info" in msg.keys():
+    if "info" in msg:
         build_id = msg["info"]["build_id"]
         task_id = msg["info"]["task_id"]
     else:
@@ -331,13 +326,8 @@ def local_files_compare(file1, file2):
     :param file2: local file 2
     :reture: True or False
     """
-    fp1 = open(file1)
-    fp2 = open(file2)
-    flist1 = [i for i in fp1]
-    flist2 = [x for x in fp2]
-    fp1.close()
-    fp2.close()
-    return operator.eq(flist1, flist2)
+    with open(file1) as fp1, open(file2) as fp2:
+        return fp1.readlines() == fp2.readlines()
 
 
 def package_info_analyzer(ssh, pkg):
@@ -349,7 +339,7 @@ def package_info_analyzer(ssh, pkg):
     :reture: a dict
     """
     _, output = ssh.runcmd(f"rpm -qi {pkg}")
-    data = dict()
+    data = {}
     info = output.strip().split("\n")
     current_field = None
 
@@ -479,7 +469,7 @@ def package_upgrade(ssh, pkg_name, rpm=None):
     cmd = f"yum upgrade -y {pkg_name}"
     if rpm:
         cmd = f"rpm -Uvh {rpm}"
-    ret, output = ssh.runcmd(cmd)
+    ret, _output = ssh.runcmd(cmd)
     if ret != 0:
         raise FailException(f"Failed to upgrade {pkg_name}")
 
@@ -494,7 +484,7 @@ def package_downgrade(ssh, pkg_name, rpm=False):
     cmd = f"yum downgrade -y {pkg_name}"
     if rpm:
         cmd = f"rpm -Uvh --oldpackage {rpm}"
-    ret, output = ssh.runcmd(cmd)
+    ret, _output = ssh.runcmd(cmd)
     if ret != 0:
         raise FailException(f"Failed to downgrade {pkg_name}")
 
@@ -682,7 +672,7 @@ def msg_search(output, msgs, check="or"):
     """
     if type(msgs) is str:
         msgs = [msgs]
-    search_list = list()
+    search_list = []
     for msg in msgs:
         if_find = "No"
         if "|" in msg:
@@ -696,13 +686,9 @@ def msg_search(output, msgs, check="or"):
                 logger.info(f"Succeeded to find message: {msg}")
         search_list.append(if_find)
     if check == "or":
-        if "Yes" in search_list:
-            return True
-        return False
+        return "Yes" in search_list
     else:
-        if "No" in search_list:
-            return False
-        return True
+        return "No" not in search_list
 
 
 def msg_number(output, msg):
@@ -712,7 +698,7 @@ def msg_number(output, msg):
     :param msg: message string to be searched
     :return: the message number
     """
-    number = len(re.findall(msg, output, re.I))
+    number = len(re.findall(msg, output, re.IGNORECASE))
     logger.info(f"Find '{msg}' {number} times")
     return number
 
@@ -750,7 +736,7 @@ def expect_run(ssh, cmd, attrs, timeout=60):
     :param attrs: such as ['Password:|password']
     :param timeout: timeout in seconds for expect operations (default: 60)
     """
-    options = list()
+    options = []
     random_str = random_string()
     filename = f"/tmp/virtwho-{random_str}.sh"
     pw_files = []

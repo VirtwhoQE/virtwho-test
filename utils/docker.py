@@ -1,13 +1,13 @@
+import argparse
 import os
 import random
-import argparse
 import sys
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import logger, FailException
+from virtwho import FailException, logger
 from virtwho.base import rhel_compose_repo
 from virtwho.ssh import SSHConnect
 
@@ -109,9 +109,7 @@ def docker_image_exist(ssh, image_name):
     :param image_name: image name to check
     """
     ret, _ = ssh.runcmd(f"docker images | grep {image_name}")
-    if ret == 0:
-        return True
-    return False
+    return ret == 0
 
 
 def docker_container_exist(ssh, keyword):
@@ -122,9 +120,7 @@ def docker_container_exist(ssh, keyword):
     """
     keyword = str(keyword)
     ret, output = ssh.runcmd(f"docker ps -a | grep '{keyword}'")
-    if ret == 0 and keyword in output:
-        return True
-    return False
+    return bool(ret == 0 and keyword in output)
 
 
 def docker_container_port(ssh):

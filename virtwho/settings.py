@@ -9,7 +9,7 @@ logger = getLogger(__name__)
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__dict__ = self
 
 
@@ -41,7 +41,7 @@ class Configure:
         remote server if remote_ parameters provided to achieve updating
         remote file.
         """
-        for key in self.config._sections.keys():
+        for key in self.config._sections:
             setattr(self, key, getattr(self.config._sections, key))
         with open(self.local_file, "w") as f:
             self.config.write(f, space_around_delimiters=False)

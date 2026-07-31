@@ -1,20 +1,22 @@
+import time
+
 import pytest
 
-from virtwho.settings import config
-from virtwho.runner import VirtwhoRunner
-from virtwho.configure import VirtwhoSysConfig
-from virtwho.configure import VirtwhoGlobalConfig
-from virtwho.configure import RHSMConf
-from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
-from virtwho.configure import get_register_handler
-from virtwho.configure import hypervisor_create
-
-from virtwho.ssh import SSHConnect
-from virtwho.register import SubscriptionManager, Satellite, RHSM
-from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, logger
+from virtwho import HYPERVISOR, REGISTER, RHEL_COMPOSE, FailException, logger
 from virtwho.base import hostname_get
-
-import time
+from virtwho.configure import (
+    RHSMConf,
+    VirtwhoGlobalConfig,
+    VirtwhoSysConfig,
+    get_hypervisor_handler,
+    get_register_handler,
+    hypervisor_create,
+    virtwho_ssh_connect,
+)
+from virtwho.register import RHSM, Satellite, SubscriptionManager
+from virtwho.runner import VirtwhoRunner
+from virtwho.settings import config
+from virtwho.ssh import SSHConnect
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
 register_handler = get_register_handler(REGISTER)
@@ -431,7 +433,7 @@ def _resolve_guest_uuid(ssh, matched_hv, hyp_type, guest_uuid_ini):
                         f"virsh domuuid: {guest_uuid_ini}\n"
                     )
                     sys.stderr.flush()
-            except Exception as virsh_err:
+            except (OSError, FailException) as virsh_err:
                 sys.stderr.write(
                     f"[oneshot-discover] virsh domuuid failed "
                     f"for {guest_name}: {virsh_err}\n"
@@ -568,7 +570,7 @@ def _oneshot_discover(data):
             f"guest_uuid={data.get('guest_uuid')}"
         )
 
-    except Exception as e:
+    except (OSError, KeyError, ValueError) as e:
         import traceback
 
         sys.stderr.write(
@@ -586,7 +588,7 @@ def hypervisor_data(ssh_guest):
     (uuid, hostname, version, cpu, cluster, guest_uuid) with values
     discovered from the hypervisor's API at runtime.  This avoids stale
     or incorrect INI data causing false test failures."""
-    data = dict()
+    data = {}
     data["guest_name"] = hypervisor_handler.guest_name
     data["guest_ip"] = hypervisor_handler.guest_ip
     data["guest_uuid"] = hypervisor_handler.guest_uuid
@@ -655,7 +657,7 @@ def hypervisor_data(ssh_guest):
 @pytest.fixture(scope="session")
 def register_data():
     """Register data for testing from virtwho.ini file"""
-    data = dict()
+    data = {}
     data["server"] = register_handler.server
     data["username"] = register_handler.username
     data["password"] = register_handler.password
@@ -735,7 +737,7 @@ def bad_proxy_was_used(ssh_host, container_name):
 def proxy_data():
     """Proxy data for testing (good proxy only; bad proxy comes from
     the bad_proxy_container fixture)."""
-    proxy = dict()
+    proxy = {}
     proxy_server = config.virtwho.proxy_server
     proxy_port = config.virtwho.proxy_port
     good_proxy = f"{proxy_server}:{proxy_port}"
@@ -763,7 +765,7 @@ def proxy_data():
 @pytest.fixture(scope="session")
 def owner_data():
     """Owner data for testing"""
-    owner = dict()
+    owner = {}
     bad_owner = "bad_owner"
     owner["owner"] = register_handler.default_org
     owner["bad_owner"] = bad_owner
@@ -784,7 +786,7 @@ def owner_data():
 @pytest.fixture(scope="session")
 def configs_data():
     """Configs data for testing"""
-    configs = dict()
+    configs = {}
     configs["wrong_configs"] = "xxxx"
     configs["error"] = [
         "Unable to read configuration file",

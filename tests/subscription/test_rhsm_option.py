@@ -8,13 +8,16 @@
 """
 
 import pytest
-from virtwho.base import msg_search
-from virtwho import logger, REGISTER, HYPERVISOR
-from virtwho import SECOND_HYPERVISOR_FILE
-from virtwho import SECOND_HYPERVISOR_SECTION
-from tests.conftest import bad_proxy_was_used
 
-from virtwho.base import encrypt_password
+from tests.conftest import bad_proxy_was_used
+from virtwho import (
+    HYPERVISOR,
+    REGISTER,
+    SECOND_HYPERVISOR_FILE,
+    SECOND_HYPERVISOR_SECTION,
+    logger,
+)
+from virtwho.base import encrypt_password, msg_search
 from virtwho.configure import hypervisor_create
 
 

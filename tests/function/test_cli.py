@@ -9,10 +9,10 @@
 
 import threading
 import time
+
 import pytest
 
-from virtwho import HYPERVISOR, RHEL_COMPOSE
-from virtwho import HYPERVISOR_FILE, config, logger
+from virtwho import HYPERVISOR, HYPERVISOR_FILE, RHEL_COMPOSE, config, logger
 from virtwho.base import encrypt_password
 
 

@@ -1,13 +1,20 @@
 import os
+
 import pytest
-from virtwho.settings import Configure
-from virtwho.settings import config
-from virtwho.settings import TEMP_DIR
-from virtwho.ssh import SSHConnect
+
+from virtwho import (
+    HYPERVISOR,
+    PRINT_JSON_FILE,
+    REGISTER,
+    RHEL_VERSION,
+    RHSM_CONF_BACKUP,
+    SYSCONFIG_FILE,
+    VIRTWHO_CONF_BACKUP,
+    logger,
+)
 from virtwho.base import hostname_get
-from virtwho import logger, RHSM_CONF_BACKUP, VIRTWHO_CONF_BACKUP, SYSCONFIG_FILE
-from virtwho import PRINT_JSON_FILE, HYPERVISOR, REGISTER
-from virtwho import RHEL_VERSION
+from virtwho.settings import TEMP_DIR, Configure, config
+from virtwho.ssh import SSHConnect
 
 
 class VirtwhoHypervisorConfig:
@@ -192,7 +199,7 @@ class VirtwhoSysConfig:
         options = {'VIRTWHO_DEBUG' : '0', 'VIRTWHO_ONE_SHOT': '0' }
         """
         with open(self.local_file, "w") as fp:
-            for option in configs.keys():
+            for option in configs:
                 assert option in [
                     "VIRTWHO_DEBUG",
                     "VIRTWHO_ONE_SHOT",

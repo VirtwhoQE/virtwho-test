@@ -1,23 +1,23 @@
+import argparse
 import os
 import re
-import argparse
 import sys
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(os.path.split(rootPath)[0])
 
-from virtwho import logger
-from virtwho.settings import config
-from virtwho.ssh import SSHConnect
-from virtwho.base import hostname_get, host_ping, ssh_connect
-from virtwho.base import rhel_host_uuid_get
-from utils.properties_update import virtwho_ini_update
-from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
+from hypervisor.virt.ahv.ahvapi import AHVApi
 from hypervisor.virt.esx.powercli import PowerCLI
 from hypervisor.virt.hyperv.hypervcli import HypervCLI
 from hypervisor.virt.kubevirt.kubevirtapi import KubevirtApi
-from hypervisor.virt.ahv.ahvapi import AHVApi
+from hypervisor.virt.libvirt.libvirtcli import LibvirtCLI
+
+from utils.properties_update import virtwho_ini_update
+from virtwho import logger
+from virtwho.base import host_ping, hostname_get, rhel_host_uuid_get, ssh_connect
+from virtwho.settings import config
+from virtwho.ssh import SSHConnect
 
 state_good = "GOOD"
 state_update = "UPDATED"
@@ -132,9 +132,11 @@ def esx_monitor():
         virtwho_ini_update("esx", "state", esx_state)
         for option, value in esx_dict.items():
             virtwho_ini_update("esx", option, value)
-        return esx_state
 
 
+
+
+    return esx_state
 def hyperv_monitor():
     """
     Check the Hyperv state, including the Hyperv server testing and the
@@ -227,9 +229,11 @@ def hyperv_monitor():
         virtwho_ini_update("hyperv", "state", hyperv_state)
         for option, value in hyperv_dict.items():
             virtwho_ini_update("hyperv", option, value)
-        return hyperv_state
 
 
+
+
+    return hyperv_state
 def kubevirt_monitor():
     """
     Check the Kubevirt state, including the Kubevirt server testing and the
@@ -382,9 +386,11 @@ def kubevirt_monitor():
         virtwho_ini_update("kubevirt", "state", kubevirt_state)
         for option, value in kubevirt_dict.items():
             virtwho_ini_update("kubevirt", option, value)
-        return kubevirt_state
 
 
+
+
+    return kubevirt_state
 def ahv_monitor():
     """
     Check the Nutanix state, including the Nutanix server testing and the
@@ -505,9 +511,11 @@ def ahv_monitor():
         virtwho_ini_update("ahv", "state", ahv_state)
         for option, value in ahv_dict.items():
             virtwho_ini_update("ahv", option, value)
-        return ahv_state
 
 
+
+
+    return ahv_state
 def libvirt_monitor():
     """
     Check the Libvirt state, including the Libvirt server testing and the
@@ -587,9 +595,11 @@ def libvirt_monitor():
         virtwho_ini_update("libvirt", "state", libvirt_state)
         for option, value in libvirt_dict.items():
             virtwho_ini_update("libvirt", option, value)
-        return libvirt_state
 
 
+
+
+    return libvirt_state
 def rhevm_monitor():
     return "SKIP"
 

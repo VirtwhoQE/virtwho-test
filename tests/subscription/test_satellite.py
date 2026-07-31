@@ -9,8 +9,9 @@
 """
 
 import pytest
-from virtwho.base import msg_search
+
 from virtwho import HYPERVISOR
+from virtwho.base import msg_search
 from virtwho.configure import get_hypervisor_handler
 
 hypervisor_handler = get_hypervisor_handler(HYPERVISOR)
@@ -45,7 +46,7 @@ class TestSatellite:
             2. get the output with 'Content Access Mode is set to Simple Content Access'
             Access .* is enabled'
         """
-        ret, output = ssh_guest.runcmd("subscription-manager status")
+        _ret, output = ssh_guest.runcmd("subscription-manager status")
         msg = "Content Access Mode is set to Simple Content Access"
         assert msg_search(output, msg)
         # Todo: design new steps and/or cases related to virt-who

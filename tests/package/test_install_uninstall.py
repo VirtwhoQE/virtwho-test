@@ -11,10 +11,15 @@
 import re
 
 import pytest
-from virtwho import VIRTWHO_PKG, RHEL_COMPOSE
-from virtwho.base import package_check, package_install, package_uninstall
-from virtwho.base import dnf_download_pkg, random_string
 
+from virtwho import RHEL_COMPOSE, VIRTWHO_PKG
+from virtwho.base import (
+    dnf_download_pkg,
+    package_check,
+    package_install,
+    package_uninstall,
+    random_string,
+)
 
 pytestmark = pytest.mark.notImageMode
 
