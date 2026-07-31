@@ -2,9 +2,10 @@ import json
 import re
 import threading
 import time
-from virtwho import logger, FailException, PRINT_JSON_FILE, HYPERVISOR
+
+from virtwho import HYPERVISOR, PRINT_JSON_FILE, FailException, logger
 from virtwho.base import msg_search
-from virtwho.configure import virtwho_ssh_connect, get_hypervisor_handler
+from virtwho.configure import get_hypervisor_handler, virtwho_ssh_connect
 
 
 class VirtwhoRunner:
@@ -110,7 +111,7 @@ class VirtwhoRunner:
             warning: check the line number of warning
             warning_msg: get all warning lines
         """
-        data = dict()
+        data = {}
         data["debug"] = msg_search(rhsm_log, "\\[.*DEBUG\\]")
         data["oneshot"] = msg_search(rhsm_log, "Thread '.*' stopped after running once")
         data["terminate"] = msg_search(rhsm_log, "virt-who terminated")
@@ -205,10 +206,10 @@ class VirtwhoRunner:
         """
         if cli:
             logger.info(f"Start to run virt-who by cli: {cli}")
-            _, output = self.ssh.runcmd(cli, log_print=False)
+            _, _output = self.ssh.runcmd(cli, log_print=False)
         else:
             logger.info("Start to run virt-who by service")
-            _, output = self.operate_service()
+            _, _output = self.operate_service()
 
     def stop(self):
         """Stop virt-who service and then kill the pid"""
@@ -222,7 +223,7 @@ class VirtwhoRunner:
         :param cmd: virt-who command
         :return: a dic
         """
-        status_data = dict()
+        status_data = {}
         _, output = self.ssh.runcmd(cmd)
         if "-j " not in cmd and "Configuration Name" in output:
             status = output.strip().split("\n")
@@ -230,7 +231,7 @@ class VirtwhoRunner:
                 num = status.index(item)
                 if "Configuration Name" in item:
                     config_name = item.split(":")[1].strip()
-                    status_data[config_name] = dict()
+                    status_data[config_name] = {}
                     if "Source Status:" in status[num + 1]:
                         status_data[config_name]["source_status"] = (
                             status[num + 1].split(":")[1].strip()
@@ -244,10 +245,10 @@ class VirtwhoRunner:
             configurations = output["configurations"]
             for item in configurations:
                 name = item["name"]
-                status_data[name] = dict()
-                if "source" in item.keys():
+                status_data[name] = {}
+                if "source" in item:
                     status_data[name]["source"] = item["source"]
-                if "destination" in item.keys():
+                if "destination" in item:
                     status_data[name]["destination"] = item["destination"]
         logger.info(status_data)
         return status_data
@@ -349,14 +350,14 @@ class VirtwhoRunner:
                         r"Response: status=20.*requestUuid.*request="
                         rf'"PUT {prefix}/consumers'
                     )
-                    return len(re.findall(msg, rhsm_log, re.I))
+                    return len(re.findall(msg, rhsm_log, re.IGNORECASE))
                 else:
                     for pattern in [
                         rf'"PUT {prefix}/consumers',
                         rf'"POST {prefix}/hypervisors',
                     ]:
                         msg = r"Response: status=20.*requestUuid.*request=" + pattern
-                        hits = re.findall(msg, rhsm_log, re.I)
+                        hits = re.findall(msg, rhsm_log, re.IGNORECASE)
                         if hits:
                             return len(hits)
         else:
@@ -364,7 +365,7 @@ class VirtwhoRunner:
                 msg = r"Sending update in guests lists for config"
             else:
                 msg = r"Sending updated Host-to-guest mapping to"
-        res = re.findall(msg, rhsm_log, re.I)
+        res = re.findall(msg, rhsm_log, re.IGNORECASE)
         return len(res)
 
     def reporter_id(self, rhsm_log):
@@ -449,19 +450,19 @@ class VirtwhoRunner:
         :param rhsm_log:
         :return: dict with local mode mapping facts
         """
-        data = dict()
+        data = {}
         key = "Domain info:"
         if key in rhsm_log:
-            rex = re.compile(r"(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)", re.S)
+            rex = re.compile(r"(?<=Domain info: )\[.*?\]\n+(?=\d\d\d\d|$)", re.DOTALL)
             mapping_info = rex.findall(rhsm_log)[0]
             try:
                 mapping_info = json.loads(mapping_info.replace("\n", ""), strict=False)
-            except Exception:
+            except (ValueError, json.JSONDecodeError):
                 logger.warning(f"json.loads failed: {mapping_info}")
                 return data
             for item in mapping_info:
                 guestId = item["guestId"]
-                attr = dict()
+                attr = {}
                 attr["state"] = item["state"]
                 attr["active"] = item["attributes"]["active"]
                 attr["type"] = item["attributes"]["virtWhoType"]
@@ -474,45 +475,45 @@ class VirtwhoRunner:
         :param rhsm_log:
         :return: dict with remote mode mapping facts
         """
-        data = dict()
+        data = {}
         orgs = re.findall(r"Host-to-guest mapping being sent to '(.*?)'", rhsm_log)
         if len(orgs) > 0:
             data["orgs"] = orgs
-            org_data = dict()
+            org_data = {}
             for org in orgs:
                 # key = f"Host-to-guest mapping being sent to '{org}'"
-                rex = re.compile(r"(?<=: ){.*?}\n+(?=202|$)", re.S)
+                rex = re.compile(r"(?<=: ){.*?}\n+(?=202|$)", re.DOTALL)
                 mapping_info = rex.findall(rhsm_log)[-1]
                 try:
                     mapping_info = json.loads(
                         mapping_info.replace("\n", ""), strict=False
                     )
-                except Exception:
+                except (ValueError, json.JSONDecodeError):
                     logger.warning("Failed to run json.loads for rhsm.log")
                     return data
                 hypervisors = mapping_info["hypervisors"]
                 org_data["hypervisor_num"] = len(hypervisors)
                 for item in hypervisors:
                     hypervisorId = item["hypervisorId"]["hypervisorId"]
-                    if "name" in item.keys():
+                    if "name" in item:
                         hypervisor_name = item["name"]
                     else:
                         hypervisor_name = ""
-                    facts = dict()
+                    facts = {}
                     facts["name"] = hypervisor_name
                     facts["type"] = item["facts"]["hypervisor.type"]
                     facts["version"] = str(item["facts"]["hypervisor.version"])
                     facts["socket"] = item["facts"]["cpu.cpu_socket(s)"]
                     facts["dmi"] = item["facts"]["dmi.system.uuid"]
-                    if "hypervisor.cluster" in item["facts"].keys():
+                    if "hypervisor.cluster" in item["facts"]:
                         facts["cluster"] = item["facts"]["hypervisor.cluster"]
                     else:
                         facts["cluster"] = ""
-                    guests = list()
+                    guests = []
                     for guest in item["guestIds"]:
                         guestId = guest["guestId"]
                         guests.append(guestId)
-                        attr = dict()
+                        attr = {}
                         attr["guest_hypervisor"] = hypervisorId
                         attr["state"] = guest["state"]
                         attr["active"] = guest["attributes"]["active"]
@@ -532,7 +533,7 @@ class VirtwhoRunner:
             guest_uuid = get_hypervisor_handler(self.mode).guest_uuid
             for org in mapping["orgs"]:
                 org_dict = mapping.get(org)
-                if org_dict and guest_uuid in org_dict.keys():
+                if org_dict and guest_uuid in org_dict:
                     return org_dict[guest_uuid]["guest_hypervisor"]
         return ""
 
@@ -589,8 +590,5 @@ class VirtwhoRunner:
         # SSH connection and causing exit-code 255 on Testing Farm.
         self.ssh.runcmd(f"pkill -9 -x {process_name} || true")
         self.ssh.runcmd(f"rm -f /var/run/{process_name}.pid")
-        ret, output = self.ssh.runcmd(f"pgrep -x {process_name}")
-        if not output or not output.strip():
-            return True
-        else:
-            return False
+        _ret, output = self.ssh.runcmd(f"pgrep -x {process_name}")
+        return bool(not output or not output.strip())

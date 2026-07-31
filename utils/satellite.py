@@ -8,10 +8,9 @@ sys.path.append(rootPath)
 
 from virtwho import FailException
 from virtwho.base import system_init
-from virtwho.ssh import SSHConnect
-from virtwho.register import SubscriptionManager
+from virtwho.register import RHSM, SubscriptionManager
 from virtwho.settings import config
-from virtwho.register import RHSM
+from virtwho.ssh import SSHConnect
 
 
 def satellite_deploy(args):
@@ -146,7 +145,7 @@ def satellite_pkg_install(ssh):
         "yum clean all;"
         "rm -rf /etc/yum.repos.d/beaker*"
     )
-    ret, output = ssh.runcmd("yum install -y satellite")
+    ret, _output = ssh.runcmd("yum install -y satellite")
     if ret != 0:
         raise FailException("Failed to install satellite package")
 
@@ -169,7 +168,7 @@ def satellite_installer(ssh, admin_password, sat_ver):
             f"--tuning development "
             f"--foreman-initial-admin-password={admin_password}"
         )
-    ret, output = ssh.runcmd(cmd)
+    ret, _output = ssh.runcmd(cmd)
     if ret != 0:
         raise FailException("Failed to run satellite-installer")
 

@@ -1,8 +1,8 @@
+import os
+import re
+
 from virtwho.logger import getLogger
 from virtwho.settings import config
-import re
-import os
-
 
 logger = getLogger(__name__)
 

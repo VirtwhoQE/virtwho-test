@@ -10,13 +10,15 @@
 import pytest
 
 from tests.conftest import wait_for_consumer
-
-from virtwho import HYPERVISOR, RHEL_COMPOSE
-from virtwho import HYPERVISOR_FILE
-from virtwho import REGISTER
-from virtwho import SYSCONFIG_FILE
-from virtwho import logger
-from virtwho import RHEL_VERSION
+from virtwho import (
+    HYPERVISOR,
+    HYPERVISOR_FILE,
+    REGISTER,
+    RHEL_COMPOSE,
+    RHEL_VERSION,
+    SYSCONFIG_FILE,
+    logger,
+)
 from virtwho.base import hostname_get
 
 
@@ -240,14 +242,14 @@ class TestConfigurationPositive:
         globalconf.update("global", "log_per_config", "False")
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
-        ret, output = ssh_host.runcmd(
+        _ret, _output = ssh_host.runcmd(
             "find /var/log/rhsm/ -type f -size +100c -name 'virtwho*'"
         )
 
         globalconf.update("global", "log_per_config", "True")
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1
-        ret, files = ssh_host.runcmd(
+        _ret, files = ssh_host.runcmd(
             "find /var/log/rhsm/ -type f -size +100c -name 'virtwho*'"
         )
         assert "virtwho.destination" in files
@@ -610,11 +612,11 @@ class TestSysConfiguration:
         if RHEL_VERSION >= 9:
             pytest.skip("sysconfig is deprecated for RHEL 9+")
 
-        function_sysconfig.update(**{"VIRTWHO_DEBUG": "1"})
+        function_sysconfig.update(VIRTWHO_DEBUG="1")
         result = virtwho.run_service()
         assert result["send"] == 1 and result["error"] == 0 and result["debug"] is True
 
-        function_sysconfig.update(**{"VIRTWHO_DEBUG": "0"})
+        function_sysconfig.update(VIRTWHO_DEBUG="0")
         result = virtwho.run_service()
         assert result["send"] == 1 and result["error"] == 0 and result["debug"] is False
 

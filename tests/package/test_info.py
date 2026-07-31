@@ -10,11 +10,11 @@
 
 import os
 import re
+
 import pytest
 
-from virtwho import base, RHEL_COMPOSE, VIRTWHO_PKG, VIRTWHO_VERSION
+from virtwho import RHEL_COMPOSE, VIRTWHO_PKG, VIRTWHO_VERSION, base
 from virtwho.settings import DOCS_DIR, TEMP_DIR
-
 
 pytestmark = pytest.mark.notImageMode
 

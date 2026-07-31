@@ -7,6 +7,7 @@ rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
 from xml.dom import minidom
+
 from properties_update import virtwho_ini_props_update
 
 

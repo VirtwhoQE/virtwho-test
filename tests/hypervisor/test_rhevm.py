@@ -9,14 +9,14 @@
 
 import pytest
 
-from virtwho import REGISTER
-from virtwho import RHEL_COMPOSE
-from virtwho import HYPERVISOR
-from virtwho import PRINT_JSON_FILE
-from virtwho import SECOND_HYPERVISOR_FILE
-from virtwho import SECOND_HYPERVISOR_SECTION
-
-
+from virtwho import (
+    HYPERVISOR,
+    PRINT_JSON_FILE,
+    REGISTER,
+    RHEL_COMPOSE,
+    SECOND_HYPERVISOR_FILE,
+    SECOND_HYPERVISOR_SECTION,
+)
 from virtwho.base import encrypt_password
 from virtwho.configure import hypervisor_create
 
@@ -709,7 +709,7 @@ class TestRHEVMNegative:
 
         # run virt-who for rhevm without /ovirt-engine
         function_hypervisor.update(
-            "server", function_hypervisor.rhevm_hypervisor_url.rstrip("/ovirt-engine/")
+            "server", function_hypervisor.rhevm_hypervisor_url.removesuffix("/ovirt-engine").removesuffix("/")
         )
         result = virtwho.run_service()
         assert result["error"] == 0 and result["send"] == 1 and result["thread"] == 1

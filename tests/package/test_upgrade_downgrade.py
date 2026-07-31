@@ -10,10 +10,17 @@
 """
 
 import pytest
+
 from virtwho import VIRTWHO_PKG
-from virtwho.base import package_check, package_upgrade, package_downgrade
-from virtwho.base import dnf_download_pkg, dnf_can_downgrade, random_string
-from virtwho.base import system_reboot
+from virtwho.base import (
+    dnf_can_downgrade,
+    dnf_download_pkg,
+    package_check,
+    package_downgrade,
+    package_upgrade,
+    random_string,
+    system_reboot,
+)
 
 
 def _skip_if_no_downgrade(ssh_host):

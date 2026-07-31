@@ -1,6 +1,6 @@
+import logging
 import os
 import time
-import logging
 
 
 class Logger:
@@ -29,7 +29,7 @@ class Logger:
         if not os.path.exists(self.log_path):
             os.mkdir(self.log_path)
         self.log_name = os.path.join(
-            self.log_path, "%s.log" % time.strftime("%Y_%m_%d")
+            self.log_path, "{}.log".format(time.strftime("%Y_%m_%d"))
         )
         self.formatter = logging.Formatter(
             "[%(asctime)s] - [%(filename)s] - %(levelname)s: %(message)s",

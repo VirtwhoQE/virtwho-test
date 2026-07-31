@@ -1,12 +1,13 @@
 import json
+import re
 import time
+from json.decoder import JSONDecodeError
+
 import requests
 
-from json.decoder import JSONDecodeError
-from virtwho import logger, FailException
+from virtwho import FailException, logger
 from virtwho.configure import get_register_handler
 from virtwho.ssh import SSHConnect
-import re
 
 
 class SubscriptionManager:
@@ -65,7 +66,7 @@ class SubscriptionManager:
                 self.satellite_cert_install()
             else:
                 cmd += f"--baseurl={self.baseurl}"
-            ret, output = self.ssh.runcmd(cmd)
+            _ret, output = self.ssh.runcmd(cmd)
             if "The system has been registered" in output:
                 logger.info(f"Succeeded to register host({self.host})")
                 return output
@@ -141,7 +142,7 @@ class SubscriptionManager:
         cmd = "subscription-manager repos "
         for item in repo_list:
             cmd += f'--{action}="{item.strip()}" '
-        ret, output = self.ssh.runcmd(cmd)
+        ret, _output = self.ssh.runcmd(cmd)
         if ret == 0:
             logger.info(f"Succeeded to {action} repo: {repo}")
         else:
@@ -163,7 +164,7 @@ class SubscriptionManager:
             lines = [line.strip() for line in output.split("\n")]
             pairs = [re.split(r"[\ \t]*:[\ \t]*", line) for line in lines if line]
             return dict(pairs)
-        return dict()
+        return {}
 
 
 class RHSM:
@@ -507,7 +508,7 @@ class Satellite:
         guest_id = self.host_id(host=guest)
         if host_id and guest_id:
             # Find the guest in hypervisor page
-            ret, output = request_get(
+            _ret, output = request_get(
                 url=f"{self.api}/api/v2/hosts/{host_id}", auth=self.auth
             )
             if guest.lower() in str(output):
@@ -517,7 +518,7 @@ class Satellite:
                 logger.warning("Failed to find the associated guest in hypervisor page")
                 return False
             # Find the hypervisor in guest page
-            ret, output = request_get(
+            _ret, output = request_get(
                 url=f"{self.api}/api/v2/hosts/{guest_id}", auth=self.auth
             )
             if hypervisor.lower() in str(output):

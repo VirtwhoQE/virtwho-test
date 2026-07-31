@@ -10,15 +10,14 @@
 import pytest
 
 from tests.conftest import wait_for_consumer
-
-from virtwho import REGISTER
-from virtwho import RHEL_COMPOSE
-from virtwho import HYPERVISOR
-from virtwho import PRINT_JSON_FILE
-from virtwho import SECOND_HYPERVISOR_FILE
-from virtwho import SECOND_HYPERVISOR_SECTION
-
-
+from virtwho import (
+    HYPERVISOR,
+    PRINT_JSON_FILE,
+    REGISTER,
+    RHEL_COMPOSE,
+    SECOND_HYPERVISOR_FILE,
+    SECOND_HYPERVISOR_SECTION,
+)
 from virtwho.base import encrypt_password, msg_search
 from virtwho.configure import hypervisor_create
 

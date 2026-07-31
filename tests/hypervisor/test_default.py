@@ -12,11 +12,7 @@ import time
 import pytest
 
 from tests.conftest import wait_for_consumer
-
-from virtwho import REGISTER
-from virtwho import HYPERVISOR
-from virtwho import logger
-
+from virtwho import HYPERVISOR, REGISTER, logger
 from virtwho.base import hostname_get
 from virtwho.configure import hypervisor_create
 from virtwho.settings import config
@@ -310,9 +306,9 @@ class TestHypervisorPositive:
         facts = result["mappings"][register_data["default_org"]][host_name]
         assert "hypervisors_async" in result["log"]
         assert (
-            "type" in facts.keys()
-            and "version" in facts.keys()
-            and "socket" in facts.keys()
+            "type" in facts
+            and "version" in facts
+            and "socket" in facts
         )
 
     @pytest.mark.tier1

@@ -11,8 +11,7 @@ import pytest
 
 from virtwho import REGISTER, logger
 from virtwho.base import hypervisors_list, msg_search
-from virtwho.configure import hypervisor_create
-from virtwho.configure import get_hypervisor_info
+from virtwho.configure import get_hypervisor_info, hypervisor_create
 
 
 @pytest.mark.usefixtures("function_virtwho_d_conf_clean")

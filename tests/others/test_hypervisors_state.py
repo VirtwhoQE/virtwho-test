@@ -12,12 +12,14 @@
 
 import pytest
 
-from virtwho.provision.virtwho_hypervisor import hyperv_monitor
-from virtwho.provision.virtwho_hypervisor import esx_monitor
-from virtwho.provision.virtwho_hypervisor import kubevirt_monitor
-from virtwho.provision.virtwho_hypervisor import libvirt_monitor
-from virtwho.provision.virtwho_hypervisor import ahv_monitor
-from virtwho.provision.virtwho_hypervisor import rhevm_monitor
+from virtwho.provision.virtwho_hypervisor import (
+    ahv_monitor,
+    esx_monitor,
+    hyperv_monitor,
+    kubevirt_monitor,
+    libvirt_monitor,
+    rhevm_monitor,
+)
 
 
 class TestHypervisorsState:

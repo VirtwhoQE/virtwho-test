@@ -1,4 +1,5 @@
 import pytest
+
 from virtwho import RHEL_COMPOSE
 
 server_invalid_error = [

@@ -10,10 +10,9 @@
 
 import pytest
 
-from virtwho import RHEL_COMPOSE, HYPERVISOR
+from virtwho import HYPERVISOR, RHEL_COMPOSE
 from virtwho.base import hypervisors_list, local_files_compare
-from virtwho.configure import hypervisor_create, VirtwhoSysConfig
-
+from virtwho.configure import VirtwhoSysConfig, hypervisor_create
 
 pytestmark = pytest.mark.notImageMode
 

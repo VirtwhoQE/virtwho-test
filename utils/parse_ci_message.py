@@ -1,14 +1,14 @@
+import argparse
 import json
 import os
 import re
-import argparse
 import sys
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
 
-from virtwho import logger, FailException
+from virtwho import FailException, logger
 from virtwho.settings import config
 
 
@@ -16,12 +16,12 @@ def umb_ci_message_parser(args):
     """
     Parse the umb ci message to a dic
     """
-    ci_msg_dic = dict()
+    ci_msg_dic = {}
     ci_msg = args.gating_msg
     if not ci_msg:
         raise FailException("Failed to get the UMB CI MESSAGE")
     ci_msg = json.loads(ci_msg)
-    if "info" in ci_msg.keys():
+    if "info" in ci_msg:
         build_id = ci_msg["info"]["build_id"]
         task_id = ci_msg["info"]["task_id"]
         owner_name = ci_msg["info"]["owner_name"]
