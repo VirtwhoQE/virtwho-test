@@ -46,7 +46,7 @@ HYP=${HYPERVISOR:-esx}
 # Remove hypervisor test files that don't match the configured hypervisor
 for f in "${INSTALL_DIR}"/tests/hypervisor/test_*.py; do
     htype=$(basename "$f" .py | sed 's/^test_//')
-    if [ "$htype" != "$HYP" ] && [ "$htype" != "default" ]; then
+    if [[ "$htype" != "$HYP" && "$htype" != "default" && "$htype" != "${HYP}_"* ]]; then
         rm -f "$f"
         echo "Removed non-matching test file: $f"
     fi
