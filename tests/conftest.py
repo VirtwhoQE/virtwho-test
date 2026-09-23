@@ -638,6 +638,10 @@ def hypervisor_data(ssh_guest):
     elif HYPERVISOR in ("libvirt", "hyperv"):
         _oneshot_discover(data)
 
+    if HYPERVISOR == "hyperv":
+        data["kerberos_keytab_b64"] = getattr(hypervisor_handler, "kerberos_keytab_b64", "")
+        data["kerberos_principal"] = getattr(hypervisor_handler, "kerberos_principal", "")
+
     if data.get("guest_uuid") and not hypervisor_handler.guest_uuid:
         hypervisor_handler.guest_uuid = data["guest_uuid"]
 

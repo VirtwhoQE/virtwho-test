@@ -202,6 +202,33 @@ def hyperv_assertion():
 
 
 @pytest.fixture(scope="session")
+def hyperv_kerberos_assertion():
+    """
+    Collect all the assertion info for hyperv kerberos authentication
+    to this fixture
+    """
+    data = {
+        "auth_method": {
+            "invalid": {
+                "ntlm": 'Invalid auth_method "ntlm": must be one of: basic, kerberos',
+                "红帽€467aa": 'Invalid auth_method "红帽€467aa": must be one of: basic, kerberos',
+            },
+        },
+        "kerberos_keytab": {
+            "missing_file": "is not accessible",
+        },
+        "kerberos_principal": {
+            "empty": 'Option "kerberos_principal" must be a non-empty string',
+        },
+        "dropped_config": 'Dropping invalid configuration',
+        "username_ignored": "Username is ignored when auth_method=kerberos",
+        "password_ignored": "Password is ignored when auth_method=kerberos",
+    }
+
+    return data
+
+
+@pytest.fixture(scope="session")
 def kubevirt_assertion():
     """
     Collect all the assertion info for kubevirt to this fixture
