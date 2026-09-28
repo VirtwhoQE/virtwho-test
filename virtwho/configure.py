@@ -1,3 +1,4 @@
+import base64
 import os
 
 import pytest
@@ -37,6 +38,7 @@ class VirtwhoHypervisorConfig:
         self.hypervisor = get_hypervisor_handler(mode)
         self.remote_ssh = virtwho_ssh_connect(mode)
         self.rhevm_hypervisor_url = None
+        self._kerberos_keytab_path = None
         if not os.path.exists(TEMP_DIR):
             os.mkdir(TEMP_DIR)
         self.local_file = os.path.join(TEMP_DIR, f"{mode}.conf")
@@ -110,6 +112,44 @@ class VirtwhoHypervisorConfig:
         """
         self.cfg.delete(self.section, option)
         logger.info(f"*** Delete [{self.section}]:{option}=")
+
+    def enable_kerberos_auth(self, keytab=True, principal=True):
+        """Reconfigure a hyperv config file to use Kerberos (auth_method=
+        kerberos) instead of basic auth. kerberos_keytab/kerberos_principal
+        are pulled from virtwho.ini's [hyperv] section, same as server/
+        username/password are in create().
+        :param keytab: Set kerberos_keytab (decoded from virtwho.ini's
+            kerberos_keytab_b64) if configured.
+        :param principal: Set kerberos_principal from virtwho.ini, if configured.
+        """
+        self.delete("username")
+        self.delete("password")
+        self.update("auth_method", "kerberos")
+        if principal and getattr(self.hypervisor, "kerberos_principal", ""):
+            self.update("kerberos_principal", self.hypervisor.kerberos_principal)
+        if keytab:
+            keytab_path = self._deploy_kerberos_keytab()
+            if keytab_path:
+                self.update("kerberos_keytab", keytab_path)
+
+    def _deploy_kerberos_keytab(self):
+        """Decode virtwho.ini's kerberos_keytab_b64 (a base64-encoded,
+        pre-generated Kerberos keytab file) and upload it to the virt-who
+        host, returning the remote path. Cached after the first call so
+        repeated tests reuse the same uploaded file.
+        """
+        keytab_b64 = getattr(self.hypervisor, "kerberos_keytab_b64", "")
+        if not keytab_b64:
+            return None
+        if self._kerberos_keytab_path is None:
+            local_path = os.path.join(TEMP_DIR, "hyperv-kerberos.keytab")
+            with open(local_path, "wb") as f:
+                f.write(base64.b64decode(keytab_b64))
+            remote_path = "/etc/virt-who.d/hyperv-kerberos.keytab"
+            self.remote_ssh.put_file(local_path, remote_path)
+            self._kerberos_keytab_path = remote_path
+            logger.info(f"*** Deployed kerberos_keytab to {remote_path}")
+        return self._kerberos_keytab_path
 
     def destroy(self):
         """Remove both the local and remote files"""

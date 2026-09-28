@@ -80,10 +80,18 @@ guest_password=
 guest_uuid=
 guest_state=
 
+; server/username/password are used for basic auth (test_hyperv.py).
+; kerberos_principal/kerberos_keytab_b64 are used for Kerberos auth
+; (test_hyperv_kerberos.py), which the test suite enables itself by
+; setting auth_method=kerberos in the generated virt-who config. 
+; kerberos_keytab_b64 is a base64-encoded Kerberos keytab file which 
+; the suite decodes to a file on the virt-who host at test time.
 [hyperv]
 server=
 username=
 password=
+kerberos_principal=
+kerberos_keytab_b64=
 uuid=
 hostname=
 version=
