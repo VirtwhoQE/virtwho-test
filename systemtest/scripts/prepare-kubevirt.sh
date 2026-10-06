@@ -16,22 +16,18 @@ ini_get() {
 }
 
 # Inject the real SA token (passed via KUBEVIRT_TOKEN env var from Jenkins).
-# Uses python to avoid sed delimiter collisions if the token contains |, /, &.
+# Uses configparser to safely write the token value without corrupting subsequent lines.
 if [ -n "${KUBEVIRT_TOKEN:-}" ]; then
     python3 -c "
-import re, sys
+import configparser, sys
 token = sys.argv[1]
-with open('virtwho.ini') as f:
-    txt = f.read()
-txt = re.sub(
-    r'(?m)(^\[kubevirt\].*?^token=).*',
-    lambda m: m.group(1) + token,
-    txt,
-    count=1,
-    flags=re.DOTALL,
-)
+cfg = configparser.ConfigParser()
+cfg.optionxform = str
+cfg.read('virtwho.ini')
+if 'kubevirt' in cfg:
+    cfg['kubevirt']['token'] = token
 with open('virtwho.ini', 'w') as f:
-    f.write(txt)
+    cfg.write(f, space_around_delimiters=False)
 " "$KUBEVIRT_TOKEN"
     echo "Injected KUBEVIRT_TOKEN into virtwho.ini"
 fi

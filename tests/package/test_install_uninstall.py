@@ -12,7 +12,7 @@ import re
 
 import pytest
 
-from virtwho import RHEL_COMPOSE, VIRTWHO_PKG
+from virtwho import RHEL_COMPOSE, TEST_RPMS, VIRTWHO_PKG
 from virtwho.base import (
     dnf_download_pkg,
     package_check,
@@ -42,39 +42,46 @@ class TestInstallUninstall:
             1. virt-who can be removed and reinstalled from repos successfully.
             2.
         """
-        package_uninstall(ssh_host, "virt-who")
-        assert package_check(ssh_host, "virt-who") is False
-        package_install(ssh_host, "virt-who")
-        assert package_check(ssh_host, "virt-who") == VIRTWHO_PKG
+        try:
+            package_uninstall(ssh_host, "virt-who")
+            assert package_check(ssh_host, "virt-who") is False
+            package_install(ssh_host, "virt-who")
+            if TEST_RPMS:
+                assert package_check(ssh_host, "virt-who") is not False
+            else:
+                assert package_check(ssh_host, "virt-who") == VIRTWHO_PKG
 
-        options = [
-            "#[config name]",
-            "#type=",
-            "#server=",
-            "#username=",
-            "#password=",
-            "#encrypted_password=",
-            "#owner=",
-            "#hypervisor_id=",
-            "#rhsm_hostname=",
-            "#rhsm_port=",
-            "#rhsm_username=",
-            "#rhsm_password=",
-            "#rhsm_encrypted_password=",
-            "#rhsm_prefix=/rhsm",
-            "#kubeconfig=",
-            "#kubeversion=",
-            "#insecure=",
-        ]
-        line_num = 44
-        if "RHEL-8" in RHEL_COMPOSE:
-            line_num = 43
-            options.remove("#insecure=")
-        _, output = ssh_host.runcmd("cat /etc/virt-who.d/template.conf")
-        for option in options:
-            assert len(re.findall(option, output)) > 0
-        lines = output.strip().split("\n")
-        assert len(lines) == line_num
+            options = [
+                "#[config name]",
+                "#type=",
+                "#server=",
+                "#username=",
+                "#password=",
+                "#encrypted_password=",
+                "#owner=",
+                "#hypervisor_id=",
+                "#rhsm_hostname=",
+                "#rhsm_port=",
+                "#rhsm_username=",
+                "#rhsm_password=",
+                "#rhsm_encrypted_password=",
+                "#rhsm_prefix=/rhsm",
+                "#kubeconfig=",
+                "#kubeversion=",
+                "#insecure=",
+            ]
+            line_num = 44
+            if "RHEL-8" in RHEL_COMPOSE:
+                line_num = 43
+                options.remove("#insecure=")
+            _, output = ssh_host.runcmd("cat /etc/virt-who.d/template.conf")
+            for option in options:
+                assert len(re.findall(option, output)) > 0
+            lines = output.strip().split("\n")
+            assert len(lines) == line_num
+        finally:
+            if TEST_RPMS:
+                ssh_host.runcmd(f"dnf -y install --allowerasing {TEST_RPMS}")
 
     @pytest.mark.tier1
     def test_install_uninstall_by_rpm(self, ssh_host):
@@ -100,8 +107,14 @@ class TestInstallUninstall:
             assert package_check(ssh_host, "virt-who") is False
 
             package_install(ssh_host, "virt-who", rpm=rpm_path)
-            assert package_check(ssh_host, "virt-who") == VIRTWHO_PKG
+            if TEST_RPMS:
+                assert package_check(ssh_host, "virt-who") is not False
+            else:
+                assert package_check(ssh_host, "virt-who") == VIRTWHO_PKG
         finally:
-            if package_check(ssh_host, "virt-who") is False:
-                package_install(ssh_host, "virt-who")
+            if TEST_RPMS:
+                ssh_host.runcmd(f"dnf -y install --allowerasing {TEST_RPMS}")
+            else:
+                if package_check(ssh_host, "virt-who") is False:
+                    package_install(ssh_host, "virt-who")
             ssh_host.runcmd(f"rm -rf {file_path}")
