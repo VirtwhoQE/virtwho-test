@@ -83,7 +83,7 @@ sed -i "/^\[virtwho\]/,/^\[/ s|^password=.*|password=redhat|" virtwho.ini
 # Inject optional test_rpms parameter under [virtwho] section using configparser
 python3 -c "
 import configparser, os
-cfg = configparser.ConfigParser()
+cfg = configparser.ConfigParser(interpolation=None)
 cfg.optionxform = str
 cfg.read('virtwho.ini')
 if 'virtwho' in cfg:

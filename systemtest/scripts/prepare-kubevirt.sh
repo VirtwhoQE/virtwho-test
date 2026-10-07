@@ -21,7 +21,7 @@ if [ -n "${KUBEVIRT_TOKEN:-}" ]; then
     python3 -c "
 import configparser, sys
 token = sys.argv[1]
-cfg = configparser.ConfigParser()
+cfg = configparser.ConfigParser(interpolation=None)
 cfg.optionxform = str
 cfg.read('virtwho.ini')
 if 'kubevirt' in cfg:
