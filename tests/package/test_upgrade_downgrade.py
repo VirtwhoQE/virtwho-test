@@ -11,7 +11,7 @@
 
 import pytest
 
-from virtwho import VIRTWHO_PKG
+from virtwho import TEST_RPMS, VIRTWHO_PKG
 from virtwho.base import (
     dnf_can_downgrade,
     dnf_download_pkg,
@@ -24,7 +24,11 @@ from virtwho.base import (
 
 
 def _skip_if_no_downgrade(ssh_host):
-    """Skip the test if dnf cannot downgrade virt-who (only one version in repos)."""
+    """Skip the test if dnf cannot downgrade virt-who (only one version in repos or custom TEST_RPMS)."""
+    if TEST_RPMS:
+        pytest.skip(
+            "Downgrade/upgrade test not supported when testing custom TEST_RPMS build"
+        )
     if not dnf_can_downgrade(ssh_host, "virt-who"):
         pytest.skip(
             "Only one version of virt-who available in repos — "

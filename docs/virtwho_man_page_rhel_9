@@ -70,7 +70,7 @@ USAGE
               ciation is not send to server, but printed  to  standard  output
               instead.
 
-       3. status mode
+       4. status mode
               # virt-who -s
 
               This  mode is for configuration diagnosis. The host to guest as‐

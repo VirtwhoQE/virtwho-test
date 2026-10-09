@@ -67,6 +67,9 @@ class VirtwhoHypervisorConfig:
                 self.update("hypervisor_id", "hostname")
             if self.mode == "kubevirt":
                 self.update("kubeconfig", self.hypervisor.config_file)
+                if getattr(self.hypervisor, "namespace", None):
+                    self.update("namespace", self.hypervisor.namespace)
+                    self.update("hypervisor_id_fallback", "True")
             if self.mode in ("esx", "hyperv", "rhevm", "libvirt", "ahv"):
                 hypervisor_server = self.hypervisor.server
                 if self.mode == "rhevm":
