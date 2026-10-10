@@ -47,6 +47,8 @@ REGISTER = config.job.register
 
 VIRTWHO_PKG = config.virtwho.package
 
+TEST_RPMS = getattr(config.virtwho, "test_rpms", "") or os.environ.get("TEST_RPMS", "")
+
 VIRTWHO_VERSION = ""
 if VIRTWHO_PKG:
     parts = VIRTWHO_PKG.split("-")

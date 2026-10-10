@@ -80,6 +80,18 @@ sed -i "/^\[job\]/,/^\[/ s|^rhel_compose=.*|rhel_compose=${RESOLVED_COMPOSE}|" v
 sed -i "/^\[virtwho\]/,/^\[/ s|^package=.*|package=${VIRTWHO_NEVRA}|" virtwho.ini
 sed -i "/^\[virtwho\]/,/^\[/ s|^password=.*|password=redhat|" virtwho.ini
 
+# Inject optional test_rpms parameter under [virtwho] section using configparser
+python3 -c "
+import configparser, os
+cfg = configparser.ConfigParser(interpolation=None)
+cfg.optionxform = str
+cfg.read('virtwho.ini')
+if 'virtwho' in cfg:
+    cfg['virtwho']['test_rpms'] = os.environ.get('TEST_RPMS', '')
+with open('virtwho.ini', 'w') as f:
+    cfg.write(f, space_around_delimiters=False)
+"
+
 # hostname/IP-dependent and SSH-key operations are deferred to run-tests.sh
 # (execute phase) where the guest is fully booted and /root is writable.
 echo "virtwho-test cloned to ${INSTALL_DIR} and configured (SSH trust deferred to execute phase)"

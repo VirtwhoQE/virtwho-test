@@ -13,7 +13,7 @@ import re
 
 import pytest
 
-from virtwho import RHEL_COMPOSE, VIRTWHO_PKG, VIRTWHO_VERSION, base
+from virtwho import RHEL_COMPOSE, TEST_RPMS, VIRTWHO_PKG, VIRTWHO_VERSION, base
 from virtwho.settings import DOCS_DIR, TEMP_DIR
 
 pytestmark = pytest.mark.notImageMode
@@ -159,8 +159,13 @@ class TestVirtwhoPackageInfo:
             and pkg_info["Group"] == group
             and pkg_info["Size"]
             and pkg_info["License"] == virtwho_license
-            and "RSA/SHA256" in pkg_info["Signature"]
-            and "Key ID" in pkg_info["Signature"]
+            and (
+                bool(TEST_RPMS)
+                or (
+                    "RSA/SHA256" in pkg_info["Signature"]
+                    and "Key ID" in pkg_info["Signature"]
+                )
+            )
             and pkg_info["Source RPM"] == VIRTWHO_PKG.split("noarch")[0] + "src.rpm"
             and pkg_info["Build Date"]
             and pkg_info["Build Host"]
