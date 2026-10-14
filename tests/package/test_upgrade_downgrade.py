@@ -11,7 +11,7 @@
 
 import pytest
 
-from virtwho import VIRTWHO_PKG
+from virtwho import VIRTWHO_PKG, logger
 from virtwho.base import (
     dnf_can_downgrade,
     dnf_download_pkg,
@@ -30,6 +30,17 @@ def _skip_if_no_downgrade(ssh_host):
             "Only one version of virt-who available in repos — "
             "downgrade not possible (expected in compose-only mode)"
         )
+
+
+def _reboot_would_kill_pytest(ssh_host):
+    """True when pytest is running on the host it would reboot."""
+    _, remote_id = ssh_host.runcmd("cat /etc/machine-id")
+    try:
+        with open("/etc/machine-id") as machine_id:
+            local_id = machine_id.read()
+    except OSError:
+        return False
+    return remote_id.strip() == local_id.strip()
 
 
 pytestmark = pytest.mark.notImageMode
@@ -92,14 +103,20 @@ class TestUpgradeDowngrade:
                 and result["debug"] is True
             )
 
-            system_reboot(ssh_host)
-            result = virtwho.run_service()
-            assert (
-                package_check(ssh_host, "virt-who") == VIRTWHO_PKG
-                and result["send"] == 1
-                and result["error"] == 0
-                and result["debug"] is True
-            )
+            # Testing Farm runs pytest on this host. Rebooting it kills the suite.
+            if _reboot_would_kill_pytest(ssh_host):
+                logger.info(
+                    "Skipping host reboot: pytest is running on the system under test"
+                )
+            else:
+                system_reboot(ssh_host)
+                result = virtwho.run_service()
+                assert (
+                    package_check(ssh_host, "virt-who") == VIRTWHO_PKG
+                    and result["send"] == 1
+                    and result["error"] == 0
+                    and result["debug"] is True
+                )
 
         finally:
             if package_check(ssh_host, "virt-who") != VIRTWHO_PKG:
