@@ -83,9 +83,9 @@ load manifest and set for virt-who testing.
 
 
 .. _virtwho_host.py:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/virtwho/provision/virtwho_host.py
+    https://github.com/candlepin/virtwho-test/blob/master/virtwho/provision/virtwho_host.py
 .. _virtwho_hypervisor.py:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/virtwho/provision/virtwho_hypervisor.py
+    https://github.com/candlepin/virtwho-test/blob/master/virtwho/provision/virtwho_hypervisor.py
 .. _virtwho_satellite.py:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/virtwho/provision/virtwho_satellite.py
+    https://github.com/candlepin/virtwho-test/blob/master/virtwho/provision/virtwho_satellite.py
 
