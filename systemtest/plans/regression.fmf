@@ -7,9 +7,6 @@ description: |
 environment:
     HYPERVISOR: libvirt
     REGISTER: rhsm
-    HTTPS_PROXY: http://squid.corp.redhat.com:3128
-    HTTP_PROXY: http://squid.corp.redhat.com:3128
-    NO_PROXY: localhost,127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
 
 prepare:
     - name: Install dependencies
