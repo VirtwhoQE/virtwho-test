@@ -72,8 +72,6 @@ class TestUpgradeDowngrade:
 
         try:
             globalconf.update("global", "debug", "True")
-            globalconf.update("system_environment", "http_proxy", "xxx")
-            globalconf.update("system_environment", "no_proxy", "*")
 
             package_downgrade(ssh_host, "virt-who")
             result = virtwho.run_service()
@@ -138,8 +136,6 @@ class TestUpgradeDowngrade:
         compose_dir = "/tmp/vw-compose-" + random_string()
         try:
             globalconf.update("global", "debug", "True")
-            globalconf.update("system_environment", "http_proxy", "xxx")
-            globalconf.update("system_environment", "no_proxy", "*")
 
             gating_rpm = dnf_download_pkg(ssh_host, "virt-who", gating_dir)
 
@@ -235,6 +231,11 @@ class TestUpgradeDowngrade:
             assert msg1 in output and msg2 in output
 
             package_upgrade(ssh_host, "virt-who")
+            # The migrated no_proxy=* bypasses the suite proxy. Stage rejects
+            # that direct connection, so drop the section before the report check.
+            ssh_host.runcmd(
+                f"sed -i '/^\\[system_environment\\]/,$d' {virtwho_conf_file}"
+            )
             result = virtwho.run_service()
             assert (
                 result["send"] == 1
