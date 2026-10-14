@@ -9,31 +9,116 @@
 # daemon will fail with ApiException(403).
 set -euo pipefail
 
-cd /opt/virtwho-test
+# Mirror the path detection in setup-virtwho-test.sh: use /usr/share on bootc
+# (ostree-safe), /opt otherwise.
+if command -v bootc &>/dev/null || [ -f /run/ostree-booted ] || [ -L /ostree ]; then
+    INSTALL_DIR=/usr/share/virtwho-test
+else
+    INSTALL_DIR=/opt/virtwho-test
+fi
+cd "$INSTALL_DIR"
 
 ini_get() {
     awk -F= "/^\[kubevirt\]/{f=1;next} /^\[/{f=0} f&&/^${1}=/{print \$2}" virtwho.ini | tr -d ' '
 }
 
 # Inject the real SA token (passed via KUBEVIRT_TOKEN env var from Jenkins).
-# Uses python to avoid sed delimiter collisions if the token contains |, /, &.
+# Uses configparser to safely write the token value without corrupting subsequent lines.
 if [ -n "${KUBEVIRT_TOKEN:-}" ]; then
     python3 -c "
-import re, sys
+import configparser, json, re, socket, ssl, sys, urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 token = sys.argv[1]
-with open('virtwho.ini') as f:
-    txt = f.read()
-txt = re.sub(
-    r'(?m)(^\[kubevirt\].*?^token=).*',
-    lambda m: m.group(1) + token,
-    txt,
-    count=1,
-    flags=re.DOTALL,
-)
-with open('virtwho.ini', 'w') as f:
-    f.write(txt)
+cfg = configparser.ConfigParser(interpolation=None)
+cfg.optionxform = str
+cfg.read('virtwho.ini')
+if 'kubevirt' in cfg:
+    cfg['kubevirt']['token'] = token
+    endpoint = cfg['kubevirt'].get('endpoint')
+    namespace = cfg['kubevirt'].get('namespace')
+    guest_name = cfg['kubevirt'].get('guest_name', 'rhel10-virtwho-guest')
+
+    if endpoint and token and namespace:
+        http = urllib3.PoolManager(cert_reqs=ssl.CERT_NONE)
+        headers = {'Authorization': f'Bearer {token}'}
+
+        # Discover guest VM node IP
+        try:
+            r = http.request(
+                'GET',
+                f'{endpoint}/apis/kubevirt.io/v1/namespaces/{namespace}/virtualmachineinstances/{guest_name}',
+                headers=headers,
+                timeout=10,
+            )
+            if 200 <= r.status < 300:
+                vmi = json.loads(r.data.decode('utf-8'))
+                node_name = vmi.get('status', {}).get('nodeName', '')
+                discovered_ip = None
+
+                # Strategy 1: AWS EC2 node name encodes the IP (ip-A-B-C-D.region...)
+                m = re.match(r'^ip-(\d+)-(\d+)-(\d+)-(\d+)[.-]', node_name)
+                if m:
+                    discovered_ip = '.'.join(m.groups())
+
+                # Strategy 2: query Node object for InternalIP (may 403 in namespace-restricted envs)
+                if not discovered_ip:
+                    try:
+                        nr = http.request('GET', f'{endpoint}/api/v1/nodes/{node_name}', headers=headers, timeout=10)
+                        if 200 <= nr.status < 300:
+                            node_obj = json.loads(nr.data.decode('utf-8'))
+                            for addr in node_obj.get('status', {}).get('addresses', []):
+                                if addr.get('type') == 'InternalIP':
+                                    discovered_ip = addr['address']
+                                    break
+                    except Exception:
+                        pass
+
+                # Strategy 3: node_name is already a bare IP address
+                if not discovered_ip:
+                    try:
+                        socket.inet_aton(node_name)
+                        discovered_ip = node_name
+                    except OSError:
+                        pass
+
+                # Strategy 4: DNS resolution as a last resort
+                if not discovered_ip and node_name:
+                    try:
+                        discovered_ip = socket.gethostbyname(node_name)
+                    except OSError:
+                        pass
+
+                if discovered_ip:
+                    cfg['kubevirt']['guest_ip'] = discovered_ip
+                    print(f'Discovered guest_ip: {discovered_ip} (node: {node_name})')
+                else:
+                    print(f'Warning: could not determine guest_ip from node: {node_name}')
+        except Exception as e:
+            print(f'Warning: guest_ip discovery failed: {e}')
+
+        # Discover guest SSH NodePort service
+        try:
+            r = http.request(
+                'GET',
+                f'{endpoint}/api/v1/namespaces/{namespace}/services/virtwho-guest-ssh',
+                headers=headers,
+                timeout=10,
+            )
+            if 200 <= r.status < 300:
+                svc = json.loads(r.data.decode('utf-8'))
+                node_port = svc.get('spec', {}).get('ports', [{}])[0].get('nodePort')
+                if node_port:
+                    cfg['kubevirt']['guest_port'] = str(node_port)
+                    print(f'Discovered guest_port: {node_port}')
+        except Exception as e:
+            print(f'Warning: guest_port discovery failed: {e}')
+
+    with open('virtwho.ini', 'w') as f:
+        cfg.write(f, space_around_delimiters=False)
+else:
+    print('Warning: [kubevirt] section not found in virtwho.ini; skipping token injection')
 " "$KUBEVIRT_TOKEN"
-    echo "Injected KUBEVIRT_TOKEN into virtwho.ini"
+    echo "Injected KUBEVIRT_TOKEN and updated dynamic coordinates in virtwho.ini"
 fi
 
 KV_ENDPOINT=$(ini_get endpoint)
