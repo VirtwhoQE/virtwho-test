@@ -227,7 +227,7 @@ def arguments_parser():
     parser.add_argument(
         "--automation-script-format",
         required=True,
-        help="Example: https://github.com/VirtwhoQE/virtwho-test/tree/main/tests/{path}",
+        help="Example: https://github.com/candlepin/virtwho-test/tree/main/tests/{path}",
     )
     parser.add_argument(
         "--log-file",

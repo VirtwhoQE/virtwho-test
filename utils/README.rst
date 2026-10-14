@@ -82,10 +82,10 @@ All the utils/*.py are defined as public tools.
 
 
 .. _beaker.py:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/utils/beaker.py
+    https://github.com/candlepin/virtwho-test/blob/master/utils/beaker.py
 .. _docker.py:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/utils/docker.py
+    https://github.com/candlepin/virtwho-test/blob/master/utils/docker.py
 .. _kickstart.py:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/utils/kickstart.py
+    https://github.com/candlepin/virtwho-test/blob/master/utils/kickstart.py
 .. _satellite.py:
-    https://github.com/VirtwhoQE/virtwho-test/blob/master/utils/satellite.py
+    https://github.com/candlepin/virtwho-test/blob/master/utils/satellite.py
