@@ -159,7 +159,9 @@ class TestUpgradeDowngrade:
             package_downgrade(ssh_host, "virt-who")
             compose_pkg = package_check(ssh_host, "virt-who")
             assert compose_pkg is not False and compose_pkg != VIRTWHO_PKG
-            compose_rpm = dnf_download_pkg(ssh_host, "virt-who", compose_dir)
+            # dnf download of the bare name fetches the newest build, not
+            # the downgraded package just installed. Save that one.
+            compose_rpm = dnf_download_pkg(ssh_host, compose_pkg, compose_dir)
 
             package_upgrade(ssh_host, "virt-who", rpm=gating_rpm)
             result = virtwho.run_service()
