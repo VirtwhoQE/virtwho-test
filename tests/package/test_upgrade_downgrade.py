@@ -11,7 +11,7 @@
 
 import pytest
 
-from virtwho import TEST_RPMS, VIRTWHO_PKG
+from virtwho import TEST_RPMS, VIRTWHO_PKG, logger
 from virtwho.base import (
     dnf_can_downgrade,
     dnf_download_pkg,
@@ -34,6 +34,17 @@ def _skip_if_no_downgrade(ssh_host):
             "Only one version of virt-who available in repos — "
             "downgrade not possible (expected in compose-only mode)"
         )
+
+
+def _reboot_would_kill_pytest(ssh_host):
+    """True when pytest is running on the host it would reboot."""
+    _, remote_id = ssh_host.runcmd("cat /etc/machine-id")
+    try:
+        with open("/etc/machine-id") as machine_id:
+            local_id = machine_id.read()
+    except OSError:
+        return False
+    return remote_id.strip() == local_id.strip()
 
 
 pytestmark = pytest.mark.notImageMode
@@ -76,8 +87,6 @@ class TestUpgradeDowngrade:
 
         try:
             globalconf.update("global", "debug", "True")
-            globalconf.update("system_environment", "http_proxy", "xxx")
-            globalconf.update("system_environment", "no_proxy", "*")
 
             package_downgrade(ssh_host, "virt-who")
             result = virtwho.run_service()
@@ -98,14 +107,20 @@ class TestUpgradeDowngrade:
                 and result["debug"] is True
             )
 
-            system_reboot(ssh_host)
-            result = virtwho.run_service()
-            assert (
-                package_check(ssh_host, "virt-who") == VIRTWHO_PKG
-                and result["send"] == 1
-                and result["error"] == 0
-                and result["debug"] is True
-            )
+            # Testing Farm runs pytest on this host. Rebooting it kills the suite.
+            if _reboot_would_kill_pytest(ssh_host):
+                logger.info(
+                    "Skipping host reboot: pytest is running on the system under test"
+                )
+            else:
+                system_reboot(ssh_host)
+                result = virtwho.run_service()
+                assert (
+                    package_check(ssh_host, "virt-who") == VIRTWHO_PKG
+                    and result["send"] == 1
+                    and result["error"] == 0
+                    and result["debug"] is True
+                )
 
         finally:
             if package_check(ssh_host, "virt-who") != VIRTWHO_PKG:
@@ -142,15 +157,15 @@ class TestUpgradeDowngrade:
         compose_dir = "/tmp/vw-compose-" + random_string()
         try:
             globalconf.update("global", "debug", "True")
-            globalconf.update("system_environment", "http_proxy", "xxx")
-            globalconf.update("system_environment", "no_proxy", "*")
 
             gating_rpm = dnf_download_pkg(ssh_host, "virt-who", gating_dir)
 
             package_downgrade(ssh_host, "virt-who")
             compose_pkg = package_check(ssh_host, "virt-who")
             assert compose_pkg is not False and compose_pkg != VIRTWHO_PKG
-            compose_rpm = dnf_download_pkg(ssh_host, "virt-who", compose_dir)
+            # dnf download of the bare name fetches the newest build, not
+            # the downgraded package just installed. Save that one.
+            compose_rpm = dnf_download_pkg(ssh_host, compose_pkg, compose_dir)
 
             package_upgrade(ssh_host, "virt-who", rpm=gating_rpm)
             result = virtwho.run_service()
@@ -239,6 +254,11 @@ class TestUpgradeDowngrade:
             assert msg1 in output and msg2 in output
 
             package_upgrade(ssh_host, "virt-who")
+            # The migrated no_proxy=* bypasses the suite proxy. Stage rejects
+            # that direct connection, so drop the section before the report check.
+            ssh_host.runcmd(
+                f"sed -i '/^\\[system_environment\\]/,$d' {virtwho_conf_file}"
+            )
             result = virtwho.run_service()
             assert (
                 result["send"] == 1
